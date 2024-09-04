@@ -10,12 +10,15 @@ use App\Http\Controllers\BatchController;
 use App\Http\Controllers\CurriculumController;
 use App\Http\Controllers\SectionController;
 use App\Http\Controllers\CalendarController;
+use App\Http\Controllers\CourseController;
 use App\Http\Controllers\TeachingMaterialController;
 use App\Http\Controllers\QualificationController;
 use App\Http\Controllers\LeaveController;
 //use App\Http\Controllers\AttendanceController;
 use App\Http\Controllers\PasswordResetController;
 use App\Http\Controllers\PostController;
+use App\Http\Controllers\QuestionBankController;
+use App\Http\Controllers\SubjectController;
 
 /*
 |--------------------------------------------------------------------------
@@ -140,5 +143,19 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
 
 //	 Route::get('/attendances', [AttendanceController::class, 'index']);
 //	  Route::get('/batches',[BatchController::class,'get_batches']);
+
+    Route::get('/allBatches', [BatchController::class,'getBatches']);
+    Route::get('/batches/{id}', [BatchController::class,'show']);
+
+    Route::get('/courses', [CourseController::class,'getAllCourses']);
+    Route::get('/courses/{id}', [CourseController::class,'show']);
+
+    //Subjects
+    Route::get('/subjects', [SubjectController::class,'getSubjects']);
+    Route::get('/subjects/{id}', [SubjectController::class,'show']);
+
+    Route::get('/questionBanks', [QuestionBankController::class,'getQuestionBanks']);
+    Route::get('/questionBanks/{id}', [QuestionBankController::class,'show']);
+
 });
 
