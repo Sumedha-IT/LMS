@@ -26,7 +26,6 @@ class BatchController extends Controller
         $batches = $user->batches()
             ->with('course_package')
             ->find($id);
-
         return new BatchResource($batches);
     }
 
@@ -36,12 +35,12 @@ class BatchController extends Controller
         ]);
 
         if ($validator->fails()) {
-            return response()->json(['message' => 'Batch Id must be Integer'], 400);
+            return response()->json(['message' => 'Batch Id must be Integer', 'hasError'=>true], 404);
         }
         $batch = Batch::find($id);
 
         if (empty($batch)) {
-            return response()->json(['message' => 'Batch id not found'], 404);
+            return response()->json(['message' => 'Batch id not found', 'hasError'=>false], 404);
         }            
         return new BatchResource($batch);
     }
@@ -61,5 +60,83 @@ class BatchController extends Controller
             "totalPages" => ceil($totalRecords / $size)
         ];
         return response()->json($data,200);
+    }
+
+    public function create(Request $request)
+    {
+
+        $data = $request->data;
+        $data = $this->validateBatch($data);
+        if (!empty($data['message'])) {
+            return response()->json($data, 400);
+        }
+        Batch::create($data);
+        return response()->json(['message' => "Batch Created","hasError"=>false], 200);
+    }
+
+    public function update($id,Request $request){
+
+        $data = $request->data;
+        $batch =Batch::find($id);
+
+        if (empty($batch)) {
+            return response()->json(['message' => "Batch Not Found","hasError"=>false], 404);
+        }
+
+        $data = $this->validateBatch($data);
+        $batch->update($data);
+
+        $batch =Batch::find($id);
+        if (!empty($data['message'])) {
+            return response()->json($data, 400);
+        }
+        return response()->json(['message' => "Batch Updated"], 200);
+    }
+
+    public function validateBatch($data){
+        $validator = Validator::make($data, [
+            'teamId' => 'nullable|integer|exists:teams,id',
+            'branchId' => 'nullable|integer|exists:branches,id',
+            'coursePackageId' => 'required|integer',
+            'courseId' => 'nullable|integer|exists:courses,id',
+            'managerId' => 'required|integer|exists:users,id',
+            'batchName' => 'required|string|max:255',
+            'attendenceSetting' => 'nullable|integer',
+            'startDate' => 'required|date',
+            'endDate' => 'required|date|after:startDate',
+            'allowEditClassDate' => 'nullable|boolean',
+            'allowEditClassTIme' => 'nullable|boolean',
+            'curriculumData' => 'nullable|json',
+        ]);
+
+        if(!empty($validator->errors()->messages())){
+            return ['message' => "Invalid data",'hasError'=>true];
+        }
+        $data = $validator->validate();
+        $data = [
+            "team_id" => $data['teamId'] ,
+            "branch_id" => $data['branchId'] ,
+            "course_package_id" => $data['coursePackageId'] ?? 1,   //Hard code coursePackageID
+            "course_id" => $data['courseId'] ?? null,
+            "manager_id" => $data['managerId'] ?? null,
+            "name" => $data['batchName'] ?? null,
+            "attendance_setting" => $data['attendenceSetting'] ?? null,
+            "start_date" => $data['startDate'] ?? null,
+            "end_date" => $data['endDate'] ?? null,
+            "allow_edit_class_date" => $data['allowEditClassDate'] ?? null,
+            "curriculum_data" => $data['curriculumData'] ?? null
+        ];
+
+        return $data;
+    }
+
+    public function delete($id){
+        $batch = Batch::find($id);
+        if ($batch) {
+            $batch->delete();
+            return response()->json(['message' => 'Batch deleted successfully',"hasError"=>false], 200);
+        }
+
+        return response()->json(['message' => 'Batch not found',"hasError"=>false], 404);
     }
 }

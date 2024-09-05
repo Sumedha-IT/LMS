@@ -55,11 +55,12 @@ class CourseController extends Controller
             'id' => 'required|integer',
         ]);
 
+        $data = $validator->validated();
         if ($validator->fails()) {
             return response()->json(['message' => 'Course Id must be Integer'], 400);
         }
 
-        $course = Course::find($id);
+        $course = Course::find($data['id']);
         if (empty($course)) {
             return response()->json(['message' => 'Course not found'], 404);
         }

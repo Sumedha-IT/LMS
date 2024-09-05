@@ -1,5 +1,8 @@
 <?php
 
+use App\Http\Controllers\Api\QuestionController;
+use App\Http\Controllers\Api\QuestionOptionController;
+use App\Http\Controllers\Api\StudentsController;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 use Illuminate\Support\Facades\Route;
@@ -19,6 +22,8 @@ use App\Http\Controllers\PasswordResetController;
 use App\Http\Controllers\PostController;
 use App\Http\Controllers\QuestionBankController;
 use App\Http\Controllers\SubjectController;
+use App\Http\Controllers\TestingController;
+use PHPUnit\Event\Code\TestCollectionIterator;
 
 /*
 |--------------------------------------------------------------------------
@@ -144,18 +149,37 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
 //	 Route::get('/attendances', [AttendanceController::class, 'index']);
 //	  Route::get('/batches',[BatchController::class,'get_batches']);
 
-    Route::get('/allBatches', [BatchController::class,'getBatches']);
+    Route::post('/batches', [BatchController::class,'create']);
     Route::get('/batches/{id}', [BatchController::class,'show']);
+    Route::get('/allBatches', [BatchController::class,'getBatches']);
+    Route::put('/batches/{id}', [BatchController::class,'update']);
+    Route::delete('/batches/{id}', [BatchController::class,'delete']);
 
-    Route::get('/courses', [CourseController::class,'getAllCourses']);
-    Route::get('/courses/{id}', [CourseController::class,'show']);
+
+
 
     //Subjects
     Route::get('/subjects', [SubjectController::class,'getSubjects']);
     Route::get('/subjects/{id}', [SubjectController::class,'show']);
 
-    Route::get('/questionBanks', [QuestionBankController::class,'getQuestionBanks']);
+    Route::get('/questionBanks', [QuestionBankController::class,'index']);
     Route::get('/questionBanks/{id}', [QuestionBankController::class,'show']);
+
+    Route::get('/questions', [QuestionController::class,'index']);
+    Route::get('/questions/{question_id}', [QuestionController::class,'show']);
+
+    Route::get('/options', [QuestionOptionController::class,'index']);
+    Route::get('/options/{id}', [QuestionOptionController::class,'show']);
+
+    Route::get('/students', [StudentsController::class,'index']);
+    Route::get('/students/{id}', [StudentsController::class,'show']);
+
+    Route::get('/courses', [CourseController::class,'getAllCourses']);
+    Route::get('/courses/{id}', [CourseController::class,'show']);
+
+
 
 });
 
+
+Route::get("/test/{id}",[TestingController::class,"show"]);

@@ -17,17 +17,17 @@ class QuestionBankController extends Controller
         ]);
 
         if ($validator->fails()) {
-            return response()->json(['message' => 'Question Bank Id must be Integer'], 400);
+            return response()->json(['message' => 'Question Bank Id must be Integer', 'hasError'=>true], 400);
         }
         $questionBank = QuestionBank::find($id);
 
         if (empty($questionBank)) {
-            return response()->json(['message' => 'Question bank not found'], 404);
+            return response()->json(['message' => 'Question bank not found', 'hasError'=>false], 404);
         }            
         return new QuestionBankResource($questionBank);
     }
 
-    public function getQuestionBanks(Request $req)
+    public function index(Request $req)
     {
         $size = $req->get('size') == 0 ? 25 : $req->get('size');
         $pageNo = $req->get('page', 1);
