@@ -33,5 +33,5 @@ Route::get('clear-cache', function () {
 
 
 Route::get('/exam', function () {
-    return view('exam.index');
+    return view('welcome');
 });
