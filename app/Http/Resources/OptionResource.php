@@ -16,8 +16,8 @@ class OptionResource extends JsonResource
     {
         return [
             'id' => $this->id,
-            "question_id" => $this->question_bank_id,
-            "option" => $this->audio_file,
+            "question_id" => $this->question_id,
+            "is_correct" => $this->is_correct,
         ];
     }
 }

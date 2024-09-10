@@ -13,6 +13,7 @@ use App\Http\Controllers\BatchController;
 use App\Http\Controllers\CurriculumController;
 use App\Http\Controllers\SectionController;
 use App\Http\Controllers\CalendarController;
+use App\Http\Controllers\ChaptersController;
 use App\Http\Controllers\CourseController;
 use App\Http\Controllers\TeachingMaterialController;
 use App\Http\Controllers\QualificationController;
@@ -20,7 +21,9 @@ use App\Http\Controllers\LeaveController;
 //use App\Http\Controllers\AttendanceController;
 use App\Http\Controllers\PasswordResetController;
 use App\Http\Controllers\PostController;
+use App\Http\Controllers\QuestionBankChapterController;
 use App\Http\Controllers\QuestionBankController;
+use App\Http\Controllers\QuestionTypesController;
 use App\Http\Controllers\SubjectController;
 use App\Http\Controllers\TestingController;
 use PHPUnit\Event\Code\TestCollectionIterator;
@@ -161,21 +164,48 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
     //Subjects
     Route::get('/subjects', [SubjectController::class,'getSubjects']);
     Route::get('/subjects/{id}', [SubjectController::class,'show']);
+    Route::post('/subjects', [SubjectController::class,'create']);
+    Route::delete('/subjects/{id}', [SubjectController::class,'delete']);
 
+    //Question Bank
     Route::get('/questionBanks', [QuestionBankController::class,'index']);
     Route::get('/questionBanks/{id}', [QuestionBankController::class,'show']);
+    Route::post('/questionBanks', [QuestionBankController::class,'create']);
+    Route::delete('/questionBanks/{id}', [QuestionBankController::class,'delete']);
+    Route::get('/questionBankTypes',[QuestionBankController::class,'getQuestionBankTypes']);
+    Route::get('/questionBankDifficulties',[QuestionBankController::class,'getQuestionBankDifficulties']);
 
-    Route::get('/questions', [QuestionController::class,'index']);
-    Route::get('/questions/{question_id}', [QuestionController::class,'show']);
-
-    Route::get('/options', [QuestionOptionController::class,'index']);
-    Route::get('/options/{id}', [QuestionOptionController::class,'show']);
-
+    //Students
     Route::get('/students', [StudentsController::class,'index']);
     Route::get('/students/{id}', [StudentsController::class,'show']);
 
+    //Courses
     Route::get('/courses', [CourseController::class,'getAllCourses']);
     Route::get('/courses/{id}', [CourseController::class,'show']);
+
+    //Chapters
+    Route::get('/chapters/{id}', [QuestionBankChapterController::class,'show']);
+    Route::get('/chapters', [QuestionBankChapterController::class,'index']);
+    Route::post('/chapters', [QuestionBankChapterController::class,'create']);
+    Route::put('/chapters/{id}', [QuestionBankChapterController::class,'update']);
+    Route::delete('/chapters/{id}', [QuestionBankChapterController::class,'delete']);
+
+    //Question
+    Route::get('/questions', [QuestionController::class,'index']);
+    Route::post('/questions', [QuestionController::class,'create']);
+    Route::get('/questions/{question_id}', [QuestionController::class,'show']);
+    Route::put('/questions/{question_id}', [QuestionController::class,'update']);
+    Route::delete('/questions/{question_id}', [QuestionController::class,'delete']);
+
+
+
+    //Options
+    Route::get('/options', [QuestionOptionController::class,'index']);
+    Route::get('/options/{id}', [QuestionOptionController::class,'show']);
+    Route::post('/options', [QuestionOptionController::class,'create']);
+    Route::put('/options', [QuestionOptionController::class,'update']);
+
+
 
 
 

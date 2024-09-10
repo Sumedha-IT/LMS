@@ -86,11 +86,19 @@ class BatchController extends Controller
         $data = $this->validateBatch($data);
         $batch->update($data);
 
-        $batch =Batch::find($id);
         if (!empty($data['message'])) {
             return response()->json($data, 400);
         }
         return response()->json(['message' => "Batch Updated"], 200);
+    }
+
+    public function delete($id){
+        $batch = Batch::find($id);
+        if ($batch) {
+            $batch->delete();
+            return response()->json(['message' => 'Batch deleted successfully',"hasError"=>false], 200);
+        }
+        return response()->json(['message' => 'Batch not found',"hasError"=>false], 404);
     }
 
     public function validateBatch($data){
@@ -130,13 +138,4 @@ class BatchController extends Controller
         return $data;
     }
 
-    public function delete($id){
-        $batch = Batch::find($id);
-        if ($batch) {
-            $batch->delete();
-            return response()->json(['message' => 'Batch deleted successfully',"hasError"=>false], 200);
-        }
-
-        return response()->json(['message' => 'Batch not found',"hasError"=>false], 404);
-    }
 }

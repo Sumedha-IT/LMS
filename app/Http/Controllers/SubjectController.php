@@ -15,7 +15,6 @@ class SubjectController extends Controller
         return view('folders.index', compact('folders'));
     }
 
-
     public function show($id)
     {
         $validator = Validator::make(['id' => $id], [
@@ -23,12 +22,12 @@ class SubjectController extends Controller
         ]);
 
         if ($validator->fails()) {
-            return response()->json(['message' => 'Subject Id must be Integer and required'], 400);
+            return response()->json(['message' => 'Subject Id must be Integer and required', "hasError" => true], 400);
         }
         $subject = Subject::find($id);
 
-        if(empty($subject)){
-            return response()->json(['message' => 'Subject id not found'], 404);
+        if (empty($subject)) {
+            return response()->json(['message' => 'Subject id not found', "hasError" => false], 404);
         }
         return new SubjectResource($subject);
     }
@@ -47,5 +46,29 @@ class SubjectController extends Controller
             "totalPages" => ceil($totalRecords / $size)
         ];
         return response()->json($data, 200);
+    }
+
+    public function create(Request $req){
+
+        $validator = Validator::make($req->data, [
+            'name' => 'required|string'
+        ]);
+
+        if (!empty($validator->errors()->messages())) {
+            return response()->json(["message" => "Name must be in string", "hasError" => true], 400);
+        }
+
+        $data = $validator->validated();
+        Subject::create($data);
+        return response()->json(['message' => "Subject Created", "hasError" => false], 200);
+    }
+
+    public function delete($id){
+        $batch = Subject::find($id);
+        if ($batch) {
+            $batch->delete();
+            return response()->json(['message' => 'Subject deleted successfully',"hasError"=>false], 200);
+        }
+        return response()->json(['message' => 'Subject not found',"hasError"=>false], 404);
     }
 }
