@@ -4,7 +4,7 @@ import ReactDOM from 'react-dom/client';
 export default function HelloReact() {
     return(
         <div>
-        <h1>Hello React</h1>
+        <h1>Exam Module</h1>
         </div>
     );
 }

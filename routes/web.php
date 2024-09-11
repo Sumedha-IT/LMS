@@ -21,17 +21,22 @@ Route::get('/', function () {
 Route::get('/api/events/meetings', 'EventController@getMeetings');
 Route::get('/api/events/deadlines', 'EventController@getDeadlines');
 
-Route::get('clear-cache', function () {
-    //Artisan::call('storage:link');
-    Artisan::call('optimize');
-	Artisan::call('cache:clear');   
-    Artisan::call('config:cache');
-    Artisan::call('route:clear');
+// Route::get('clear-cache', function () {
+//     //Artisan::call('storage:link');
+//     Artisan::call('optimize');
+// 	Artisan::call('cache:clear');   
+//     Artisan::call('config:cache');
+//     Artisan::call('route:clear');
 
-    return "Cache cleared successfully";
-});
+//     return "Cache cleared successfully";
+// });
+
 
 
 Route::get('/exam', function () {
     return view('welcome');
-});
+})->name('exam.react');
+
+Route::get('/exam/dashboard', function () {
+    return view('exam.dashboard');
+})->name('exam.dashboard');
