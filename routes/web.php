@@ -32,6 +32,11 @@ Route::get('clear-cache', function () {
 });
 
 
-Route::get('/exam', function () {
-    return view('exam.index');
-});
+
+// Route::get('/exam', function () {
+//     return view('welcome');
+// })->name('exam.react');
+
+// Route::get('/exam/dashboard', function () {
+//     return view('exam.dashboard');
+// })->name('exam.dashboard');
