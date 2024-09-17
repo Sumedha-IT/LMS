@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Api\ExamController;
 use App\Http\Controllers\Api\QuestionController;
 use App\Http\Controllers\Api\QuestionOptionController;
 use App\Http\Controllers\Api\StudentsController;
@@ -15,6 +16,8 @@ use App\Http\Controllers\SectionController;
 use App\Http\Controllers\CalendarController;
 use App\Http\Controllers\ChaptersController;
 use App\Http\Controllers\CourseController;
+use App\Http\Controllers\ExamQuestionController;
+use App\Http\Controllers\ExamSectionController;
 use App\Http\Controllers\TeachingMaterialController;
 use App\Http\Controllers\QualificationController;
 use App\Http\Controllers\LeaveController;
@@ -26,6 +29,7 @@ use App\Http\Controllers\QuestionBankController;
 use App\Http\Controllers\QuestionTypesController;
 use App\Http\Controllers\SubjectController;
 use App\Http\Controllers\TestingController;
+use Monolog\Handler\RotatingFileHandler;
 use PHPUnit\Event\Code\TestCollectionIterator;
 
 /*
@@ -197,17 +201,34 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
     Route::put('/questions/{question_id}', [QuestionController::class,'update']);
     Route::delete('/questions/{question_id}', [QuestionController::class,'delete']);
 
-
-
     //Options
     Route::get('/options', [QuestionOptionController::class,'index']);
     Route::get('/options/{id}', [QuestionOptionController::class,'show']);
     Route::post('/options', [QuestionOptionController::class,'create']);
     Route::put('/options', [QuestionOptionController::class,'update']);
 
+    //Exams
+    Route::post('/exams', [ExamController::class,'create']);
+    Route::get('/exams', [ExamController::class,'index']);
+    Route::get('/exams/{id}', [ExamController::class,'show']);
+    Route::put('/exams/{id}', [ExamController::class,'update']);
+    Route::delete('/exams/{id}', [ExamController::class,'delete']);
 
+    //Section
+    Route::post('/examSections', [ExamSectionController::class,'create']);
+    Route::get('/examSections', [ExamSectionController::class,'index']);
+    Route::get('/examSections/{id}', [ExamSectionController::class,'show']);
+    Route::put('/examSections/{id}', [ExamSectionController::class,'update']);
+    Route::delete('/examSections/{id}', [ExamSectionController::class,'delete']);
 
+    //Exam Question
+    Route::post('/examQuestions', [ExamQuestionController::class,'create']);
+    Route::get('/examQuestions', [ExamQuestionController::class,'index']);
+    Route::get('/examQuestions/{id}', [ExamQuestionController::class,'show']);
+    Route::put('/examQuestions/{id}', [ExamQuestionController::class,'update']);
+    Route::delete('/examQuestions/{id}', [ExamQuestionController::class,'delete']);
 
+    Route::get('/invigilators',[UserController::class,'tutors']);
 
 });
 

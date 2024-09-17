@@ -26,6 +26,10 @@ class Question extends Model
         return $this->belongsTo(QuestionBank::class);
     }
 
+    public function examQuestion()
+    {
+        return $this->hasMany(ExamQuestion::class,'question_id','id');
+    }
     
 }
 
