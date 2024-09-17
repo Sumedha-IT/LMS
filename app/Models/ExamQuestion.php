@@ -14,7 +14,7 @@ class ExamQuestion extends Model
         return $this->belongsTo(Exam::class,'exam_id','id');
     }
 
-    public function question()
+    public function questions()
     {
         return $this->belongsTo(Question::class,'question_id','id');
     }

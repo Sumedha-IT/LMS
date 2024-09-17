@@ -51,6 +51,21 @@ class ExamQuestionController extends Controller
         return response()->json(['message' => 'Exam Paper Updated', 'hasError' => false]);
     }
 
+    public function index($examId, Request $request) {
+
+        // Build the query
+        $query = ExamQuestion::where('exam_id', $examId)
+        ->with('questions'); // Eager load the related questions
+
+        // Conditionally add the section filter
+        if (!empty($request->section)) {
+             $query->where('section', $request->section);
+        }
+
+        $questions = $query->get();
+        dd($questions);
+    
+    }
     public function validateExamQuestions($data)
     {
 

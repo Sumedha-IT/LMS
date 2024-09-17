@@ -225,6 +225,7 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
     Route::post('/{examId}/examQuestions', [ExamQuestionController::class,'create']);
     Route::delete('/{examId}/examQuestions', [ExamQuestionController::class,'delete']);
     Route::patch('/{examId}/examQuestions', [ExamQuestionController::class,'patch']);
+    Route::get('/{examId}/examQuestions', [ExamQuestionController::class,'index']);
 
     // Route::get('/examQuestions', [ExamQuestionController::class,'index']);
     // Route::get('/examQuestions/{id}', [ExamQuestionController::class,'show']);

@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\exam\CreateExamRequest;
 use App\Http\Resources\ExamResource;
 use App\Models\Exam;
+use App\Models\ExamQuestion;
 use Illuminate\Database\QueryException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
@@ -37,6 +38,20 @@ class ExamController extends Controller
 
         // Fetch the records for the current page
         $exams = Exam::offset($offset)->limit($size)->get();
+
+        //  Fetch distinct sections for each exam
+        $exams->each(function ($exam) {
+            $sections = ExamQuestion::where('exam_id', $exam->id)
+                ->distinct('section')
+                ->pluck('section')
+                ->toArray();
+            
+            // Add sections to the meta column
+            $exam->meta = [
+                'sections' => $sections
+            ];
+        });
+
         $data = [
             "data" => empty($exams) ? [] : ExamResource::collection($exams),
             "totalRecords" => $totalRecords,

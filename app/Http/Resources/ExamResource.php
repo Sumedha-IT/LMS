@@ -26,7 +26,8 @@ class ExamResource extends JsonResource
             'batchId' => $this->batch_id,
             'duration' => $this->duration,
             'instructions' => $this->instructions,
-            'invigilatorId' => $this->invigilator_id
+            'invigilatorId' => $this->invigilator_id,
+            'meta' => $this->meta
         ];
     }
 }
