@@ -222,12 +222,12 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
     Route::delete('/examSections/{id}', [ExamSectionController::class,'delete']);
 
     //Exam Question
-    Route::post('/examQuestions', [ExamQuestionController::class,'create']);
-    Route::get('/examQuestions', [ExamQuestionController::class,'index']);
-    Route::get('/examQuestions/{id}', [ExamQuestionController::class,'show']);
-    Route::put('/examQuestions/{id}', [ExamQuestionController::class,'update']);
-    Route::delete('/examQuestions/{id}', [ExamQuestionController::class,'delete']);
+    Route::post('/{examId}/examQuestions', [ExamQuestionController::class,'create']);
+    Route::delete('/{examId}/examQuestions', [ExamQuestionController::class,'delete']);
+    Route::patch('/{examId}/examQuestions', [ExamQuestionController::class,'patch']);
 
+    // Route::get('/examQuestions', [ExamQuestionController::class,'index']);
+    // Route::get('/examQuestions/{id}', [ExamQuestionController::class,'show']);
     Route::get('/invigilators',[UserController::class,'tutors']);
 
 });

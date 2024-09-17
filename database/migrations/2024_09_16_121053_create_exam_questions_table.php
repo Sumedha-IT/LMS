@@ -13,15 +13,15 @@ return new class extends Migration
     {
         Schema::create('exam_questions', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('section_id');
+            $table->string('section');
             $table->foreignId('question_id');
-            $table->string('question');
+            $table->foreignId('question_bank_id');
+            $table->string('question')->nullable();
             $table->foreignId('exam_id');
             $table->json('meta')->nullable();
             $table->integer('score')->default(0);
             $table->timestamps();
-
-            $table->unique(['section_id', 'question_id']);
+            $table->unique(['exam_id', 'question_id']);
         });
     }
 
