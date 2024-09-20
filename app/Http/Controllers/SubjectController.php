@@ -55,7 +55,7 @@ class SubjectController extends Controller
         ]);
 
         if (!empty($validator->errors()->messages())) {
-            return response()->json(["message" => "Name must be in string", "hasError" => true], 400);
+            return ['message' => $validator->errors()->all()[0], 'status' => 400,'success' =>false];
         }
 
         $data = $validator->validated();

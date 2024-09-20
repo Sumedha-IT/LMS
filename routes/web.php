@@ -32,11 +32,7 @@ Route::get('clear-cache', function () {
 });
 
 
-
-// Route::get('/exam', function () {
-//     return view('welcome');
-// })->name('exam.react');
-
-// Route::get('/exam/dashboard', function () {
-//     return view('exam.dashboard');
-// })->name('exam.dashboard');
+// Catch-all route for React app
+Route::get('/administrator/{any}', function () {
+    return view('filament.pages.examination'); // This should be your Blade view that loads React
+})->where('any', '.*');

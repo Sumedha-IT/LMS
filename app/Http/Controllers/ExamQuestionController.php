@@ -2,8 +2,12 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Exam;
 use App\Models\ExamQuestion;
+use App\Models\Question;
+use App\Models\QuestionBank;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 
 class ExamQuestionController extends Controller
@@ -11,25 +15,138 @@ class ExamQuestionController extends Controller
     public function create($examId, Request $request)
     {
         $data = $request->data;
-        $data['examId'] = $examId;
+        $exam = Exam::find($examId);
+        if (empty($exam)) {
+            return response()->json(['message' => 'Exam Id not found', 'hasError'=>false], 404);
+        }     
+        $exam->examQuestions()->delete();
 
-        $data = $this->validateExamQuestions($data);
+        $data = $this->validateExamQuestions($request->data,$exam);
         if (!empty($data['message'])) {
             return response()->json($data, 400);
         }
 
-        $questions = ExamQuestion::where('exam_id', $data['examId'])->whereIn('question_id', $data['questionIds'])->get();
-        if (!$questions->isEmpty()) {
-            $questionIds = $questions->pluck('question_id')->toArray();
-            $data = [
-                "message" => " Error ! Questions already exist in Exam i.e. " . implode(', ', $questionIds),
-                "hasError" => true
-            ];
-            return $data;
+        $this->saveQuestionToExam($data,$exam);
+        return response()->json(['message' => 'Questions added', 'hasError' => false], 200);
+    }
+
+    public function validateExamQuestions($data,$exam){
+        $validator = Validator::make($data, [
+            '*.partId' => 'required|string',                     // Each section must have a partId that is a string
+            '*.banks' => 'required|array',                       // banks is required and must be an array
+            '*.banks.*.id' => 'nullable|integer|distinct|exists:question_banks,id', // ID is optional, but if present it must be an integer
+            '*.banks.*.questionsIds' => 'nullable|array',        // questionsIds is required and must be an array (can be empty)
+        ]);
+
+        if ($validator->fails()) {
+            return ['message' => $validator->errors()->all()[0], 'status' => 400, 'success' => false];
         }
 
-        $this->saveQuestionToExam($data);
-        return response()->json(['message' => 'Questions added', 'hasError' => false], 200);
+        //Extract BankIds
+        $bankIds = collect($data)->flatMap(function ($part) {
+            return collect($part['banks'])->pluck('id');
+        })->toArray();
+
+        //Get All  Questions and group by BankIds
+        $questionsByBank = Question::whereIn('question_bank_id', $bankIds)
+                        ->get()
+                        ->groupBy('question_bank_id')
+                        ->map(function ($questions) {
+                            return $questions->pluck('id')->toArray();
+                        })->toArray();
+
+        $questionToAdd = [];
+        // Add custom validation to check if questions exist in the database
+        foreach ($data as &$part) {
+            foreach ($part['banks'] as &$bank) {
+                $bankId = $bank['id'];
+                // Check if the bank has any questions
+                if (empty($questionsByBank[$bankId])) {
+                    $validator->errors()->add(
+                        'error',
+                        'bankId ' . $bankId . ' does not contain any questions'
+                    );
+                    break; // Breaks out of the inner loop, but not the outer
+                }
+        
+                // Validate question IDs if they are provided
+                if (!empty($bank['questionsIds']) && !empty($bank['id'])) {
+                    $questionsIds = $bank['questionsIds'];
+                    $notExistedQuestions = array_diff($questionsIds, $questionsByBank[$bankId]);
+        
+                    // Check if the counts of question IDs match
+                    if (count($questionsByBank[$bankId]) !== count($questionsIds)) {
+                        $validator->errors()->add(
+                            'banks.' . $bankId . '.questionsIds',
+                            'Question IDs: ' . implode(', ', $notExistedQuestions) . " do not exist in question Bank ID: " . $bankId
+                        );
+                        break; // This breaks out of the inner loop
+                    }
+                    $questionToAdd[$part['partId']] =  $questionsIds;
+                } else {
+                    // Assign existing question IDs from the bank
+                    $questionToAdd[$part['partId']] = $questionsByBank[$bankId];
+                }
+            }
+        }
+        
+
+        if (!empty($validator->errors()->messages())) {
+            return ['message' => $validator->errors()->all()[0], 'status' => 400, 'success' => false];
+        }
+
+        return $questionToAdd;   
+    }
+
+    public function saveQuestionToExam($questionsToAdd,$exam){
+        $questionIds = []; // Collect all question IDs for one query
+    
+        // Collect all question IDs from the array
+        foreach ($questionsToAdd as $questionIdsBySection) {
+            $questionIds = array_merge($questionIds, $questionIdsBySection);
+        }
+    
+        // Fetch all the questions in one query
+        $questions = Question::whereIn('id', $questionIds)->get()->keyBy('id');
+    
+        $input = []; // This will store the batch insert data
+    
+        // Iterate through the sections and their respective question IDs
+        foreach ($questionsToAdd as $partId => $questionIds) {
+            foreach ($questionIds as $questionId) {
+                // Check if the question exists in the fetched questions
+                if (isset($questions[$questionId])) {
+                    $question = $questions[$questionId]; // Get the question object
+                    
+                    $input[] = [
+                        'question_id'       => $questionId,
+                        'question_bank_id'  => $question->question_bank_id,  // From the pre-fetched question
+                        'part_id'           => $partId ,  // Handle "default" section
+                        'exam_id'           => $exam->id,  // Constant exam ID
+                        'meta'              => json_encode($question->toArray()),  // Store the entire question data as JSON
+                        'created_at'        => now(),  // Timestamp for creation
+                        'updated_at'        => now(),  // Timestamp for update
+                    ];
+                }
+            }
+        }
+
+        // Perform a batch insert with the prepared data
+        ExamQuestion::insert($input);
+    }
+
+    public function delete($examId, Request $request)
+    {
+        $exam = Exam::find($examId)->first();
+        if (empty($exam)) {
+            return response()->json(['message' => "Exam Not Found", "success" => false, "status" => 404], 404);
+        }
+        $data = $request->data;
+        $data['examId'] = $examId;
+
+        $data = $this->validateExamQuestions($data);
+        ExamQuestion::whereIn('question_id', $data['questionIds'])->delete();
+        return response()->json(['message' => "Questions Removed", "success" => true, "status" => true], 200);
     }
 
     public function patch($examId, Request $request)
@@ -41,62 +158,92 @@ class ExamQuestionController extends Controller
         if (!empty($data['message'])) {
             return response()->json($data, 400);
         }
+        if (!empty($data['randomQuestions'])) {
 
-        $existedQuestionIds = ExamQuestion::where('exam_id', $data['examId'])->pluck('question_id')->toArray();
-        $questionToBeDeleted =  array_diff($existedQuestionIds, $data['questionIds']);
-        $data['questionIds'] = array_diff($data['questionIds'], $existedQuestionIds);
+            ExamQuestion::where('exam_id', $data['examId'])
+                ->where('section', $data['section'])
+                ->where('question_bank_id', $data['questionBankId'])->delete();
 
-        ExamQuestion::where('exam_id', $data['examId'])->whereIn('question_id', $questionToBeDeleted)->delete();
-        $this->saveQuestionToExam($data);
-        return response()->json(['message' => 'Exam Paper Updated', 'hasError' => false]);
-    }
+            $data['questionIds'] = QuestionBank::find($data['questionBankId'])
+                ->questions()
+                ->inRandomOrder()
+                ->take($data['randomQuestions'])
+                ->pluck('id');
+            $this->saveQuestionToExam($data);
+        } else {
+            $existedQuestionIds = ExamQuestion::where('exam_id', $data['examId'])->pluck('question_id')->toArray();
+            $questionToBeDeleted =  array_diff($existedQuestionIds, $data['questionIds']);
+            $data['questionIds'] = array_diff($data['questionIds'], $existedQuestionIds);
 
-    public function index($examId, Request $request) {
-
-        // Build the query
-        $query = ExamQuestion::where('exam_id', $examId)
-        ->with('questions'); // Eager load the related questions
-
-        // Conditionally add the section filter
-        if (!empty($request->section)) {
-             $query->where('section', $request->section);
+            ExamQuestion::where('exam_id', $data['examId'])->whereIn('question_id', $questionToBeDeleted)->delete();
+            $this->saveQuestionToExam($data);
         }
 
-        $questions = $query->get();
-        dd($questions);
-    
+        return response()->json(['data' => $data, 'message' => 'Exam Paper Updated', 'hasError' => false]);
     }
-    public function validateExamQuestions($data)
+
+    public function index($examId, Request $request)
     {
 
+        $data = request()->query();
+        extract($data);
+
+        $size = $request->get('size') == 0 ? 25 : $request->get('size');
+        $pageNo = $request->get('page', 1);
+        $offset = ($pageNo - 1) * $size;
+        $totalRecords = Question::where('question_bank_id',$questionBankId)->count();
+
+        // Raw query using CASE statement to determine selection
+        $questions = DB::table('questions')
+        ->leftJoin('exam_questions', function ($join) use ($partId, $examId) {
+            $join->on('questions.id', '=', 'exam_questions.question_id')
+            ->where('exam_questions.part_id', $partId)
+                ->where('exam_questions.exam_id', $examId);
+        })
+        ->select(
+            'questions.id',
+            'questions.question_bank_id As questionBankId',
+            'questions.question',
+            DB::raw('CASE WHEN exam_questions.question_id IS NOT NULL THEN true ELSE false END AS selected')
+        )->where('questions.question_bank_id', $questionBankId)->orderBy('selected', 'desc')
+        ->offset($offset)
+        ->limit($size)
+        ->get();
+
+        $data = [
+            "data" => empty($questions) ? [] : $questions,
+            "totalRecords" => $totalRecords,
+            "totalPages" => ceil($totalRecords / $size),
+            "status" => 200,
+            "success" => true
+        ];
+        return response()->json($data,200);
+    }
+
+    public function getQuestionIds(Request $request)
+    {
+        $data = $request->data;
         $validator = Validator::make($data, [
-            "questionBankId" => "required|integer",
-            "questionIds" => "required|array",
-            "examId" => "required|integer|exists:exams,id",
-            "section" => "required|string"
+            'autoSelect'     => 'required|boolean|in:1',
+            'totalQuestion'  => 'required|boolean',
+            'questionCount'  => 'nullable|integer',
+            'questionBankId' => 'required|exists:question_banks,id',
         ]);
 
-        if (!empty($validator->errors()->messages())) {
-            dd($validator->errors()->messages());
-            return ['message' => "Invalid data", 'hasError' => true];
+        if ($validator->fails()) {
+            return response()->json(["message" => $validator->errors()->all()[0], 'status' => 200, 'success' => false]);
         }
 
-        $data = $validator->validate();
+        $data = $validator->validated(); // Use validated() instead of validate()
 
-        return $data;
-    }
+        // Determine the query for question IDs based on totalQuestion
+        $questionQuery = Question::where('question_bank_id', $data['questionBankId']);
 
-    public function saveQuestionToExam($data)
-    {
-        $input = [];
-        foreach ($data['questionIds'] as $questionId) {
-            $input[] = [
-                'question_id' => $questionId,
-                'question_bank_id' => $data['questionBankId'],
-                'section' => $data['section'],
-                'exam_id' => $data['examId']
-            ];
+        if ($data['totalQuestion']==false) {
+            $questionIds = $questionQuery->inRandomOrder()->limit($data['questionCount'])->pluck('id');
+        } else {
+            $questionIds = $questionQuery->pluck('id');
         }
-        ExamQuestion::insert($input);
+        return response()->json(["data" => $questionIds->toArray(), 'status' => 200, 'success' => true]);
     }
 }

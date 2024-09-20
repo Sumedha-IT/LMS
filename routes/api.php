@@ -144,7 +144,19 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
     //api for listing for sections
     
      // Api for Post/Timeline
-    
+     Route::middleware(['payloadCheck'])->group(function () {
+        Route::post('/exams', [ExamController::class,'create']);
+        Route::post('/questionBanks', [QuestionBankController::class,'create']);
+        Route::post('/questions', [QuestionController::class,'create']);
+        Route::post('/options', [QuestionOptionController::class,'create']);
+        Route::post('/{examId}/examQuestions', [ExamQuestionController::class,'create']);
+        Route::delete('/{examId}/examQuestions', [ExamQuestionController::class,'delete']);
+        Route::put('/{examId}/examQuestions', [ExamQuestionController::class,'patch']);
+        Route::post('/questionIds', [ExamQuestionController::class,'getQuestionIds']);
+
+
+    });
+        
     Route::get('posts', [PostController::class, 'index']);
     // Route::get('posts/{id}', [PostController::class, 'show']);
     Route::post('posts/like', [PostController::class, 'like']);
@@ -174,7 +186,6 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
     //Question Bank
     Route::get('/questionBanks', [QuestionBankController::class,'index']);
     Route::get('/questionBanks/{id}', [QuestionBankController::class,'show']);
-    Route::post('/questionBanks', [QuestionBankController::class,'create']);
     Route::delete('/questionBanks/{id}', [QuestionBankController::class,'delete']);
     Route::get('/questionBankTypes',[QuestionBankController::class,'getQuestionBankTypes']);
     Route::get('/questionBankDifficulties',[QuestionBankController::class,'getQuestionBankDifficulties']);
@@ -196,7 +207,6 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
 
     //Question
     Route::get('/questions', [QuestionController::class,'index']);
-    Route::post('/questions', [QuestionController::class,'create']);
     Route::get('/questions/{question_id}', [QuestionController::class,'show']);
     Route::put('/questions/{question_id}', [QuestionController::class,'update']);
     Route::delete('/questions/{question_id}', [QuestionController::class,'delete']);
@@ -204,11 +214,9 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
     //Options
     Route::get('/options', [QuestionOptionController::class,'index']);
     Route::get('/options/{id}', [QuestionOptionController::class,'show']);
-    Route::post('/options', [QuestionOptionController::class,'create']);
     Route::put('/options', [QuestionOptionController::class,'update']);
 
     //Exams
-    Route::post('/exams', [ExamController::class,'create']);
     Route::get('/exams', [ExamController::class,'index']);
     Route::get('/exams/{id}', [ExamController::class,'show']);
     Route::put('/exams/{id}', [ExamController::class,'update']);
@@ -222,14 +230,12 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
     Route::delete('/examSections/{id}', [ExamSectionController::class,'delete']);
 
     //Exam Question
-    Route::post('/{examId}/examQuestions', [ExamQuestionController::class,'create']);
-    Route::delete('/{examId}/examQuestions', [ExamQuestionController::class,'delete']);
-    Route::patch('/{examId}/examQuestions', [ExamQuestionController::class,'patch']);
     Route::get('/{examId}/examQuestions', [ExamQuestionController::class,'index']);
 
     // Route::get('/examQuestions', [ExamQuestionController::class,'index']);
     // Route::get('/examQuestions/{id}', [ExamQuestionController::class,'show']);
     Route::get('/invigilators',[UserController::class,'tutors']);
+    
 
 });
 

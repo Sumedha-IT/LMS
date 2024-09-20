@@ -1,7 +1,9 @@
 import { fetchBaseQuery } from "@reduxjs/toolkit/query/react";
 
+const apiUrl = APP_URL
+
 const baseQuery = fetchBaseQuery({
-    baseUrl: `${ import.meta.env.REACT_APP_API_URL}`,
+    baseUrl: `${ apiUrl}`,
     prepareHeaders: (headers) => {
         // const data = JSON.parse(String(localStorage.getItem("token")));
         const data = "350|CJjJQ4Dpytdkkm6Bn5qtigAEiIFsFsNe2MAJLGYxb5936e16";
@@ -19,7 +21,7 @@ export const baseQueryWithReauth = async (args, api, extraOptions) => {
 
     if (result.error && result.error.status === 401) {
         try {
-            const response = await fetch(`${process.env.REACT_APP_API_URL}`);
+            const response = await fetch(`${apiUrl}`);
 
             // Clear localStorage and refresh the page
             // localStorage.clear();

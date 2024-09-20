@@ -13,19 +13,22 @@ return new class extends Migration
     {
         Schema::create('exams', function (Blueprint $table) {
             $table->id();
-            $table->string('name');
+            $table->string('title');
             $table->integer('total_marks')->default(0);
             $table->integer('max_attempts')->default(10);
             $table->text('instructions')->nullable();
-            $table->timestamp('starts_at');
-            $table->timestamp('ends_at');
-            $table->string('duration');
+
+            $table->string('starts_at');
+            $table->string('ends_at');
+
+            $table->timestamp('exam_date');
             $table->boolean('immediate_result');
             $table->foreignId('batch_id');
-            $table->foreignId('invigilator_id');
-
+            $table->foreignId('subject_id');
+            $table->json('invigilators')->nullable();
             $table->timestamps();
-            $table->unique(['name', 'batch_id']);
+            
+            $table->unique(['title', 'batch_id']);
         });
     }
 

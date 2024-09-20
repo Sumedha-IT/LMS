@@ -10,16 +10,21 @@ class Exam extends Model
     use HasFactory;
 
     protected $fillable = [
-        'name',
+        'title',
         'instructions',
         'starts_at',
         'ends_at',
-        'duration',
         'immediate_result',
         'max_attempts',
         'batch_id',
+        'invigilators',
+        'exam_date'
     ];
 
+    protected $casts = [
+         'invigilators' => 'array'
+    ];
+    
     public function batch()
     {
         return $this->belongsTo(Batch::class);
@@ -30,7 +35,7 @@ class Exam extends Model
         return $this->hasMany(ExamAttempt::class,'exam_id');
     }
 
-    public function examQuestion()
+    public function examQuestions()
     {
         return $this->hasMany(ExamQuestion::class,'exam_id','id');
     }
