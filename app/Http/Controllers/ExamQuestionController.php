@@ -73,9 +73,9 @@ class ExamQuestionController extends Controller
                 if (!empty($bank['questionsIds']) && !empty($bank['id'])) {
                     $questionsIds = $bank['questionsIds'];
                     $notExistedQuestions = array_diff($questionsIds, $questionsByBank[$bankId]);
-        
-                    // Check if the counts of question IDs match
-                    if (count($questionsByBank[$bankId]) !== count($questionsIds)) {
+
+                    // Check if there is not Existed Question
+                    if (!empty($notExistedQuestions)) {
                         $validator->errors()->add(
                             'banks.' . $bankId . '.questionsIds',
                             'Question IDs: ' . implode(', ', $notExistedQuestions) . " do not exist in question Bank ID: " . $bankId
