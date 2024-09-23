@@ -17,7 +17,7 @@ class ExamQuestionController extends Controller
         $data = $request->data;
         $exam = Exam::find($examId);
         if (empty($exam)) {
-            return response()->json(['message' => 'Exam Id not found', 'hasError'=>false], 404);
+            return response()->json(['message' => 'Exam Id not found',  'success' => false, "status" => 404], 404);
         }     
         $exam->examQuestions()->delete();
 
@@ -27,7 +27,7 @@ class ExamQuestionController extends Controller
         }
 
         $this->saveQuestionToExam($data,$exam);
-        return response()->json(['message' => 'Questions added', 'hasError' => false], 200);
+        return response()->json(['message' => 'Questions added', 'success' => true, "status" => 200], 200);
     }
 
     public function validateExamQuestions($data,$exam){
@@ -110,7 +110,6 @@ class ExamQuestionController extends Controller
         $questions = Question::whereIn('id', $questionIds)->get()->keyBy('id');
     
         $input = []; // This will store the batch insert data
-    
         // Iterate through the sections and their respective question IDs
         foreach ($questionsToAdd as $partId => $questionIds) {
             foreach ($questionIds as $questionId) {
@@ -124,8 +123,8 @@ class ExamQuestionController extends Controller
                         'part_id'           => $partId ,  // Handle "default" section
                         'exam_id'           => $exam->id,  // Constant exam ID
                         'meta'              => json_encode($question->toArray()),  // Store the entire question data as JSON
-                        'created_at'        => now(),  // Timestamp for creation
-                        'updated_at'        => now(),  // Timestamp for update
+                        // 'created_at'        => now(),  // Timestamp for creation
+                        // 'updated_at'        => now(),  // Timestamp for update
                     ];
                 }
             }

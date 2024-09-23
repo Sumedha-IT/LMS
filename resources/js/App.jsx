@@ -9,13 +9,12 @@ import AdminDashboard from './pages/AdminDashboard';
 function App() {
   return (
     <div className="">
-      <Routes>
-        <Route path="/administrator/1/examination/" element={<AdminDashboard />} />
-        <Route path="/ExamForm" element={<ExamScheduling />} />
-        <Route path="/addquestion" element={<QuestionBankComponent />} />
-        <Route path="/addQuestionBank" element={<AddQuestionBank />} />
-        <Route path="/manageQuestions" element={<ManageQuestionsComponent />} />
-
+       <Routes>
+        <Route path="/administrator/:id/examination/" element={<AdminDashboard />} />
+        <Route path="/administrator/:id/examination/ExamForm" element={<ExamScheduling />} />
+        <Route path="/administrator/:id/examination/addquestion" element={<QuestionBankComponent />} />
+        <Route path="/administrator/:id/examination/addQuestionBank" element={<AddQuestionBank />} />
+        <Route path="/administrator/:id/examination/manageQuestions" element={<ManageQuestionsComponent />} />
       </Routes>
 
     </div>
