@@ -203,6 +203,8 @@ class ExamQuestionController extends Controller
             'questions.id',
             'questions.question_bank_id As questionBankId',
             'questions.question',
+            'questions.marks',
+            'questions.negative_marks As negativeMarks',
             DB::raw('CASE WHEN exam_questions.question_id IS NOT NULL THEN true ELSE false END AS selected')
         )->where('questions.question_bank_id', $questionBankId)->orderBy('selected', 'desc')
         ->offset($offset)

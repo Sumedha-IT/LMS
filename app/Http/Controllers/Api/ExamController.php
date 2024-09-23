@@ -23,12 +23,12 @@ class ExamController extends Controller
         ]);
 
         if ($validator->fails()) {
-            return response()->json(['message' => 'Exam Id must be Integer', 'hasError'=>true], 404);
+            return response()->json(['message' => 'Exam Id must be Integer', 'success' => false, 'status' => 404], 404);
         }
         $exam = Exam::find($id);
 
         if (empty($exam)) {
-            return response()->json(['message' => 'Exam Id not found', 'hasError'=>false], 404);
+            return response()->json(['message' => 'Exam Id not found',  'success' => false, 'status' => 404], 404);
         }             
 
         $examQuestions = ExamQuestion::where('exam_id', $exam->id)
@@ -47,18 +47,22 @@ class ExamController extends Controller
                     return $group->count(); // Count how many questions per question_bank_id
                 })
             ];
+            
+
             $qbIds = $data[$section]['questionBanks']->keys();
             $qbNames = QuestionBank::select('name','id')->whereIn('id',$qbIds)->groupBy('id')->get();
             $qbConfig = Question::selectRaw('question_bank_id, COUNT(*) as question_count')
                         ->whereIn('question_bank_id', $qbIds)->groupBy('question_bank_id')->get();
 
             foreach ($data[$section]['questionBanks'] as $qbId => $counts) {
-                $data[$section]['questionBanks'][$qbId] = [
+                $data[$section][$qbId] = [
                     "name" => $qbNames->where('id',$qbId)->pluck('name')->first(),
                     "totalQuestions" =>$qbConfig->where('question_bank_id', $qbId)->pluck('question_count')->first(),
-                    "usedQuestions" => $counts
+                    "usedQuestions" => $counts,
+                    "id" => $qbId
                 ];
             }
+            unset($data[$section]['questionBanks']);
         }
 
         $exam->meta = $data;
@@ -66,14 +70,29 @@ class ExamController extends Controller
     }
 
     public function index(Request $request){
+        $data = request()->query();
+
         $size = $request->get('size') == 0 ? 25 : $request->get('size');
         $pageNo = $request->get('page', 1);
         $offset = ($pageNo - 1) * $size;
         $totalRecords = Exam::count();
 
-        // Fetch the records for the current page
-        // Eager load the batch relationship
-        $exams = Exam::with('batch') 
+        $exams = Exam::with('batch')
+        // Apply batchId filter only if it exists
+        ->when(!empty($data['batchId']), function ($query) use ($data) {
+            return $query->where('batch_id', $data['batchId']);
+        })
+        // Apply date filter based on the criteria ('past' or 'upcoming')
+        ->when(isset($data['dateCriteria']) && in_array($data['dateCriteria'], ['past', 'upcoming']), function ($query) use ($data) {
+            $operator = $data['dateCriteria'] === 'past' ? '<' : '>';
+            return $query->where('exam_date', $operator, now());
+        })
+        // Order by 'created_by' either ascending or descending based on the direction provided
+        ->when(!empty($data['sortOrder']), function ($query) use ($data) {
+            $direction = $data['sortOrder'] === 'desc' ? 'desc' : 'asc';
+            return $query->orderBy('created_at', $direction);
+        })
+        // Apply pagination logic
         ->offset($offset)
         ->limit($size)
         ->get();
