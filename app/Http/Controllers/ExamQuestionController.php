@@ -125,8 +125,8 @@ class ExamQuestionController extends Controller
         }
 
         // Raw query using CASE statement to determine selection
-        $questionIds = ExamQuestion::where('question_bank_id', ["questionIds" => $data['questionBankId']])->where('exam_id', $examId)->select('id')
-        ->get()->pluck('id') // This will give you a collection of ids
+        $questionIds = ExamQuestion::where('question_bank_id', ["questionIds" => $data['questionBankId']])->where('exam_id', $examId)->select('question_id')
+        ->get()->pluck('question_id') // This will give you a collection of ids
         ->toArray();
 
         $data = [
