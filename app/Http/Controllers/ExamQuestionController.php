@@ -120,14 +120,15 @@ class ExamQuestionController extends Controller
             'partId' => 'required|string',                                     
         ]);
 
-        if ($validator->fails()) {
+        if ($validator->fails())
             return ['message' => $validator->errors()->all()[0], 'status' => 400, 'success' => false];
-        }
 
-        // Raw query using CASE statement to determine selection
-        $questionIds = ExamQuestion::where('question_bank_id', ["questionIds" => $data['questionBankId']])->where('exam_id', $examId)->select('question_id')
-        ->get()->pluck('question_id') // This will give you a collection of ids
+        $questionIds = ExamQuestion::where('exam_id', $examId)->where('question_bank_id', $data['questionBankId'])->where('part_id', $data['partId'])->get()->pluck('question_id')
         ->toArray();
+
+        //If Ids not found return all 
+        if (count($questionIds) == 0)
+            $questionIds = Question::where('question_bank_id', $data['questionBankId'])->get()->pluck('id')->toArray();
 
         $data = [
             "data" => empty($questionIds) ? [] : ($questionIds),
