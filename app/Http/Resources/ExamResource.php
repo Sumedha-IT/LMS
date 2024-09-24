@@ -40,7 +40,7 @@ class ExamResource extends JsonResource
             'batch' => $this->batch->name, 
             'subjectId' => $this->subject_id,
             'examDate' =>   date('Y-m-d', strtotime($this->exam_date)),
-            'instructions' => ($this->instructions) ? true : false,
+            'instructions' => $this->instructions,
             'invigilators' => $this->invigilators,
             'meta' => $this->meta
         ];

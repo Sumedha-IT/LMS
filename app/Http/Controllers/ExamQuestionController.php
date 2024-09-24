@@ -98,42 +98,6 @@ class ExamQuestionController extends Controller
         return $questionToAdd;   
     }
 
-    public function saveQuestionToExam($questionsToAdd,$exam){
-        $questionIds = []; // Collect all question IDs for one query
-    
-        // Collect all question IDs from the array
-        foreach ($questionsToAdd as $questionIdsBySection) {
-            $questionIds = array_merge($questionIds, $questionIdsBySection);
-        }
-    
-        // Fetch all the questions in one query
-        $questions = Question::whereIn('id', $questionIds)->get()->keyBy('id');
-    
-        $input = []; // This will store the batch insert data
-        // Iterate through the sections and their respective question IDs
-        foreach ($questionsToAdd as $partId => $questionIds) {
-            foreach ($questionIds as $questionId) {
-                // Check if the question exists in the fetched questions
-                if (isset($questions[$questionId])) {
-                    $question = $questions[$questionId]; // Get the question object
-                    
-                    $input[] = [
-                        'question_id'       => $questionId,
-                        'question_bank_id'  => $question->question_bank_id,  // From the pre-fetched question
-                        'part_id'           => $partId ,  // Handle "default" section
-                        'exam_id'           => $exam->id,  // Constant exam ID
-                        'meta'              => json_encode($question->toArray()),  // Store the entire question data as JSON
-                        // 'created_at'        => now(),  // Timestamp for creation
-                        // 'updated_at'        => now(),  // Timestamp for update
-                    ];
-                }
-            }
-        }
-
-        // Perform a batch insert with the prepared data
-        ExamQuestion::insert($input);
-    }
-
     public function delete($examId, Request $request)
     {
         $exam = Exam::find($examId)->first();
@@ -148,73 +112,25 @@ class ExamQuestionController extends Controller
         return response()->json(['message' => "Questions Removed", "success" => true, "status" => true], 200);
     }
 
-    public function patch($examId, Request $request)
-    {
-        $data = $request->data;
-        $data['examId'] = $examId;
-
-        $data = $this->validateExamQuestions($request->data);
-        if (!empty($data['message'])) {
-            return response()->json($data, 400);
-        }
-        if (!empty($data['randomQuestions'])) {
-
-            ExamQuestion::where('exam_id', $data['examId'])
-                ->where('section', $data['section'])
-                ->where('question_bank_id', $data['questionBankId'])->delete();
-
-            $data['questionIds'] = QuestionBank::find($data['questionBankId'])
-                ->questions()
-                ->inRandomOrder()
-                ->take($data['randomQuestions'])
-                ->pluck('id');
-            $this->saveQuestionToExam($data);
-        } else {
-            $existedQuestionIds = ExamQuestion::where('exam_id', $data['examId'])->pluck('question_id')->toArray();
-            $questionToBeDeleted =  array_diff($existedQuestionIds, $data['questionIds']);
-            $data['questionIds'] = array_diff($data['questionIds'], $existedQuestionIds);
-
-            ExamQuestion::where('exam_id', $data['examId'])->whereIn('question_id', $questionToBeDeleted)->delete();
-            $this->saveQuestionToExam($data);
-        }
-
-        return response()->json(['data' => $data, 'message' => 'Exam Paper Updated', 'hasError' => false]);
-    }
-
     public function index($examId, Request $request)
     {
-
         $data = request()->query();
-        extract($data);
+        $validator = Validator::make($data, [
+            'questionBankId' => 'required|integer|exists:question_banks,id', 
+            'partId' => 'required|string',                                     
+        ]);
 
-        $size = $request->get('size') == 0 ? 25 : $request->get('size');
-        $pageNo = $request->get('page', 1);
-        $offset = ($pageNo - 1) * $size;
-        $totalRecords = Question::where('question_bank_id',$questionBankId)->count();
+        if ($validator->fails()) {
+            return ['message' => $validator->errors()->all()[0], 'status' => 400, 'success' => false];
+        }
 
         // Raw query using CASE statement to determine selection
-        $questions = DB::table('questions')
-        ->leftJoin('exam_questions', function ($join) use ($partId, $examId) {
-            $join->on('questions.id', '=', 'exam_questions.question_id')
-            ->where('exam_questions.part_id', $partId)
-                ->where('exam_questions.exam_id', $examId);
-        })
-        ->select(
-            'questions.id',
-            'questions.question_bank_id As questionBankId',
-            'questions.question',
-            'questions.marks',
-            'questions.negative_marks As negativeMarks',
-            DB::raw('CASE WHEN exam_questions.question_id IS NOT NULL THEN true ELSE false END AS selected')
-        )->where('questions.question_bank_id', $questionBankId)->orderBy('selected', 'desc')
-        ->offset($offset)
-        ->limit($size)
-        ->get();
+        $questionIds = ExamQuestion::where('question_bank_id', ["questionIds" => $data['questionBankId']])->where('exam_id', $examId)->select('id')
+        ->get()->pluck('id') // This will give you a collection of ids
+        ->toArray();
 
         $data = [
-            "data" => empty($questions) ? [] : $questions,
-            "totalRecords" => $totalRecords,
-            "totalPages" => ceil($totalRecords / $size),
+            "data" => empty($questionIds) ? [] : ($questionIds),
             "status" => 200,
             "success" => true
         ];
@@ -246,5 +162,39 @@ class ExamQuestionController extends Controller
             $questionIds = $questionQuery->pluck('id');
         }
         return response()->json(["data" => $questionIds->toArray(), 'status' => 200, 'success' => true]);
+    }
+
+    public function saveQuestionToExam($questionsToAdd,$exam){
+        $questionIds = []; // Collect all question IDs for one query
+    
+        // Collect all question IDs from the array
+        foreach ($questionsToAdd as $questionIdsBySection) {
+            $questionIds = array_merge($questionIds, $questionIdsBySection);
+        }
+    
+        // Fetch all the questions in one query
+        $questions = Question::whereIn('id', $questionIds)->get()->keyBy('id');
+    
+        $input = []; // This will store the batch insert data
+        // Iterate through the sections and their respective question IDs
+        foreach ($questionsToAdd as $partId => $questionIds) {
+            foreach ($questionIds as $questionId) {
+                // Check if the question exists in the fetched questions
+                if (isset($questions[$questionId])) {
+                    $question = $questions[$questionId]; // Get the question object
+                    
+                    $input[] = [
+                        'question_id'       => $questionId,
+                        'question_bank_id'  => $question->question_bank_id,  // From the pre-fetched question
+                        'part_id'           => $partId ,  // Handle "default" section
+                        'exam_id'           => $exam->id,  // Constant exam ID
+                        'meta'              => json_encode($question->toArray()),  // Store the entire question data as JSON
+                    ];
+                }
+            }
+        }
+
+        // Perform a batch insert with the prepared data
+        ExamQuestion::insert($input);
     }
 }

@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Tabs, Tab, Box, Button, Typography, Select, MenuItem } from '@mui/material';
 import CommonTable from '../common/CommonTable'; // Import the reusable common table component
 import TabPanel, { a11yProps } from '../common/TabPanel'; // Import the common TabPanel component
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useNavigate, useSearchParams, useParams } from 'react-router-dom';
 import { useGetQuestionBanksQuery } from '../store/service/admin/AdminService';
 import { useDispatch, useSelector } from 'react-redux';
 import { getBankCount } from '../store/slices/adminSlice/ExamSlice';
@@ -17,6 +17,7 @@ const tableHeaders = [
 ];
 
 const AddQuestionBank = () => {
+    const { id } = useParams();
     const [page, setPage] = useState(0); // Current page
     const [rowsPerPage, setRowsPerPage] = useState(10); // Rows per page
     const [tabValue, setTabValue] = useState(1);
@@ -195,7 +196,7 @@ const AddQuestionBank = () => {
 
             {/* Close Button */}
             <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 2 }}>
-                <Button variant="contained" color="secondary" onClick={() => { nav('/addquestion') }}>
+                <Button variant="contained" color="secondary" onClick={() => { nav(`/administrator/${id}/examination/addquestion`) }}>
                     Close
                 </Button>
             </Box>

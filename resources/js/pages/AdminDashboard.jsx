@@ -2,11 +2,12 @@
 
 import React, { useState, useEffect } from 'react';
 import CommonTable from '../common/CommonTable';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import { Button, Select, MenuItem, FormControl, InputLabel, Grid, Box } from '@mui/material';
 import { useGetExamDataQuery } from '../store/service/admin/AdminService';
 
 function AdminDashboard() {
+    const { id } = useParams();
     const [page, setPage] = useState(0); // Current page
     const [rowsPerPage, setRowsPerPage] = useState(10); // Rows per page
     const [selectedBatch, setSelectedBatch] = useState('');
@@ -43,7 +44,8 @@ function AdminDashboard() {
 
     const nav = useNavigate();
     const handleAddNewExam = () => {
-        nav('/ExamForm'); // Navigate to the Add New Exam form
+        nav(`/administrator/${id}/examination/ExamForm`);
+        // nav('/ExamForm'); // Navigate to the Add New Exam form
     };
 
     return (

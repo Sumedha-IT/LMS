@@ -13,7 +13,7 @@ import MenuItem from '@mui/material/MenuItem';
 import TextField from '@mui/material/TextField';
 import { useFormik } from 'formik';
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate,useParams } from 'react-router-dom';
 import * as Yup from 'yup';
 import dayjs from 'dayjs';
 import {
@@ -59,6 +59,7 @@ const ExamScheduling = () => {
   const [AddExamData] = useAddExamDataMutation();
   const { data: invigilatorList, isLoading: isInvigilatorLoading } = useGetInvigilatorsQuery();
   const nav = useNavigate();
+  const { id } = useParams();
 
   const formik = useFormik({
     initialValues: {
@@ -117,7 +118,7 @@ const ExamScheduling = () => {
       const { data, error } = result;
       if (result.data?.success === true) {
         localStorage.setItem("examId", data.data?.id)
-        nav(`/addquestion`);
+        nav(`/administrator/${id}/examination/addquestion`);
         toast.success(result.data?.message)
       } else {
         console.log("asdfadsfds", error.data.message)

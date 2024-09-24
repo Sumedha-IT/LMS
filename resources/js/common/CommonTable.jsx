@@ -1,5 +1,4 @@
-
-// import React from 'react';
+import React from 'react';
 import PropTypes from 'prop-types';
 import {
     Table,
@@ -16,11 +15,25 @@ import {
 const CommonTable = ({
     headers,
     data,
-    style,
-    onMarksListClick,
-    onViewAttendanceClick,
-    onAddClick,
-    addedBanks,
+    style = {
+        container: {},
+        paper: {},
+        headerCell: {
+            backgroundColor: '#f5f5f5',
+            color: '#333',
+            fontWeight: 'bold',
+        },
+        bodyCell: {
+            color: '#333',
+        },
+        pagination: {
+            backgroundColor: '#f5f5f5',
+        },
+    },
+    onMarksListClick = null,
+    onViewAttendanceClick = null,
+    onAddClick = null,
+    addedBanks = [],
     totalRecords,
     page,
     rowsPerPage,
@@ -55,11 +68,10 @@ const CommonTable = ({
                         {data?.map((row, rowIndex) => (
                             <TableRow
                                 key={rowIndex}
-
                                 sx={{
                                     transition: 'background-color 0.3s ease',
                                     '&:hover': {
-                                        backgroundColor: '#f0f0f0', // Change background on hover
+                                        backgroundColor: '#f0f0f0',
                                     },
                                 }}
                             >
@@ -155,30 +167,6 @@ CommonTable.propTypes = {
     onAddClick: PropTypes.func,
     addedBanks: PropTypes.array,
     style: PropTypes.object, // Custom styles for the table
-};
-
-// Default props
-CommonTable.defaultProps = {
-    style: {
-        container: {},
-        paper: {},
-        headerCell: {
-            backgroundColor: '#f5f5f5',
-            color: '#333',
-            fontWeight: 'bold',
-        },
-        bodyCell: {
-            // backgroundColor: '#fff',
-            color: '#333',
-        },
-        pagination: {
-            backgroundColor: '#f5f5f5',
-        },
-    },
-    onMarksListClick: null,
-    onViewAttendanceClick: null,
-    onAddClick: null,
-    addedBanks: [],
 };
 
 export default CommonTable;
