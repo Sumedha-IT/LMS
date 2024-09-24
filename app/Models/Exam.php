@@ -18,7 +18,8 @@ class Exam extends Model
         'max_attempts',
         'batch_id',
         'invigilators',
-        'exam_date'
+        'exam_date',
+        'subject_id'
     ];
 
     protected $casts = [

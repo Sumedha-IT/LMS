@@ -1,52 +1,75 @@
-import React, { useEffect, useState } from 'react';
-import { useFormik } from 'formik';
-import * as Yup from 'yup';
-import TextField from '@mui/material/TextField';
-import Button from '@mui/material/Button';
-import MenuItem from '@mui/material/MenuItem';
-import IconButton from '@mui/material/IconButton';
+
+
 import AddIcon from '@mui/icons-material/Add';
 import DeleteIcon from '@mui/icons-material/Delete';
+import Button from '@mui/material/Button';
 import Dialog from '@mui/material/Dialog';
 import DialogActions from '@mui/material/DialogActions';
 import DialogContent from '@mui/material/DialogContent';
 import DialogContentText from '@mui/material/DialogContentText';
 import DialogTitle from '@mui/material/DialogTitle';
-import 'tailwindcss/tailwind.css';
+import IconButton from '@mui/material/IconButton';
+import MenuItem from '@mui/material/MenuItem';
+import TextField from '@mui/material/TextField';
+import { useFormik } from 'formik';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { axiosGet } from '../services/Services';
-import { useGetCoursesQuery, useGetSubjectsQuery } from '../store/service/admin/AdminService';
+import * as Yup from 'yup';
+import dayjs from 'dayjs';
+import {
+  useGetBatchesQuery,
+  useGetSubjectsQuery,
+  useGetInvigilatorsQuery,
+  useAddExamDataMutation,
+} from '../store/service/admin/AdminService';
+import { toast } from 'react-toastify';
 
 const validationSchema = Yup.object({
-  examDate: Yup.date().required('Exam date is required'),
+  examDate: Yup.date()
+    .min(dayjs().format('YYYY-MM-DD'), 'Exam date must be in the future') // Date must be after today
+    .required('Exam date is required'),
   title: Yup.string().required('Title is required'),
-  subjectName: Yup.string().required('Subject name is required'),
-  batch: Yup.string().required('Batch name is required'),
-  // classYear: Yup.string().required('Batch year is required'),
-  startTime: Yup.string().required('Start time is required'),
-  endTime: Yup.string().required('End time is required'),
+  subjectId: Yup.string().required('Subject name is required'),
+  batchId: Yup.string().required('Batch name is required'),
+  startsAt: Yup.string().required('Start time is required'),
+  endsAt: Yup.string()
+    .required('End time is required')
+    .test('is-greater', 'End time must be after start time', function (value) {
+      const { startsAt } = this.parent;
+      return value > startsAt;
+    }),
+  invigilators: Yup.array()
+    .of(
+      Yup.object().shape({
+        invigilator: Yup.object()
+          .nullable()
+          .required('At least one invigilator is required.'),
+      })
+    )
+    .min(1, 'At least one invigilator is required.')
 });
 
-const ExamScheduling = ({ onExamSchedule }) => {
-  const [invigilators, setInvigilators] = useState([{ name: '', contact: '' }]);
-  // const [subjectList, setSubjectList] = useState(null);
-  // const [courseList, setCourseList] = useState(null);
+const ExamScheduling = () => {
+  const [invigilators, setInvigilators] = useState([{ invigilator: null }]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [confirmationOpen, setConfirmationOpen] = useState(false);
   const [isReadOnly, setIsReadOnly] = useState(false);
-  const { data: courseList } = useGetSubjectsQuery();
-  const { data: subjectList } = useGetCoursesQuery();
+  const { data: courseList } = useGetBatchesQuery();
+  const { data: subjectList } = useGetSubjectsQuery();
+  const [AddExamData] = useAddExamDataMutation();
+  const { data: invigilatorList, isLoading: isInvigilatorLoading } = useGetInvigilatorsQuery();
   const nav = useNavigate();
 
   const formik = useFormik({
     initialValues: {
       examDate: '',
       title: '',
-      subjectName: '',
-      batch: '',
-      startTime: '',
-      endTime: '',
-      examInstructions: '',
+      subjectId: '',
+      batchId: '',
+      startsAt: '',
+      endsAt: '',
+      instructions: '',
+      invigilators: invigilators,
     },
     validationSchema: validationSchema,
     onSubmit: (values) => {
@@ -54,57 +77,57 @@ const ExamScheduling = ({ onExamSchedule }) => {
     },
   });
 
-  // const Getdata = async () => {
-  //   try {
-  //     // let data = await axiosGet('courses')
-  //     // console.log("This is your data", data)
-  //     const [coursesResponse, studentsResponse] = await Promise.all([
-  //       axiosGet('courses'),  // First API call
-  //       axiosGet('subjects')  // Second API call
-  //     ]);
-
-  //     setSubjectList(coursesResponse.data.data)
-  //     setCourseList(studentsResponse.data.data)
-  //   } catch (e) {
-  //     console.log(e)
-  //   }
-
-  // }
-
-  useEffect(() => {
-    // Getdata()
-  }, [])
-
-  // console.log(subjectList, courseList);
+  // Handle Invigilator Select Change
   const handleInvigilatorChange = (index, event) => {
-    const { name, value } = event.target;
-    const newInvigilators = [...invigilators];
-    newInvigilators[index][name] = value;
-    setInvigilators(newInvigilators);
+    const { value } = event.target;
+    const selectedInvigilator = invigilatorList?.data?.find((inv) => inv.name === value);
+
+    const updatedInvigilators = [...invigilators];
+    updatedInvigilators[index] = { invigilator: selectedInvigilator };  // Store the full invigilator object
+    setInvigilators(updatedInvigilators);
+    formik.setFieldValue('invigilators', updatedInvigilators); // Set formik value
   };
 
+  // Add new invigilator row
   const addInvigilatorFields = () => {
-    setInvigilators([...invigilators, { name: '', contact: '' }]);
+    const updatedInvigilators = [...invigilators, { invigilator: null }];
+    setInvigilators(updatedInvigilators);
+    formik.setFieldValue('invigilators', updatedInvigilators); // Update formik value
   };
 
+  // Remove invigilator row
   const removeInvigilatorFields = (index) => {
     const newInvigilators = invigilators.filter((_, i) => i !== index);
     setInvigilators(newInvigilators);
+    formik.setFieldValue('invigilators', newInvigilators); // Update formik value
   };
 
-  const handleConfirmSubmit = () => {
-    setIsReadOnly(true);  // Make all fields read-only
-    setIsSubmitting(true);
+  const handleConfirmSubmit = async () => {
+    setIsReadOnly(true);
     setConfirmationOpen(false);
 
-    // Proceed with form submission
     const examDetails = {
       ...formik.values,
-      invigilators
+      invigilators: invigilators.map((item) => item.invigilator),
     };
-    // onExamSchedule(examDetails);
-    console.log(examDetails)
-    nav('/addquestion');
+
+    try {
+      const result = await AddExamData({ data: examDetails });
+      console.log(result);
+      const { data, error } = result;
+      if (result.data?.success === true) {
+        localStorage.setItem("examId", data.data?.id)
+        nav(`/addquestion`);
+        toast.success(result.data?.message)
+      } else {
+        console.log("asdfadsfds", error.data.message)
+        toast.error(error.data.message)
+      }
+    } catch (e) {
+      console.log(e);
+      toast.error(e)
+    }
+    setIsReadOnly(false);
   };
 
   const handleCancelSubmit = () => {
@@ -112,16 +135,15 @@ const ExamScheduling = ({ onExamSchedule }) => {
   };
 
   return (
-    <div className="bg-gray-100 flex justify-center items-center  px-8">
-      <div className="md:px-0 px-6">
+    <div className="bg-gray-100 flex justify-center items-center px-8 min-h-screen">
+      <div className="md:px-0 px-6 w-full ">
         <div className="w-full p-6 overflow-y-auto">
           <h2 className="text-2xl font-bold mb-3 text-center">Schedule an Exam</h2>
           <form onSubmit={formik.handleSubmit} className="grid gap-6">
 
-            {/* {/ Flexbox layout for label and input fields /} */}
+            {/* Exam Date */}
             <div className="flex items-center gap-4">
               <label className="w-1/3">Exam Date <span className="text-[red]">*</span></label>
-
               <TextField
                 fullWidth
                 id="examDate"
@@ -138,6 +160,7 @@ const ExamScheduling = ({ onExamSchedule }) => {
               />
             </div>
 
+            {/* Title */}
             <div className="flex items-center gap-4">
               <label className="w-1/3">Title <span className="text-[red]">*</span></label>
               <TextField
@@ -154,222 +177,160 @@ const ExamScheduling = ({ onExamSchedule }) => {
               />
             </div>
 
+            {/* Subject Name */}
             <div className="flex items-center gap-4">
               <label className="w-1/3">Subject Name <span className="text-[red]">*</span></label>
               <TextField
                 fullWidth
-                id="subjectName"
-                name="subjectName"
+                id="subjectId"
+                name="subjectId"
                 select
-                value={formik.values.subjectName}
+                value={formik.values.subjectId}
                 onChange={formik.handleChange}
-                error={formik.touched.subjectName && Boolean(formik.errors.subjectName)}
-                helperText={formik.touched.subjectName && formik.errors.subjectName}
+                error={formik.touched.subjectId && Boolean(formik.errors.subjectId)}
+                helperText={formik.touched.subjectId && formik.errors.subjectId}
                 InputProps={{
                   readOnly: isReadOnly,
                 }}
-                disabled={!subjectList || subjectList.length === 0}  // Disable until data is available
+                disabled={!subjectList || subjectList.length === 0}
               >
-                {/* Show menu items only when subjectList is available */}
-                {subjectList && subjectList?.data?.length > 0 ? (
-                  subjectList?.data.map((subject) => (
-                    <MenuItem key={subject.id} value={subject.name}>
+                {subjectList?.data.length > 0 ? (
+                  subjectList.data.map((subject) => (
+                    <MenuItem key={subject.id} value={subject.id}>
                       {subject.name}
                     </MenuItem>
                   ))
                 ) : (
-                  <MenuItem disabled>
-                    Loading Subjects...
-                  </MenuItem>
+                  <MenuItem disabled>No Subjects Available</MenuItem>
                 )}
               </TextField>
             </div>
 
+            {/* Batch */}
             <div className="flex items-center gap-4">
               <label className="w-1/3">Batch <span className="text-[red]">*</span></label>
               <TextField
                 fullWidth
-                id="batch"
-                name="batch"
+                id="batchId"
+                name="batchId"
                 select
-                value={formik.values.batch}
+                value={formik.values.batchId}
                 onChange={formik.handleChange}
-                error={formik.touched.batch && Boolean(formik.errors.batch)}
-                helperText={formik.touched.batch && formik.errors.batch}
+                error={formik.touched.batchId && Boolean(formik.errors.batchId)}
+                helperText={formik.touched.batchId && formik.errors.batchId}
                 InputProps={{
                   readOnly: isReadOnly,
                 }}
-                disabled={!courseList || courseList.length === 0}  // Disable until data is available
+                disabled={!courseList || courseList.length === 0}
               >
-                {/* Show menu items only when courseList is available */}
-                {courseList && courseList?.data.length > 0 ? (
-                  courseList?.data.map((course) => (
-                    <MenuItem key={course.id} value={course.name}>
-                      {course.name}
+                {courseList?.data.length > 0 ? (
+                  courseList.data.map((course) => (
+                    <MenuItem key={course.id} value={course.batch_id}>
+                      {course.batch_name}
                     </MenuItem>
                   ))
                 ) : (
-                  <MenuItem disabled>
-                    Loading Courses...
-                  </MenuItem>
+                  <MenuItem disabled>No Batches Available</MenuItem>
                 )}
               </TextField>
             </div>
 
-            {/* <div className="flex items-center gap-4">
-              <label className="w-1/3">Batch Year <span className="text-[red]">*</span></label>
-              <TextField
-                fullWidth
-                id="classYear"
-                name="classYear"
-                select
-                value={formik.values.classYear}
-                onChange={formik.handleChange}
-                error={formik.touched.classYear && Boolean(formik.errors.classYear)}
-                helperText={formik.touched.classYear && formik.errors.classYear}
-                InputProps={{
-                  readOnly: isReadOnly,
-                }}
-              >
-                <MenuItem value="1st Year">1st Year</MenuItem>
-                <MenuItem value="2nd Year">2nd Year</MenuItem>
-                <MenuItem value="3rd Year">3rd Year</MenuItem>
-                <MenuItem value="4th Year">4th Year</MenuItem>
-              </TextField>
-            </div> */}
-
-            {/* {/ Start Time Field /} */}
+            {/* Start Time */}
             <div className="flex items-center gap-4">
               <label className="w-1/3">Start Time <span className="text-[red]">*</span></label>
               <TextField
                 fullWidth
-                id="startTime"
-                name="startTime"
+                id="startsAt"
+                name="startsAt"
                 type="time"
                 InputLabelProps={{ shrink: true }}
-                value={formik.values.startTime}
+                value={formik.values.startsAt}
                 onChange={formik.handleChange}
-                error={formik.touched.startTime && Boolean(formik.errors.startTime)}
-                helperText={formik.touched.startTime && formik.errors.startTime}
+                error={formik.touched.startsAt && Boolean(formik.errors.startsAt)}
+                helperText={formik.touched.startsAt && formik.errors.startsAt}
                 InputProps={{
                   readOnly: isReadOnly,
                 }}
               />
             </div>
 
-            {/* {/ End Time Field /} */}
+            {/* End Time */}
             <div className="flex items-center gap-4">
               <label className="w-1/3">End Time <span className="text-[red]">*</span></label>
               <TextField
                 fullWidth
-                id="endTime"
-                name="endTime"
+                id="endsAt"
+                name="endsAt"
                 type="time"
                 InputLabelProps={{ shrink: true }}
-                value={formik.values.endTime}
+                value={formik.values.endsAt}
                 onChange={formik.handleChange}
-                error={formik.touched.endTime && Boolean(formik.errors.endTime)}
-                helperText={formik.touched.endTime && formik.errors.endTime}
+                error={formik.touched.endsAt && Boolean(formik.errors.endsAt)}
+                helperText={formik.touched.endsAt && formik.errors.endsAt}
                 InputProps={{
                   readOnly: isReadOnly,
                 }}
               />
             </div>
 
-
+            {/* Exam Instructions */}
             <div className="flex items-center gap-4">
-              <label className="w-1/3">Exam Instructions </label>
+              <label className="w-1/3">Exam Instructions</label>
               <TextField
                 fullWidth
-                id="examInstructions"
-                name="examInstructions"
-                type='text'
-                value={formik.values.examInstructions}
+                id="instructions"
+                name="instructions"
+                type="text"
+                value={formik.values.instructions}
                 onChange={formik.handleChange}
-                error={formik.touched.examInstructions && Boolean(formik.errors.examInstructions)}
-                helperText={formik.touched.examInstructions && formik.errors.examInstructions}
+                error={formik.touched.instructions && Boolean(formik.errors.instructions)}
+                helperText={formik.touched.instructions && formik.errors.instructions}
                 InputProps={{
                   readOnly: isReadOnly,
                 }}
-                multiline   // This enables the textarea behavior
-                rows={4}    // Number of rows for the textarea
+                multiline
+                rows={4}
               />
             </div>
 
-            {/* <div className="flex gap-4">
-              <div className="w-1/3">
-                <label>Max. Attempts</label>
-                <TextField
-                  fullWidth
-                  id="maxAttempts"
-                  name="maxAttempts"
-                  type="number"
-                  value={formik.values.maxAttempts}
-                  onChange={formik.handleChange}
-                  error={formik.touched.maxAttempts && Boolean(formik.errors.maxAttempts)}
-                  helperText={formik.touched.maxAttempts && formik.errors.maxAttempts}
-                  InputProps={{
-                    readOnly: isReadOnly,
-                  }}
-                />
-              </div>
-              <div className="w-1/3">
-                <label>Min. Marks</label>
-                <TextField
-                  fullWidth
-                  id="minMarks"
-                  name="minMarks"
-                  type="number"
-                  value={formik.values.minMarks}
-                  onChange={formik.handleChange}
-                  error={formik.touched.minMarks && Boolean(formik.errors.minMarks)}
-                  helperText={formik.touched.minMarks && formik.errors.minMarks}
-                  InputProps={{
-                    readOnly: isReadOnly,
-                  }}
-                />
-              </div>
-              <div className="w-1/3">
-                <label>No. of Questions</label>
-                <TextField
-                  fullWidth
-                  id="numQuestions"
-                  name="numQuestions"
-                  type="number"
-                  value={formik.values.numQuestions}
-                  onChange={formik.handleChange}
-                  error={formik.touched.numQuestions && Boolean(formik.errors.numQuestions)}
-                  helperText={formik.touched.numQuestions && formik.errors.numQuestions}
-                  InputProps={{
-                    readOnly: isReadOnly,
-                  }}
-                />
-              </div>
-            </div> */}
-
+            {/* Invigilator Section */}
             <div className="flex items-center gap-4">
-              <label className="w-1/3">Invigilators</label>
+              <label className="w-1/3">Invigilators <span className="text-[red]">*</span></label>
               <div className="w-full">
-                {invigilators.map((invigilator, index) => (
+                {invigilators.map((item, index) => (
                   <div key={index} className="flex items-center gap-2 mb-2">
                     <TextField
                       fullWidth
+                      select
                       label="Name"
                       name="name"
-                      value={invigilator.name}
+                      value={item.invigilator?.name || ''}
                       onChange={(e) => handleInvigilatorChange(index, e)}
                       InputProps={{
                         readOnly: isReadOnly,
                       }}
-                    />
+                      error={formik.touched.invigilators?.[index]?.invigilator && Boolean(formik.errors.invigilators?.[index]?.invigilator)}
+                      helperText={formik.touched.invigilators?.[index]?.invigilator && formik.errors.invigilators?.[index]?.invigilator?.message}
+                      disabled={isInvigilatorLoading}
+                    >
+                      {invigilatorList?.data.length > 0 ? (
+                        invigilatorList.data.map((inv) => (
+                          <MenuItem key={inv.id} value={inv.name}>
+                            {inv.name}
+                          </MenuItem>
+                        ))
+                      ) : (
+                        <MenuItem disabled>No Invigilators Available</MenuItem>
+                      )}
+                    </TextField>
+
                     <TextField
                       fullWidth
                       label="Contact"
                       name="contact"
-                      value={invigilator.contact}
-                      onChange={(e) => handleInvigilatorChange(index, e)}
+                      value={item.invigilator?.phone || ''}
                       InputProps={{
-                        readOnly: isReadOnly,
+                        readOnly: true, // Contact is auto-filled based on the selected invigilator
                       }}
                     />
                     <div className="w-10">
@@ -377,7 +338,7 @@ const ExamScheduling = ({ onExamSchedule }) => {
                         <IconButton
                           color="secondary"
                           onClick={() => removeInvigilatorFields(index)}
-                          disabled={isReadOnly}  // Disable delete button when read-only
+                          disabled={isReadOnly}
                         >
                           <DeleteIcon />
                         </IconButton>
@@ -400,7 +361,7 @@ const ExamScheduling = ({ onExamSchedule }) => {
 
             <div className="flex justify-end">
               <Button
-                className=''
+                className=""
                 color="primary"
                 variant="contained"
                 type="submit"
@@ -412,7 +373,7 @@ const ExamScheduling = ({ onExamSchedule }) => {
           </form>
         </div>
 
-        {/* {/ Confirmation Dialog /} */}
+        {/* Confirmation Dialog */}
         <Dialog
           open={confirmationOpen}
           onClose={handleCancelSubmit}

@@ -3,7 +3,6 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
-use App\Http\Requests\exam\CreateExamRequest;
 use App\Http\Resources\ExamResource;
 use App\Models\Exam;
 use App\Models\ExamQuestion;
@@ -11,9 +10,7 @@ use App\Models\Question;
 use App\Models\QuestionBank;
 use Illuminate\Database\QueryException;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
-use Symfony\Component\CssSelector\Node\FunctionNode;
 
 class ExamController extends Controller
 {
@@ -158,9 +155,9 @@ class ExamController extends Controller
         $data['max_attempts'] = $data['maxAttempts'] ?? 1;
         $data['batch_id'] = $data['batchId'];
         $data['subject_id'] = $data['subjectId'];
+        
         $data['immediate_result'] = $data['immediateResult'] ?? 0;
         $data['exam_date'] =$data['examDate'];
-
         return $data;   
     }
 
