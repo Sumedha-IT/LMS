@@ -255,4 +255,10 @@ class User extends Authenticatable implements HasTenants, FilamentUser, HasAvata
     // {
     //     return $this->belongsTo(Team::class, 'latest_team_id');
     // }
+
+
+    public function ExamAttempts()
+    {
+        return $this->hasMany(ExamAttempt::class,'student_id');
+    }
 }

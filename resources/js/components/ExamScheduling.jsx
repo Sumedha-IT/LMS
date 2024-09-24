@@ -1,3 +1,4 @@
+<<<<<<< Updated upstream
 import React, { useEffect, useState } from 'react';
 import { useFormik } from 'formik';
 import * as Yup from 'yup';
@@ -7,11 +8,19 @@ import MenuItem from '@mui/material/MenuItem';
 import IconButton from '@mui/material/IconButton';
 import AddIcon from '@mui/icons-material/Add';
 import DeleteIcon from '@mui/icons-material/Delete';
+=======
+
+
+import AddIcon from '@mui/icons-material/Add';
+import DeleteIcon from '@mui/icons-material/Delete';
+import Button from '@mui/material/Button';
+>>>>>>> Stashed changes
 import Dialog from '@mui/material/Dialog';
 import DialogActions from '@mui/material/DialogActions';
 import DialogContent from '@mui/material/DialogContent';
 import DialogContentText from '@mui/material/DialogContentText';
 import DialogTitle from '@mui/material/DialogTitle';
+<<<<<<< Updated upstream
 import 'tailwindcss/tailwind.css';
 import { useNavigate } from 'react-router-dom';
 import { axiosGet } from '../services/Services';
@@ -37,16 +46,79 @@ const ExamScheduling = ({ onExamSchedule }) => {
   const { data: courseList } = useGetSubjectsQuery();
   const { data: subjectList } = useGetCoursesQuery();
   const nav = useNavigate();
+=======
+import IconButton from '@mui/material/IconButton';
+import MenuItem from '@mui/material/MenuItem';
+import TextField from '@mui/material/TextField';
+import { useFormik } from 'formik';
+import React, { useState } from 'react';
+import { useNavigate,useParams } from 'react-router-dom';
+import * as Yup from 'yup';
+import dayjs from 'dayjs';
+import {
+  useGetBatchesQuery,
+  useGetSubjectsQuery,
+  useGetInvigilatorsQuery,
+  useAddExamDataMutation,
+} from '../store/service/admin/AdminService';
+import { toast } from 'react-toastify';
+
+const validationSchema = Yup.object({
+  examDate: Yup.date()
+    .min(dayjs().format('YYYY-MM-DD'), 'Exam date must be in the future') // Date must be after today
+    .required('Exam date is required'),
+  title: Yup.string().required('Title is required'),
+  subjectId: Yup.string().required('Subject name is required'),
+  batchId: Yup.string().required('Batch name is required'),
+  startsAt: Yup.string().required('Start time is required'),
+  endsAt: Yup.string()
+    .required('End time is required')
+    .test('is-greater', 'End time must be after start time', function (value) {
+      const { startsAt } = this.parent;
+      return value > startsAt;
+    }),
+  invigilators: Yup.array()
+    .of(
+      Yup.object().shape({
+        invigilator: Yup.object()
+          .nullable()
+          .required('At least one invigilator is required.'),
+      })
+    )
+    .min(1, 'At least one invigilator is required.')
+});
+
+const ExamScheduling = () => {
+  const [invigilators, setInvigilators] = useState([{ invigilator: null }]);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [confirmationOpen, setConfirmationOpen] = useState(false);
+  const [isReadOnly, setIsReadOnly] = useState(false);
+  const { data: courseList } = useGetBatchesQuery();
+  const { data: subjectList } = useGetSubjectsQuery();
+  const [AddExamData] = useAddExamDataMutation();
+  const { data: invigilatorList, isLoading: isInvigilatorLoading } = useGetInvigilatorsQuery();
+  const nav = useNavigate();
+  const { id } = useParams();
+>>>>>>> Stashed changes
 
   const formik = useFormik({
     initialValues: {
       examDate: '',
       title: '',
+<<<<<<< Updated upstream
       subjectName: '',
       batch: '',
       startTime: '',
       endTime: '',
       examInstructions: '',
+=======
+      subjectId: '',
+      batchId: '',
+      startsAt: '',
+      endsAt: '',
+      instructions: '',
+      invigilators: invigilators,
+>>>>>>> Stashed changes
     },
     validationSchema: validationSchema,
     onSubmit: (values) => {
@@ -54,6 +126,7 @@ const ExamScheduling = ({ onExamSchedule }) => {
     },
   });
 
+<<<<<<< Updated upstream
   // const Getdata = async () => {
   //   try {
   //     // let data = await axiosGet('courses')
@@ -105,6 +178,59 @@ const ExamScheduling = ({ onExamSchedule }) => {
     // onExamSchedule(examDetails);
     console.log(examDetails)
     nav('/addquestion');
+=======
+  // Handle Invigilator Select Change
+  const handleInvigilatorChange = (index, event) => {
+    const { value } = event.target;
+    const selectedInvigilator = invigilatorList?.data?.find((inv) => inv.name === value);
+
+    const updatedInvigilators = [...invigilators];
+    updatedInvigilators[index] = { invigilator: selectedInvigilator };  // Store the full invigilator object
+    setInvigilators(updatedInvigilators);
+    formik.setFieldValue('invigilators', updatedInvigilators); // Set formik value
+  };
+
+  // Add new invigilator row
+  const addInvigilatorFields = () => {
+    const updatedInvigilators = [...invigilators, { invigilator: null }];
+    setInvigilators(updatedInvigilators);
+    formik.setFieldValue('invigilators', updatedInvigilators); // Update formik value
+  };
+
+  // Remove invigilator row
+  const removeInvigilatorFields = (index) => {
+    const newInvigilators = invigilators.filter((_, i) => i !== index);
+    setInvigilators(newInvigilators);
+    formik.setFieldValue('invigilators', newInvigilators); // Update formik value
+  };
+
+  const handleConfirmSubmit = async () => {
+    setIsReadOnly(true);
+    setConfirmationOpen(false);
+
+    const examDetails = {
+      ...formik.values,
+      invigilators: invigilators.map((item) => item.invigilator),
+    };
+
+    try {
+      const result = await AddExamData({ data: examDetails });
+      console.log(result);
+      const { data, error } = result;
+      if (result.data?.success === true) {
+        localStorage.setItem("examId", data.data?.id)
+        nav(`/administrator/${id}/examination/addquestion`);
+        toast.success(result.data?.message)
+      } else {
+        console.log("asdfadsfds", error.data.message)
+        toast.error(error.data.message)
+      }
+    } catch (e) {
+      console.log(e);
+      toast.error(e)
+    }
+    setIsReadOnly(false);
+>>>>>>> Stashed changes
   };
 
   const handleCancelSubmit = () => {
@@ -112,16 +238,27 @@ const ExamScheduling = ({ onExamSchedule }) => {
   };
 
   return (
+<<<<<<< Updated upstream
     <div className="bg-gray-100 flex justify-center items-center  px-8">
       <div className="md:px-0 px-6">
+=======
+    <div className="bg-gray-100 flex justify-center items-center px-8 min-h-screen">
+      <div className="md:px-0 px-6 w-full ">
+>>>>>>> Stashed changes
         <div className="w-full p-6 overflow-y-auto">
           <h2 className="text-2xl font-bold mb-3 text-center">Schedule an Exam</h2>
           <form onSubmit={formik.handleSubmit} className="grid gap-6">
 
+<<<<<<< Updated upstream
             {/* {/ Flexbox layout for label and input fields /} */}
             <div className="flex items-center gap-4">
               <label className="w-1/3">Exam Date <span className="text-[red]">*</span></label>
 
+=======
+            {/* Exam Date */}
+            <div className="flex items-center gap-4">
+              <label className="w-1/3">Exam Date <span className="text-[red]">*</span></label>
+>>>>>>> Stashed changes
               <TextField
                 fullWidth
                 id="examDate"
@@ -138,6 +275,10 @@ const ExamScheduling = ({ onExamSchedule }) => {
               />
             </div>
 
+<<<<<<< Updated upstream
+=======
+            {/* Title */}
+>>>>>>> Stashed changes
             <div className="flex items-center gap-4">
               <label className="w-1/3">Title <span className="text-[red]">*</span></label>
               <TextField
@@ -154,10 +295,15 @@ const ExamScheduling = ({ onExamSchedule }) => {
               />
             </div>
 
+<<<<<<< Updated upstream
+=======
+            {/* Subject Name */}
+>>>>>>> Stashed changes
             <div className="flex items-center gap-4">
               <label className="w-1/3">Subject Name <span className="text-[red]">*</span></label>
               <TextField
                 fullWidth
+<<<<<<< Updated upstream
                 id="subjectName"
                 name="subjectName"
                 select
@@ -174,21 +320,47 @@ const ExamScheduling = ({ onExamSchedule }) => {
                 {subjectList && subjectList?.data?.length > 0 ? (
                   subjectList?.data.map((subject) => (
                     <MenuItem key={subject.id} value={subject.name}>
+=======
+                id="subjectId"
+                name="subjectId"
+                select
+                value={formik.values.subjectId}
+                onChange={formik.handleChange}
+                error={formik.touched.subjectId && Boolean(formik.errors.subjectId)}
+                helperText={formik.touched.subjectId && formik.errors.subjectId}
+                InputProps={{
+                  readOnly: isReadOnly,
+                }}
+                disabled={!subjectList || subjectList.length === 0}
+              >
+                {subjectList?.data.length > 0 ? (
+                  subjectList.data.map((subject) => (
+                    <MenuItem key={subject.id} value={subject.id}>
+>>>>>>> Stashed changes
                       {subject.name}
                     </MenuItem>
                   ))
                 ) : (
+<<<<<<< Updated upstream
                   <MenuItem disabled>
                     Loading Subjects...
                   </MenuItem>
+=======
+                  <MenuItem disabled>No Subjects Available</MenuItem>
+>>>>>>> Stashed changes
                 )}
               </TextField>
             </div>
 
+<<<<<<< Updated upstream
+=======
+            {/* Batch */}
+>>>>>>> Stashed changes
             <div className="flex items-center gap-4">
               <label className="w-1/3">Batch <span className="text-[red]">*</span></label>
               <TextField
                 fullWidth
+<<<<<<< Updated upstream
                 id="batch"
                 name="batch"
                 select
@@ -212,10 +384,33 @@ const ExamScheduling = ({ onExamSchedule }) => {
                   <MenuItem disabled>
                     Loading Courses...
                   </MenuItem>
+=======
+                id="batchId"
+                name="batchId"
+                select
+                value={formik.values.batchId}
+                onChange={formik.handleChange}
+                error={formik.touched.batchId && Boolean(formik.errors.batchId)}
+                helperText={formik.touched.batchId && formik.errors.batchId}
+                InputProps={{
+                  readOnly: isReadOnly,
+                }}
+                disabled={!courseList || courseList.length === 0}
+              >
+                {courseList?.data.length > 0 ? (
+                  courseList.data.map((course) => (
+                    <MenuItem key={course.id} value={course.batch_id}>
+                      {course.batch_name}
+                    </MenuItem>
+                  ))
+                ) : (
+                  <MenuItem disabled>No Batches Available</MenuItem>
+>>>>>>> Stashed changes
                 )}
               </TextField>
             </div>
 
+<<<<<<< Updated upstream
             {/* <div className="flex items-center gap-4">
               <label className="w-1/3">Batch Year <span className="text-[red]">*</span></label>
               <TextField
@@ -239,10 +434,14 @@ const ExamScheduling = ({ onExamSchedule }) => {
             </div> */}
 
             {/* {/ Start Time Field /} */}
+=======
+            {/* Start Time */}
+>>>>>>> Stashed changes
             <div className="flex items-center gap-4">
               <label className="w-1/3">Start Time <span className="text-[red]">*</span></label>
               <TextField
                 fullWidth
+<<<<<<< Updated upstream
                 id="startTime"
                 name="startTime"
                 type="time"
@@ -251,17 +450,32 @@ const ExamScheduling = ({ onExamSchedule }) => {
                 onChange={formik.handleChange}
                 error={formik.touched.startTime && Boolean(formik.errors.startTime)}
                 helperText={formik.touched.startTime && formik.errors.startTime}
+=======
+                id="startsAt"
+                name="startsAt"
+                type="time"
+                InputLabelProps={{ shrink: true }}
+                value={formik.values.startsAt}
+                onChange={formik.handleChange}
+                error={formik.touched.startsAt && Boolean(formik.errors.startsAt)}
+                helperText={formik.touched.startsAt && formik.errors.startsAt}
+>>>>>>> Stashed changes
                 InputProps={{
                   readOnly: isReadOnly,
                 }}
               />
             </div>
 
+<<<<<<< Updated upstream
             {/* {/ End Time Field /} */}
+=======
+            {/* End Time */}
+>>>>>>> Stashed changes
             <div className="flex items-center gap-4">
               <label className="w-1/3">End Time <span className="text-[red]">*</span></label>
               <TextField
                 fullWidth
+<<<<<<< Updated upstream
                 id="endTime"
                 name="endTime"
                 type="time"
@@ -270,12 +484,23 @@ const ExamScheduling = ({ onExamSchedule }) => {
                 onChange={formik.handleChange}
                 error={formik.touched.endTime && Boolean(formik.errors.endTime)}
                 helperText={formik.touched.endTime && formik.errors.endTime}
+=======
+                id="endsAt"
+                name="endsAt"
+                type="time"
+                InputLabelProps={{ shrink: true }}
+                value={formik.values.endsAt}
+                onChange={formik.handleChange}
+                error={formik.touched.endsAt && Boolean(formik.errors.endsAt)}
+                helperText={formik.touched.endsAt && formik.errors.endsAt}
+>>>>>>> Stashed changes
                 InputProps={{
                   readOnly: isReadOnly,
                 }}
               />
             </div>
 
+<<<<<<< Updated upstream
 
             <div className="flex items-center gap-4">
               <label className="w-1/3">Exam Instructions </label>
@@ -357,19 +582,77 @@ const ExamScheduling = ({ onExamSchedule }) => {
                       label="Name"
                       name="name"
                       value={invigilator.name}
+=======
+            {/* Exam Instructions */}
+            <div className="flex items-center gap-4">
+              <label className="w-1/3">Exam Instructions</label>
+              <TextField
+                fullWidth
+                id="instructions"
+                name="instructions"
+                type="text"
+                value={formik.values.instructions}
+                onChange={formik.handleChange}
+                error={formik.touched.instructions && Boolean(formik.errors.instructions)}
+                helperText={formik.touched.instructions && formik.errors.instructions}
+                InputProps={{
+                  readOnly: isReadOnly,
+                }}
+                multiline
+                rows={4}
+              />
+            </div>
+
+            {/* Invigilator Section */}
+            <div className="flex items-center gap-4">
+              <label className="w-1/3">Invigilators <span className="text-[red]">*</span></label>
+              <div className="w-full">
+                {invigilators.map((item, index) => (
+                  <div key={index} className="flex items-center gap-2 mb-2">
+                    <TextField
+                      fullWidth
+                      select
+                      label="Name"
+                      name="name"
+                      value={item.invigilator?.name || ''}
+>>>>>>> Stashed changes
                       onChange={(e) => handleInvigilatorChange(index, e)}
                       InputProps={{
                         readOnly: isReadOnly,
                       }}
+<<<<<<< Updated upstream
                     />
+=======
+                      error={formik.touched.invigilators?.[index]?.invigilator && Boolean(formik.errors.invigilators?.[index]?.invigilator)}
+                      helperText={formik.touched.invigilators?.[index]?.invigilator && formik.errors.invigilators?.[index]?.invigilator?.message}
+                      disabled={isInvigilatorLoading}
+                    >
+                      {invigilatorList?.data.length > 0 ? (
+                        invigilatorList.data.map((inv) => (
+                          <MenuItem key={inv.id} value={inv.name}>
+                            {inv.name}
+                          </MenuItem>
+                        ))
+                      ) : (
+                        <MenuItem disabled>No Invigilators Available</MenuItem>
+                      )}
+                    </TextField>
+
+>>>>>>> Stashed changes
                     <TextField
                       fullWidth
                       label="Contact"
                       name="contact"
+<<<<<<< Updated upstream
                       value={invigilator.contact}
                       onChange={(e) => handleInvigilatorChange(index, e)}
                       InputProps={{
                         readOnly: isReadOnly,
+=======
+                      value={item.invigilator?.phone || ''}
+                      InputProps={{
+                        readOnly: true, // Contact is auto-filled based on the selected invigilator
+>>>>>>> Stashed changes
                       }}
                     />
                     <div className="w-10">
@@ -377,7 +660,11 @@ const ExamScheduling = ({ onExamSchedule }) => {
                         <IconButton
                           color="secondary"
                           onClick={() => removeInvigilatorFields(index)}
+<<<<<<< Updated upstream
                           disabled={isReadOnly}  // Disable delete button when read-only
+=======
+                          disabled={isReadOnly}
+>>>>>>> Stashed changes
                         >
                           <DeleteIcon />
                         </IconButton>
@@ -400,7 +687,11 @@ const ExamScheduling = ({ onExamSchedule }) => {
 
             <div className="flex justify-end">
               <Button
+<<<<<<< Updated upstream
                 className=''
+=======
+                className=""
+>>>>>>> Stashed changes
                 color="primary"
                 variant="contained"
                 type="submit"
@@ -412,7 +703,11 @@ const ExamScheduling = ({ onExamSchedule }) => {
           </form>
         </div>
 
+<<<<<<< Updated upstream
         {/* {/ Confirmation Dialog /} */}
+=======
+        {/* Confirmation Dialog */}
+>>>>>>> Stashed changes
         <Dialog
           open={confirmationOpen}
           onClose={handleCancelSubmit}
@@ -439,4 +734,8 @@ const ExamScheduling = ({ onExamSchedule }) => {
   );
 };
 
+<<<<<<< Updated upstream
 export default ExamScheduling;
+=======
+export default ExamScheduling;
+>>>>>>> Stashed changes

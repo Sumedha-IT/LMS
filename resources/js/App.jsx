@@ -1,4 +1,9 @@
 import { Route, Routes } from 'react-router-dom';
+<<<<<<< Updated upstream
+=======
+import { ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
+>>>>>>> Stashed changes
 import './App.css';
 import AddQuestionBank from './components/AddQuestionBank';
 import ExamScheduling from './components/ExamScheduling';
@@ -9,6 +14,7 @@ import AdminDashboard from './pages/AdminDashboard';
 function App() {
   return (
     <div className="">
+<<<<<<< Updated upstream
       <Routes>
         <Route path="/administrator/1/examination/" element={<AdminDashboard />} />
         <Route path="/ExamForm" element={<ExamScheduling />} />
@@ -16,6 +22,15 @@ function App() {
         <Route path="/addQuestionBank" element={<AddQuestionBank />} />
         <Route path="/manageQuestions" element={<ManageQuestionsComponent />} />
 
+=======
+      <ToastContainer />
+       <Routes>
+        <Route path="/administrator/:id/examination/" element={<AdminDashboard />} />
+        <Route path="/administrator/:id/examination/ExamForm" element={<ExamScheduling />} />
+        <Route path="/administrator/:id/examination/addquestion" element={<QuestionBankComponent />} />
+        <Route path="/administrator/:id/examination/addQuestionBank" element={<AddQuestionBank />} />
+        <Route path="/administrator/:id/examination/manageQuestions" element={<ManageQuestionsComponent />} />
+>>>>>>> Stashed changes
       </Routes>
 
     </div>

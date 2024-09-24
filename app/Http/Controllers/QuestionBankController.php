@@ -36,8 +36,10 @@ class QuestionBankController extends Controller
         $offset = ($pageNo - 1) * $size;
 
         $totalRecords = QuestionBank::count();
+
         // Fetch the records for the current page
-        $questionBanks = QuestionBank::offset($offset)->limit($size);
+        $questionBanks =  QuestionBank::withCount('questions')->offset($offset)->limit($size);
+
         $data = [
             "data" => ($questionBanks->count() == 0) ? [] : QuestionBankResource::collection($questionBanks->get()),
             "totalRecords" => $totalRecords,
@@ -90,7 +92,7 @@ class QuestionBankController extends Controller
         ]);
 
         if (!empty($validator->errors()->messages())) {
-            return ['message' => "Invalid data", 'hasError' => true];
+            return ['message' => $validator->errors()->all()[0], 'status' => 400,'success' =>false];
         }
         $data = $validator->validate();
         $data = [

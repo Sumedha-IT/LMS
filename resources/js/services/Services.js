@@ -1,7 +1,13 @@
 import axios from 'axios';
+<<<<<<< Updated upstream
 
 const api = axios.create({
     baseURL: import.meta.env.VITE_APP_API_URL, 
+=======
+const apiUrl = APP_URL
+const api = axios.create({
+    baseURL: apiUrl, // Make sure to set this in your .env file
+>>>>>>> Stashed changes
     timeout: 10000, // Set a timeout of 10 seconds
 });
 const getCommonHeaders = (isFormData = false) => {

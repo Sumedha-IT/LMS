@@ -22,7 +22,6 @@ class QuestionController extends Controller
         }
 
         $data = $validator->validated();
-
         // Fetch the QuestionBank by ID and immediately load the related questions
         $questionBank = QuestionBank::with('questions')->find($data['questionBankId']);
 
@@ -61,6 +60,9 @@ class QuestionController extends Controller
     {
         $data = $req->data;
         $data = $this->validateQuestion($data);
+        if (!empty($data['message'])) {
+            return response()->json($data, 400);
+        }
         Question::create($data);
         return response()->json(['message' => "Question Created","hasError"=>false], 200);
 
@@ -100,7 +102,7 @@ class QuestionController extends Controller
             'checkPunctuation' => 'nullable|boolean', // Assuming it's a boolean flag
         ]);
         if ($validator->fails()) {
-            return ['message' => "Invalid data", 'hasError' => true];
+            return ['message' => $validator->errors()->all()[0], 'hasError' => true];
         }
         
         $data = $validator->validate();

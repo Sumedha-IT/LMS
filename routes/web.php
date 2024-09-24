@@ -31,6 +31,7 @@ Route::get('clear-cache', function () {
     return "Cache cleared successfully";
 });
 
+<<<<<<< Updated upstream
 
 
 // Route::get('/exam', function () {
@@ -40,3 +41,5 @@ Route::get('clear-cache', function () {
 // Route::get('/exam/dashboard', function () {
 //     return view('exam.dashboard');
 // })->name('exam.dashboard');
+=======
+>>>>>>> Stashed changes

@@ -107,7 +107,7 @@ class QuestionOptionController extends Controller
         ]);
 
         if (!empty($validator->errors()->messages())) {
-            return  ["message" => "Invalid data", "hasError" => true];
+            return ['message' => $validator->errors()->all()[0], 'status' => 400,'success' =>false];
         }
 
         $data = $validator->validated();

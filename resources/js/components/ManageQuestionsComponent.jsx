@@ -1,3 +1,4 @@
+<<<<<<< Updated upstream
 // import React, { useState } from 'react';
 // import { Box, Typography, Button, IconButton, Checkbox, Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, TextField } from '@mui/material';
 // import { Edit as EditIcon, Delete as DeleteIcon, Save as SaveIcon, Cancel as CancelIcon } from '@mui/icons-material';
@@ -273,16 +274,61 @@ const ManageQuestionsComponent = ({ handleOpen, setSelectedQuestionsCount }) => 
     };
 
     // Function to handle selecting a question
+=======
+
+
+
+import {
+    Box, Button, Checkbox, Paper, Table, TableBody, TableCell,
+    TableContainer, TableHead, TableRow, Typography
+} from '@mui/material';
+import React, { useEffect, useState } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
+import { toast } from 'react-toastify';
+import { useGetQuestionIdMutation, useGetQuestionsAsPerBankIdQuery } from '../store/service/admin/AdminService';
+import { getBankCount } from '../store/slices/adminSlice/ExamSlice';
+import EditQuestionSettingsModal from './EditQuestionSettingsModal';
+
+const ManageQuestionsComponent = ({ handleOpen, setSelectedQuestionsCount, partId, bankId, randomQuestionsIds }) => {
+    const { data, isLoading, isError } = useGetQuestionsAsPerBankIdQuery(bankId);
+    const [GetQuestionId] = useGetQuestionIdMutation();
+    const [questions, setQuestions] = useState([]);
+    const [selectedQuestions, setSelectedQuestions] = useState([]);
+    const [autoSelect, setAutoSelect] = useState(true); // Control Auto vs Manual question selection
+    const [totalQuestions, setTotalQuestions] = useState(0); // Dynamic total questions count
+    const selector = useSelector((state) => state.ExamReducer.QuestionBankCount);
+    const dispatch = useDispatch();
+
+    useEffect(() => {
+        if (data && !isLoading && !isError) {
+            if (randomQuestionsIds?.length > 0) {
+                // console.log("!randomQuestionsIds.includes(e.id)", randomQuestionsIds);
+                const filteredData = data.data?.filter((e) => randomQuestionsIds.includes(e.id));
+                setQuestions(filteredData)
+                console.log(data.data?.filter((e) => randomQuestionsIds.includes(e.id)));
+            } else {
+
+                setQuestions(data.data);
+            }
+        }
+    }, [data, isLoading, isError]);
+
+    // Handle question selection
+>>>>>>> Stashed changes
     const handleSelectQuestion = (id) => {
         const updatedQuestions = questions.map((q) =>
             q.id === id ? { ...q, selected: !q.selected } : q
         );
         setQuestions(updatedQuestions);
+<<<<<<< Updated upstream
 
+=======
+>>>>>>> Stashed changes
         const selected = updatedQuestions.filter((q) => q.selected);
         setSelectedQuestions(selected);
     };
 
+<<<<<<< Updated upstream
     // Handle adding new question by showing input
     const handleAddNewQuestion = () => {
         setIsAddingNewQuestion(true); // Show the input for the new question
@@ -317,10 +363,71 @@ const ManageQuestionsComponent = ({ handleOpen, setSelectedQuestionsCount }) => 
         // Implement your logic for updating or submitting selected questions here
     };
 
+=======
+    // Handle submit for selected questions
+    const handleSubmitSelectedQuestions = (randomIds = []) => {
+        console.log('randomIds', randomIds);
+        const questionsIds = selectedQuestions.map((e) => e.id);
+        const updatedParts = selector.map((part) => {
+            if (String(part.partId) === String(partId)) {
+                return {
+                    ...part,
+                    banks: part.banks?.map((bank) => {
+                        if (String(bank.id) === String(bankId)) {
+                            return {
+                                ...bank,
+                                usage: `Use ${randomIds.length > 0 ? randomIds.length : selectedQuestions.length} out of ${data.data?.length} questions`,
+                                questionsIds: randomIds.length > 0 ? randomIds : questionsIds,
+                            };
+                        }
+                        return bank;
+                    }),
+                };
+            }
+            return part;
+        });
+        dispatch(getBankCount(updatedParts));
+        toast.success("Question bank details updated successfully !")
+        handleOpen(); // Close the modal or component
+    };
+
+    // Handle the modal update and its response
+    const handleModalUpdate = async ({ autoSelect, totalQuestion, questionCount }) => {
+        setAutoSelect(autoSelect);
+        setTotalQuestions(questionCount);
+        console.log("in the box", autoSelect, totalQuestion, questionCount);
+        if (autoSelect) {
+            let result = await GetQuestionId({ data: { autoSelect, totalQuestion, questionCount, questionBankId: bankId } })
+            const { data } = result;
+            console.log(data);
+            handleSubmitSelectedQuestions(data?.data)
+            // Auto-select questions logic here (example: take all questions automatically)
+            // const updatedQuestions = questions.map((q, index) => ({
+            //     ...q,
+            //     selected: index < questionCount, // Select the first 'questionCount' questions
+            // }));
+            // setQuestions(updatedQuestions);
+            // console.log("updatedQuestions", updatedQuestions);
+        } else {
+            // Manually select questions
+            // Map over the data and check if each question's id is in randomQuestionsIds
+            const updatedQuestions = data.data?.map((q) => ({
+                ...q,
+                selected: randomQuestionsIds?.includes(q.id),  // Select if the question's id is in randomQuestionsIds
+            }));
+
+            setQuestions(updatedQuestions);  // Set the questions with the correct selected state
+
+            console.log("Updated questions with randomQuestionsIds", updatedQuestions);
+        }
+    };
+
+>>>>>>> Stashed changes
     return (
         <Box sx={{ padding: 2 }}>
             <Typography variant="h6" sx={{ marginBottom: 2 }}>
                 Questions: Capgemini Test - 1
+<<<<<<< Updated upstream
                 <Typography variant="body2" component="span" sx={{ cursor: 'pointer', color: '#007bff', marginLeft: 1 }} onClick={handleEditSettings}>
                     {isEditingSettings ? 'Stop Editing' : 'Edit Settings'}
                 </Typography>
@@ -350,11 +457,28 @@ const ManageQuestionsComponent = ({ handleOpen, setSelectedQuestionsCount }) => 
                 </Box>
             )}
 
+=======
+                <Typography
+                    variant="body2"
+                    component="span"
+                    sx={{ cursor: 'pointer', color: '#007bff', marginLeft: 1 }}
+                >
+                    <EditQuestionSettingsModal onUpdate={handleModalUpdate} totalQuestionCount={questions.length} />
+                </Typography>
+            </Typography>
+
+            {/* Table for displaying and selecting questions */}
+>>>>>>> Stashed changes
             <TableContainer component={Paper}>
                 <Table sx={{ minWidth: 650 }} aria-label="question table">
                     <TableHead>
                         <TableRow>
+<<<<<<< Updated upstream
                             {isEditingSettings && <TableCell>Select</TableCell>}
+=======
+                            {/* Show the Checkbox column only if autoSelect is false */}
+                            {!autoSelect && <TableCell>Select</TableCell>}
+>>>>>>> Stashed changes
                             <TableCell>Marks</TableCell>
                             <TableCell>Question</TableCell>
                         </TableRow>
@@ -362,8 +486,13 @@ const ManageQuestionsComponent = ({ handleOpen, setSelectedQuestionsCount }) => 
                     <TableBody>
                         {questions.map((q) => (
                             <TableRow key={q.id}>
+<<<<<<< Updated upstream
                                 {/* Show the Checkbox only when "Edit Settings" is active */}
                                 {isEditingSettings && (
+=======
+                                {/* Show the Checkbox only when autoSelect is false */}
+                                {!autoSelect && (
+>>>>>>> Stashed changes
                                     <TableCell>
                                         <Checkbox
                                             checked={q.selected}
@@ -377,6 +506,7 @@ const ManageQuestionsComponent = ({ handleOpen, setSelectedQuestionsCount }) => 
                                         Marks: {q.marks}
                                     </Typography>
                                 </TableCell>
+<<<<<<< Updated upstream
 
                                 {/* If question is being edited, show input field */}
                                 <TableCell>
@@ -413,6 +543,10 @@ const ManageQuestionsComponent = ({ handleOpen, setSelectedQuestionsCount }) => 
                                             </IconButton>
                                         </>
                                     )}
+=======
+                                <TableCell>
+                                    <div dangerouslySetInnerHTML={{ __html: q.question }}></div>
+>>>>>>> Stashed changes
                                 </TableCell>
                             </TableRow>
                         ))}
@@ -420,16 +554,29 @@ const ManageQuestionsComponent = ({ handleOpen, setSelectedQuestionsCount }) => 
                 </Table>
             </TableContainer>
 
+<<<<<<< Updated upstream
             {/* Show Submit or Update Button when any question is selected */}
             {isEditingSettings && selectedQuestions.length > 0 && (
                 <Box sx={{ marginTop: 2 }}>
                     <Button variant="contained" color="primary" onClick={handleSubmitSelectedQuestions}>
+=======
+            {/* Show Submit Button when any question is selected in Manual Mode */}
+            {!autoSelect && selectedQuestions.length > 0 && (
+                <Box sx={{ marginTop: 2 }}>
+                    <Button variant="contained" color="primary" onClick={() => { handleSubmitSelectedQuestions() }}>
+>>>>>>> Stashed changes
                         Submit Selected Questions
                     </Button>
                 </Box>
             )}
+<<<<<<< Updated upstream
             <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 2 }}>
                 <Button variant="contained" color="secondary" onClick={() => { handleOpen() }}>
+=======
+
+            <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 2 }}>
+                <Button variant="contained" color="secondary" onClick={() => handleOpen()}>
+>>>>>>> Stashed changes
                     Close
                 </Button>
             </Box>
