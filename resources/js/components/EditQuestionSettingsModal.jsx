@@ -103,10 +103,10 @@ const EditQuestionSettingsModal = ({ onUpdate, totalQuestionCount }) => {
                             label="# Ques. to use"
                             type="number"
                             value={useAllQuestions ? totalQuestions : questionsToUse}
-                            onChange={handleQuestionsToUseChange} // Handle changes and validation
-                            disabled={useAllQuestions} // Disable if "Always use all questions" is checked
-                            error={!!error} // Highlight the field with error
-                            helperText={error} // Display the error message
+                            onChange={handleQuestionsToUseChange} 
+                            disabled={useAllQuestions} 
+                            error={!!error} 
+                            helperText={error} 
                         />
                         <Typography>Total Questions: {totalQuestions}</Typography>
                     </Box>

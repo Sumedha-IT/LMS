@@ -19,6 +19,8 @@ class QuestionController extends Controller
 
         if ($validator->fails()) {
             return response()->json(['message' => 'Question Id must be Integer','hasError'=>true], 400);
+            return response()->json(['message' =>  'Question Id must be Integer', 'success' => true, "status" => 400], 400);
+
         }
 
         $data = $validator->validated();
@@ -26,14 +28,16 @@ class QuestionController extends Controller
         $questionBank = QuestionBank::with('questions')->find($data['questionBankId']);
 
         if (!$questionBank) {
-            return response()->json(['message' => 'Question Bank not found', 'hasError'=>false], 404);
+            return response()->json(['message' =>  'Question Bank not found', 'success' => false, "status" => 404], 404);
+
         }
 
         // Access the questions relationship
         $questions = $questionBank->questions;
 
         if ($questions->isEmpty()) {
-            return response()->json(['message' => 'Questions not found'], 404);
+            return response()->json(['message' => 'Questions not found', 'success' => true, "status" => 200], 200);
+
         }
         return QuestionResource::collection($questions);
     }

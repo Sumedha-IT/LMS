@@ -2,23 +2,25 @@
 
 import React, { useState, useEffect } from 'react';
 import CommonTable from '../common/CommonTable';
-import { useNavigate, useParams } from 'react-router-dom';
-import { Button, Select, MenuItem, FormControl, InputLabel, Grid, Box } from '@mui/material';
-import { useGetExamDataQuery } from '../store/service/admin/AdminService';
+import { useNavigate, useParams} from 'react-router-dom';
+import { Button, Select, MenuItem, FormControl, InputLabel, Grid, Box, Typography } from '@mui/material';
+import { useGetBatchesQuery, useGetExamDataQuery } from '../store/service/admin/AdminService';
 
 function AdminDashboard() {
-    const { id } = useParams();
     const [page, setPage] = useState(0); // Current page
     const [rowsPerPage, setRowsPerPage] = useState(10); // Rows per page
     const [selectedBatch, setSelectedBatch] = useState('');
     const [selectedDate, setSelectedDate] = useState('');
     const [examData, setExamData] = useState([]);
+    const { data: batchList } = useGetBatchesQuery();
     const { data, isLoading, isError } = useGetExamDataQuery({
         page: page + 1, // Backend expects 1-based page index
         rowsPerPage: rowsPerPage,
         filterBatch: selectedBatch,
         dateCriteria: selectedDate,
     });
+    const { id } = useParams();
+
 
     useEffect(() => {
         if (data && !isLoading && !isError) {
@@ -42,16 +44,21 @@ function AdminDashboard() {
         setPage(0);
     };
 
+    const onEditClick = async (id) => {
+        console.log(id)
+        nav(`/administrator/${id}/examination/addquestion?examId=${id}`)
+    }
+
     const nav = useNavigate();
     const handleAddNewExam = () => {
         nav(`/administrator/${id}/examination/ExamForm`);
-        // nav('/ExamForm'); // Navigate to the Add New Exam form
+
     };
 
     return (
         <div className="p-4">
             <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-                <h1>Examinations</h1>
+                <Typography variant="h5" >Examinations</Typography>
 
                 {/* Filter and Add Buttons */}
                 <div>
@@ -85,9 +92,15 @@ function AdminDashboard() {
                                 label="Select Batch"
                                 onChange={(e) => setSelectedBatch(e.target.value)}
                             >
-                                <MenuItem value="1">All</MenuItem>
-                                <MenuItem value="Batch1">Batch 1</MenuItem>
-                                <MenuItem value="Batch2">Batch 2</MenuItem>
+                                {batchList?.data.length > 0 ? (
+                                    batchList.data.map((batch) => (
+                                        <MenuItem key={batch.batch_id} value={batch.batch_id}>
+                                            {batch.batch_name}
+                                        </MenuItem>
+                                    ))
+                                ) : (
+                                    <MenuItem disabled>No Batches Available</MenuItem>
+                                )}
                             </Select>
                         </FormControl>
                     </Grid>
@@ -101,8 +114,8 @@ function AdminDashboard() {
                                 onChange={(e) => setSelectedDate(e.target.value)}
                             >
                                 <MenuItem value="All">All</MenuItem>
-                                <MenuItem value="Past">Past</MenuItem>
-                                <MenuItem value="Upcoming">Upcoming</MenuItem>
+                                <MenuItem value="past">Past</MenuItem>
+                                <MenuItem value="upcoming">Upcoming</MenuItem>
                                 {/* Add more options */}
                             </Select>
                         </FormControl>
@@ -129,6 +142,7 @@ function AdminDashboard() {
                 onRowsPerPageChange={handleRowsPerPageChange}
                 onMarksListClick={(row) => console.log('Marks List Clicked for', row)}
                 onViewAttendanceClick={(row) => console.log('View Attendance Clicked for', row)}
+                onEditClick={onEditClick}
             />
         </div>
     );
