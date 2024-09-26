@@ -1,10 +1,10 @@
 <?php
 
-use App\Http\Controllers\Api\ExamController;
-use App\Http\Controllers\Api\QuestionController;
-use App\Http\Controllers\Api\QuestionOptionController;
-use App\Http\Controllers\Api\StudentsController;
+use App\Http\Controllers\api\ExamController;
+use App\Http\Controllers\api\QuestionOptionController;
+use App\Http\Controllers\api\StudentsController;
 use Illuminate\Http\Request;
+use App\Http\Controllers\api\QuestionController;
 use Illuminate\Http\Resources\Json\JsonResource;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
