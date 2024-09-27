@@ -96,7 +96,7 @@ const TestDataComponent = ({ Meta }) => {
         dispatch(getBankCount(updatedSelector)); // Dispatch updated banks to Redux store
     };
     const { id } = useParams();
-    const addQuestions = (id) => nav(`/administrator/${id}/examination/addQuestionBank?partId=${id}`);
+    const addQuestions = (partId) => nav(`/administrator/${id}/exams/addquestionBank?partId=${partId}`);
 
     const handleOpen = () => setOpen(prevOpen => !prevOpen);
 
@@ -157,7 +157,7 @@ const TestDataComponent = ({ Meta }) => {
             // console.log(data, error, result);
             if (data?.success === true) {
                 toast.success(data?.message)
-                nav(`/administrator/${id}/examination/`)
+                nav(`/administrator/${id}/exams/`)
                 dispatch(getBankCount([{ partId: Date.now().toString(), banks: [] }]));
                 localStorage.clear();
             } else {

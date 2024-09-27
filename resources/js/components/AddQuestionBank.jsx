@@ -196,7 +196,7 @@ const AddQuestionBank = () => {
 
             {/* Close Button */}
             <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 2 }}>
-                <Button variant="contained" color="secondary" onClick={() => { nav(`/administrator/${id}/examination/addquestion`) }}>
+                <Button variant="contained" color="secondary" onClick={() => { nav(`/administrator/${id}/exams/addquestion`) }}>
                     Close
                 </Button>
             </Box>

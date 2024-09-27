@@ -44,14 +44,14 @@ function AdminDashboard() {
         setPage(0);
     };
 
-    const onEditClick = async (id) => {
-        console.log(id)
-        nav(`/administrator/${id}/examination/addquestion?examId=${id}`)
+    const onEditClick = async (examId) => {
+        // console.log(id,examId)
+        nav(`/administrator/${id}/exams/addquestion?examId=${examId}`)
     }
 
     const nav = useNavigate();
     const handleAddNewExam = () => {
-        nav(`/administrator/${id}/examination/ExamForm`);
+        nav(`/administrator/${id}/exams/ExamForm`);
 
     };
 

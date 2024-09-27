@@ -13,11 +13,11 @@ function App() {
     <div className="">
       <ToastContainer />
        <Routes>
-        <Route path="/administrator/:id/examination/" element={<AdminDashboard />} />
-        <Route path="/administrator/:id/examination/ExamForm" element={<ExamScheduling />} />
-        <Route path="/administrator/:id/examination/addquestion" element={<QuestionBankComponent />} />
-        <Route path="/administrator/:id/examination/addQuestionBank" element={<AddQuestionBank />} />
-        <Route path="/administrator/:id/examination/manageQuestions" element={<ManageQuestionsComponent />} />
+        <Route path="/administrator/:id/exams/" element={<AdminDashboard />} />
+        <Route path="/administrator/:id/exams/ExamForm" element={<ExamScheduling />} />
+        <Route path="/administrator/:id/exams/addquestion" element={<QuestionBankComponent />} />
+        <Route path="/administrator/:id/exams/addQuestionBank" element={<AddQuestionBank />} />
+        <Route path="/administrator/:id/exams/manageQuestions" element={<ManageQuestionsComponent />} />
       </Routes>
 
     </div>

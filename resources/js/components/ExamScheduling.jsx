@@ -40,14 +40,14 @@ const validationSchema = Yup.object({
     .required('Start hour is required')
     .test('start-required', 'Start time must be selected', function (value) {
       const { startsAtMinutes } = this.parent;
-      return value !== '00' || startsAtMinutes !== '00';  // Ensure time is not zero-zero
+      return value !== '' || startsAtMinutes !== '';  // Ensure time is not zero-zero
     }),
 
   startsAtMinutes: Yup.string()
     .required('Start minute is required')
     .test('start-min-required', 'Start minute must be selected', function (value) {
       const { startsAtHours } = this.parent;
-      return startsAtHours !== '00' || value !== '00';  // Ensure time is not zero-zero
+      return startsAtHours !== '' || value !== '';  // Ensure time is not zero-zero
     }),
 
   endsAtHours: Yup.string()
@@ -178,7 +178,7 @@ const ExamScheduling = ({ ExamData }) => {
       const { data, error } = result;
       if (result.data?.success === true) {
         localStorage.setItem("examId", data.data?.id)
-        nav(`/administrator/${id}/examination/addquestion`);
+        nav(`/administrator/${id}/exams/addquestion`);
 
         toast.success(result.data?.message)
       } else {
