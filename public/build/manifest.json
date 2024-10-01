@@ -5,14 +5,17 @@
     "isEntry": true
   },
   "resources/css/filament/administrator/theme.css": {
-    "file": "assets/theme-DGQ_bZGX.css",
+    "file": "assets/theme-C2TCqk8L.css",
     "src": "resources/css/filament/administrator/theme.css",
     "isEntry": true
   },
   "resources/js/app.js": {
-    "file": "assets/app-D2jpX1vH.js",
+    "file": "assets/app-VbMQq58u.js",
     "name": "app",
     "src": "resources/js/app.js",
-    "isEntry": true
+    "isEntry": true,
+    "css": [
+      "assets/app-D2wQ3-6M.css"
+    ]
   }
 }

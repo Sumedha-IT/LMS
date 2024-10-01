@@ -233,4 +233,9 @@ class Batch extends Model
             $curriculumNames
         );
     }
+
+    public function exams()
+    {
+        return $this->hasMany(Exam::class);
+    }
 }

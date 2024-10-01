@@ -1,7 +1,7 @@
 import { createSlice } from '@reduxjs/toolkit'
 
 const initialState = {
-    QuestionBankCount: 0
+    QuestionBankCount: []
 }
 
 export const ExamSlice = createSlice({
@@ -9,10 +9,10 @@ export const ExamSlice = createSlice({
     initialState,
     reducers: {
         getBankCount(state, action) {
-            state.QuestionBankCount = action.payload.data
+            state.QuestionBankCount = action.payload
         }
     },
 })
 
-
+export const { getBankCount } = ExamSlice.actions
 export default ExamSlice.reducer

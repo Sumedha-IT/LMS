@@ -1,4 +1,6 @@
 import { Route, Routes } from 'react-router-dom';
+import { ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 import './App.css';
 import AddQuestionBank from './components/AddQuestionBank';
 import ExamScheduling from './components/ExamScheduling';
@@ -9,13 +11,13 @@ import AdminDashboard from './pages/AdminDashboard';
 function App() {
   return (
     <div className="">
-      <Routes>
-        <Route path="/administrator/1/examination/" element={<AdminDashboard />} />
-        <Route path="/ExamForm" element={<ExamScheduling />} />
-        <Route path="/addquestion" element={<QuestionBankComponent />} />
-        <Route path="/addQuestionBank" element={<AddQuestionBank />} />
-        <Route path="/manageQuestions" element={<ManageQuestionsComponent />} />
-
+      <ToastContainer />
+       <Routes>
+        <Route path="/administrator/:id/exams/" element={<AdminDashboard />} />
+        <Route path="/administrator/:id/exams/ExamForm" element={<ExamScheduling />} />
+        <Route path="/administrator/:id/exams/addquestion" element={<QuestionBankComponent />} />
+        <Route path="/administrator/:id/exams/addQuestionBank" element={<AddQuestionBank />} />
+        <Route path="/administrator/:id/exams/manageQuestions" element={<ManageQuestionsComponent />} />
       </Routes>
 
     </div>

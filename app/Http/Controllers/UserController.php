@@ -129,8 +129,9 @@ class UserController extends Controller
 
     public function tutors(Request $request)
     {
-        $users = User::where('role_id', 7)->get();
-
-        return UserResource::collection($users);
+        $users = User::where('role_id', 7)
+             ->select('id', 'name', 'email','phone')
+             ->get();
+        return response()->json(["data" => $users]);
     }
 }
