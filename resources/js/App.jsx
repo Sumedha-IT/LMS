@@ -6,6 +6,8 @@ import AddQuestionBank from './components/AddQuestionBank';
 import ExamScheduling from './components/ExamScheduling';
 import ManageQuestionsComponent from './components/ManageQuestionsComponent';
 import QuestionBankComponent from './components/QuestionBankComponent';
+import PaymentDetails from './components/PaymentDetails.jsx';
+
 import AdminDashboard from './pages/AdminDashboard';
 
 function App() {
@@ -18,6 +20,11 @@ function App() {
         <Route path="/administrator/:id/exams/addquestion" element={<QuestionBankComponent />} />
         <Route path="/administrator/:id/exams/addQuestionBank" element={<AddQuestionBank />} />
         <Route path="/administrator/:id/exams/manageQuestions" element={<ManageQuestionsComponent />} />
+
+        <Route path="/administrator/:id/payment-details" element={<PaymentDetails/>} />
+
+
+
       </Routes>
 
     </div>

@@ -11,10 +11,13 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('exams_attempts', function (Blueprint $table) {
+        Schema::create('exam_attempts', function (Blueprint $table) {
             $table->id();
             $table->foreignId('student_id');
             $table->foreignId('exam_id');
+            $table->integer('attempt_count')->default(0);
+            $table->string('status');
+            $table->timestamp('ends_at');
             $table->string('score')->nullable();
             $table->json('report')->nullable();
             $table->timestamps();
@@ -26,6 +29,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('exams_attempts');
+        Schema::dropIfExists('exam_attempts');
     }
 };

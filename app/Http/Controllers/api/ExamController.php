@@ -4,10 +4,13 @@ namespace App\Http\Controllers\api;
 
 use App\Http\Controllers\Controller;
 use App\Http\Resources\ExamResource;
+use App\Http\Resources\StudentExamResource;
 use App\Models\Exam;
+use App\Models\ExamAttempt;
 use App\Models\ExamQuestion;
 use App\Models\Question;
 use App\Models\QuestionBank;
+use App\Models\User;
 use Illuminate\Database\QueryException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -113,7 +116,7 @@ class ExamController extends Controller
             ->get();
 
         $data = [
-            "data" => empty($exams) ? [] : ExamResource::collection($exams),
+            "data" => empty($exams) ? [] : ExamResource::collection($exams,[]),
             "totalRecords" => $totalRecords,
             "totalPages" => ceil($totalRecords / $size)
         ];
@@ -141,42 +144,6 @@ class ExamController extends Controller
             }
         }
         return response()->json(["data" => $data, 'message' => "Exam Created", "success" => true,'status' => 200], 200);
-    }
-
-    public function validateExam($data){
-
-        $validator = Validator::make($data, [
-            'id' => 'nullable|integer',
-            'batchId' => 'required|integer|exists:batches,id',
-            'subjectId' => 'required|integer|exists:subjects,id',
-            'title' => ['required','string','max:255'],
-            'instructions' => 'nullable|string|max:1000',
-            'startsAt' => 'required|date_format:H:i',
-            'endsAt' => 'required|date_format:H:i|after:startsAt',
-            'examDate' => 'required|date_format:Y-m-d|after:today',
-            'immediateResult' => 'boolean',
-            'maxAttempts' => 'integer|max:10',
-            'invigilators' => 'array',
-            'invigilators.*.name' => 'required|string|max:255', 
-            'invigilators.*.id' => 'required|integer|exists:users,id',
-            'invigilators.*.phone' => 'required|string',
-            'invigilators.*.email' => 'nullable|email',
-        ]);
-        
-        if (!empty($validator->errors()->messages())) {
-            return ['message' => $validator->errors()->all()[0], 'status' => 400,'success' =>false];
-        }
-
-        $data = $validator->validate();
-        $data["starts_at"] = $data['startsAt'];
-        $data['ends_at'] = $data['endsAt'];
-        $data['max_attempts'] = $data['maxAttempts'] ?? 1;
-        $data['batch_id'] = $data['batchId'];
-        $data['subject_id'] = $data['subjectId'];
-        
-        $data['immediate_result'] = $data['immediateResult'] ?? 0;
-        $data['exam_date'] =$data['examDate'];
-        return $data;   
     }
 
     public function delete($id){
@@ -226,4 +193,95 @@ class ExamController extends Controller
         return response()->json(["data" => $data, 'message' => "Exam Updated", "success" => true,'status' => 200], 200);
     }
 
+    public function validateExam($data){
+
+        $validator = Validator::make($data, [
+            'id' => 'nullable|integer',
+            'batchId' => 'required|integer|exists:batches,id',
+            'subjectId' => 'required|integer|exists:subjects,id',
+            'title' => ['required','string','max:255'],
+            'instructions' => 'nullable|string|max:1000',
+            'startsAt' => 'required|date_format:H:i',
+            'endsAt' => 'required|date_format:H:i|after:startsAt',
+            'examDate' => 'required|date_format:Y-m-d|after:today',
+            'immediateResult' => 'boolean',
+            'maxAttempts' => 'integer|max:10',
+            'invigilators' => 'array',
+            'invigilators.*.name' => 'required|string|max:255', 
+            'invigilators.*.id' => 'required|integer|exists:users,id',
+            'invigilators.*.phone' => 'required|string',
+            'invigilators.*.email' => 'nullable|email',
+        ]);
+        
+        if (!empty($validator->errors()->messages())) {
+            return ['message' => $validator->errors()->all()[0], 'status' => 400,'success' =>false];
+        }
+
+        $data = $validator->validate();
+        $data["starts_at"] = $data['startsAt'];
+        $data['ends_at'] = $data['endsAt'];
+        $data['max_attempts'] = $data['maxAttempts'] ?? 1;
+        $data['batch_id'] = $data['batchId'];
+        $data['subject_id'] = $data['subjectId'];
+        
+        $data['immediate_result'] = $data['immediateResult'] ?? 1;
+        $data['exam_date'] =$data['examDate'];
+        return $data;   
+    }
+
+    public function getExams($id,Request $request){
+
+        $size = $request->get('size') == 0 ? 25 : $request->get('size' ,25);
+        $pageNo = $request->get('page', 1);
+        $offset = ($pageNo - 1) * $size;
+        $today = date('Y-m-d').' 00:00:00';
+        $examType = $request->examType == 'past'  ? 'past' : 'upcoming';
+        $user = User::find($id);
+        $batchIds = $user->batches()->get()->pluck('id')->toArray();
+
+        $exams = Exam::with('subject')-> whereIn('batch_id',$batchIds)->orderBy('exam_date','desc');
+        $attemptedExams = ExamAttempt::where('student_id',$id)->get();
+        $attemptedExamIds = $attemptedExams->pluck('exam_id')->toArray();
+
+        $totalRecords = 0;
+        $exams->each(function ($exam) use (&$data, $attemptedExamIds, $today) {
+            if ($exam->exam_date < $today) {
+                $exam->status = in_array($exam['id'], $attemptedExamIds) ? "Completed" : "Expired";
+                $examResource = new StudentExamResource($exam);
+                $data['pastExams'][] = $examResource;
+            } elseif ($exam->exam_date == $today) {
+                // Calculate start time
+                $startDateTime = strtotime(date('Y-m-d') . ' ' . $exam->starts_at . ':00');
+                
+                // Exam can be attempted in the 15 min interval after starts at
+                if (time() > ($startDateTime + 15 * 60)) {
+                    $exam->status = 'Expired';
+                    $examResource = new StudentExamResource($exam);
+                    $data['pastExams'][] = $examResource;
+                } else {
+                    $exam->status = 'Available';
+                    $examResource = new StudentExamResource($exam);
+                    $data['upcomingExams'][] = $examResource;
+                }
+            }else{
+                $exam->status = 'Upcoming';
+                $examResource = new StudentExamResource($exam);
+                $data['upcomingExams'][] = $examResource;
+            }
+
+
+        });
+
+        $data = $examType == 'past' ? $data['pastExams'] ?? [] : $data['upcomingExams'] ?? [];
+        $totalRecords = count($data);
+        $data =  array_slice($data,$offset,$size);
+        $data = [
+            "data" => empty($data) ? [] : $data,
+            "totalRecords" => $totalRecords,
+            "totalPages" => ceil($totalRecords / $size),
+            "success" => true,
+            'status' => 200
+        ];
+        return response()->json($data, 200);
+    }
 }

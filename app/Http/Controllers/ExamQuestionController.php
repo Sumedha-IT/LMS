@@ -82,11 +82,15 @@ class ExamQuestionController extends Controller
                         );
                         break; // This breaks out of the inner loop
                     }
-                    $questionToAdd[$part['partId']] =  $questionsIds;
+ 
+                    $existedQuestionIds =  $questionToAdd[$part['partId']] ?? [];
+                    $questionToAdd[$part['partId']] =  array_merge($questionsIds,$existedQuestionIds);
+
                 } else {
                     // Assign existing question IDs from the bank
-                    $questionToAdd[$part['partId']] = $questionsByBank[$bankId];
+                    $questionToAdd[$part['partId']] =  array_merge($questionToAdd[$part['partId']] ?? [],$questionsByBank[$bankId]);
                 }
+                
             }
         }
         
@@ -174,7 +178,7 @@ class ExamQuestionController extends Controller
         }
     
         // Fetch all the questions in one query
-        $questions = Question::whereIn('id', $questionIds)->get()->keyBy('id');
+        $questions = Question::with('questions_options')->whereIn('id', $questionIds)->get()->keyBy('id');
     
         $input = []; // This will store the batch insert data
         // Iterate through the sections and their respective question IDs
@@ -183,18 +187,29 @@ class ExamQuestionController extends Controller
                 // Check if the question exists in the fetched questions
                 if (isset($questions[$questionId])) {
                     $question = $questions[$questionId]; // Get the question object
-                    
+                    $options =  $question->questions_options;
                     $input[] = [
                         'question_id'       => $questionId,
                         'question_bank_id'  => $question->question_bank_id,  // From the pre-fetched question
                         'part_id'           => $partId ,  // Handle "default" section
                         'exam_id'           => $exam->id,  // Constant exam ID
-                        'meta'              => json_encode($question->toArray()),  // Store the entire question data as JSON
+                        'question'          => $question->question,
+                        'meta'              => json_encode([
+                                                'options' => $options,
+                                                'correctOption' => collect($options)->where('is_correct',1)->pluck('id')->first(),
+                                                'questionMeta' => [
+                                                    'audioFile' => $question->audio_file,
+                                                    'paragraph' => $question->paragraph,
+                                                    'hint' => $question->hint,
+                                                    'explanation' => $question->explanation,
+                                                ]
+                                               ]),
+                        'score'             => $question->marks,
+                        'negative_score'    => $question->negative_marks
                     ];
                 }
             }
         }
-
         // Perform a batch insert with the prepared data
         ExamQuestion::insert($input);
     }

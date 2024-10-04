@@ -81,7 +81,6 @@ class QuestionBankController extends Controller
 
     public function validateQuestionBank($data)
     {
-        
         $validator = Validator::make($data, [
             'name' => 'nullable|string',
             'questionBankSubjectId' => 'required|integer|exists:question_bank_subjects,id',

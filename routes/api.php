@@ -1,8 +1,10 @@
 <?php
 
+use App\Http\Controllers\api\ExamAttemptController;
 use App\Http\Controllers\api\ExamController;
 use App\Http\Controllers\api\QuestionOptionController;
 use App\Http\Controllers\api\StudentsController;
+use App\Http\Controllers\api\QuestionAttempLogController;
 use Illuminate\Http\Request;
 use App\Http\Controllers\api\QuestionController;
 use Illuminate\Http\Resources\Json\JsonResource;
@@ -29,8 +31,7 @@ use App\Http\Controllers\QuestionBankController;
 use App\Http\Controllers\QuestionTypesController;
 use App\Http\Controllers\SubjectController;
 use App\Http\Controllers\TestingController;
-use Monolog\Handler\RotatingFileHandler;
-use PHPUnit\Event\Code\TestCollectionIterator;
+
 
 /*
 |--------------------------------------------------------------------------
@@ -232,9 +233,20 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
     //Exam Question
     Route::get('/{examId}/examQuestions', [ExamQuestionController::class,'index']);
 
-    // Route::get('/examQuestions', [ExamQuestionController::class,'index']);
-    // Route::get('/examQuestions/{id}', [ExamQuestionController::class,'show']);
+    //Student Module Apis
+    Route::get('/student/{examId}/exams', [ExamController::class,'getExams']);
+
+    Route::get('/student/{id}/exam/{examId}/initiateExam', [ExamAttemptController::class,'startExam']);
+    Route::get('/student/{id}/examQuestions', [QuestionAttempLogController::class,'getQuestions']);
+    Route::get('/student/{id}/examQuestions/test', [QuestionAttempLogController::class,'test']);
+
+    Route::post('/student/{id}/examQuestions', [QuestionAttempLogController::class,'attemptQuestion']);
+
+    
     Route::get('/invigilators',[UserController::class,'tutors']);
+
+
+
     
 
 });

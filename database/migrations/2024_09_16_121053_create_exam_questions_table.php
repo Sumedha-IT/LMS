@@ -19,7 +19,9 @@ return new class extends Migration
             $table->string('question')->nullable();
             $table->foreignId('exam_id');
             $table->json('meta')->nullable();
-            $table->integer('score')->default(0);
+            $table->decimal('score', 8, 2)->default(0.00);
+            $table->decimal('negative_score', 8, 2)->default(0.00);
+
             $table->timestamps();
             $table->unique(['exam_id', 'question_id']);
         });
