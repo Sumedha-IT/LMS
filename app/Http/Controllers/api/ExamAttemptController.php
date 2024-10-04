@@ -6,6 +6,8 @@ use App\Http\Controllers\Controller;
 use App\Http\Resources\ExamAttemptResource;
 use App\Models\Exam;
 use App\Models\ExamAttempt;
+use App\Models\ExamQuestion;
+use App\Models\QuestionAttemptLog;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
@@ -88,7 +90,66 @@ class ExamAttemptController extends Controller
         $data['ends_at'] =date('Y-m-d') . ' '.$exam->ends_at.':00';
 
         return $data;
+    }
 
+    public function submitExam(Request $request){
+
+        $examAttempLog = ExamAttempt::find($request->attemptId);
+        // $examAttempLog->status = "completed";
+        $examAttempLog->report = $this->generateReport($examAttempLog);
+
+
+    }
+
+    public function generateReport($examAttempLog){
+        $timeTaken = $this->subtractTime($examAttempLog->created_at->format('H:i:s'),date('H:i:s'));
+        $report = [];
+        $mergedData = ExamQuestion::with(['questionAttempts' => function($query) use ($examAttempLog) {
+            // Filter attempts based on the examAttemptLog's exam_id
+            $query->where('exam_attempt_id',$examAttempLog->id);
+            $query->select('id', 'part_id', 'question_id', 'question_bank_id','exam_id'); // Specify the columns you want from the questionAttempts
+        }])
+        ->select('id', 'exam_attempt_id', 'exam_id', 'score') // Specify the columns you want from ExamQuestion
+        ->where('exam_id', $examAttempLog->exam_id)
+        ->get()
+        ->map(function ($examQuestion) use($report){
+            $questionAttempts = $examQuestion->questionAttempts->first();
+            return [
+                'id' => $examQuestion->id,
+                'question' => $examQuestion->question,
+                'question_id' => $examQuestion->question_id,
+                'meta' =>    array_map(function ($option) {
+                    return [
+                        'id' => $option['id'],
+                        'option' => $option['option'],
+                    ];
+                }, $examQuestion->meta['options']),
+                'answer' => $questionAttempts->answer ?? null,
+                'statusCode' => $questionAttempts->stage ?? null,
+                'score' => $examQuestion->score,
+                'negativeScore' => $examQuestion->negative_score,
+            ];
+        });
+
+    }
+
+    
+
+    public function subtractTime($timeA , $timeB){
+
+        // Convert both times to timestamps
+        $timeA = strtotime($timeA);
+        $timeB = strtotime($timeB);
+        
+        // Calculate the difference in seconds
+        $diffInSeconds = $timeB - $timeA;
+        
+        // Convert the difference into hours and minutes
+        $hours = floor($diffInSeconds / 3600); // Get hours
+        $minutes = floor(($diffInSeconds % 3600) / 60); // Get minutes
+        
+        // Format hours and minutes as HH:MM
+        return  sprintf('%02d:%02d', $hours, $minutes);
     }
  
 }

@@ -32,7 +32,10 @@ class QuestionAttempLogController extends Controller
         ->where('exam_id', $data['examAttemptLog']->exam_id)
         ->where('part_id', $partId)->count();
     
-        $mergedData = ExamQuestion::with('questionAttempts') // Eager load related question attempts
+        $mergedData = ExamQuestion::with(['questionAttempts' => function($query) use ($data) {
+            // Filter attempts based on the examAttemptLog's exam_id
+            $query->where('exam_attempt_id', $data['examAttemptLog']->exam_id);
+        }])
         ->where('exam_id', $data['examAttemptLog']->exam_id)
         ->where('part_id', $partId)
         ->offset($offset)
@@ -141,17 +144,4 @@ class QuestionAttempLogController extends Controller
 
         return $data;
     }
-
-    public function submitExam(Request $req){
-        $data = $req->data;
-        // $data[
-        //     'attemptId' => 2
-        // ]
-
-    }
-    // public function generateExamReport($data){
-    //     $data =[
-    //         'examAttemptId' => 
-    //     ];
-    // }
 }

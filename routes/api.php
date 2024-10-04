@@ -233,22 +233,20 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
     //Exam Question
     Route::get('/{examId}/examQuestions', [ExamQuestionController::class,'index']);
 
+
+
+
     //Student Module Apis
     Route::get('/student/{examId}/exams', [ExamController::class,'getExams']);
 
     Route::get('/student/{id}/exam/{examId}/initiateExam', [ExamAttemptController::class,'startExam']);
     Route::get('/student/{id}/examQuestions', [QuestionAttempLogController::class,'getQuestions']);
-    Route::get('/student/{id}/examQuestions/test', [QuestionAttempLogController::class,'test']);
 
     Route::post('/student/{id}/examQuestions', [QuestionAttempLogController::class,'attemptQuestion']);
 
-    
+    Route::post('/student/{id}/exam/{examId}/submitExam', [ExamAttemptController::class,'submitExam']);    
+
     Route::get('/invigilators',[UserController::class,'tutors']);
-
-
-
-    
-
 });
 
 
