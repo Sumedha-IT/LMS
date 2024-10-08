@@ -34,7 +34,8 @@ class QuestionAttempLogController extends Controller
     
         $mergedData = ExamQuestion::with(['questionAttempts' => function($query) use ($data) {
             // Filter attempts based on the examAttemptLog's exam_id
-            $query->where('exam_attempt_id', $data['examAttemptLog']->exam_id);
+            $query->where('exam_attempt_id', $data['examAttemptLog']->id);
+            
         }])
         ->where('exam_id', $data['examAttemptLog']->exam_id)
         ->where('part_id', $partId)
@@ -88,7 +89,7 @@ class QuestionAttempLogController extends Controller
 
             $validator = Validator::make($data, [
                 'statusCode' => 'required|integer|in:1,2,3,4',
-                'answerId' => ['nullable', 'integer', Rule::in(($optionIds))],
+                'answerId' => ['nullable', 'integer', Rule::in(($optionIds)),'required_if:statusCode,1,3'],
             ]);
             
             if (!empty($validator->errors()->messages())) {
@@ -99,16 +100,22 @@ class QuestionAttempLogController extends Controller
 
 
         $score = (float)(($question->meta['correctOption'] == $data['answerId']) ? $question->score : ((-1)*(float)$question->negative_score));
-
+        
+        if(!in_array($data['statusCode'], [3, 1])){
+            $answer = null;
+            $score = 0.0;
+        }else{
+            $answer = ["selectedOption" => $validatedData['answerId']];
+        }
+        
         $input = [
             'exam_attempt_id' => $data['examAttemptId'],
             'exam_id' => $data['examAttemptLog']->exam_id,
-            'answer' => ["selectedOption" => $validatedData['answerId']],
+            'answer' => $answer,
             'stage' => $validatedData['statusCode'],
             'score' => $score,
             'exam_question_id' => $data['questionId']
         ];
-
         
         // Find the existing record or create a new one
         $questionAttemptLog = QuestionAttemptLog::firstOrNew([
@@ -128,13 +135,11 @@ class QuestionAttempLogController extends Controller
     }
 
     public function validateExamEnv($data){
-
         $examAttemptLog = ExamAttempt::where('id',$data['examAttemptId'] ?? null);
         if(empty($examAttemptLog))
             return ['message' => "Invalid Attempt Id", 'status' => 404,'success' =>false];
 
         $examAttemptLog = $examAttemptLog->first();
-
         if($examAttemptLog->status == 'completed')
             return ['message' => "Exam Already Submitted", 'status' => 400,'success' =>false];
         if(date('Y-m-d H:i:s') >  $examAttemptLog->ends_at)

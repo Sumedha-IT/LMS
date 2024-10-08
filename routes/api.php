@@ -45,7 +45,8 @@ use App\Http\Controllers\TestingController;
 */
 
 Route::post('/send-notification', [\App\Http\Controllers\NotificationController::class, 'sendNotification']);
-Route::middleware(['auth:sanctum'
+Route::middleware([
+    // 'auth:sanctum'
     //, 'verified'
 ])->group(function () {
     Route::get('/user', function (Request $request) {
@@ -155,6 +156,8 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
         Route::put('/{examId}/examQuestions', [ExamQuestionController::class,'patch']);
         Route::post('/questionIds', [ExamQuestionController::class,'getQuestionIds']);
 
+        Route::post('/student/{id}/examQuestions', [QuestionAttempLogController::class,'attemptQuestion']);
+
 
     });
         
@@ -242,12 +245,32 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
     Route::get('/student/{id}/exam/{examId}/initiateExam', [ExamAttemptController::class,'startExam']);
     Route::get('/student/{id}/examQuestions', [QuestionAttempLogController::class,'getQuestions']);
 
+
+    Route::post('/student/{id}/exam/{examId}/submitExam', [ExamAttemptController::class,'submitExam']);  
+    Route::get('/student/{id}/exam/{examId}/reviewExam', [ExamAttemptController::class,'reviewExam']);    
+
+    Route::get('/invigilators',[UserController::class,'tutors']);
+                       
+    
+    
+
+
+
+    //Student Module Apis
+    Route::get('/student/{examId}/exams', [ExamController::class,'getExams']);
+
+    Route::get('/student/{id}/exam/{examId}/initiateExam', [ExamAttemptController::class,'startExam']);
+    Route::get('/student/{id}/examQuestions', [QuestionAttempLogController::class,'getQuestions']);
+
     Route::post('/student/{id}/examQuestions', [QuestionAttempLogController::class,'attemptQuestion']);
 
     Route::post('/student/{id}/exam/{examId}/submitExam', [ExamAttemptController::class,'submitExam']);    
 
     Route::get('/invigilators',[UserController::class,'tutors']);
 });
-
-
-Route::get("/test/{id}",[TestingController::class,"show"]);
+Route::group(['middleware' => [
+    'addHeader', 
+    'auth:sanctum'
+    ]], function () {
+    Route::get("/test", [TestingController::class, "getAllCourses"]);
+});

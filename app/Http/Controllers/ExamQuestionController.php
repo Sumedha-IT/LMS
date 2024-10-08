@@ -30,7 +30,7 @@ class ExamQuestionController extends Controller
         return response()->json(['message' => 'Questions added', 'success' => true, "status" => 200], 200);
     }
 
-    public function validateExamQuestions($data,$exam){
+    public function validateExamQuestions($data){
         $validator = Validator::make($data, [
             '*.partId' => 'required|string',                     // Each section must have a partId that is a string
             '*.banks' => 'required|array',                       // banks is required and must be an array
@@ -182,6 +182,7 @@ class ExamQuestionController extends Controller
     
         $input = []; // This will store the batch insert data
         // Iterate through the sections and their respective question IDs
+        $totalMarks = 0;
         foreach ($questionsToAdd as $partId => $questionIds) {
             foreach ($questionIds as $questionId) {
                 // Check if the question exists in the fetched questions
@@ -205,12 +206,18 @@ class ExamQuestionController extends Controller
                                                 ]
                                                ]),
                         'score'             => $question->marks,
-                        'negative_score'    => $question->negative_marks
+                        'negative_score'    => $question->negative_marks,
+                        'created_at'        => date('Y m d H:i:s'),
+                        'updated_at'        => date('Y m d H:i:s')
                     ];
+                    $totalMarks+=  $question->marks; 
                 }
             }
         }
+        
         // Perform a batch insert with the prepared data
+        $exam->total_marks =  $totalMarks;
+        $exam->save();
         ExamQuestion::insert($input);
     }
 }

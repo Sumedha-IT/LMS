@@ -15,7 +15,7 @@ return new class extends Migration
             $table->id();
             $table->foreignId('exam_attempt_id');
             $table->foreignId('exam_id');
-            $table->json('answer');
+            $table->json('answer')->nullable();
             $table->float('score');
 
             // 1 =>  'Answered',
@@ -38,3 +38,4 @@ return new class extends Migration
         Schema::dropIfExists('question_attempt_logs');
     }
 };
+

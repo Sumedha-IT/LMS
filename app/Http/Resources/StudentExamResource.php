@@ -32,7 +32,8 @@ class StudentExamResource extends JsonResource
             'instructions' => $this->instructions,
             'invigilators' => $this->invigilators,
             // 'meta' => $this->meta
-            'status' =>$this->status ?? null
+            'status' =>$this->status ?? null,
+            'report' => $this->report ?? null
         ];
     }
 }

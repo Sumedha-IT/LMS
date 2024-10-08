@@ -42,4 +42,14 @@ class ExamQuestion extends Model
         return $this->hasMany(QuestionAttemptLog::class, 'exam_question_id', 'question_id');
     }
     
+    public function questionType()
+    {
+        return $this->hasMany(Question::class, 'exam_question_id', 'question_id');
+
+    }
+
+    public function questionBank()
+    {
+        return $this->belongsTo(QuestionBank::class, 'question_bank_id','id');
+    }
 }
