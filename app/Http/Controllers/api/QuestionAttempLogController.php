@@ -135,10 +135,11 @@ class QuestionAttempLogController extends Controller
     }
 
     public function validateExamEnv($data){
-        $examAttemptLog = ExamAttempt::where('id',$data['examAttemptId'] ?? null);
-        if(empty($examAttemptLog))
+        $examAttemptLog = ExamAttempt::where('id',$data['examAttemptId'] ?? null)->get();
+        
+        if($examAttemptLog->isEmpty())
             return ['message' => "Invalid Attempt Id", 'status' => 404,'success' =>false];
-
+        
         $examAttemptLog = $examAttemptLog->first();
         if($examAttemptLog->status == 'completed')
             return ['message' => "Exam Already Submitted", 'status' => 400,'success' =>false];
@@ -146,7 +147,6 @@ class QuestionAttempLogController extends Controller
             return ['message' => "Time Over !! , Exam Time Completed", 'status' => 400,'success' =>false];
       
         $data['examAttemptLog'] = $examAttemptLog;
-
         return $data;
     }
 }

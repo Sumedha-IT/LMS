@@ -232,23 +232,30 @@ class ExamController extends Controller
 
         $totalRecords = 0;
         $pageNo = $request->get('page', 1);
-        $today = date('Y-m-d') . ' 00:00:00';
+        $today = date('Y-m-d 00:00:00');
+      
         $size = $request->get('size') == 0 ? 25 : $request->get('size', 25);
         $offset = ($pageNo - 1) * $size;
 
         $examType = $request->examType == 'past'  ? 'past' : 'upcoming';
 
         $user = User::find($id);
+
+        if(empty($user))
+            return  response()->json(['message' => "User not found", 'status' => 404,'success' =>false]);
+
         $batchIds = $user->batches()->get()->pluck('id')->toArray();
+
+        if(empty($batchIds))
+            return  response()->json(['message' => "User in not enrolled to any batch", 'status' => 400,'success' =>false]);
 
         $exams = Exam::with('subject')->whereIn('batch_id', $batchIds)->orderBy('exam_date', 'desc');
         $attemptedExams = ExamAttempt::where('student_id', $id)->get();
         $attemptedExamIds = $attemptedExams->pluck('exam_id')->toArray();
 
         $exams->each(function ($exam) use (&$data, $attemptedExamIds, $attemptedExams, $today, $user) {
-
             if ($exam->exam_date < $today) {
-                $exam->status = in_array($exam['id'], $attemptedExamIds) ? "Completed" : "Expired";
+                $exam->status = in_array($exam['id'], $attemptedExamIds) ? "completed" : "Expired";
                 if ($exam->status == 'Completed') {
                     $exam->report = $attemptedExams->where('exam_id', $exam->id)->where('student_id', $user->id)->first()->report;
                     $exam->report = json_decode($exam->report, true);
@@ -256,24 +263,8 @@ class ExamController extends Controller
                 }
                 $examResource = new StudentExamResource($exam);
                 $data['pastExams'][] = $examResource;
-            } elseif ($exam->exam_date == $today) {
-                // Calculate start time
-                $startDateTime = strtotime(date('Y-m-d') . ' ' . $exam->starts_at . ':00');
-
-                // Exam can be attempted in the 15 min interval after starts at
-                if (time() > ($startDateTime + 15 * 60)) {
-
-                    $exam->status = 'Expired';
-                    $examResource = new StudentExamResource($exam);
-                    $data['pastExams'][] = $examResource;
-                } else {
-                    $exam->status = 'Available';
-                    $examResource = new StudentExamResource($exam);
-                    $data['upcomingExams'][] = $examResource;
-                }
             } else {
-
-                $exam->status = 'Upcoming';
+                $exam->status =  ($exam->exam_date == $today ) ? 'Available' : 'Upcoming';
                 $examResource = new StudentExamResource($exam);
                 $data['upcomingExams'][] = $examResource;
             }
@@ -282,6 +273,7 @@ class ExamController extends Controller
         $data = $examType == 'past' ? $data['pastExams'] ?? [] : $data['upcomingExams'] ?? [];
         $totalRecords = count($data);
         $data =  array_slice($data, $offset, $size);
+
         $data = [
             "data" => empty($data) ? [] : $data,
             "totalRecords" => $totalRecords,

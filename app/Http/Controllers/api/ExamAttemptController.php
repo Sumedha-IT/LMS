@@ -27,15 +27,13 @@ class ExamAttemptController extends Controller
         }
 
         if(empty($data['examAttemptLog'])){
-            $input =[
-                'student_id' =>$data['id'],
+            $data['examAttemptLog'] = ExamAttempt::create([
+                'student_id' => $data['id'],
                 'exam_id' => $data['exam']->id,
                 'attempt_count' => 1,
                 'status' => "started",
-                'ends_at'=> $data['ends_at']
-
-            ];
-            $data['examAttemptLog'] = ExamAttempt::create($input);
+                'ends_at' => $data['ends_at']
+            ]);
         }else{
             $data['examAttemptLog']->update([
                 'attempt_count' => $data['examAttemptLog']->attempt_count + 1,
@@ -73,11 +71,8 @@ class ExamAttemptController extends Controller
             $data['examAttemptLog'] = $examAttemptLog;
             if ($examAttemptLog->attempt_count >= 100)
                 return ['message' => "Maximum Retry Limit Exceeded", 'status' => 400, 'success' => false];
-
             if ($examAttemptLog->status == 'completed')
                 return ['message' => "Exam Already Submitted", 'status' => 400, 'success' => false];
-
-
         }
 
         $exam = Exam::find($data['examId']);
@@ -86,6 +81,7 @@ class ExamAttemptController extends Controller
         // Get the current date and time in the desired format
         $currentTime = date('Y-m-d H:i:s');
         $examStartsAt = date('Y-m-d') . ' ' . $exam->starts_at . ':00';
+        
         $examStartsAtPlus15Mins = date('Y-m-d H:i:s', strtotime($examStartsAt . ' +2000 minutes'));
         if ($currentTime > $examStartsAtPlus15Mins)
             return ['message' => "Start Time Expired ! Please Contact Invigilator", 'status' => 400, 'success' => false];
@@ -116,32 +112,9 @@ class ExamAttemptController extends Controller
     }
 
     public function generateReport($examAttempLog){
+
         $timeTaken = $this->subtractTime($examAttempLog->created_at->format('H:i:s'),date('H:i:s'));
-        $report = DB::select("
-            SELECT 
-                eq.part_id AS partId, 
-                COALESCE(SUM(qal.score), 0) AS marksObtained, 
-                COALESCE(COUNT(*), 0) AS totalQuestions, 
-                COALESCE(SUM(eq.score), 0) AS maxMarksForSection,
-                COALESCE(COUNT(qal.id), 0) AS totalAttempedCount,
-                COALESCE(COUNT(CASE WHEN qal.stage = 2 THEN 1 END), 0) AS notAnswered,
-                COALESCE(COUNT(CASE WHEN qal.stage = 3 THEN 1 END), 0) AS answeredAndMarkForReview,
-                COALESCE(COUNT(CASE WHEN qal.stage = 4 THEN 1 END), 0) AS markForReview,
-                COALESCE(COUNT(CASE WHEN qal.score < 0 THEN 1 END), 0) AS wrong,
-                COALESCE(COUNT(CASE WHEN qal.score >= 0 THEN 1 END), 0) AS correct,
-                COALESCE(COUNT(CASE WHEN qal.exam_question_id IS NULL THEN 1 END), 0) AS skippedQuestions
-            FROM 
-                lms.exam_questions AS eq
-            LEFT JOIN 
-                lms.question_attempt_logs AS qal 
-            ON 
-                eq.question_id = qal.exam_question_id 
-                AND qal.exam_attempt_id = ".$examAttempLog->id."
-            WHERE 
-                eq.exam_id = ".$examAttempLog->exam_id."
-            GROUP BY 
-                eq.part_id
-        ");
+        $report = $this->getReport($examAttempLog,true);
         
         $partWiseReport = collect($report);
         $result['timeTaken'] = $timeTaken;
@@ -261,6 +234,11 @@ class ExamAttemptController extends Controller
             return $query->where('part_id', $partId);
         })->count();
 
+        $meta = [
+            'Correct' => 0,
+            'Incorrect'   => 0,
+            'Not Attempted' => 0
+        ];
         $mergedData = ExamQuestion::with([
             'questionAttempts' => function($query) use ($examAttempLog) {
                 $query->where('exam_attempt_id', $examAttempLog->id);
@@ -268,7 +246,7 @@ class ExamAttemptController extends Controller
             'questionBank.question_bank_type'  // Include the question bank type in the eager loading
         ])->where('exam_id', $examAttempLog->exam_id)->when($data['partId'], function ($query, $partId) {
             return $query->where('part_id', $partId);
-        })->offset($offset)->limit($size)->get()->map(function ($examQuestion) use($review) {
+        })->offset($offset)->limit($size)->get()->map(function ($examQuestion) use($review,&$meta) {
 
             $questionAttempts = $examQuestion->questionAttempts->first();
             $questionType = $examQuestion->questionBank->question_bank_type->name ?? null; 
@@ -280,9 +258,10 @@ class ExamAttemptController extends Controller
                 'statusCode' => $questionAttempts->stage ?? null,
                 'maxMarks' => $examQuestion->score ,
                 'obtainedMarks' => $questionAttempts->score ?? null,
-                'isCorrect' => !empty($questionAttempts->score) ? (($questionAttempts->score > 0) ? true : false) : null
+                'questionStatus' => !empty($questionAttempts->score) ? (($questionAttempts->score > 0) ? "Correct" : "Incorrect") : "Not Attempted"
             ];
 
+            $meta[$data['questionStatus']]+= 1;
             if($review){
                 $data['question'] = $examQuestion->question;
                 $data['meta'] =  array_map(function ($option) {
@@ -294,7 +273,6 @@ class ExamAttemptController extends Controller
                 }, $examQuestion->meta['options']);
 
                 $data['correctOption'] = $examQuestion->meta['correctOption'];
-
                 $data['answer'] = $questionAttempts->answer ?? null;
                 $data['statusCode'] = $questionAttempts->stage ?? null;
                 $data['score'] = $examQuestion->score;
@@ -310,6 +288,7 @@ class ExamAttemptController extends Controller
             "data" => empty($mergedData) ? [] : $mergedData,
             "totalRecords" => $totalRecords,
             "totalPages" => ceil($totalRecords / $size),
+            "meta" => $meta,
             "partIds" => $partIds ?? [],
             "status" => 200,
             "success" => true,
@@ -319,5 +298,72 @@ class ExamAttemptController extends Controller
         return response()->json($data,200);
     }
 
+    public function getReport($examAttempLog,$review = false){
+        if($review){
+            return  DB::select("
+                        SELECT 
+                            eq.part_id AS partId, 
+                            COALESCE(SUM(qal.score), 0) AS marksObtained, 
+                            COALESCE(COUNT(*), 0) AS totalQuestions, 
+                            COALESCE(SUM(eq.score), 0) AS maxMarksForSection,
+                            COALESCE(COUNT(qal.id), 0) AS totalAttempedCount,
+                            COALESCE(COUNT(CASE WHEN qal.stage = 2 THEN 1 END), 0) AS notAnswered,
+                            COALESCE(COUNT(CASE WHEN qal.stage = 3 THEN 1 END), 0) AS answeredAndMarkForReview,
+                            COALESCE(COUNT(CASE WHEN qal.stage = 4 THEN 1 END), 0) AS markForReview,
+                            COALESCE(COUNT(CASE WHEN qal.score < 0 THEN 1 END), 0) AS wrong,
+                            COALESCE(COUNT(CASE WHEN qal.score >= 0 THEN 1 END), 0) AS correct,
+                            COALESCE(COUNT(CASE WHEN qal.exam_question_id IS NULL THEN 1 END), 0) AS skippedQuestions
+                        FROM 
+                            lms.exam_questions AS eq
+                        LEFT JOIN 
+                            lms.question_attempt_logs AS qal 
+                        ON 
+                            eq.question_id = qal.exam_question_id 
+                            AND qal.exam_attempt_id = ".$examAttempLog->id."
+                        WHERE 
+                            eq.exam_id = ".$examAttempLog->exam_id."
+                        GROUP BY 
+                            eq.part_id
+            ");
+        }else{
+            return  DB::select("
+                SELECT 
+                    eq.part_id AS partId, 
+                    COALESCE(COUNT(*), 0) AS noOfQuestions, 
+                    COALESCE(COUNT(CASE WHEN qal.stage = 1 THEN 1 END), 0) AS answered,
+                    COALESCE(COUNT(CASE WHEN qal.stage = 2 THEN 1 END), 0) AS notAnswered,
+                    COALESCE(COUNT(CASE WHEN qal.stage = 3 THEN 1 END), 0) AS answeredAndMarkForReview,
+                    COALESCE(COUNT(CASE WHEN qal.stage = 4 THEN 1 END), 0) AS markForReview,
+                    COALESCE(COUNT(CASE WHEN qal.exam_question_id IS NULL THEN 1 END), 0) AS notVisited
+                FROM 
+                    lms.exam_questions AS eq
+                LEFT JOIN 
+                    lms.question_attempt_logs AS qal 
+                ON 
+                    eq.question_id = qal.exam_question_id 
+                    AND qal.exam_attempt_id = ".$examAttempLog->id."
+                WHERE 
+                    eq.exam_id = ".$examAttempLog->exam_id."
+                GROUP BY 
+                    eq.part_id
+            ");
+        }
+    }
+
+    public function getExamStat(Request $request){
+        
+        $examAttempLog = ExamAttempt::find($request->attemptId);
+        if(empty($examAttempLog))
+            return ['message' => 'Attempt Id not found', 'status' => 404,'success' =>false];
+
+        if($examAttempLog->status == 'completed')
+            return ['message' => 'Exam Already Submitted', 'status' => 400,'success' =>false];
+
+        $examAttempLog->report = $this->getReport($examAttempLog);
+        // $examAttempLog->status = 'completed';
+        
+        $examAttempLog->save();
+        return response()->json(['message' => 'Exam Stats', 'data' => $examAttempLog->report, 'status' => 200, 'success' => true], 200);
+    }
 
 }
