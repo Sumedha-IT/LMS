@@ -32,26 +32,7 @@ const PaymentDetails = () => {
 
   return (
     <div className="p-6">
-      {/* Tabs */}
-      <div className="flex border-b mb-4">
-        <button
-          className={`py-2 px-4 ${
-            activeTab === "admission" ? "border-b-2 border-orange-500 text-orange-500" : ""
-          }`}
-          onClick={() => setActiveTab("admission")}
-        >
-          Admission/Fee
-        </button>
-        <button
-          className={`py-2 px-4 ${
-            activeTab === "payments" ? "border-b-2 border-orange-500 text-orange-500" : ""
-          }`}
-          onClick={() => setActiveTab("payments")}
-        >
-          Payments
-        </button>
-      </div>
-
+   
       {/* Admission/Fee View */}
       {activeTab === "admission" && (
         <div className="flex">
@@ -141,39 +122,6 @@ const PaymentDetails = () => {
         </div>
       )}
 
-     {/* Payments View */}
-     {activeTab === "payments" && (
-        <div>
-          <table className="min-w-full bg-white rounded shadow">
-            <thead>
-              <tr className="bg-gray-100 text-left text-gray-600">
-                <th className="py-2 px-4">Receipt No.</th>
-                <th className="py-2 px-4">Paid On</th>
-                <th className="py-2 px-4">Mode</th>
-                <th className="py-2 px-4">Ref No.</th>
-                <th className="py-2 px-4">Amount Paid</th>
-                <th className="py-2 px-4"></th>
-              </tr>
-            </thead>
-            <tbody>
-              {payments.map((payment, index) => (
-                <tr key={index} className="border-b">
-                  <td className="py-2 px-4">{payment.receiptNo}</td>
-                  <td className="py-2 px-4">{payment.paidOn}</td>
-                  <td className="py-2 px-4">{payment.mode}</td>
-                  <td className="py-2 px-4">{payment.refNo || "-"}</td>
-                  <td className="py-2 px-4 text-green-600">₹{payment.amountPaid.toLocaleString()}</td>
-                  <td className="py-2 px-4">
-                    <a href="#" className="text-orange-500">
-                      Payment Receipt
-                    </a>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      )}
     </div>
   );
 };
