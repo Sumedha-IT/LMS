@@ -55,39 +55,48 @@ class ExamAttemptController extends Controller
         $validator = Validator::make($data, [
             'id' => 'nullable|integer|exists:users,id',
             'examId' => 'required|integer|exists:exams,id',
-            
-        ]);
+        ]);        
 
         if (!empty($validator->errors()->messages())) {
             return ['message' => $validator->errors()->all()[0], 'status' => 400,'success' =>false];
         }
-
         $data = $validator->validate();
-        $examAttemptLog = ExamAttempt::where('exam_id',$data['examId'])->where('student_id',$data['id'])->first();
 
+        
+        // Check if the user belongs to that particular exam or not.
         $data['user']= User::find($data['id']);
+        $batchIds = $data['user']->batches()->get()->pluck('id')->toArray();
+        $exam = Exam::with('subject')->whereIn('batch_id', $batchIds)->where('id',$data['examId'])->first();
 
-        if (!empty($examAttemptLog)) {
-            $data['examAttemptLog'] = $examAttemptLog;
-            if ($examAttemptLog->attempt_count >= 100)
-                return ['message' => "Maximum Retry Limit Exceeded", 'status' => 400, 'success' => false];
-            if ($examAttemptLog->status == 'completed')
-                return ['message' => "Exam Already Submitted", 'status' => 400, 'success' => false];
-        }
+        if(empty($exam))
+            return ['message' => "Invalid Exam", 'status' => 400, 'success' => false];
 
-        $exam = Exam::find($data['examId']);
-        date_default_timezone_set('Asia/Kolkata');
-
-        // Get the current date and time in the desired format
         $currentTime = date('Y-m-d H:i:s');
         $examStartsAt = date('Y-m-d') . ' ' . $exam->starts_at . ':00';
-        
-        $examStartsAtPlus15Mins = date('Y-m-d H:i:s', strtotime($examStartsAt . ' +2000 minutes'));
-        if ($currentTime > $examStartsAtPlus15Mins)
-            return ['message' => "Start Time Expired ! Please Contact Invigilator", 'status' => 400, 'success' => false];
+        $examEndsAt = date('Y-m-d') . ' ' . $exam->ends_at . ':00';
 
         if ($currentTime < $examStartsAt)
             return ['message' => "Exam is not started yet", 'status' => 400, 'success' => false];
+
+        if ($currentTime > $examEndsAt)
+            return ['message' => "Exam is already ended ", 'status' => 400, 'success' => false];
+
+        $examAttemptLog = ExamAttempt::where('exam_id',$data['examId'])->where('student_id',$data['id'])->first();
+
+        if (!empty($examAttemptLog)) {
+            $data['examAttemptLog'] = $examAttemptLog;
+            if ($examAttemptLog->attempt_count >= 10)
+                return ['message' => "Maximum Retry Limit Exceeded", 'status' => 400, 'success' => false];
+            if ($examAttemptLog->status == 'completed')
+                return ['message' => "Exam Already Submitted", 'status' => 400, 'success' => false];
+        }else{
+            date_default_timezone_set('Asia/Kolkata');
+
+            //Check if user is not late for the Exam
+            $examStartsAtPlus15Mins = date('Y-m-d H:i:s', strtotime($examStartsAt . ' +15 minutes'));
+            if ($currentTime > $examStartsAtPlus15Mins)
+                return ['message' => "You're late ! Please Contact Invigilator", 'status' => 400, 'success' => false];
+        }
 
         $data['exam'] = $exam;
         $data['ends_at'] =date('Y-m-d') . ' '.$exam->ends_at.':00';
@@ -99,14 +108,13 @@ class ExamAttemptController extends Controller
         
         $examAttempLog = ExamAttempt::find($request->attemptId);
         if(empty($examAttempLog))
-            return ['message' => 'Attempt Id not found', 'status' => 404,'success' =>false];
+            return response()->json(['message' => 'Attempt Id not found', 'data' => $examAttempLog->report, 'status' => 404, 'success' => false], 200);
 
         if($examAttempLog->status == 'completed')
-            return ['message' => 'Exam Already Submitted', 'status' => 400,'success' =>false];
+            return response()->json(['message' => 'Exam Already Submitted', 'data' => $examAttempLog->report, 'status' => 400, 'success' => false], 200);
 
-        $examAttempLog->report = $this->generateReport($examAttempLog);
-        // $examAttempLog->status = 'completed';
-
+        $examAttempLog->report = (array)$this->generateReport($examAttempLog);
+        $examAttempLog->status = 'completed';
         $examAttempLog->save();
         return response()->json(['message' => 'Exam submitted succesfully', 'data' => $examAttempLog->report, 'status' => 200, 'success' => true], 200);
     }
@@ -128,7 +136,7 @@ class ExamAttemptController extends Controller
                 return $item->totalQuestions ?? 0; 
             }),
             'maxMarks' => $partWiseReport->sum(function ($item) { 
-                return $item->maxMarksForSection ?? 0; 
+                return (float)$item->maxMarksForSection ?? 0; 
             }),
             'totalAttemptedCount' => $partWiseReport->sum(function ($item) { 
                 return $item->totalAttempedCount ?? 0; 
@@ -222,6 +230,8 @@ class ExamAttemptController extends Controller
             return response()->json(['message' => $validator->errors()->all()[0], 'status' => 404, 'success' => false], 404);
         }
         $examAttempLog = ExamAttempt::where('exam_id',$examId)->where('student_id',$id)->first();
+        if($examAttempLog->status != 'completed')
+            return response()->json(['message' => "Kindly please submit the exam", 'status' => 404, 'success' => false], 400);
 
         $totalRecords = ExamQuestion::with([
             'questionAttempts' => function ($query) use ($examAttempLog) {
@@ -250,17 +260,25 @@ class ExamAttemptController extends Controller
 
             $questionAttempts = $examQuestion->questionAttempts->first();
             $questionType = $examQuestion->questionBank->question_bank_type->name ?? null; 
+            
             $data =  [
                 'id' => $examQuestion->id,
                 'question_id' => $examQuestion->question_id,
                 'type' => $questionType,
                 'partId' => $examQuestion->part_id,
-                'statusCode' => $questionAttempts->stage ?? null,
-                'maxMarks' => $examQuestion->score ,
-                'obtainedMarks' => $questionAttempts->score ?? null,
-                'questionStatus' => !empty($questionAttempts->score) ? (($questionAttempts->score > 0) ? "Correct" : "Incorrect") : "Not Attempted"
+                'maxMarks' => $examQuestion->score,
+                'statusCode' => null,
+                'obtainedMarks' => null,
+                'questionStatus' =>  "Not Attempted"
             ];
 
+            if(!empty($questionAttempts)){
+                $data['statusCode'] = $questionAttempts->stage ?? null;
+                $data['obtainedMarks'] = $questionAttempts->score ?? null;
+                $data['questionStatus'] = empty($questionAttempts->answer) ? "Not Attempted" : ($questionAttempts->score > 0 ? "Correct" : "Incorrect");
+            }
+
+           
             $meta[$data['questionStatus']]+= 1;
             if($review){
                 $data['question'] = $examQuestion->question;
@@ -298,6 +316,29 @@ class ExamAttemptController extends Controller
         return response()->json($data,200);
     }
 
+    public function getExamStat(Request $request){
+        $examAttempLog = ExamAttempt::find($request->attemptId);
+        if(empty($examAttempLog))
+            return response()->json(['message' => 'Attempt Id not found', 'data' => $examAttempLog->report, 'status' => 200, 'success' => false], 404);
+
+        if($examAttempLog->status == 'completed')
+            return response()->json(['message' => 'Exam Already Submitted', 'data' => $examAttempLog->report, 'status' => 200, 'success' => false], 400);
+
+        $examAttempLog->report = $this->getReport($examAttempLog);
+        return response()->json(['message' => 'Exam Statistics', 'data' => $examAttempLog->report, 'status' => 200, 'success' => true], 200);
+    }
+
+    public function getExamReport($id,$examId){
+        //Add api check for exam Submitted or not
+        $examAttempLog = ExamAttempt::where('exam_id',$examId)->where('student_id',$id)->first();
+
+        if(empty($examAttempLog))
+            return response()->json(['message' => 'Exam not attempted', 'data' => $examAttempLog->report, 'status' => 400, 'success' => false], 200);
+
+        $examAttempLog->report = (array)$this->generateReport($examAttempLog);
+        return response()->json(['message' => 'Exam Report', 'data' => $examAttempLog->report, 'status' => 200, 'success' => true], 200);
+    }
+
     public function getReport($examAttempLog,$review = false){
         if($review){
             return  DB::select("
@@ -305,13 +346,13 @@ class ExamAttemptController extends Controller
                             eq.part_id AS partId, 
                             COALESCE(SUM(qal.score), 0) AS marksObtained, 
                             COALESCE(COUNT(*), 0) AS totalQuestions, 
-                            COALESCE(SUM(eq.score), 0) AS maxMarksForSection,
-                            COALESCE(COUNT(qal.id), 0) AS totalAttempedCount,
+                            COALESCE(CAST(SUM(eq.score) AS FLOAT), 0) AS maxMarksForSection,
+                            COALESCE(COUNT(qal.answer), 0) AS totalAttempedCount,
                             COALESCE(COUNT(CASE WHEN qal.stage = 2 THEN 1 END), 0) AS notAnswered,
                             COALESCE(COUNT(CASE WHEN qal.stage = 3 THEN 1 END), 0) AS answeredAndMarkForReview,
                             COALESCE(COUNT(CASE WHEN qal.stage = 4 THEN 1 END), 0) AS markForReview,
                             COALESCE(COUNT(CASE WHEN qal.score < 0 THEN 1 END), 0) AS wrong,
-                            COALESCE(COUNT(CASE WHEN qal.score >= 0 THEN 1 END), 0) AS correct,
+                            COALESCE(COUNT(CASE WHEN qal.score > 0 THEN 1 END), 0) AS correct,
                             COALESCE(COUNT(CASE WHEN qal.exam_question_id IS NULL THEN 1 END), 0) AS skippedQuestions
                         FROM 
                             lms.exam_questions AS eq
@@ -349,21 +390,4 @@ class ExamAttemptController extends Controller
             ");
         }
     }
-
-    public function getExamStat(Request $request){
-        
-        $examAttempLog = ExamAttempt::find($request->attemptId);
-        if(empty($examAttempLog))
-            return ['message' => 'Attempt Id not found', 'status' => 404,'success' =>false];
-
-        if($examAttempLog->status == 'completed')
-            return ['message' => 'Exam Already Submitted', 'status' => 400,'success' =>false];
-
-        $examAttempLog->report = $this->getReport($examAttempLog);
-        // $examAttempLog->status = 'completed';
-        
-        $examAttempLog->save();
-        return response()->json(['message' => 'Exam Stats', 'data' => $examAttempLog->report, 'status' => 200, 'success' => true], 200);
-    }
-
 }

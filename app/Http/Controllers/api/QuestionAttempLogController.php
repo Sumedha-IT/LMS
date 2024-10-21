@@ -13,7 +13,6 @@ use Illuminate\Validation\Rule;
 class QuestionAttempLogController extends Controller
 {
     public function getQuestions(Request $request){
-        
         $data = request()->query();
 
         $size = $request->get('size') == 0 ? 25 : $request->get('size');
@@ -55,9 +54,10 @@ class QuestionAttempLogController extends Controller
                     ];
                 }, $examQuestion->meta['options']),
                 'answer' => $questionAttempts->answer ?? null,
-                'statusCode' => $questionAttempts->stage ?? null,
+                'statusCode' => $questionAttempts->stage ?? "5",
                 'score' => $examQuestion->score,
                 'negativeScore' => $examQuestion->negative_score,
+                'saved' => empty($questionAttempts) ? false : true 
             ];
         });
 
@@ -87,6 +87,10 @@ class QuestionAttempLogController extends Controller
         }
         $optionIds = collect($question->meta['options'])->pluck('id')->toArray();
 
+            // 1 =>  'Answered',
+            // 2 =>  'Not_Answered',
+            // 3 =>  'Answered_and_Mark_for_review',
+            // 4 =>  'Mark_for_review'
             $validator = Validator::make($data, [
                 'statusCode' => 'required|integer|in:1,2,3,4',
                 'answerId' => ['nullable', 'integer', Rule::in(($optionIds)),'required_if:statusCode,1,3'],
@@ -135,17 +139,22 @@ class QuestionAttempLogController extends Controller
     }
 
     public function validateExamEnv($data){
-        $examAttemptLog = ExamAttempt::where('id',$data['examAttemptId'] ?? null)->get();
-        
-        if($examAttemptLog->isEmpty())
-            return ['message' => "Invalid Attempt Id", 'status' => 404,'success' =>false];
-        
+        $examAttemptLog = ExamAttempt::where('id',$data['examAttemptId'] ?? null);
         $examAttemptLog = $examAttemptLog->first();
+
+        if(empty($examAttemptLog))
+            return ['message' => "Invalid Attempt Id", 'status' => 404,'success' =>false];
+        if($examAttemptLog->ends_at < date('Y-m-d H:i:s')){
+            // Api check Exam ended
+            // Create report here
+            $examAttemptLog->status = 'completed';
+            $examAttemptLog->save();
+            return ['message' => "Exam Time over !!!", 'status' => 400,'success' =>false];
+        }
+        // Api Check
         if($examAttemptLog->status == 'completed')
             return ['message' => "Exam Already Submitted", 'status' => 400,'success' =>false];
-        if(date('Y-m-d H:i:s') >  $examAttemptLog->ends_at)
-            return ['message' => "Time Over !! , Exam Time Completed", 'status' => 400,'success' =>false];
-      
+
         $data['examAttemptLog'] = $examAttemptLog;
         return $data;
     }

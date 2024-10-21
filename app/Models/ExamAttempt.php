@@ -16,8 +16,14 @@ class ExamAttempt extends Model
         'attempt_count',
         'score',
         'status',
-        'ends_at'
+        'ends_at',
+        'report'
     ];
+
+    protected $casts = [
+        'report' => 'array'
+   ];
+
     public function student()
     {
         return $this->belongsTo(User::class, 'student_id');

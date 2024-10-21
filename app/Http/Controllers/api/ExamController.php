@@ -198,11 +198,20 @@ class ExamController extends Controller
             'id' => 'nullable|integer',
             'batchId' => 'required|integer|exists:batches,id',
             'subjectId' => 'required|integer|exists:subjects,id',
-            'title' => ['required','string','max:255'],
+            'title' => ['required','string','max:50'],
             'instructions' => 'nullable|string|max:1000',
-            'startsAt' => 'required|date_format:H:i',
+            'examDate' => 'required|date_format:Y-m-d|after_or_equal:today',
+            'startsAt' => [
+                'required',
+                'date_format:H:i',
+                function ($attribute, $value, $fail) {
+                    $examDate = request('examDate');
+                    if ($examDate === date('Y-m-d') && $value <= date('H:i')) {
+                        $fail('The start time must be after the current time if the exam is scheduled for today.');
+                    }
+                }
+            ],
             'endsAt' => 'required|date_format:H:i|after:startsAt',
-            'examDate' => 'required|date_format:Y-m-d|after:today',
             'immediateResult' => 'boolean',
             'maxAttempts' => 'integer|max:10',
             'invigilators' => 'array',
@@ -247,28 +256,61 @@ class ExamController extends Controller
         $batchIds = $user->batches()->get()->pluck('id')->toArray();
 
         if(empty($batchIds))
-            return  response()->json(['message' => "User in not enrolled to any batch", 'status' => 400,'success' =>false]);
+            return  response()->json(['message' => "User is not enrolled to any batch", 'status' => 400,'success' =>false]);
 
         $exams = Exam::with('subject')->whereIn('batch_id', $batchIds)->orderBy('exam_date', 'desc');
         $attemptedExams = ExamAttempt::where('student_id', $id)->get();
         $attemptedExamIds = $attemptedExams->pluck('exam_id')->toArray();
-
         $exams->each(function ($exam) use (&$data, $attemptedExamIds, $attemptedExams, $today, $user) {
-            if ($exam->exam_date < $today) {
-                $exam->status = in_array($exam['id'], $attemptedExamIds) ? "completed" : "Expired";
-                if ($exam->status == 'Completed') {
-                    $exam->report = $attemptedExams->where('exam_id', $exam->id)->where('student_id', $user->id)->first()->report;
-                    $exam->report = json_decode($exam->report, true);
-                    $exam->report =  $exam->report['aggregateReport'] ?? [];
+            
+            if(in_array($exam->id,$attemptedExamIds )){
+                $examAttemptLog = $attemptedExams->where('exam_id', $exam->id)->where('student_id', $user->id)->first();
+                if($examAttemptLog->status == 'completed'){
+                    $exam->totalMarksObtained = $examAttemptLog->report['aggregateReport']['totalMarksObtained'] ?? 0;
+                    $exam->attemptId = $examAttemptLog->id;
+                    $exam->status = "Completed" ;
+                    $examResource = new StudentExamResource($exam);
+                    $data['pastExams'][] = $examResource;
+                }else{
+                    $exam->status =  ($exam->exam_date == $today ) ? 'Available' : 'Expired';
+                    $examResource = new StudentExamResource($exam);
+                    if($exam->status == 'Expired'){
+                        $data['pastExams'][] = $examResource;
+                    }else{
+                        $data['upcomingExams'][] = $examResource;
+                    }
                 }
+            }else if ($exam->exam_date < $today) {
+                $exam->status = "Expired";
+
+                // api check if the user hasn't submitted the report will not be saved.
+                $exam->totalMarksObtained = $examAttemptLog->report['aggregateReport']['totalMarksObtained'] ?? 0;
                 $examResource = new StudentExamResource($exam);
                 $data['pastExams'][] = $examResource;
             } else {
-                $exam->status =  ($exam->exam_date == $today ) ? 'Available' : 'Upcoming';
-                $examResource = new StudentExamResource($exam);
-                $data['upcomingExams'][] = $examResource;
+                if($exam->exam_date == $today){
+                    if(($exam->ends_at >  date('H:i') && $exam->starts_at < date('H:i'))) {
+                        $exam->status = 'Available';
+                        $examResource = new StudentExamResource($exam);
+                        $data['upcomingExams'][] = $examResource;
+                    }elseif( $exam->starts_at > date('H:i') ) {
+                        $exam->status = 'Upcoming';
+                        $examResource = new StudentExamResource($exam);
+                        $data['upcomingExams'][] = $examResource;
+                    }
+                    else{
+                        $exam->status = 'Expired';
+                        $examResource = new StudentExamResource($exam);
+                        $data['pastExams'][] = $examResource;
+                    }
+                }else{
+                    $exam->status =  ($exam->exam_date == $today ) ? 'Available' : 'Upcoming';
+                    $examResource = new StudentExamResource($exam);
+                    $data['upcomingExams'][] = $examResource;
+                }
             }
         });
+
 
         $data = $examType == 'past' ? $data['pastExams'] ?? [] : $data['upcomingExams'] ?? [];
         $totalRecords = count($data);

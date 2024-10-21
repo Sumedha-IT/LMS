@@ -6,7 +6,7 @@ const baseQuery = fetchBaseQuery({
     baseUrl: `${APP_URL}`,
     prepareHeaders: (headers) => {
         // const data = JSON.parse(String(localStorage.getItem("token")));
-        const data = "350|CJjJQ4Dpytdkkm6Bn5qtigAEiIFsFsNe2MAJLGYxb5936e16";
+        const data = "31|uyUHQUw8TGBcj0xlU2jmsgMJvWEoQ9Iuk3lxMCwb5f1437ba";
         if (data) {
             headers.set("authorization", `Bearer ${data}`);
             // if (APP_URL)

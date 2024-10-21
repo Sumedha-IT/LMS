@@ -219,12 +219,14 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
     Route::post('/student/{id}/exam/{examId}/submitExam', [ExamAttemptController::class,'submitExam']);  
     Route::get('/student/{id}/exam/{examId}/reviewExam', [ExamAttemptController::class,'reviewExam']);  
     Route::get('/student/{id}/exam/{examId}/examStat', [ExamAttemptController::class,'getExamStat']);  
-
+    Route::get('/student/{id}/exam/{examId}/examReport', [ExamAttemptController::class,'getExamReport']);  
       
     Route::get('/invigilators',[UserController::class,'tutors']);
 
+
     // Api for Post/Timeline
     Route::middleware(['payloadCheck'])->group(function () {
+
         Route::post('/exams', [ExamController::class,'create']);
         Route::post('/{examId}/examQuestions', [ExamQuestionController::class,'create']);
         Route::delete('/{examId}/examQuestions', [ExamQuestionController::class,'delete']);

@@ -23,4 +23,38 @@ class TestingController extends Controller
        
     }
 
+
+    public function showUserInfo()
+    {
+        // Mock data for demonstration. Replace this with actual dynamic data from your database.
+        $user = [
+            'name' => 'John Doe',
+            'email' => 'john@example.com',
+            'phone' => '123-456-7890',
+            'address' => '123 Main Street, City, Country',
+            'education' => 'Bachelor of Computer Science',
+            'employment' => 'Software Engineer at XYZ Corp',
+            'meta' => [
+                'he'=>"llo"
+            ]
+        ];
+
+        return view('userInfo', compact('user'));
+    }
+
+    public function getUserInfoJson()
+    {
+        // Same mock data for demonstration
+        $user = [
+            'name' => 'John Doe',
+            'email' => 'john@example.com',
+            'phone' => '123-456-7890',
+            'address' => '123 Main Street, City, Country',
+            'education' => 'Bachelor of Computer Science',
+            'employment' => 'Software Engineer at XYZ Corp',
+        ];
+
+        return response()->json($user);
+    }
+
 }
