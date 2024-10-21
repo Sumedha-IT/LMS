@@ -11,6 +11,7 @@ import AdminDashboard from './pages/AdminDashboard';
 
 
 import UserDashboard from './pages/UserDashboard';
+import PermissionUserExam from './components/PermissionUserExam';
 
 function App() {
   return (
@@ -25,6 +26,8 @@ function App() {
         <Route path="/administrator/:id/payment-details" element={<PaymentDetails/>} />
 
         <Route path="/administrator/:id/examinations" element={<UserDashboard />} />
+        <Route path="/user/:userId/exam/:examId" element={<PermissionUserExam />} />
+
 
       </Routes>
 

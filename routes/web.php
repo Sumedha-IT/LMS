@@ -31,3 +31,6 @@ Route::get('clear-cache', function () {
     return "Cache cleared successfully";
 });
 
+Route::get('administrator/user/{userId}/exam/{examId}', function ($userId, $examId) {
+    return view('exam');  // This should point to the Blade file that loads the React component.
+})->name('user.exam');
