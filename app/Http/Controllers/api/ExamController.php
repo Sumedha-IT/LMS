@@ -11,6 +11,7 @@ use App\Models\ExamQuestion;
 use App\Models\Question;
 use App\Models\QuestionBank;
 use App\Models\User;
+use App\Services\ExamService;
 use Illuminate\Database\QueryException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -236,7 +237,7 @@ class ExamController extends Controller
         return $data;   
     }
 
-    public function getExams($id, Request $request)
+    public function getExams($id, Request $request,ExamService $es)
     {
 
         $totalRecords = 0;
@@ -282,9 +283,7 @@ class ExamController extends Controller
                 }
             }else if ($exam->exam_date < $today) {
                 $exam->status = "Expired";
-
-                // api check if the user hasn't submitted the report will not be saved.
-                $exam->totalMarksObtained = $examAttemptLog->report['aggregateReport']['totalMarksObtained'] ?? 0;
+                $exam->totalMarksObtained = 0;
                 $examResource = new StudentExamResource($exam);
                 $data['pastExams'][] = $examResource;
             } else {
