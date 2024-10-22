@@ -9,6 +9,7 @@ import PaperIcon from '@mui/icons-material/Article'; // Use a suitable icon for 
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 import Slide from '@mui/material/Slide';
 import { useNavigate } from 'react-router-dom';
+import userId from '../store/service/user/UserService';
 
 const Transition = React.forwardRef(function Transition(props, ref) {
     return (
@@ -92,7 +93,7 @@ const ReviewDialog = ({ openModal, handleCloseModal, selectedRow }) => {
                             display: 'flex', gap: 2, justifyContent: "end"
                         }}>
                             <Box>
-                                <Button onClick={() => nav(`/administrator/1/examinations/user/7/exam/${selectedRow.id}/review`)}  sx={{ display: 'flex', color:'#09b509db',alignItems: 'center', mb: 1, fontSize: { xs: '11px', sm: '12px', md: '14px', xl: '15px' } }}>
+                                <Button onClick={() => nav(`/administrator/1/examinations/user/${userId}/exam/${selectedRow.id}/review`)}  sx={{ display: 'flex', color:'#09b509db',alignItems: 'center', mb: 1, fontSize: { xs: '11px', sm: '12px', md: '14px', xl: '15px' } }}>
                                     Evaluated
                                 </Button>
                             </Box>

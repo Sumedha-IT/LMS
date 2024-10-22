@@ -2,11 +2,11 @@ import { Box, Paper, Tab, Tabs, Typography } from '@mui/material';
 import React, { useEffect, useState } from 'react';
 import TabPanel, { a11yProps } from '../common/TabPanel';
 import UserExamTable from '../components/UserExamTable';
-import { useGetStudentDataQuery } from '../store/service/user/UserService';
+import userId, { useGetStudentDataQuery } from '../store/service/user/UserService';
 
 const UserDashboard = () => {
     const [mainTab, setMainTab] = useState(0); // For Exams and Attempted Exams tabs
-    const { data } = useGetStudentDataQuery({ userId: 7 });
+    const { data } = useGetStudentDataQuery({ userId: userId });
 
 
     useEffect(() => {
@@ -73,14 +73,14 @@ const UserDashboard = () => {
 
             {/* TabPanel switching based on mainTab value */}
             <TabPanel value={mainTab} index={0}>
-                <UserExamTable Value={mainTab} /> {/* The UserExamTable will handle the exam table data */}
+                <UserExamTable Value={mainTab} userId={userId}/> {/* The UserExamTable will handle the exam table data */}
             </TabPanel>
 
             <TabPanel value={mainTab} index={1}>
                 {/* <Typography variant="body1">
                     This is the Past Exams section.
                 </Typography> */}
-                <UserExamTable Value={mainTab} />
+                <UserExamTable Value={mainTab} userId={userId} />
             </TabPanel>
         </Box>
     );

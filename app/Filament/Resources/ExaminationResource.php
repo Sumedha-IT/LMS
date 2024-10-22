@@ -22,9 +22,9 @@ class ExaminationResource extends Resource
     public static function shouldRegisterNavigation(): bool
     {
         // Ensure there's a logged-in user
-        if (Auth::check()) {
+        if (Auth::check() && Auth::user()) {
             // Check if the user's role is 'Student' i.e role id = 6
-            return (Auth::user()->role()->first()->id === 6);
+            return (Auth::user()->getIsStudentAttribute());
         }
     
         // Return false if no user is logged in or role is not 'Student'

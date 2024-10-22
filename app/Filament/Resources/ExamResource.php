@@ -24,9 +24,8 @@ class ExamResource extends Resource
     public static function shouldRegisterNavigation(): bool
     {
         // Ensure there's a logged-in user
-        if (Auth::check()) {
-            // Check if the user's role is 'Student' i.e role id = 6
-            return !(Auth::user()->role()->first()->id === 6);
+        if (Auth::check() && Auth::user()) {
+            return !(Auth::user()->getIsStudentAttribute());
         }
     
         // Return false if no user is logged in or role is not 'Student'
@@ -74,7 +73,6 @@ class ExamResource extends Resource
             'question' => Pages\ExamAddQuestion::route('/addquestion'),
             'questionbank' => Pages\ExamAddQuestionBank::route('/addquestionBank'),
             'managequestions' => Pages\ExamManageQuestions::route('/manageQuestions'),
-
         ];
     }
 }

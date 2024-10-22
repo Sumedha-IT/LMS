@@ -4,7 +4,7 @@
 // import AccessTimeIcon from '@mui/icons-material/AccessTime';
 // import PendingActionsIcon from '@mui/icons-material/PendingActions';
 // import CommonTable from '../common/CommonTable';
-// import { useGetUserExamDataQuery } from '../store/service/user/UserService';
+// import userId, { useGetUserExamDataQuery } from '../store/service/user/UserService';
 
 // const headers = [
 //     { label: '', accessor: 'index' },
@@ -195,7 +195,7 @@ const Transition = React.forwardRef(function Transition(props, ref) {
         />)
 });
 
-const UserExamTable = ({ Value }) => {
+const UserExamTable = ({ Value,  userId }) => {
     const [userExamData, setUserExamData] = useState([]);
     const [page, setPage] = useState(0);
     const [rowsPerPage, setRowsPerPage] = useState(10);
@@ -206,7 +206,7 @@ const UserExamTable = ({ Value }) => {
         page: page + 1,
         rowsPerPage: rowsPerPage,
         ExamType: (Value === 0 ? "upcoming" : "past"),
-        userId: 7,
+        userId: userId,
     });
 
     useEffect(() => {
@@ -254,8 +254,7 @@ const UserExamTable = ({ Value }) => {
         // Check if the current time is between the start and end times
     }
 
-
-    const renderActions = (row) => {
+    const renderActions = (row, userId) => {
         const buttonEnabled = isButtonEnabled(row.examDate, row.starts_at, row.ends_at);
 
         return (
@@ -263,7 +262,8 @@ const UserExamTable = ({ Value }) => {
                 {Value === 0 ? (
                     <Box
                         component="a"
-                        href={buttonEnabled ? `/user/${7}/exam/${row.id}` : '#'}
+
+                        href={buttonEnabled ? `/user/${userId}/exam/${row.id}` : '#'}
                         target={buttonEnabled ? "_blank" : undefined}
                         rel="noopener noreferrer"
                         sx={{
@@ -329,7 +329,7 @@ const UserExamTable = ({ Value }) => {
         index: `${index + 1}.`,
         examNameWithStatus: renderExamNameWithStatus(exam),
         ...exam,
-        actions: renderActions(exam),
+        actions: renderActions(exam, userId),
     }));
 
     return (
