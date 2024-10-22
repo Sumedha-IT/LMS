@@ -31,6 +31,22 @@ Route::get('clear-cache', function () {
     return "Cache cleared successfully";
 });
 
-Route::get('administrator/user/{userId}/exam/{examId}', function ($userId, $examId) {
+Route::get('user/{userId}/exam/{examId}', function ($userId, $examId) {
     return view('exam');  // This should point to the Blade file that loads the React component.
 })->name('user.exam');
+
+Route::get('user/{userId}/exam/{examId}/assessment/{attemptId}', function ($userId, $examId) {
+    return view('questionPanel');  // This should point to the Blade file that loads the React component.
+})->name('user.exam.questionPanel');
+
+Route::get('user/{userId}/exam/{examId}/review}', function ($userId, $examId) {
+    return view('examReview');  // This should point to the Blade file that loads the React component.
+})->name('user.exam.examReview');
+
+Route::get('user/{userId}/exam/{examId}/result}', function ($userId, $examId) {
+    return view('examResult');  // This should point to the Blade file that loads the React component.
+})->name('user.exam.examResult');
+
+Route::get('/user', function () {
+    return redirect('/administrator');
+});

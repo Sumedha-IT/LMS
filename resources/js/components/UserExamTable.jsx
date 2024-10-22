@@ -286,7 +286,7 @@ const UserExamTable = ({ Value }) => {
                         Attempt
                     </Box>
                 ) : (
-                    <Button
+                    <button
                         variant="text"
                         color="warning"
                         size="small"
@@ -294,7 +294,7 @@ const UserExamTable = ({ Value }) => {
                         sx={{ color: '#f97316' }}
                     >
                         Review
-                    </Button>
+                    </button>
                 )}
             </Box>
         );

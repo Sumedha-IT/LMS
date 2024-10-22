@@ -10,12 +10,26 @@ use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
+use Illuminate\Support\Facades\Auth;
 
 class ExaminationResource extends Resource
 {
     protected static ?string $model = Examination::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
+
+
+    public static function shouldRegisterNavigation(): bool
+    {
+        // Ensure there's a logged-in user
+        if (Auth::check()) {
+            // Check if the user's role is 'Student' i.e role id = 6
+            return (Auth::user()->role()->first()->id === 6);
+        }
+    
+        // Return false if no user is logged in or role is not 'Student'
+        return false;
+    }
 
     public static function form(Form $form): Form
     {

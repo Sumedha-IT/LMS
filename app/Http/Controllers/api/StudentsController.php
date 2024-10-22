@@ -11,7 +11,6 @@ use Illuminate\Support\Facades\Validator;
 class StudentsController extends Controller
 {
     public function index(Request $req){
-
         $size = $req->get('size') == 0 ? 25 : $req->get('size');
         $pageNo = $req->get('page', 1);
         $offset = ($pageNo - 1) * $size;
