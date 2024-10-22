@@ -242,9 +242,5 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
     });
 
 });
-Route::group(['middleware' => [
-    'addHeader', 
-    'auth:sanctum'
-    ]], function () {
-    Route::get("/test", [TestingController::class, "getAllCourses"]);
-});
+
+Route::get("/test", [TestingController::class, "testMail"]);

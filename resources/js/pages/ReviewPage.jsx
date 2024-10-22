@@ -156,7 +156,7 @@ const ReviewPage = () => {
                 </Box>
                 {/* Main Content Section */}
                 <Grid container spacing={0} sx={{ height: `calc(100vh - 49px)`, '@media (min-width: 0px) and (max-width: 599px)': { height: `calc(100vh - 63px)` }, '@media (min-width: 599px) and (max-width: 1100px)': { height: `calc(100vh - 42px)` } }}>
-                    <Grid item size={{ xs: 12, sm: 8, md: 9 }} sx={{ p: 0 }}>
+                    <Grid item xs={12} sm={ 8} md={ 9} sx={{ p: 0}}>
                         {isSubmit ? (
                             <ResultComponent userId={userId} examId={examId} handleReviewQuestion={handleReviewQuestion} />
                         ) : (
@@ -176,7 +176,7 @@ const ReviewPage = () => {
                     </Grid>
 
                     {/* Right: Status Panel (Visible on larger screens, toggle on small screens) */}
-                    <Grid item size={{ sm: 4, md: 3 }} sx={{ bgcolor: 'white', p: 0, borderLeft: '1px solid #e0e0e0', display: { xs: 'none', sm: 'block' } }}>
+                    <Grid item sm={4}md={3} sx={{ bgcolor: 'white', p: 0, borderLeft: '1px solid #e0e0e0', display: { xs: 'none', sm: 'block' }}}>
 
                         <ResultStatus userId={userId} examId={examId} setIsSubmit={setIsSubmit} isSubmit={isSubmit} showReport={isReviewMode} setShowReport={setIsReviewMode} />
 

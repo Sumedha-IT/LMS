@@ -92,7 +92,7 @@ const ReviewDialog = ({ openModal, handleCloseModal, selectedRow }) => {
                             display: 'flex', gap: 2, justifyContent: "end"
                         }}>
                             <Box>
-                                <Button onClick={() => nav(`/user/7/exam/${selectedRow.id}/review`)} color='#09b509db' sx={{ display: 'flex', alignItems: 'center', mb: 1, fontSize: { xs: '11px', sm: '12px', md: '14px', xl: '15px' } }}>
+                                <Button onClick={() => nav(`/administrator/1/examinations/user/7/exam/${selectedRow.id}/review`)}  sx={{ display: 'flex', color:'#09b509db',alignItems: 'center', mb: 1, fontSize: { xs: '11px', sm: '12px', md: '14px', xl: '15px' } }}>
                                     Evaluated
                                 </Button>
                             </Box>

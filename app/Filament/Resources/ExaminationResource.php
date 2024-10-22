@@ -69,7 +69,7 @@ class ExaminationResource extends Resource
     {
         return [
             'index' => Pages\ExamDashboard::route(''),
-            // 'create' => Pages\CreateExamination::route('/create'),
+            'create' => Pages\ReviewExam::route('/user/{userId}/exam/{id}/review'),
             // 'edit' => Pages\EditExamination::route('/{record}/edit'),
         ];
     }

@@ -286,15 +286,15 @@ const UserExamTable = ({ Value }) => {
                         Attempt
                     </Box>
                 ) : (
-                    <button
+                    <Button
                         variant="text"
                         color="warning"
                         size="small"
                         onClick={() => handleReview(row)}
-                        sx={{ color: '#f97316' }}
+                     //   sx={{ color: '#f97316' }}
                     >
                         Review
-                    </button>
+                    </Button>
                 )}
             </Box>
         );

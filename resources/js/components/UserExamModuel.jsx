@@ -278,9 +278,7 @@ const UserExamModule = () => {
         <>
             {/* {questions ? */}
             <Box sx={{
-                width: '100%', bgcolor: '#f4f5f7', height: '100vh', '@media (min-width: 0px) and (max-width: 425px)': {
-                    height: '100vh', // change height for this range
-                },
+                width: '100%', bgcolor: '#f4f5f7', 
             }}>
                 {/* Header Section */}
                 <Box sx={{ bgcolor: '#f97316' }}>
@@ -308,8 +306,8 @@ const UserExamModule = () => {
                     </Button>
                 </Box>
                 {/* Main Content Section */}
-                <Grid container spacing={0} sx={{ height: `calc(100vh - 49px)`, '@media (min-width: 0px) and (max-width: 599px)': { height: `calc(100vh - 63px)` }, '@media (min-width: 599px) and (max-width: 1100px)': { height: `calc(100vh - 42px)` } }}>
-                    <Grid item size={{ xs: 12, sm: 8, md: 9 }} sx={{ p: 0 }}>
+                <Grid container spacing={0} sx={{ height: `calc(100vh - 90px)`, '@media (min-width: 0px) and (max-width: 599px)': { height: `calc(100vh - 63px)` }, '@media (min-width: 599px) and (max-width: 1100px)': { height: `calc(100vh - 42px)` } }}>
+                    <Grid item xs={12} sm={8} md={9} sx={{ p: 0 }}>
                         {quitConfirmation ? <QuitConfirmation setQuitConfirmation={setQuitConfirmation} setIsSubmission={setIsSubmission}
                             setIsSubmit={setIsSubmit} setTimeLeft={setTimeLeft}
                             setIsTimeOver={setIsTimeOver} /> : <>
@@ -339,7 +337,7 @@ const UserExamModule = () => {
                     </Grid>
 
                     {/* Right: Status Panel (Visible on larger screens, toggle on small screens) */}
-                    <Grid item size={{ sm: 4, md: 3 }} sx={{ bgcolor: 'white', p: 0, borderLeft: '1px solid #e0e0e0', display: { xs: 'none', sm: 'block' } }}>
+                    <Grid item sm={4} md={3} sx={{ bgcolor: 'white', p: 0, borderLeft: '1px solid #e0e0e0', display: { xs: 'none', sm: 'block' } }}>
                         {(isSubmit && !isSubmission) || isReviewMode ? (
                             <ResultStatus onSubmitQuiz={handleSubmitQuiz} userId={userId} setIsSubmit={setIsSubmit} examId={examId} submitButton={submitButton} showReport={isReviewMode} setShowReport={setIsReviewMode} />
                         ) : (
