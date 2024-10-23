@@ -15,7 +15,6 @@ class DataValidationMiddleware
      */
     public function handle(Request $request, Closure $next): Response
     {
-
         // Check if the 'data' key is present in the request payload (either in POST data or query parameters)
         if (!$request->has('data')) {
             return response()->json(['message' => "Data key required", "status" => 400, "success" => false], 400);

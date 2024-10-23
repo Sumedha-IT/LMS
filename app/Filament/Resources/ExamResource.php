@@ -12,6 +12,8 @@ use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
+use Illuminate\Support\Facades\Auth;
+
 
 class ExamResource extends Resource
 {
@@ -19,6 +21,16 @@ class ExamResource extends Resource
 
     protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
 
+    public static function shouldRegisterNavigation(): bool
+    {
+        // Ensure there's a logged-in user
+        if (Auth::check() && Auth::user()) {
+            return !(Auth::user()->getIsStudentAttribute());
+        }
+    
+        // Return false if no user is logged in or role is not 'Student'
+        return false;
+    }
     public static function form(Form $form): Form
     {
         return $form
@@ -61,7 +73,6 @@ class ExamResource extends Resource
             'question' => Pages\ExamAddQuestion::route('/addquestion'),
             'questionbank' => Pages\ExamAddQuestionBank::route('/addquestionBank'),
             'managequestions' => Pages\ExamManageQuestions::route('/manageQuestions'),
-
         ];
     }
 }

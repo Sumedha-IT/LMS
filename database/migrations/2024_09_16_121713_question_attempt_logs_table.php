@@ -15,18 +15,18 @@ return new class extends Migration
             $table->id();
             $table->foreignId('exam_attempt_id');
             $table->foreignId('exam_id');
-            $table->text('answer');
+            $table->json('answer')->nullable();
             $table->float('score');
-            $table->enum('stage', [
-                'Answered',
-                'Not Answered',
-                'Not visited',
-                'Answered and Mark for review',
-                'Mark for review'
-            ]);
-            
+
+            // 1 =>  'Answered',
+            // 2 =>  'Not_Answered',
+            // 3 =>  'Answered_and_Mark_for_review',
+            // 4 =>  'Mark_for_review'
+            $table->enum('stage', [1,2,3,4]);
             $table->foreignId('exam_question_id');
             $table->timestamps();
+
+            $table->unique(['exam_attempt_id', 'exam_question_id']);
         });
     }
 
@@ -38,3 +38,4 @@ return new class extends Migration
         Schema::dropIfExists('question_attempt_logs');
     }
 };
+

@@ -8,15 +8,33 @@ use Illuminate\Database\Eloquent\Model;
 class ExamAttempt extends Model
 {
     use HasFactory;
+    protected $table = 'exam_attempts';
+
+    protected $fillable = [
+        'student_id',
+        'exam_id',
+        'attempt_count',
+        'score',
+        'status',
+        'ends_at',
+        'report'
+    ];
+
+    protected $casts = [
+        'report' => 'array'
+   ];
+
     public function student()
     {
-        return $this->belongsTo(User::class, 'id');
+        return $this->belongsTo(User::class, 'student_id');
     }
 
     public function exam()
     {
-        return $this->belongsTo(Exam::class,'id');
+        return $this->belongsTo(ExamQuestion::class, 'exam_id');
     }
 
+    
+    
   
 }

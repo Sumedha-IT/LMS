@@ -1,8 +1,10 @@
 <?php
 
+use App\Http\Controllers\api\ExamAttemptController;
 use App\Http\Controllers\api\ExamController;
 use App\Http\Controllers\api\QuestionOptionController;
 use App\Http\Controllers\api\StudentsController;
+use App\Http\Controllers\api\QuestionAttempLogController;
 use Illuminate\Http\Request;
 use App\Http\Controllers\api\QuestionController;
 use Illuminate\Http\Resources\Json\JsonResource;
@@ -29,8 +31,7 @@ use App\Http\Controllers\QuestionBankController;
 use App\Http\Controllers\QuestionTypesController;
 use App\Http\Controllers\SubjectController;
 use App\Http\Controllers\TestingController;
-use Monolog\Handler\RotatingFileHandler;
-use PHPUnit\Event\Code\TestCollectionIterator;
+
 
 /*
 |--------------------------------------------------------------------------
@@ -44,7 +45,8 @@ use PHPUnit\Event\Code\TestCollectionIterator;
 */
 
 Route::post('/send-notification', [\App\Http\Controllers\NotificationController::class, 'sendNotification']);
-Route::middleware(['auth:sanctum'
+Route::middleware([
+    'auth:sanctum'
     //, 'verified'
 ])->group(function () {
     Route::get('/user', function (Request $request) {
@@ -136,26 +138,40 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
     Route::get('/attendance-report', [\App\Http\Controllers\AttendanceController::class, 'getAttendanceReport']);
 
     Route::get('/attendance-chart', [\App\Http\Controllers\AttendanceController::class, 'getChartData']);
-//Api for annoucements
+    //Api for annoucements
     Route::get('/announcements', [\App\Http\Controllers\AnnouncementController::class, 'index']);
     
     Route::get('/tutors', [\App\Http\Controllers\UserController::class, 'tutors']);
 
     //api for listing for sections
     
-     // Api for Post/Timeline
-     Route::middleware(['payloadCheck'])->group(function () {
-        Route::post('/exams', [ExamController::class,'create']);
-        Route::post('/questionBanks', [QuestionBankController::class,'create']);
-        Route::post('/questions', [QuestionController::class,'create']);
-        Route::post('/options', [QuestionOptionController::class,'create']);
-        Route::post('/{examId}/examQuestions', [ExamQuestionController::class,'create']);
-        Route::delete('/{examId}/examQuestions', [ExamQuestionController::class,'delete']);
-        Route::put('/{examId}/examQuestions', [ExamQuestionController::class,'patch']);
-        Route::post('/questionIds', [ExamQuestionController::class,'getQuestionIds']);
+
+});
 
 
-    });
+Route::group(['middleware' => [
+    'encryptCookie',
+    'addHeader', 
+    'auth:sanctum',
+    ]], function () {
+    Route::get("/test", [TestingController::class, "getAllCourses"]);
+
+
+    //Student Module Apis
+    Route::get('/student/{examId}/exams', [ExamController::class,'getExams']);
+    Route::get('/student/{id}/exam/{examId}/initiateExam', [ExamAttemptController::class,'startExam']);
+    Route::get('/student/{id}/examQuestions', [QuestionAttempLogController::class,'getQuestions']);
+    Route::post('/student/{id}/examQuestions', [QuestionAttempLogController::class,'attemptQuestion']);
+    Route::post('/student/{id}/exam/{examId}/submitExam', [ExamAttemptController::class,'submitExam']);
+    Route::get('/student/{id}/exam/{examId}/examStat', [ExamAttemptController::class,'getExamStat']);    
+    Route::get('/student/{id}/exam/{examId}/reviewExam', [ExamAttemptController::class,'reviewExam']);    
+    Route::get('/student/{id}/exam/{examId}/examReport', [ExamAttemptController::class,'getExamReport']);    
+
+
+
+    Route::get('/invigilators',[UserController::class,'tutors']);
+
+      
         
     Route::get('posts', [PostController::class, 'index']);
     // Route::get('posts/{id}', [PostController::class, 'show']);
@@ -166,7 +182,7 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
 
 
 //	 Route::get('/attendances', [AttendanceController::class, 'index']);
-//	  Route::get('/batches',[BatchController::class,'get_batches']);
+//	 Route::get('/batches',[BatchController::class,'get_batches']);
 
     Route::post('/batches', [BatchController::class,'create']);
     Route::get('/batches/{id}', [BatchController::class,'show']);
@@ -174,70 +190,71 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
     Route::put('/batches/{id}', [BatchController::class,'update']);
     Route::delete('/batches/{id}', [BatchController::class,'delete']);
 
-
-
-
-    //Subjects
+    // Subjects
     Route::get('/subjects', [SubjectController::class,'getSubjects']);
     Route::get('/subjects/{id}', [SubjectController::class,'show']);
     Route::post('/subjects', [SubjectController::class,'create']);
     Route::delete('/subjects/{id}', [SubjectController::class,'delete']);
 
-    //Question Bank
+    // Question Bank
     Route::get('/questionBanks', [QuestionBankController::class,'index']);
     Route::get('/questionBanks/{id}', [QuestionBankController::class,'show']);
     Route::delete('/questionBanks/{id}', [QuestionBankController::class,'delete']);
     Route::get('/questionBankTypes',[QuestionBankController::class,'getQuestionBankTypes']);
     Route::get('/questionBankDifficulties',[QuestionBankController::class,'getQuestionBankDifficulties']);
 
-    //Students
+    // Students
     Route::get('/students', [StudentsController::class,'index']);
     Route::get('/students/{id}', [StudentsController::class,'show']);
 
-    //Courses
+    // Courses
     Route::get('/courses', [CourseController::class,'getAllCourses']);
     Route::get('/courses/{id}', [CourseController::class,'show']);
-
-    //Chapters
+    // Chapters
     Route::get('/chapters/{id}', [QuestionBankChapterController::class,'show']);
     Route::get('/chapters', [QuestionBankChapterController::class,'index']);
     Route::post('/chapters', [QuestionBankChapterController::class,'create']);
     Route::put('/chapters/{id}', [QuestionBankChapterController::class,'update']);
     Route::delete('/chapters/{id}', [QuestionBankChapterController::class,'delete']);
 
-    //Question
+    // Question
     Route::get('/questions', [QuestionController::class,'index']);
     Route::get('/questions/{question_id}', [QuestionController::class,'show']);
     Route::put('/questions/{question_id}', [QuestionController::class,'update']);
     Route::delete('/questions/{question_id}', [QuestionController::class,'delete']);
 
-    //Options
+    // Options
     Route::get('/options', [QuestionOptionController::class,'index']);
     Route::get('/options/{id}', [QuestionOptionController::class,'show']);
     Route::put('/options', [QuestionOptionController::class,'update']);
 
-    //Exams
+    // Exams
     Route::get('/exams', [ExamController::class,'index']);
     Route::get('/exams/{id}', [ExamController::class,'show']);
     Route::put('/exams/{id}', [ExamController::class,'update']);
     Route::delete('/exams/{id}', [ExamController::class,'delete']);
 
-    //Section
-    Route::post('/examSections', [ExamSectionController::class,'create']);
-    Route::get('/examSections', [ExamSectionController::class,'index']);
-    Route::get('/examSections/{id}', [ExamSectionController::class,'show']);
-    Route::put('/examSections/{id}', [ExamSectionController::class,'update']);
-    Route::delete('/examSections/{id}', [ExamSectionController::class,'delete']);
-
     //Exam Question
     Route::get('/{examId}/examQuestions', [ExamQuestionController::class,'index']);
 
-    // Route::get('/examQuestions', [ExamQuestionController::class,'index']);
-    // Route::get('/examQuestions/{id}', [ExamQuestionController::class,'show']);
-    Route::get('/invigilators',[UserController::class,'tutors']);
-    
 
+    // Api for Post/Timeline
+    Route::middleware(['payloadCheck'])->group(function () {
+
+        Route::post('/exams', [ExamController::class,'create']);
+        Route::post('/{examId}/examQuestions', [ExamQuestionController::class,'create']);
+        Route::delete('/{examId}/examQuestions', [ExamQuestionController::class,'delete']);
+
+        Route::post('/questionBanks', [QuestionBankController::class,'create']);
+        Route::post('/questions', [QuestionController::class,'create']);
+        Route::post('/options', [QuestionOptionController::class,'create']);
+        
+        Route::put('/{examId}/examQuestions', [ExamQuestionController::class,'patch']);
+        Route::post('/questionIds', [ExamQuestionController::class,'getQuestionIds']);
+        Route::post('/student/{id}/examQuestions', [QuestionAttempLogController::class,'attemptQuestion']);
+
+    });
 });
-
-
-Route::get("/test/{id}",[TestingController::class,"show"]);
+Route::middleware(['zohoAuth'])->group(function () {
+    Route::get('/sumedha/allBatches', [BatchController::class,'getBatches']);
+});
