@@ -17,6 +17,7 @@ class AddHeader
     public function handle(Request $request, Closure $next): Response
     {       
         $cookieValue = Cookie::get('user_info');
+        dd($cookieValue);
         $cookieValue = json_decode(decrypt_data($cookieValue, config('services.app.secret')),true);
         if(empty($cookieValue) || ($request->header('User-Agent') != $cookieValue['user_agent'] && $request->ip() != $cookieValue['ip_address']) ){
             auth()->logout();
