@@ -3,7 +3,7 @@ import { Box, Button, Grid, Typography, IconButton, Drawer } from '@mui/material
 import CloseIcon from '@mui/icons-material/Close';
 import MenuIcon from '@mui/icons-material/Menu'; // Toggle button icon
 import Countdown from 'react-countdown';
-import { useParams } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import { useGetExamQuestionsMutation, useGetReviewExamQuestionMutation } from '../store/service/user/UserService';
 import QuestionPanel from './exam/QuestionPanel';
 import ResultComponent from './exam/ResultComponent';
@@ -38,11 +38,6 @@ const UserExamModule = () => {
     const { userId, examId, examAttemptId } = useParams();
     const [getReviewExamQuestion] = useGetReviewExamQuestionMutation();
     const examDetails = JSON.parse(localStorage.getItem('examDetails'));
-
-
-
-
-
 
 
     useEffect(() => {
@@ -301,7 +296,13 @@ const UserExamModule = () => {
                             )}
                         </Typography>
                     </Box>
-                    <Button onClick={handleQuitConfirmations} sx={{ position: 'absolute', top: 0, right: 0 }}>
+                    <Button onClick={() => {
+                        if (isSubmit) {
+                            window.close()
+                        } else {
+                            handleQuitConfirmations();
+                        }
+                    }} sx={{ position: 'absolute', top: 0, right: 0 }}>
                         <CloseIcon sx={{ color: 'white' }} />
                     </Button>
                 </Box>

@@ -8,7 +8,7 @@
 <body>
    <div id = hello-react>  </div> 
    @viteReactRefresh()
-   @vite('resources/js/index.jsx')
+   @include('layouts/react-vite')
 
 </body>
 </html>

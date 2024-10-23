@@ -1,5 +1,5 @@
 <x-filament-panels::page>
 <div id = hello-react>  </div> 
    @viteReactRefresh()
-   @vite('resources/js/index.jsx')
+   @include('layouts/react-vite')
 </x-filament-panels::page>

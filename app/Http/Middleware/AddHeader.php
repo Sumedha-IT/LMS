@@ -16,6 +16,7 @@ class AddHeader
      */
     public function handle(Request $request, Closure $next): Response
     {       
+        
         if($request->header('developer') == true){
             $request->headers->set('Authorization','Bearer 31|uyUHQUw8TGBcj0xlU2jmsgMJvWEoQ9Iuk3lxMCwb5f1437ba');
             return $next($request);

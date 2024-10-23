@@ -15,7 +15,6 @@ class QuestionAttempLogController extends Controller
 {
     public function getQuestions(Request $request,ExamService $es){
         $data = request()->query();
-
         $size = $request->get('size') == 0 ? 25 : $request->get('size');
         $pageNo = $request->get('page', 1);
         $offset = ($pageNo - 1) * $size;
@@ -61,7 +60,9 @@ class QuestionAttempLogController extends Controller
                 'saved' => empty($questionAttempts) ? false : true 
             ];
         });
-
+        if($mergedData->isEmpty()){
+            return response()->json(['message' =>"Question were not added", 'status' => 404,'success' =>false],404);
+        }
         $data = [
             "data" => empty($mergedData) ? [] : $mergedData,
             "totalRecords" => $totalRecords,

@@ -40,7 +40,7 @@ Route::get('user/{userId}/exam/{examId}/assessment/{attemptId}', function ($user
 })->name('user.exam.questionPanel');
 
 
-Route::get('/administrator/1/examinations/user/{userId}/exam/{examId}/result}', function ($userId, $examId) {
+Route::get('/administrator/{adminId}/examinations/user/{userId}/exam/{examId}/result}', function ($userId, $examId) {
     return view('examResult');  // This should point to the Blade file that loads the React component.
 })->name('user.exam.examResult');
 
