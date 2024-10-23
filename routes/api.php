@@ -151,6 +151,7 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
 Route::get("/test", [TestingController::class, "getAllCourses"]);
 
 Route::group(['middleware' => [
+    // 'encryptCookie',
     'addHeader', 
     'auth:sanctum',
     ]], function () {
