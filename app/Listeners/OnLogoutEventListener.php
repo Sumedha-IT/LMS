@@ -20,7 +20,11 @@ class OnLogoutEventListener
      */
     public function handle(object $event): void
     {
-        $event->user->tokens()->delete();
+        if($event->user){
+            $event->user->tokens()->delete();
+        }
         setcookie('x_path_id', "", time() - (24 * 60), "/"); 
+        setcookie('user_info', "", time() - (24 * 60), "/"); 
+
     }
 }

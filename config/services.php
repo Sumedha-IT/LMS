@@ -37,5 +37,8 @@ return [
 
     'zoho' => [
         'x_auth' => env('ZOHO_X_AUTH')
+    ],
+    'app' =>[
+        'secret' => env('SECRET')
     ]
 ];
