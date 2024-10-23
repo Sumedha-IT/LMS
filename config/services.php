@@ -35,4 +35,7 @@ return [
         'credentials' => env('FIREBASE_CREDENTIALS'),
     ],
 
+    'zoho' => [
+        'x_auth' => env('ZOHO_X_AUTH')
+    ]
 ];

@@ -30,7 +30,7 @@ class ExamQuestionController extends Controller
         return response()->json(['message' => 'Questions added', 'success' => true, "status" => 200], 200);
     }
 
-    public function validateExamQuestions($data,$exam){
+    public function validateExamQuestions($data){
         $validator = Validator::make($data, [
             '*.partId' => 'required|string',                     // Each section must have a partId that is a string
             '*.banks' => 'required|array',                       // banks is required and must be an array
@@ -82,11 +82,15 @@ class ExamQuestionController extends Controller
                         );
                         break; // This breaks out of the inner loop
                     }
-                    $questionToAdd[$part['partId']] =  $questionsIds;
+ 
+                    $existedQuestionIds =  $questionToAdd[$part['partId']] ?? [];
+                    $questionToAdd[$part['partId']] =  array_merge($questionsIds,$existedQuestionIds);
+
                 } else {
                     // Assign existing question IDs from the bank
-                    $questionToAdd[$part['partId']] = $questionsByBank[$bankId];
+                    $questionToAdd[$part['partId']] =  array_merge($questionToAdd[$part['partId']] ?? [],$questionsByBank[$bankId]);
                 }
+                
             }
         }
         
@@ -174,28 +178,46 @@ class ExamQuestionController extends Controller
         }
     
         // Fetch all the questions in one query
-        $questions = Question::whereIn('id', $questionIds)->get()->keyBy('id');
+        $questions = Question::with('questions_options')->whereIn('id', $questionIds)->get()->keyBy('id');
     
         $input = []; // This will store the batch insert data
         // Iterate through the sections and their respective question IDs
+        $totalMarks = 0;
         foreach ($questionsToAdd as $partId => $questionIds) {
             foreach ($questionIds as $questionId) {
                 // Check if the question exists in the fetched questions
                 if (isset($questions[$questionId])) {
                     $question = $questions[$questionId]; // Get the question object
-                    
+                    $options =  $question->questions_options;
                     $input[] = [
                         'question_id'       => $questionId,
                         'question_bank_id'  => $question->question_bank_id,  // From the pre-fetched question
                         'part_id'           => $partId ,  // Handle "default" section
                         'exam_id'           => $exam->id,  // Constant exam ID
-                        'meta'              => json_encode($question->toArray()),  // Store the entire question data as JSON
+                        'question'          => $question->question,
+                        'meta'              => json_encode([
+                                                'options' => $options,
+                                                'correctOption' => collect($options)->where('is_correct',1)->pluck('id')->first(),
+                                                'questionMeta' => [
+                                                    'audioFile' => $question->audio_file,
+                                                    'paragraph' => $question->paragraph,
+                                                    'hint' => $question->hint,
+                                                    'explanation' => $question->explanation,
+                                                ]
+                                               ]),
+                        'score'             => $question->marks,
+                        'negative_score'    => $question->negative_marks,
+                        'created_at'        => date('Y m d H:i:s'),
+                        'updated_at'        => date('Y m d H:i:s')
                     ];
+                    $totalMarks+=  $question->marks; 
                 }
             }
         }
-
+        
         // Perform a batch insert with the prepared data
+        $exam->total_marks =  $totalMarks;
+        $exam->save();
         ExamQuestion::insert($input);
     }
 }

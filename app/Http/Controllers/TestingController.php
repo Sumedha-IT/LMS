@@ -4,79 +4,76 @@ namespace App\Http\Controllers;
 
 use App\Http\Resources\CourseResource;
 use App\Models\Course;
+use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
-
+use Illuminate\Support\Facades\Mail;
 class TestingController extends Controller
 {
-    // public function test($id){
-    //     $validator = Validator::make(['id' => $id], [
-    //         'id' => 'required|integer',
-    //     ]);
-    //     $data =$validator->validated();
-    //     if ($validator->fails()) {
-    //         return response()->json(['message' => 'Course Id must be Integer'], 400);
-    //     }
-    //     $course = Course::find($data['id']);
-    //     if (empty($course)) {
-    //         return response()->json(['message' => 'Course not found'], 404);
-    //     }
-    //     return new CourseResource($course);
 
-    // }
-
-    public function show($id){
-        $validator = Validator::make(['id' => $id], [
-            'id' => 'required|integer',
-        ]);
-
-        $data = $validator->validated();
-        if ($validator->fails()) {
-            return response()->json(['message' => 'Course Id must be Integer'], 400);
+    
+    public function testMail(){
+        try{
+                // Use a plain string instead of an array
+            
+            $user['to'] = 'kanha.tomar@hiteshi.com';
+            $body = 'Let’s go to lunch bhook lg rhi hai';
+            Mail::raw($body, function($message) use($user) {
+                $message->to($user['to']);
+                $message->subject("Lunch Invitation");
+            });
+                
+            return "Mail Sent Successfully!";
+        }catch(\Exception $e){
+            dd($e->getMessage());
         }
-
-        $course = Course::find($data['id']);
-        if (empty($course)) {
-            return response()->json(['message' => 'Course not found'], 404);
-        }
-        return new CourseResource($course);
     }
 
-    // public function show($id){
-    //     $validator = Validator::make(['id' => $id], [
-    //         'id' => 'required|integer',
-    //     ]);
+    public function show($id){
+        // dd(Hash::make('test'));
+        $token = User::find(7)->createToken('appToken');
+        dd($token->plainTextToken);
+    }
 
-    //     if ($validator->fails()) {
-    //         return response()->json(['message' => 'Course Id must be Integer'], 400);
-    //     }
-
-    //     $course = Course::find($id);
-    //     if (empty($course)) {
-    //         return response()->json(['message' => 'Course not found'], 404);
-    //     }
-    //     return new CourseResource($course);
-    // }
 
     public function getAllCourses(Request $req)
     {
-        $courses = Course::all();
-        // Return the courses as a JSON response
-        return response()->json($courses);
+       
+    }
 
-        $size = $req->get('size') == 0 ? 25 : $req->get('size');
-        $pageNo = $req->get('page', 1);
-        $offset = ($pageNo - 1) * $size;
-        $totalRecords = Course::count();
 
-        // Fetch the records for the current page
-        $courses = Course::offset($offset)->limit($size)->get();
-        $data = [
-            "data" => empty($courses) ? [] : CourseResource::collection($courses),
-            "totalRecords" => $totalRecords,
-            "totalPages" => ceil($totalRecords / $size)
+    public function showUserInfo()
+    {
+        // Mock data for demonstration. Replace this with actual dynamic data from your database.
+        $user = [
+            'name' => 'John Doe',
+            'email' => 'john@example.com',
+            'phone' => '123-456-7890',
+            'address' => '123 Main Street, City, Country',
+            'education' => 'Bachelor of Computer Science',
+            'employment' => 'Software Engineer at XYZ Corp',
+            'meta' => [
+                'he'=>"llo"
+            ]
         ];
-        return response()->json($data,200);
+
+        return view('userInfo', compact('user'));
+    }
+
+    public function getUserInfoJson()
+    {
+        // Same mock data for demonstration
+        $user = [
+            'name' => 'John Doe',
+            'email' => 'john@example.com',
+            'phone' => '123-456-7890',
+            'address' => '123 Main Street, City, Country',
+            'education' => 'Bachelor of Computer Science',
+            'employment' => 'Software Engineer at XYZ Corp',
+        ];
+
+        return response()->json($user);
     }
 
 }

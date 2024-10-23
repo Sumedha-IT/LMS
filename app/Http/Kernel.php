@@ -46,6 +46,19 @@ class Kernel extends HttpKernel
         ],
     ];
 
+    protected $middlewarePriority = [
+        \Illuminate\Cookie\Middleware\EncryptCookies::class,
+        \App\Http\Middleware\AddHeader::class,
+        \Illuminate\Session\Middleware\StartSession::class,
+        \Illuminate\View\Middleware\ShareErrorsFromSession::class,
+        \Illuminate\Contracts\Auth\Middleware\AuthenticatesRequests::class,
+        \Illuminate\Routing\Middleware\ThrottleRequests::class,
+        \Illuminate\Routing\Middleware\ThrottleRequestsWithRedis::class,
+        \Illuminate\Session\Middleware\AuthenticateSession::class,
+        \Illuminate\Routing\Middleware\SubstituteBindings::class,
+        \Illuminate\Auth\Middleware\Authorize::class,
+    ];
+
     /**
      * The application's middleware aliases.
      *
@@ -67,5 +80,8 @@ class Kernel extends HttpKernel
         'verified' => \Illuminate\Auth\Middleware\EnsureEmailIsVerified::class,
         'checksession' => \App\Http\Middleware\CheckSession::class,
         'payloadCheck'=>\App\Http\Middleware\DataValidationMiddleware::class,
+        'addHeader'=>\App\Http\Middleware\AddHeader::class,
+        'encryptCookie' =>\App\Http\Middleware\EncryptCookies::class,
+        'zohoAuth' =>\App\Http\Middleware\ZohoMiddleware::class,
     ];
 }
