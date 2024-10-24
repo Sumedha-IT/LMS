@@ -25,4 +25,8 @@ return new class extends Migration
             $table->dropColumn('zoho_crm_id'); // Remove the column if rolling back
         });
     }
+<<<<<<< HEAD
 };
+=======
+};
+>>>>>>> b647374f1708982fdbe3aee44ffd6e7cbf18936e
