@@ -15,7 +15,7 @@ class ZohoMiddleware
      */
     public function handle(Request $request, Closure $next): Response
     {
-
+        dd(getallheaders());
         if($request->header('source') == 'zoho' && $request->header('x_auth_zoho') == config('services.zoho.x_auth')){
             return $next($request);
         }else{
