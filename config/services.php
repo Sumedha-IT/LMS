@@ -39,6 +39,7 @@ return [
         'x_auth' => env('ZOHO_X_AUTH')
     ],
     'app' =>[
-        'secret' => env('SECRET')
+        'secret' => env('SECRET'),
+        'supportMail' => env('SUPPORT_MAIL')
     ]
 ];

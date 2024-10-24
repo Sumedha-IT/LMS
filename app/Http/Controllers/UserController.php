@@ -2,10 +2,15 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Resources\StudentResource;
 use App\Http\Resources\UserResource;
 use App\Models\Qualification;
 use App\Models\User;
+use App\Services\UserService;
+use Google\Rpc\RequestInfo;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Validator;
+use PDO;
 
 class UserController extends Controller
 {
@@ -73,15 +78,15 @@ class UserController extends Controller
         //$user->qualification_id = $request->qualification_id;
 
         //dd($request->qualifications);
-//        foreach ($request->qualifications as $qualification) {
-//
-//            $qualificationsWithName = array_map(function($qualification) {
-//                $qualificationDetail = Qualification::find($qualification['qualification_id']);
-//                $qualification['name'] = $qualificationDetail ? $qualificationDetail->name : 'Unknown';
-//                return $qualification;
-//            }, $qualifications);
-//
-//        }
+        //        foreach ($request->qualifications as $qualification) {
+        //
+        //            $qualificationsWithName = array_map(function($qualification) {
+        //                $qualificationDetail = Qualification::find($qualification['qualification_id']);
+        //                $qualification['name'] = $qualificationDetail ? $qualificationDetail->name : 'Unknown';
+        //                return $qualification;
+        //            }, $qualifications);
+        //
+        //        }
 
         //$qualifications = json_encode($request->qualifications);
         $arr_qualifications = [];
@@ -100,7 +105,7 @@ class UserController extends Controller
 
         // Encode it properly
         //$qualifications = $qualifications;
-//dd($qualifications);
+        //dd($qualifications);
 
         $user->qualification = $arr_qualifications;
 
@@ -118,7 +123,7 @@ class UserController extends Controller
             $user->avatar_url = basename($upload_avatar_url);
 
         $user->save();
-//        dd($user);
+        //        dd($user);
 
         return response()->json(['message' => 'User updated successfully', 'user' => new UserResource($user)]);
     }
@@ -134,4 +139,43 @@ class UserController extends Controller
              ->get();
         return response()->json(["data" => $users]);
     }
+
+    public function createStudent(Request $request,UserService $us){
+        $data = $request->data;
+
+
+        $validator = Validator::make($data, [
+            'email' => 'required|email',
+            'paymentStatus' => 'required|in:1,2,3',
+            'name' =>  'required|string',
+            "phone" => "required|string|max:12",
+            "branchLocation" => 'required|string|exists:branches,name',
+            "zohoCustomerId" => 'required|integer'
+        ]);
+          
+        if (!empty($validator->errors()->messages())) {
+            return response()->json(['message' => $validator->errors()->all()[0], 'status' => 400,'success' =>false],400);
+        }
+
+        $data = $validator->validate();
+        try {
+            $data = $us->createStudent($data);
+            return response()->json(['message'=>'User Created','data' => new StudentResource($data['user']), 'status' => 200, 'success' => true], 200);
+        } catch (\Exception $e) {
+            if ($e->getCode() === '23000') {
+                return response()->json([
+                    'message' => 'User Already registered',
+                    'success' => false,
+                    'status' =>  409
+                ], 409); // 409 Conflict
+            }
+            return response()->json([
+                'message' => $e->getMessage(),
+                'success' => false,
+                'status' =>  400
+            ], 400); // 409 Conflict
+
+        }
+    }
+
 }
