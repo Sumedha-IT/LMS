@@ -57,11 +57,16 @@
             <p><strong>Your password:</strong> <span style="font-weight: bold; color: #007BFF;">{{ $password }}</span></p>
         </div>
 <<<<<<< HEAD
+<<<<<<< HEAD
         <p>If you have any questions, feel free to <a href="mailto:support@example.com">contact us</a>.</p>
 =======
         <p>If you have any questions, feel free to <a href="mailto:{{ $supportMail }}">contact us</a>.</p>
 
 >>>>>>> b647374f1708982fdbe3aee44ffd6e7cbf18936e
+=======
+        <p>If you have any questions, feel free to <a href="mailto:{{ $supportMail }}">contact us</a>.</p>
+
+>>>>>>> 7c30c59638a9c12ae28a36a478aaa51305c6f9d5
         <p>Thank you for choosing Sumedha!</p>
         <div class="footer">
             <p>Best regards,<br>Sumedha Team</p>

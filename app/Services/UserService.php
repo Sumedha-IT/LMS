@@ -32,10 +32,14 @@ class UserService
 
 
 <<<<<<< HEAD
+<<<<<<< HEAD
         Mail::send('emailTemplates.loginCredential', ['password' => $password, 'email' => $email], function ($message) use ($user) {
 =======
         Mail::send('emailTemplates.loginCredential', ['password' => $password, 'email' => $email,'supportMail' => config('services.app.supportMail')], function ($message) use ($user) {
 >>>>>>> b647374f1708982fdbe3aee44ffd6e7cbf18936e
+=======
+        Mail::send('emailTemplates.loginCredential', ['password' => $password, 'email' => $email,'supportMail' => config('services.app.supportMail')], function ($message) use ($user) {
+>>>>>>> 7c30c59638a9c12ae28a36a478aaa51305c6f9d5
             $message->to($user['to']);
             $message->subject("Sumedha User Login Credentials");
         });
