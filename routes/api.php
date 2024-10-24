@@ -181,8 +181,8 @@ Route::group(['middleware' => [
 
 
 
-//	 Route::get('/attendances', [AttendanceController::class, 'index']);
-//	 Route::get('/batches',[BatchController::class,'get_batches']);
+    //	 Route::get('/attendances', [AttendanceController::class, 'index']);
+    //	 Route::get('/batches',[BatchController::class,'get_batches']);
 
     Route::post('/batches', [BatchController::class,'create']);
     Route::get('/batches/{id}', [BatchController::class,'show']);
