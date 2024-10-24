@@ -256,5 +256,7 @@ Route::group(['middleware' => [
     });
 });
 Route::middleware(['zohoAuth'])->group(function () {
-    Route::get('/sumedha/allBatches', [BatchController::class,'getBatches']);
+    // Route::get('/sumedha/allBatches', [BatchController::class,'getBatches']);
+    Route::post('/student', [UserController::class,'createStudent']);
+
 });

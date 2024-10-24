@@ -55,7 +55,8 @@ class StudentResource extends JsonResource
             "is_active" => $this->is_active,
             "receive_email_notification" => $this->receive_email_notification,
             "receive_sms_notification" => $this->receive_sms_notification,
-            "avatar_url" => $this->avatar_url
+            "avatar_url" => $this->avatar_url,
+            'zoho_crm_id' => $this->zoho_crm_id,
         ];
     }
 }
