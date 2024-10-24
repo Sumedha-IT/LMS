@@ -15,9 +15,12 @@ class ZohoMiddleware
      */
     public function handle(Request $request, Closure $next): Response
     {
+        dd($request->header('source') == 'zoho' , $request->header('x_auth') == config('services.zoho.x_auth'),$request->header('source'),$request->header('x_auth') );
+
         if($request->header('source') == 'zoho' && $request->header('x_auth') == config('services.zoho.x_auth')){
             return $next($request);
         }else{
+
             return response()->json(['message'=>'Unauthorised','status'=> 401 ,'success'=>false],401);
         }
 
