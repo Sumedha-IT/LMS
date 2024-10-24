@@ -7,6 +7,7 @@ class ExamService
 {
 
     public function getReport($examAttempLog,$review = false){
+        $dbName = config('database.connections.mysql.database');
         if($review){
             return  (array)DB::select("
                         SELECT 
@@ -22,9 +23,9 @@ class ExamService
                             COALESCE(COUNT(CASE WHEN qal.score > 0 THEN 1 END), 0) AS correct,
                             COALESCE(COUNT(CASE WHEN qal.exam_question_id IS NULL THEN 1 END), 0) AS skippedQuestions
                         FROM 
-                            lms.exam_questions AS eq
+                            ".$dbName.".exam_questions AS eq
                         LEFT JOIN 
-                            lms.question_attempt_logs AS qal 
+                            ".$dbName.".question_attempt_logs AS qal 
                         ON 
                             eq.question_id = qal.exam_question_id 
                             AND qal.exam_attempt_id = ".$examAttempLog->id."
@@ -44,9 +45,9 @@ class ExamService
                     COALESCE(COUNT(CASE WHEN qal.stage = 4 THEN 1 END), 0) AS markForReview,
                     COALESCE(COUNT(CASE WHEN qal.exam_question_id IS NULL THEN 1 END), 0) AS notVisited
                 FROM 
-                    lms.exam_questions AS eq
+                    ".$dbName.".exam_questions AS eq
                 LEFT JOIN 
-                    lms.question_attempt_logs AS qal 
+                    ".$dbName.".question_attempt_logs AS qal 
                 ON 
                     eq.question_id = qal.exam_question_id 
                     AND qal.exam_attempt_id = ".$examAttempLog->id."
