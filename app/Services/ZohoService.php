@@ -164,15 +164,17 @@ class ZohoService
     public function createBatchOnZohoCRM($batch)
     {
         $apiKey = '1003.5105c50190027b44dced94b8203fe9e3.b1174b18ed8661575cee62db7998fdf9';
+
         $params = [
             'auth_type' => 'apikey',
             'zapikey' => $apiKey,
             'BatchName' => $batch->name,
-            'Batch_Start_Date' => $batch->start_date,
-            'Batch_End_Date' => $batch->end_date,
+            'startDate' => date('d/m/Y'),
+            'endDate' => date('d/m/Y'),
             'batchManagerName' => "dummy",
             'batchManagerId' => $batch->manager_id,
             'batchLmsId' => $batch->id,
+            'course_Id' => $batch->course_id
         ];
 
         // Build the URL with query parameters
@@ -183,7 +185,6 @@ class ZohoService
             $response = Http::withHeaders([
                 'Content-Type' => 'application/json',
             ])->get($url);
-
             // Check the response
             if ($response->successful()) {
                 return ['success' => true];
