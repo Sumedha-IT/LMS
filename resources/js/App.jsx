@@ -13,6 +13,8 @@ import AdminDashboard from './pages/AdminDashboard';
 import UserDashboard from './pages/UserDashboard';
 import PermissionUserExam from './components/PermissionUserExam';
 import UserExamModuel from './components/UserExamModuel';
+import FeedbackPanel from './components/FeedbackPanel';
+
 import ReviewPage from './pages/ReviewPage';
 import ResultComponent from './components/exam/ResultComponent';
 
@@ -35,7 +37,7 @@ function App() {
         <Route path="/administrator/:id/examinations/user/:userId/exam/:examId/review" element={<ReviewPage />} />
         <Route path="/user/:userId/exam/:examId/result" element={<ResultComponent />} />
 
-
+        <Route path="/administrator/:id/feedback" element={<FeedbackPanel />} />
 
       </Routes>
 
