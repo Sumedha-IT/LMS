@@ -20,7 +20,7 @@ class BatchResource extends JsonResource
             'batch_start' => $this->start_date,
             'batch_end' => $this->end_date,
             'batch_manager_id' => $this->manager_id,
-            'batch_manager_name' => $this->user->name,
+            'batch_manager_name' => $this->user->name ??null,
             'curriculum' => $this->curriculum_data,
             'course_id' => $this->course_package ? $this->course_package->id : '',
             'course_name' => $this->course_package ? $this->course_package->name : '',
