@@ -143,6 +143,10 @@ class UserController extends Controller
     public function createStudent(Request $request,UserService $us){
         $data = $request->data;
 
+        if(gettype($data) != 'array')
+            $data = json_decode($data,true);
+            if(gettype($data) != 'array')
+                return response()->json(['message' => "Data key must be in array", 'status' => 400, 'success' => false], 400);
 
         $validator = Validator::make($data, [
             'email' => 'required|email',
@@ -177,5 +181,4 @@ class UserController extends Controller
 
         }
     }
-
 }
