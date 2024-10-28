@@ -1,12 +1,25 @@
 import React, { useState } from "react";
+import { useGetPaymentDataQuery } from "../store/service/user/UserService";
+import { useEffect } from "react";
 const PaymentDetails = () => {
-  const [activeTab, setActiveTab] = useState("admission");
 
+  const [installments1, setInstallments] = useState([]);
   // Sample data for Admission/Fee
   const courseDetails = {
     name: "PHYSICAL DESIGN",
     registeredOn: "09/10/2023",
   };
+  const { data, isLoading, isError } = useGetPaymentDataQuery();
+
+  useEffect(() => {
+    let getValues = data?.data
+    if (getValues?.message == "success") {
+      setInstallments(getValues)
+      
+    }
+  }, [data])
+
+  console.log("this is your amount",data?.amountDetails)
 
   const amountDetails = {
     totalCost: 86480,
@@ -32,95 +45,89 @@ const PaymentDetails = () => {
 
   return (
     <div className="p-6">
-   
-      {/* Admission/Fee View */}
-      {activeTab === "admission" && (
-        <div className="flex">
-          {/* Course and Installment Details */}
-          <div className="w-2/3">
 
-            {/* Course Details */}
-            <div className="bg-yellow-100 p-4 mb-6 rounded shadow">
-              <div className="flex items-center">
-                <img src="https://via.placeholder.com/150" alt="Course" className="w-16 h-16 mr-4" />
-                <div>
-                  <h3 className="text-xl font-semibold">{courseDetails.name}</h3>
-                  <p className="text-gray-500">Registered On: {courseDetails.registeredOn}</p>
-                </div>
+      {/* Admission/Fee View */}
+      <div className="flex">
+        {/* Course and Installment Details */}
+        <div className="w-2/3">
+
+          {/* Course Details */}
+          <div className="bg-yellow-100 p-4 mb-6 rounded shadow">
+            <div className="flex items-center">
+              <img src="https://via.placeholder.com/150" alt="Course" className="w-16 h-16 mr-4" />
+              <div>
+                <h3 className="text-xl font-semibold">{courseDetails.name}</h3>
+                <p className="text-gray-500">Registered On: {courseDetails.registeredOn}</p>
               </div>
             </div>
+          </div>
 
-            {/* Installment Table */}
-            <table className="min-w-full bg-white rounded shadow">
-              <thead>
-                <tr className="bg-gray-100 text-left text-gray-600">
-                  <th className="py-2 px-4">Installment Name</th>
-                  <th className="py-2 px-4">Status</th>
-                  <th className="py-2 px-4">Due Date</th>
-                  <th className="py-2 px-4">Amount</th>
-                  <th className="py-2 px-4">Due</th>
-                  <th className="py-2 px-4">Paid On</th>
-                  <th className="py-2 px-4"></th>
+          {/* Installment Table */}
+          <table className="min-w-full bg-white rounded shadow">
+            <thead>
+              <tr className="bg-gray-100 text-left text-gray-600">
+                <th className="py-2 px-4">Installment Name</th>
+                <th className="py-2 px-4">Status</th>
+                <th className="py-2 px-4">Due Date</th>
+                <th className="py-2 px-4">Amount</th>
+                <th className="py-2 px-4"></th>
+              </tr>
+            </thead>
+
+            <tbody>
+              {data?.data.map((installment, index) => (
+                <tr key={index} className="border-b">
+                  <td className="py-2 px-4">{installment.invoice_num}</td>
+                  <td className={`py-2 px-4 ${installment.status === "Paid" ? "text-green-500" : "text-orange-500"}`}>
+                    {installment.status === "Verification_Pending" ? "Not Approved" : installment.status}
+                  </td>
+                  <td className="py-2 px-4">{installment.due_date}</td>
+                  <td className="py-2 px-4">₹{installment.amount}</td>
+
+                  <td className="py-2 px-4">
+                    {installment.status === "Due" ? (
+                      <a href={installment.payment_url} className="bg-orange-500 text-white px-4 py-1 rounded">
+                        Pay Now
+                      </a>
+                    ) : installment.status === "Paid" ? (
+                      <a href={installment.invo_url} className="text-orange-500 mr-2">
+                        Invoice
+                      </a>
+                    ) : null}
+                </td>
                 </tr>
-              </thead>
-              
-              <tbody>
-                {installments.map((installment, index) => (
-                  <tr key={index} className="border-b">
-                    <td className="py-2 px-4">{installment.name}</td>
-                    <td className={`py-2 px-4 ${installment.status === "Cleared" ? "text-green-500" : "text-orange-500"}`}>
-                      {installment.status}
-                    </td>
-                    <td className="py-2 px-4">{installment.dueDate}</td>
-                    <td className="py-2 px-4">₹{installment.amount.toLocaleString()}</td>
-                    <td className="py-2 px-4">₹{installment.due.toLocaleString()}</td>
-                    <td className="py-2 px-4">{installment.paidOn ? installment.paidOn : "-"}</td>
-                    <td className="py-2 px-4">
-                      {installment.invoice && (
-                        <>
-                          <a href="#" className="text-orange-500 mr-2">
-                            Invoice
-                          </a>
-                          <button className="bg-orange-500 text-white px-4 py-1 rounded">
-                            Pay Now
-                          </button>
-                        </>
-                      )}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-
-          {/* Amount Details */}
-          <div className="w-1/3 p-4 bg-white shadow rounded ml-6">
-            <h4 className="text-lg font-semibold mb-4">Amount Details</h4>
-            <ul className="text-gray-700">
-              <li className="flex justify-between mb-2">
-                <span>Total Cost:</span>
-                <span className="font-semibold">₹{amountDetails.totalCost.toLocaleString()}</span>
-              </li>
-              <li className="flex justify-between mb-2">
-                <span>Discount:</span>
-                <span className="font-semibold">- ₹{amountDetails.discount}</span>
-              </li>
-              <li className="flex justify-between mb-2 text-green-600">
-                <span>Net Amount:</span>
-                <span className="font-semibold">₹{amountDetails.netAmount.toLocaleString()}</span>
-              </li>
-              <li className="flex justify-between mb-2">
-                <span>Paid Amount:</span>
-                <span className="font-semibold">₹{amountDetails.paidAmount.toLocaleString()}</span>
-              </li>
-              <li className="flex justify-between mb-2 text-orange-500">
-                <span>Pending Fee:</span>
-                <span className="font-semibold">₹{amountDetails.pendingFee.toLocaleString()}</span>
-              </li>
-            </ul>
-          </div>
+              ))}
+            </tbody>
+          </table>
         </div>
-      )}
+
+        {/* Amount Details */}
+        <div className="w-1/3 p-4 bg-white shadow rounded ml-6">
+          <h4 className="text-lg font-semibold mb-4">Amount Details</h4>
+          <ul className="text-gray-700">
+            <li className="flex justify-between mb-2">
+              <span>Total Cost:</span>
+              <span className="font-semibold">₹{data?.amountDetails?.totalPayments}</span>
+            </li>
+            {/* <li className="flex justify-between mb-2">
+              <span>Discount:</span>
+              <span className="font-semibold">- ₹{installments1?.amountDetails?.discount}</span>
+            </li>
+            <li className="flex justify-between mb-2 text-green-600">
+              <span>Net Amount:</span>
+              <span className="font-semibold">₹{installments1?.amountDetails?.netAmount}</span>
+            </li> */}
+            <li className="flex justify-between mb-2">
+              <span>Paid Amount:</span>
+              <span className="font-semibold">₹{data?.amountDetails?.totalPaid}</span>
+            </li>
+            <li className="flex justify-between mb-2 text-orange-500">
+              <span>Pending Fee:</span>
+              <span className="font-semibold">₹{data?.amountDetails?.totalDue}</span>
+            </li>
+          </ul>
+        </div>
+      </div>
 
     </div>
   );
