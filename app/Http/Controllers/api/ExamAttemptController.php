@@ -142,6 +142,10 @@ class ExamAttemptController extends Controller
             return response()->json(['message' => $validator->errors()->all()[0], 'status' => 404, 'success' => false], 404);
         }
         $examAttempLog = ExamAttempt::where('exam_id',$examId)->where('student_id',$id)->first();
+
+        if(empty($examAttempLog))
+            return response()->json(['message' => "Exam was not attempted", 'status' => 404, 'success' => false], 404);
+
         if($examAttempLog->status != 'completed')
             return response()->json(['message' => "Kindly please submit the exam", 'status' => 404, 'success' => false], 400);
 
