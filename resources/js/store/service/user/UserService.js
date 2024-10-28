@@ -13,6 +13,11 @@ export const userApi = createApi({
         getStudentData: builder.query({
             query: ({ userId }) => `students/${userId}`,
         }),
+
+        getPaymentData: builder.query({
+            query: () => `paymentCentre`,
+        }),
+
         getUserExamData: builder.query({
             query: ({ userId, ExamType, page, rowsPerPage }) => `student/${userId}/exams?examType=${ExamType}&size=${rowsPerPage}&page=${page}`,
         }),
@@ -76,8 +81,8 @@ export const userApi = createApi({
                 url: `student/${userId}/exam/${examId}/examReport`,
                 method: 'GET'
             })
-        })
+        }),
     }),
 })
 
-export const { useGetStudentDataQuery, useGetUserExamDataQuery, useGetAttemptedIdQuery, useGetExamQuestionsMutation, useUploadExamQuestionsMutation, useAddExamDataMutation, useUpdateExamDataMutation, useGetExamResultMutation, useGetReviewAnswerSheetMutation, useGetReviewExamQuestionMutation, useGetExamStatisticMutation, useGetExamReportMutation } = userApi
+export const { useGetStudentDataQuery, useGetUserExamDataQuery, useGetAttemptedIdQuery, useGetExamQuestionsMutation, useUploadExamQuestionsMutation, useAddExamDataMutation, useUpdateExamDataMutation, useGetExamResultMutation, useGetReviewAnswerSheetMutation, useGetReviewExamQuestionMutation, useGetExamStatisticMutation, useGetExamReportMutation,useGetPaymentDataQuery } = userApi
