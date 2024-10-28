@@ -31,7 +31,7 @@ use App\Http\Controllers\QuestionBankController;
 use App\Http\Controllers\QuestionTypesController;
 use App\Http\Controllers\SubjectController;
 use App\Http\Controllers\TestingController;
-
+use App\Http\Controllers\ZohoInvoiceController;
 
 /*
 |--------------------------------------------------------------------------
@@ -148,7 +148,6 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
 
 });
 
-Route::get("/test", [TestingController::class, "getAllCourses"]);
 
 Route::group(['middleware' => [
     // 'encryptCookie',
@@ -184,7 +183,6 @@ Route::group(['middleware' => [
     //	 Route::get('/attendances', [AttendanceController::class, 'index']);
     //	 Route::get('/batches',[BatchController::class,'get_batches']);
 
-    Route::post('/batches', [BatchController::class,'create']);
     Route::get('/batches/{id}', [BatchController::class,'show']);
     Route::get('/allBatches', [BatchController::class,'getBatches']);
     Route::put('/batches/{id}', [BatchController::class,'update']);
@@ -254,9 +252,11 @@ Route::group(['middleware' => [
         Route::post('/student/{id}/examQuestions', [QuestionAttempLogController::class,'attemptQuestion']);
 
     });
+    Route::get("/paymentCentre", [UserController::class, "getPaymentDetails"]);
 });
-Route::middleware(['zohoAuth'])->group(function () {
-    // Route::get('/sumedha/allBatches', [BatchController::class,'getBatches']);
-    Route::post('/student', [UserController::class,'createStudent']);
 
+Route::middleware(['zohoAuth'])->group(function () {
+    Route::get('/paymentDetails/{zohoCrmId}/refresh', [ZohoInvoiceController::class,'refreshZoho']);
+    Route::post('/student', [UserController::class,'createStudent']);
 });
+Route::post('/batches', [BatchController::class,'create']);

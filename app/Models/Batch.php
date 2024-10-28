@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Services\ZohoService;
 use BezhanSalleh\FilamentShield\Traits\HasPanelShield;
 use Filament\Facades\Filament;
 use Illuminate\Database\Eloquent\Builder;
@@ -45,6 +46,12 @@ class Batch extends Model
             //     ->join('batch_curriculum', 'batches.id', '=', 'batch_curriculum.batch_id')
             //         ->where('batch_curriculum.tutor_id', auth()->user()->id);
             // }
+        });
+
+        static::created(function ($batch) {
+            // Resolve the service from the container
+            $zs = app(ZohoService::class);
+            $zs->createBatchOnZohoCRM($batch);
         });
     }
 

@@ -7,8 +7,11 @@ use App\Http\Resources\UserResource;
 use App\Models\Qualification;
 use App\Models\User;
 use App\Services\UserService;
+use App\Services\ZohoService;
 use Google\Rpc\RequestInfo;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Validator;
 use PDO;
 
@@ -38,11 +41,11 @@ class UserController extends Controller
             'upload_resume' => 'required|file|mimes:pdf,doc,docx',
             'upload_aadhar' => 'required|file|mimes:pdf,doc,docx',
             'avatar_url' => 'nullable|file|mimes:jpeg,jpg,png,gif',
-            'parent_name'=> 'nullable|string|max:191',
-            'parent_email'=> 'nullable|email|max:191',
-            'parent_aadhar'=> 'nullable|integer|digits:12',
-            'parent_occupation'=> 'nullable|string|max:191',
-            'residential_address'=> 'nullable|string|max:191'
+            'parent_name' => 'nullable|string|max:191',
+            'parent_email' => 'nullable|email|max:191',
+            'parent_aadhar' => 'nullable|integer|digits:12',
+            'parent_occupation' => 'nullable|string|max:191',
+            'residential_address' => 'nullable|string|max:191'
         ]);
 
         $upload_aadhar = $upload_resume = $upload_avatar_url = "";
@@ -90,9 +93,8 @@ class UserController extends Controller
 
         //$qualifications = json_encode($request->qualifications);
         $arr_qualifications = [];
-        foreach ($request->qualifications as $qualification)
-        {
-            $arr_qualifications = json_decode(trim(stripslashes($qualification),'"'), true);
+        foreach ($request->qualifications as $qualification) {
+            $arr_qualifications = json_decode(trim(stripslashes($qualification), '"'), true);
         }
 
 
@@ -128,19 +130,18 @@ class UserController extends Controller
         return response()->json(['message' => 'User updated successfully', 'user' => new UserResource($user)]);
     }
 
-    public function find(Request $request)
-    {
-    }
+    public function find(Request $request) {}
 
     public function tutors(Request $request)
     {
         $users = User::where('role_id', 7)
-             ->select('id', 'name', 'email','phone')
-             ->get();
+            ->select('id', 'name', 'email', 'phone')
+            ->get();
         return response()->json(["data" => $users]);
     }
 
-    public function createStudent(Request $request,UserService $us){
+    public function createStudent(Request $request, UserService $us)
+    {
         $data = $request->data;
 
         if(gettype($data) != 'array')
@@ -150,21 +151,21 @@ class UserController extends Controller
 
         $validator = Validator::make($data, [
             'email' => 'required|email',
-            'paymentStatus' => 'required|in:1,2,3',
+            // 'paymentStatus' => 'required|in:1,2,3',
             'name' =>  'required|string',
             "phone" => "required|string|max:12",
             "branchLocation" => 'required|string|exists:branches,name',
             "zohoCustomerId" => 'required|integer'
         ]);
-          
+
         if (!empty($validator->errors()->messages())) {
-            return response()->json(['message' => $validator->errors()->all()[0], 'status' => 400,'success' =>false],400);
+            return response()->json(['message' => $validator->errors()->all()[0], 'status' => 400, 'success' => false], 400);
         }
 
         $data = $validator->validate();
         try {
             $data = $us->createStudent($data);
-            return response()->json(['message'=>'User Created','data' => new StudentResource($data['user']), 'status' => 200, 'success' => true], 200);
+            return response()->json(['message' => 'User Created', 'data' => new StudentResource($data['user']), 'status' => 200, 'success' => true], 200);
         } catch (\Exception $e) {
             if ($e->getCode() === '23000') {
                 return response()->json([
@@ -180,5 +181,28 @@ class UserController extends Controller
             ], 400); // 409 Conflict
 
         }
+    }
+
+
+    public function getPaymentDetails(ZohoService $zs)
+    {
+        $user = Auth::user();
+        if(empty($user))
+            return response()->json([ 'message' => 'User not found', "success" => false,'status' => 404], 404);
+
+        if(!$user->getIsStudentAttribute())
+            return response()->json([ 'message' => 'Payment Centre only for the user role', "success" => false,'status' => 400], 400);
+
+        $zohoCrmId = $user->zoho_crm_id;
+        if(empty($zohoCrmId))
+            return response()->json([ 'message' => 'Customer Not Synced yet on zoho', "success" => false,'status' => 400], 400);
+
+        try{
+            $paymentData = $zs->getInvoiceDetails($user);
+        }catch(\Exception $e){
+            return response()->json([ 'message' => $e->getMessage(), "success" => false,'status' => 500], 500);
+        }
+
+        return response()->json(($paymentData));
     }
 }

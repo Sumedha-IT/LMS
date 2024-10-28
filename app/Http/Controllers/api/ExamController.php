@@ -257,7 +257,7 @@ class ExamController extends Controller
         $batchIds = $user->batches()->get()->pluck('id')->toArray();
 
         if(empty($batchIds))
-            return  response()->json(['message' => "User is not enrolled to any batch", 'status' => 400,'success' =>false]);
+            return  response()->json(['message' => "User is not enrolled to any batch", 'status' => 400,'success' =>false],400);
 
         $exams = Exam::with('subject')->whereIn('batch_id', $batchIds)->orderBy('exam_date', 'desc');
         $attemptedExams = ExamAttempt::where('student_id', $id)->get();

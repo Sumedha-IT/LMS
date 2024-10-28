@@ -32,3 +32,20 @@ if (!function_exists('decrypt_data')) {
         return openssl_decrypt($encrypted_data, 'aes-256-cbc', $secret_key, 0, $iv);
     }
 }
+
+
+if (!function_exists('getCurrentTime')) {
+    /**
+     * Decrypt data using AES-256-CBC decryption
+     *
+     * @param string $encrypted_data_with_iv
+     * @param string $secret_key
+     * @return string
+     */
+    function getCurrentTime($timeZone='Asia/Kolkata')
+    {
+        date_default_timezone_set($timeZone);
+        $currentISTTime = date('Y-m-d H:i:s', strtotime('now'));
+        return $currentISTTime;
+    }
+}
