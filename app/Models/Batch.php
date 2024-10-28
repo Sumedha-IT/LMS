@@ -53,6 +53,13 @@ class Batch extends Model
             $zs = app(ZohoService::class);
             $zs->createBatchOnZohoCRM($batch);
         });
+
+
+        static::updated(function ($batch) {
+            // Resolve the service from the container
+            $zs = app(ZohoService::class);
+            $zs->createBatchOnZohoCRM($batch);
+        });
     }
 
 

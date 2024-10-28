@@ -258,5 +258,7 @@ Route::group(['middleware' => [
 Route::middleware(['zohoAuth'])->group(function () {
     Route::get('/paymentDetails/{zohoCrmId}/refresh', [ZohoInvoiceController::class,'refreshZoho']);
     Route::post('/student', [UserController::class,'createStudent']);
+    Route::post('/batches', [BatchController::class,'create']);
+    Route::put('/batches/{id}', [BatchController::class,'update']);
+
 });
-Route::post('/batches', [BatchController::class,'create']);
