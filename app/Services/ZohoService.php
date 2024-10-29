@@ -161,7 +161,7 @@ class ZohoService
         ];
     }
 
-    public function createBatchOnZohoCRM($batch)
+    public function syncBatchDataOnZoho($batch)
     {
         $apiKey = '1003.5105c50190027b44dced94b8203fe9e3.b1174b18ed8661575cee62db7998fdf9';
 
@@ -198,7 +198,6 @@ class ZohoService
                 ];
             }
         } catch (\Exception $e) {
-            dd($e->getMessage());
             // Handle exceptions
             return [
                 'error' => 'Exception occurred',
@@ -207,4 +206,45 @@ class ZohoService
             ];
         }
     }
+
+    public function deleteBatchOnZoho($batch)
+    {
+        $apiKey = '1003.5105c50190027b44dced94b8203fe9e3.b1174b18ed8661575cee62db7998fdf9';
+    
+        $params = [
+            'auth_type' => 'apikey',
+            'zapikey' => $apiKey,
+            'batchLmsId' => $batch->id
+        ];
+    
+        // Build the URL with query parameters for deleting a batch
+        $url = 'https://www.zohoapis.in/crm/v2/functions/delete_batch/actions/execute?' . http_build_query($params);
+    
+        // Make the API request
+        try {
+            $response = Http::withHeaders([
+                'Content-Type' => 'application/json',
+            ])->get($url);
+            
+            // Check the response
+            if ($response->successful()) {
+                return ['success' => true];
+            } else {
+                return [
+                    'error' => 'Failed to delete batch',
+                    'status' => $response->status(),
+                    'response' => $response->json(),
+                    'success' => false
+                ];
+            }
+        } catch (\Exception $e) {
+            // Handle exceptions
+            return [
+                'error' => 'Exception occurred',
+                'message' => $e->getMessage(),
+                'success' => false
+            ];
+        }
+    }
+    
 }

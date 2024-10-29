@@ -70,8 +70,8 @@ class BatchController extends Controller
         if (!empty($data['message'])) {
             return response()->json($data, 400);
         }
-        Batch::create($data);
-        return response()->json(['message' => "Batch Created","hasError"=>false], 200);
+        $batch = Batch::create($data);
+        return response()->json(['message' => "Batch Created","data"=>$batch,"hasError"=>false], 200);
     }
 
     public function update($id,Request $request){
@@ -84,12 +84,16 @@ class BatchController extends Controller
         }
 
         $data = $this->validateBatch($data);
-        $batch->update($data);
-
         if (!empty($data['message'])) {
             return response()->json($data, 400);
         }
-        return response()->json(['message' => "Batch Updated"], 200);
+
+        $batch = $batch->update($data);
+        if (!empty($data['message'])) {
+            return response()->json($data, 400);
+        }
+
+        return response()->json(['message' => "Batch Updated","batch"=>$batch], 200);
     }
 
     public function delete($id){
@@ -117,8 +121,8 @@ class BatchController extends Controller
             'curriculumData' => 'nullable|json',
         ]);
 
-        if(!empty($validator->errors()->messages())){
-            return ['message' => "Invalid data",'hasError'=>true];
+        if (!empty($validator->errors()->messages())) {
+            return ['message' => $validator->errors()->all()[0], 'status' => 400, 'success' => false];
         }
         $data = $validator->validate();
         $data = [
