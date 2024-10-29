@@ -123,6 +123,7 @@ const UserExamTable = ({ Value,  userId }) => {
                         color="warning"
                         size="small"
                         onClick={() => handleReview(row)}
+                        disabled={row.status === 'Expired'}
                      //   sx={{ color: '#f97316' }}
                     >
                         Review
