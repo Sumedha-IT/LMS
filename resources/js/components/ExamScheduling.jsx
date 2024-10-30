@@ -22,6 +22,8 @@ import {
   useGetInvigilatorsQuery,
   useAddExamDataMutation,
   useUpdateExamDataMutation,
+  useGetCurriculumQuery
+  
 } from '../store/service/admin/AdminService';
 import { toast } from 'react-toastify';
 import { Select } from '@mui/material';
@@ -33,7 +35,10 @@ const validationSchema = Yup.object({
     .required('Exam date is required'),
 
   title: Yup.string().required('Title is required'),
-  subjectId: Yup.string().required('Subject name is required'),
+  curriculumId:  Yup.array()
+    .of(Yup.string().required('Each subject name is required'))
+    .required('Subjects array is required')
+    .min(1, 'At least one subject is required'),
   batchId: Yup.string().required('Batch name is required'),
 
   startsAtHours: Yup.string()
@@ -82,12 +87,13 @@ const ExamScheduling = ({ ExamData }) => {
   const [isReadOnly, setIsReadOnly] = useState(false);
   const { data: courseList } = useGetBatchesQuery();
   const { data: subjectList } = useGetSubjectsQuery();
+  const { data: curriculumList } = useGetCurriculumQuery();
   const [AddExamData] = useAddExamDataMutation();
   const [UpdateExamData] = useUpdateExamDataMutation();
   const { data: invigilatorList, isLoading: isInvigilatorLoading } = useGetInvigilatorsQuery();
   const nav = useNavigate();
   const { id } = useParams();
-
+  // const subjectCurricullum = [{"id":1,"name":"abc"},{"id":2,"name":"cdjc"},{"id":3,"name":"sj"}]
   useEffect(() => {
     // console.log("ExamData", ExamData);
     if (ExamData?.invigilators?.length > 0) {
@@ -108,7 +114,7 @@ const ExamScheduling = ({ ExamData }) => {
     initialValues: {
       examDate: ExamData?.examDate || '',
       title: ExamData?.title || '',
-      subjectId: ExamData?.subjectId || '',
+      curriculumId: ExamData?.curriculumId || [],
       batchId: ExamData?.batchId || '',
       // startsAt: ExamData?.starts_at || '',
       // endsAt: ExamData?.ends_at || '',
@@ -195,6 +201,8 @@ const ExamScheduling = ({ ExamData }) => {
     setConfirmationOpen(false);
   };
 
+
+
   return (
     <div className="bg-gray-100 flex justify-center items-center px-8">
       <div className="md:px-0 px-6 w-full ">
@@ -243,20 +251,29 @@ const ExamScheduling = ({ ExamData }) => {
               <label className="w-1/3">Subject Name <span className="text-[red]">*</span></label>
               <TextField
                 fullWidth
-                id="subjectId"
-                name="subjectId"
+                id="curriculumId"
+                name="curriculumId"
                 select
-                value={formik.values.subjectId}
+                value={formik.values.curriculumId}
                 onChange={formik.handleChange}
-                error={formik.touched.subjectId && Boolean(formik.errors.subjectId)}
-                helperText={formik.touched.subjectId && formik.errors.subjectId}
+                error={formik.touched.curriculumId && Boolean(formik.errors.curriculumId)}
+                helperText={formik.touched.curriculumId && formik.errors.curriculumId}
                 InputProps={{
                   readOnly: isReadOnly,
                 }}
-                disabled={!subjectList || subjectList.length === 0}
+                SelectProps={{
+                  multiple: true, // Enable multi-select
+                  renderValue: (selected) =>{
+                    const selectedNames = curriculumList.data
+                        .filter(option => selected.includes(option.id))
+                        .map(option => option.name);
+                    return selectedNames.join(', ');
+                },
+              }}
+              disabled={!curriculumList || curriculumList.length === 0}
               >
-                {subjectList?.data.length > 0 ? (
-                  subjectList.data.map((subject) => (
+                {curriculumList?.data.length > 0 ? (
+                  curriculumList.data.map((subject) => (
                     <MenuItem key={subject.id} value={subject.id}>
                       {subject.name}
                     </MenuItem>
@@ -264,6 +281,15 @@ const ExamScheduling = ({ ExamData }) => {
                 ) : (
                   <MenuItem disabled>No Subjects Available</MenuItem>
                 )}
+                {/* {subjectList?.data.length > 0 ? (
+                  subjectList.data.map((subject) => (
+                    <MenuItem key={subject.id} value={subject.id}>
+                      {subject.name}
+                    </MenuItem>
+                  ))
+                ) : (
+                  <MenuItem disabled>No Subjects Available</MenuItem>
+                )} */}
               </TextField>
             </div>
 

@@ -10,6 +10,9 @@ export const adminApi = createApi({
         getSubjects: builder.query({
             query: () => `subjects`,
         }),
+        getCurriculum : builder.query({
+            query: () => `curriculums`,
+        }),
         getCourses: builder.query({
             query: () => `courses`,
         }),
@@ -73,4 +76,4 @@ export const adminApi = createApi({
 
 // Export hooks for usage in functional components, which are
 // auto-generated based on the defined endpoints
-export const { useGetSubjectsQuery, useGetCoursesQuery, useGetExamDataQuery, useGetExamDataByIdMutation, useGetRandomQuestionIdsMutation, useGetBatchesQuery, useGetInvigilatorsQuery, useGetQuestionBanksQuery, useGetQuestionsAsPerBankIdQuery, useAddExamDataMutation, useUpdateExamDataMutation, useGetQuestionIdMutation, useAddQuestionBanksMutation } = adminApi
+export const { useGetSubjectsQuery,useGetCurriculumQuery, useGetCoursesQuery, useGetExamDataQuery, useGetExamDataByIdMutation, useGetRandomQuestionIdsMutation, useGetBatchesQuery, useGetInvigilatorsQuery, useGetQuestionBanksQuery, useGetQuestionsAsPerBankIdQuery, useAddExamDataMutation, useUpdateExamDataMutation, useGetQuestionIdMutation, useAddQuestionBanksMutation } = adminApi

@@ -10,7 +10,6 @@ const tableHeaders = [
     { label: 'Not Answered', accessor: 'notAnswered' },
     { label: 'Marked for Review', accessor: 'markForReview' },
     { label: 'Not Visited', accessor: 'notVisited' },
-    { label: 'Time Taken', accessor: 'timeTaken' }
 ];
 
 const SubmissionPage = ({
@@ -55,7 +54,7 @@ const SubmissionPage = ({
     const handleGoBack = () => {
         navigate('/user'); // Navigate back to the user page
     };
-
+//style={"display:flex; justify-content:center; align-items: center;"}
     return (
         <>
             {errorMessage ? ( // Display error message if 400 error occurs
@@ -70,13 +69,21 @@ const SubmissionPage = ({
                     </Button>
                 </Box>
             ) : examStatisticData ? (
-                <Box sx={{ alignItems: 'center' }}>
-                    <TableContainer sx={{ marginTop: '100px', border: '1px solid rgba(0, 0, 0, 0.12)', mx: { xl: '50px', md: '40px', sm: '30px', xs: '20px' }, width: 'auto' }}>
+                <Box sx={{ 
+                    display: 'flex', 
+                    flexDirection: 'column', 
+                    alignItems: 'center', 
+                    justifyContent: 'center', 
+                    width: '100%', 
+                    height: '100vh',
+                 // Full viewport height for centering
+                }}  >
+                    <TableContainer sx={{  border: '1px solid rgba(0, 0, 0, 0.12)', mx: { xl: '50px', md: '40px', sm: '30px', xs: '20px' }, width: "95%" }}>
                         <Table aria-label="quiz details table">
                             <TableHead>
                                 <TableRow >
                                     {tableHeaders.map((header, index) => (
-                                        <TableCell key={index} sx={{ borderRight: '1px solid rgba(0, 0, 0, 0.12)', fontWeight: 'bold', textAlign: 'center', fontSize: { xs: '11px', sm: '12px', md: '13px', xl: '14px', padding: '5px' } }}>{header.label}</TableCell>
+                                        <TableCell key={index}  sx={{ borderRight: '1px solid rgba(0, 0, 0, 0.12)', fontWeight: 'bold', textAlign: 'center', fontSize: { xs: '11px', sm: '12px', md: '13px', xl: '14px', padding: '5px' } }}>{header.label}</TableCell>
                                     ))}
                                 </TableRow>
                             </TableHead>
@@ -84,7 +91,7 @@ const SubmissionPage = ({
                                 {examStatisticData?.map((row, rowIndex) => (
                                     <TableRow key={rowIndex}>
                                         {tableHeaders.map((header, colIndex) => (
-                                            <TableCell key={colIndex} sx={{ borderRight: '1px solid rgba(0, 0, 0, 0.12)', fontSize: { xs: '9px', sm: '10px', md: '12px', xl: '14px' }, padding: '10px' }}>
+                                            <TableCell key={colIndex} sx={{ borderRight: '1px solid rgba(0, 0, 0, 0.12)',  textAlign: 'center',fontSize: { xs: '9px', sm: '10px', md: '12px', xl: '14px' }, padding: '10px' }}>
                                                 {header.isPart ? `Part ${String.fromCharCode(65 + rowIndex)}` : row[header.accessor]}
                                             </TableCell>
                                         ))}
