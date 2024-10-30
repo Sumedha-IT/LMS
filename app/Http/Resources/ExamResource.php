@@ -25,11 +25,11 @@ class ExamResource extends JsonResource
             'duration' => $this->duration,
             'batchId' => $this->batch_id,
             'batch' => $this->batch->name ?? "", 
-            'subjectId' => $this->subject_id,
             'examDate' =>   date('Y-m-d', strtotime($this->exam_date)),
             'instructions' => $this->instructions ?? null,
             'invigilators' => $this->invigilators,
-            'meta' => $this->meta
+            'meta' => $this->meta,
+            'curriculum' =>$this->curriculums
         ];
     }
 }

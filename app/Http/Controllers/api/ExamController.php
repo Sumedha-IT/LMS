@@ -5,6 +5,7 @@ namespace App\Http\Controllers\api;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\ExamResource;
 use App\Http\Resources\StudentExamResource;
+use App\Models\Batch;
 use App\Models\Exam;
 use App\Models\ExamAttempt;
 use App\Models\ExamQuestion;
@@ -198,7 +199,11 @@ class ExamController extends Controller
         $validator = Validator::make($data, [
             'id' => 'nullable|integer',
             'batchId' => 'required|integer|exists:batches,id',
-            'subjectId' => 'required|integer|exists:subjects,id',
+
+            'curriculums' => 'required|array',
+            'curriculums.*.id' => 'required|integer|exists:curriculum,id',
+            'curriculums.*.name' => 'required|string',
+
             'title' => ['required','string','max:50'],
             'instructions' => 'nullable|string|max:1000',
             'examDate' => 'required|date_format:Y-m-d|after_or_equal:today',
@@ -227,11 +232,11 @@ class ExamController extends Controller
         }
 
         $data = $validator->validate();
+        
         $data["starts_at"] = $data['startsAt'];
         $data['ends_at'] = $data['endsAt'];
         $data['max_attempts'] = $data['maxAttempts'] ?? 1;
         $data['batch_id'] = $data['batchId'];
-        $data['subject_id'] = $data['subjectId']; 
         $data['immediate_result'] = $data['immediateResult'] ?? 1;
         $data['exam_date'] =$data['examDate'];
         return $data;   
@@ -324,4 +329,18 @@ class ExamController extends Controller
         ];
         return response()->json($data, 200);
     }
+
+    public function getMarkList($examId){
+        $exam = Exam::find($examId);
+        if(empty($exam))
+            return response()->json(['message' => "Exam not found", "hasError" => true], 400);
+        $batchId = $exam->batch_id;
+        $batch = Batch::where('id',$batchId)->first();
+        $batchUsers = $batch->students()->get()->select('id', 'name', 'email');
+
+        $attemptedExamUsers = ExamAttempt::with(['student' => function($query) {
+            $query->select('id', 'name', 'email');
+        }])->where('exam_id', $examId)->get();
+    }
+
 }
