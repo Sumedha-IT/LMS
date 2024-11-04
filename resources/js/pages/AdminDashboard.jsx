@@ -48,7 +48,11 @@ function AdminDashboard() {
         // console.log(id,examId)
         nav(`/administrator/${id}/exams/addquestion?examId=${examId}`)
     }
-
+    const onMarkListClick = async (examId)=>{
+        console.log(examId,"mohit")
+        nav(`/administrator/${id}/exams/listMarks?examId=${examId.id}`)
+        // nav(`/exams/${row.id}/listMarks`)
+    }
     const nav = useNavigate();
     const handleAddNewExam = () => {
         nav(`/administrator/${id}/exams/ExamForm`);
@@ -140,7 +144,7 @@ function AdminDashboard() {
                 rowsPerPage={rowsPerPage}
                 onPageChange={handlePageChange}
                 onRowsPerPageChange={handleRowsPerPageChange}
-                onMarksListClick={(row) => console.log('Marks List Clicked for', row)}
+                onMarksListClick={onMarkListClick}
                 onViewAttendanceClick={(row) => console.log('View Attendance Clicked for', row)}
                 onEditClick={onEditClick}
             />
