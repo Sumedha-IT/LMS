@@ -25,6 +25,7 @@ class QuestionAttempLogController extends Controller
             return response()->json($data, $data['status']);
         }
         $partIds = ExamQuestion::where('exam_id', $data['examAttemptLog']->exam_id) ->distinct()->pluck('part_id')->toArray();
+        sort($partIds);
         $partId = $request->get('partId') ? $request->get('partId') :  reset($partIds);
 
         $totalRecords = ExamQuestion::with('questionAttempts') // Eager load related question attempts
@@ -48,7 +49,7 @@ class QuestionAttempLogController extends Controller
                 'question' => $examQuestion->question,
                 'question_id' => $examQuestion->question_id,
                 'meta' =>    array_map(function ($option) {
-                    return [
+                    return [/*  */
                         'id' => $option['id'],
                         'option' => $option['option'],
                     ];

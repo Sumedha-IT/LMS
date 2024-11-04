@@ -147,7 +147,7 @@ const ResultComponent = ({ userId, examId, examAttemptId, handleReviewQuestion, 
                                 <Box key={index} sx={{ border: '1px solid #e0e0e0', mb: 2 }}>
                                     <Box sx={{ textAlign: 'center', borderBottom: '1px solid #e0e0e0', }}>
                                         <Typography variant="h7" sx={{ fontWeight: '700', color: 'gray', fontSize: { xs: 13 } }}>Section Name</Typography>
-                                        <Typography sx={{ fontSize: { md: 25, xs: 14 }, fontWeight: '600' }}>Part  {String.fromCharCode(65 + index)}</Typography>
+                                        <Typography sx={{ fontSize: { md: 25, xs: 14 }, fontWeight: '600' }}>{item.partId}</Typography>
                                     </Box>
                                     <Box sx={{ display: 'flex', justifyContent: 'space-around', mb: 3, py: 2, px: 4, flexWrap: 'wrap', gap: '13px' }}>
 
