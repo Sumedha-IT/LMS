@@ -26,41 +26,7 @@ const TestDataComponent = ({ Meta }) => {
     const [editablePartId, setEditablePartId] = useState(null);
     const [editablePartData, setEditablePartData] = useState('');
     const [isAddingPart, setIsAddingPart] = useState(false);
-
     const [newPartId, setNewPartId] = useState('');
-    // const[partId,setPartIds] = useState([])
-
-    // Helper function to convert part index to letters (A, B, C, ...)
-    const getPartLabel = (index) => {
-        const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
-        return letters[index] || `Part ${index + 1}`; // Fallback if too many parts
-    };
-    const handleEdit = (part) => {
-        setEditablePartId(part.partId);
-        setEditablePartData(part.partId);
-    };
-
-    const handleSaveEdit = (partId) => {
-        if (editablePartData.trim() === '') {
-            toast.error("Part ID cannot be empty");
-            return;
-        }
-
-        // Check for duplicates
-        const isDuplicate = parts.some(part => part.partId === editablePartData && part.partId !== partId);
-        if (isDuplicate) {
-            toast.error("Part ID must be unique");
-            return;
-        }
-
-        // Update the part if valid
-        setParts((prevParts) =>
-            prevParts.map(part =>
-                part.partId === partId ? { ...part, partId: editablePartData } : part
-            )
-        );
-        setEditablePartId(null); // Reset editable part ID
-    };
     useEffect(() => {
         console.log("Meta", Meta);
         if (Meta && Meta.length > 0) {
@@ -79,21 +45,21 @@ const TestDataComponent = ({ Meta }) => {
             dispatch(getBankCount(updatedMeta));
         }
     }, [Meta])
-
+    
     // Function to extract unique partIds and create parts dynamically
     useEffect(() => {
         const initialCount = {};
         const uniqueParts = [];
-
+        console.log("calling",selector)
         // Iterate over the selector to initialize parts and selectedQuestionsCount
         selector.forEach((part) => {
             const banksCount = part.banks.reduce((acc, bank) => {
                 acc[bank.id] = selectedQuestionsCount[part.partId]?.[bank.id] || 0;  // Set initial count for each bank
                 return acc;
             }, {});
-
+            
             initialCount[part.partId] = banksCount;
-
+            
             // Add unique parts to parts array
             const existingPart = uniqueParts.find(p => p.partId === part.partId);
             if (!existingPart) {
@@ -103,20 +69,21 @@ const TestDataComponent = ({ Meta }) => {
                 });
             }
         });
-
+        
         if (uniqueParts.length === 0) {
             uniqueParts.push({ partId: Date.now().toString(), banks: [] });
         }
-
+        
         // Set initial state for selectedQuestionsCount and parts
         setSelectedQuestionsCount(initialCount);
         setParts(uniqueParts);
-
+        
     }, [selector]);
+    
+    const handleDeleteQuestion = (id, partId,partIndex) => {
 
-    const handleDeleteQuestion = (id, partId) => {
-        const updatedSelector = selector.map((part) => {
-            if (part.partId === partId) {
+        const updatedSelector = selector.map((part,i) => {
+            if (part.partId === partId || i === partIndex) {
                 return {
                     ...part,
                     banks: part.banks.filter((q) => q.id !== id), // Filter out the deleted bank
@@ -129,9 +96,9 @@ const TestDataComponent = ({ Meta }) => {
     };
     const { id } = useParams();
     const addQuestions = (partId) => nav(`/administrator/${id}/exams/addquestionBank?partId=${partId}`);
-
+    
     const handleOpen = () => setOpen(prevOpen => !prevOpen);
-
+    
     const handleManageQuestions = async (partId, bankId, Ids) => {
         // console.log("this is your row data", Ids, typeof bankId);
         if (!Ids) {
@@ -140,45 +107,41 @@ const TestDataComponent = ({ Meta }) => {
                 const { data } = getIds;
                 setRandomQuestionsIds(data?.data)
             } catch (e) {
-
+                
             }
         } else {
-
+            
             setRandomQuestionsIds(Ids)
         }
         setCurrentPartId(partId); // Set the current partId
         setCurrentBankId(bankId); // Set the current bankId
         setOpen(true); // Open the ManageQuestionsComponent
     };
-
-    // Add New Part - Without Sub-Tabs
-    const addNewPart = () => {
-        const newPartId = Date.now().toString();
-        setParts([...parts, {
-            partId: newPartId,
-            banks: [] // Initialize empty banks array for the new part
-        }]);
-    };
-
+    
+    
     const handleAddNewPart = () => {
         if (newPartId.trim() === '') {
             toast.error("Part ID cannot be empty");
             return;
         }
-
+        
         // Check for duplicates when adding a new part
         if (parts.some(part => part.partId === newPartId)) {
             toast.error("Part ID must be unique");
             return;
         }
-
+        
         setParts([...parts, { partId: newPartId, banks: [] }]);
         setNewPartId(''); // Reset new part ID
         setIsAddingPart(false); // Close the input field
-
+        
         toast.success("Part added successfully!");
     };
-
+    
+    const handleEdit = (part) => {
+        setEditablePartId(part.partId);
+        setEditablePartData(part.partId);
+    };
     // Delete Part Functionality
     const handleDeletePart = (partId) => {
         const updatedParts = parts.filter(part => part.partId !== partId);  // Filter out the part to be deleted
@@ -186,17 +149,34 @@ const TestDataComponent = ({ Meta }) => {
         toast.success("Part Removed Successfully");
     };
 
-    const handleEditPart = (partId) => {
-        console.log("mohit", parts)
-        const updatedParts = parts.filter(part => part.partId !== partId);  // Filter out the part to be deleted
-        console.log("mohit", updatedParts)
-        // if(updatedParts.length == 0){
-        //     setParts(...parts,partId)
-        // }
+    const handleSaveEdit = (partId) => {
+        if (editablePartData.trim() === '') {
+            toast.error("Part ID cannot be empty");
+            return;
+        }
+        
+        // Check for duplicates
+        const isDuplicate = parts.some(part => part.partId === editablePartData && part.partId !== partId);
+        if (isDuplicate) {
+            toast.error("Part ID must be unique");
+            return;
+        }
+        
+        // Update the part if valid
+        setParts((prevParts) =>
+            prevParts.map(part =>
+                part.partId === partId ? { ...part, partId: editablePartData } : part
+            )
+        );
 
-        // setParts(updatedParts);
-        toast.success("Part Edit Successfully");
+
+        const updatedParts = parts.map(part =>
+            part.partId === partId ? { ...part, partId: editablePartData } : part
+        );
+        dispatch(getBankCount(updatedParts)); 
+        setEditablePartId(null); // Reset editable part ID
     };
+   
 
     const handleSelectedQuestionsCountForPart = (partId, bankId, count) => {
         setSelectedQuestionsCount((prev) => {
@@ -214,10 +194,10 @@ const TestDataComponent = ({ Meta }) => {
     const handleSubmit = async () => {
 
         try {
-            // console.log("exam id", examId);
+            console.log("exam id", examId,"PARTS",parts);
             let result = await AddQuestionBanks({ examId, data: { data: parts } })
             const { data, error } = result;
-            // console.log(data, error, result);
+            console.log(data, error, result);
             if (data?.success === true) {
                 toast.success(data?.message)
                 nav(`/administrator/${id}/exams/`)
@@ -248,9 +228,12 @@ const TestDataComponent = ({ Meta }) => {
 
                     {/* Content for Test Data - This will show the parts */}
                     {parts.map((part, partIndex) => {
-                        const filteredBanks = selector.filter((q) => q.partId === part.partId);
+                       console.log("search", selector, "part", part.partId)
+                     //  const filteredBanks = selector.filter((q) => q.partId === part.partId);
+                       const filteredBanks = selector.filter((q,i) => q.partId === part.partId || i === partIndex);
+
                         // const partLabel = getPartLabel(partIndex); // Get letter label for the part
-                        console.log("search", part, "part", partIndex)
+                       // console.log("search", part, "part", filteredBanks)
                         return (
                             <Paper key={part.partId || partIndex} square sx={{ borderRadius: '5px', mb: 2, padding: 2 }}>
                                 {/* Part Header with Label and Delete Button */}
@@ -291,7 +274,7 @@ const TestDataComponent = ({ Meta }) => {
                                                 </TableRow>
                                             </TableHead>
                                             <TableBody>
-                                                {filteredBanks.length > 0 ? (
+                                                {filteredBanks?.length > 0 ? (
                                                     filteredBanks[0].banks?.map((row, index) => (
                                                         <TableRow key={row.id || index}>
                                                             <TableCell>{row.name}</TableCell>
@@ -306,7 +289,8 @@ const TestDataComponent = ({ Meta }) => {
                                                                 >
                                                                     Manage Questions
                                                                 </Button>
-                                                                <IconButton color="error" onClick={() => handleDeleteQuestion(row.id, part.partId)}>
+                                                                {/* <IconButton color="error" onClick={() => console.log("rows",row.id,part.partId,index)}> */}
+                                                               <IconButton color="error" onClick={() => handleDeleteQuestion(row.id, part.partId,partIndex)}>
                                                                     <DeleteIcon />
                                                                 </IconButton>
                                                             </TableCell>
@@ -359,20 +343,7 @@ const TestDataComponent = ({ Meta }) => {
                 </Box >
 
             )}
-            {/* <Modal open={openEditTab} onClose={handleCloseEditModal}>
-                <Box sx={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', padding: 4, backgroundColor: 'white', borderRadius: 2, boxShadow: 24 }}>
-                    <Typography variant="h6">Edit Part</Typography>
-                    <TextField
-                        label="Part Data"
-                        value={editedPartData}
-                        onChange={(e) => setEditedPartData(e.target.value)}
-                        sx={{ marginTop: 2, width: '300px' }}
-                    />
-                    <Button variant="contained" onClick={handleSaveEdit} sx={{ marginTop: 2 }}>
-                        Save
-                    </Button>
-                </Box>
-            </Modal> */}
+           
         </>
     );
 };
