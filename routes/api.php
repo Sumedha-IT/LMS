@@ -151,8 +151,8 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
 
 Route::group(['middleware' => [
     // 'encryptCookie',
-    'addHeader', 
-    'auth:sanctum',
+    // 'addHeader', 
+    // 'auth:sanctum',
     ]], function () {
 
 
@@ -234,11 +234,11 @@ Route::group(['middleware' => [
     Route::get('/exams/{id}', [ExamController::class,'show']);
     Route::put('/exams/{id}', [ExamController::class,'update']);
     Route::delete('/exams/{id}', [ExamController::class,'delete']);
+    Route::get('/exams', [ExamController::class,'index']);
 
     //Exam Question
     Route::get('/{examId}/examQuestions', [ExamQuestionController::class,'index']);
     Route::get('exams/{id}/listMarks',[ExamController::class,'getMarkList']);
-    Route::get('/exams', [ExamController::class,'index']);
 
 
     // Api for Post/Timeline
