@@ -20,11 +20,12 @@ class Exam extends Model
         'batch_id',
         'invigilators',
         'exam_date',
-        'subject_id'
+        'curriculums'
     ];
 
     protected $casts = [
-         'invigilators' => 'array'
+        'invigilators' => 'array',
+        'curriculums' => 'array'
     ];
 
     protected $appends = ['duration'];

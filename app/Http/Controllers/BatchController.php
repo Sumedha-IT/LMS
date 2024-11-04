@@ -4,7 +4,9 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Http\Resources\BatchResource;
+use App\Http\Resources\CurriculumResource;
 use App\Models\Batch;
+use App\Models\Curriculum;
 use Illuminate\Support\Facades\Validator;
 
 class BatchController extends Controller
@@ -142,4 +144,22 @@ class BatchController extends Controller
         return $data;
     }
 
+ 
+
+    public function getCurriculams(Request $req)
+    {
+        $size = $req->get('size') == 0 ? 25 : $req->get('size');
+        $pageNo = $req->get('page', 1);
+        $offset = ($pageNo - 1) * $size;
+        $totalRecords = Curriculum::count();
+
+        // Fetch the records for the current page
+        $batches = Curriculum::offset($offset)->limit($size)->get();
+        $data = [
+            "data" => empty($batches) ? [] : CurriculumResource::collection($batches),
+            "totalRecords" => $totalRecords,
+            "totalPages" => ceil($totalRecords / $size)
+        ];
+        return response()->json($data,200);
+    }
 }
