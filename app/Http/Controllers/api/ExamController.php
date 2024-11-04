@@ -341,6 +341,7 @@ class ExamController extends Controller
         $attemptedExamUsers = ExamAttempt::with(['student' => function($query) {
             $query->select('id', 'name', 'email');
         }])->where('exam_id', $examId)->get();
+        return response()->json($attemptedExamUsers, 200);
     }
 
 }
