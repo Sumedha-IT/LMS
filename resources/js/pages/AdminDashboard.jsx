@@ -2,9 +2,11 @@
 
 import React, { useState, useEffect } from 'react';
 import CommonTable from '../common/CommonTable';
-import { useNavigate, useParams} from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import { Button, Select, MenuItem, FormControl, InputLabel, Grid, Box, Typography } from '@mui/material';
 import { useGetBatchesQuery, useGetExamDataQuery } from '../store/service/admin/AdminService';
+import { Modal, Backdrop, Fade } from '@mui/material';
+import MarksList from '../components/MarksList';
 
 function AdminDashboard() {
     const [page, setPage] = useState(0); // Current page
@@ -20,6 +22,9 @@ function AdminDashboard() {
         dateCriteria: selectedDate,
     });
     const { id } = useParams();
+
+    const [isPopupOpen, setIsPopupOpen] = useState(false);
+    const [selectedExamId, setSelectedExamId] = useState(null);
 
 
     useEffect(() => {
@@ -48,9 +53,11 @@ function AdminDashboard() {
         // console.log(id,examId)
         nav(`/administrator/${id}/exams/addquestion?examId=${examId}`)
     }
-    const onMarkListClick = async (examId)=>{
-        console.log(examId,"mohit")
-        nav(`/administrator/${id}/exams/listMarks?examId=${examId.id}`)
+    const onMarkListClick = async (examId) => {
+        console.log(examId, "mohit")
+        setSelectedExamId(examId.id);
+        setIsPopupOpen(true);
+      //  nav(`/administrator/${id}/exams/listMarks?examId=${examId.id}`)
         // nav(`/exams/${row.id}/listMarks`)
     }
     const nav = useNavigate();
@@ -147,6 +154,12 @@ function AdminDashboard() {
                 onMarksListClick={onMarkListClick}
                 onViewAttendanceClick={(row) => console.log('View Attendance Clicked for', row)}
                 onEditClick={onEditClick}
+            />
+              
+              <MarksList
+                open={isPopupOpen}
+                onClose={() => setIsPopupOpen(false)}
+                examId={selectedExamId}
             />
         </div>
     );
