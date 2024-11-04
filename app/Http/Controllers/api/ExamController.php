@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Resources\ExamResource;
 use App\Http\Resources\StudentExamResource;
 use App\Models\Batch;
+use App\Models\Curriculum;
 use App\Models\Exam;
 use App\Models\ExamAttempt;
 use App\Models\ExamQuestion;
@@ -112,11 +113,10 @@ class ExamController extends Controller
                 $data['sortOrder'] = (!empty($data['sortOrder']) && (in_array($data['sortOrder'], ['asc', 'desc']))) ?  $data['sortOrder'] : 'desc';
                 return $query->orderBy('created_at', $data['sortOrder']);
             })
-            // Apply pagination logic
-            ->offset($offset)
-            ->limit($size)
-            ->get();
-
+        ->offset($offset)
+        ->limit($size)
+        ->get();
+        
         $data = [
             "data" => empty($exams) ? [] : ExamResource::collection($exams,[]),
             "totalRecords" => $totalRecords,
@@ -200,10 +200,7 @@ class ExamController extends Controller
             'id' => 'nullable|integer',
             'batchId' => 'required|integer|exists:batches,id',
 
-            'curriculums' => 'required|array',
-            'curriculums.*.id' => 'required|integer|exists:curriculum,id',
-            'curriculums.*.name' => 'required|string',
-
+            'curriculumId' => 'required|array|exists:curriculum,id',
             'title' => ['required','string','max:50'],
             'instructions' => 'nullable|string|max:1000',
             'examDate' => 'required|date_format:Y-m-d|after_or_equal:today',
@@ -232,7 +229,15 @@ class ExamController extends Controller
         }
 
         $data = $validator->validate();
-        
+        $curriculumsConfig = Curriculum::whereIn('id', $data['curriculumId'])->pluck('name', 'id')->toArray();
+        $curriculums = [];
+        foreach($data['curriculumId'] as $cId){
+            $curriculums[] = [
+                'id' => $cId,
+                'name' => $curriculumsConfig[$cId]
+            ];
+        }
+        $data['curriculums'] = $curriculums;
         $data["starts_at"] = $data['startsAt'];
         $data['ends_at'] = $data['endsAt'];
         $data['max_attempts'] = $data['maxAttempts'] ?? 1;
@@ -242,7 +247,7 @@ class ExamController extends Controller
         return $data;   
     }
 
-    public function getExams($id, Request $request,ExamService $es)
+    public function getExams($id, Request $request)
     {
 
         $totalRecords = 0;
@@ -253,9 +258,7 @@ class ExamController extends Controller
         $offset = ($pageNo - 1) * $size;
 
         $examType = $request->examType == 'past'  ? 'past' : 'upcoming';
-
         $user = User::find($id);
-
         if(empty($user))
             return  response()->json(['message' => "User not found", 'status' => 404,'success' =>false]);
 
@@ -340,8 +343,16 @@ class ExamController extends Controller
 
         $attemptedExamUsers = ExamAttempt::with(['student' => function($query) {
             $query->select('id', 'name', 'email');
-        }])->where('exam_id', $examId)->get();
-        return response()->json($attemptedExamUsers, 200);
+        }])->where('exam_id', $examId)->orderBy('score','desc')->get()->toArray();
+      
+        $userIds = collect($attemptedExamUsers)->pluck('student.id')->toArray();
+        $notAttemptedExamUser = collect($batchUsers)->whereNotIn('id', $userIds)->map(function ($user) {
+            return [
+                'student' => $user,
+                'status' => 'Expired',
+            ];
+        })->toArray();
+        return response()->json(['data' =>  array_merge($attemptedExamUsers, $notAttemptedExamUser)], 200);
     }
 
 }

@@ -109,7 +109,7 @@ class ExamService
         $result['aggregateReport']['accuracy'] = ($result['aggregateReport']['correct'] / $result['aggregateReport']['totalQuestions']) * 100;
         $result['aggregateReport']['percentage'] = ($result['aggregateReport']['totalMarksObtained'] / $result['aggregateReport']['maxMarks']) * 100;
         $result['aggregateReport']['grade'] = $this->assignGrade($result['aggregateReport']['percentage']);
-            
+        
         return $result;
     } 
 
