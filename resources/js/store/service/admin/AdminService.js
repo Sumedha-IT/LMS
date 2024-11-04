@@ -28,6 +28,12 @@ export const adminApi = createApi({
         getQuestionBanks: builder.query({
             query: ({ page, rowsPerPage }) => `questionBanks?page=${page}&size=${rowsPerPage}`,
         }),
+        getMarkListBanks: builder.mutation({
+            query: (id) => ({
+                url: `exams/${id}/listMarks`,
+                method: 'GET',
+            })
+        }),
         getQuestionsAsPerBankId: builder.query({
             query: (id) => `questions?questionBankId=${id}`,
         }),
@@ -76,4 +82,4 @@ export const adminApi = createApi({
 
 // Export hooks for usage in functional components, which are
 // auto-generated based on the defined endpoints
-export const { useGetSubjectsQuery,useGetCurriculumQuery, useGetCoursesQuery, useGetExamDataQuery, useGetExamDataByIdMutation, useGetRandomQuestionIdsMutation, useGetBatchesQuery, useGetInvigilatorsQuery, useGetQuestionBanksQuery, useGetQuestionsAsPerBankIdQuery, useAddExamDataMutation, useUpdateExamDataMutation, useGetQuestionIdMutation, useAddQuestionBanksMutation } = adminApi
+export const { useGetSubjectsQuery,useGetCurriculumQuery, useGetCoursesQuery, useGetExamDataQuery, useGetExamDataByIdMutation,useGetMarkListBanksMutation, useGetRandomQuestionIdsMutation, useGetBatchesQuery, useGetInvigilatorsQuery, useGetQuestionBanksQuery, useGetQuestionsAsPerBankIdQuery, useAddExamDataMutation, useUpdateExamDataMutation, useGetQuestionIdMutation, useAddQuestionBanksMutation } = adminApi

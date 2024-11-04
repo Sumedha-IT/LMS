@@ -95,7 +95,7 @@ const ExamScheduling = ({ ExamData }) => {
   const { id } = useParams();
   // const subjectCurricullum = [{"id":1,"name":"abc"},{"id":2,"name":"cdjc"},{"id":3,"name":"sj"}]
   useEffect(() => {
-    // console.log("ExamData", ExamData);
+    console.log("ExamData", ExamData);
     if (ExamData?.invigilators?.length > 0) {
       const updatedInvigilators = ExamData.invigilators.map((invigilator) => ({
         invigilator: {
@@ -107,6 +107,10 @@ const ExamScheduling = ({ ExamData }) => {
       }));
       setInvigilators(updatedInvigilators);
       formik.setFieldValue('invigilators', updatedInvigilators);
+      //  if (ExamData?.curriculum) {
+      //       const curriculumIds = ExamData.curriculum.map(c => c.id);
+      //       formik.setFieldValue('curriculumId', curriculumIds);
+      //   }
     }
   }, [ExamData]);
 
@@ -114,7 +118,7 @@ const ExamScheduling = ({ ExamData }) => {
     initialValues: {
       examDate: ExamData?.examDate || '',
       title: ExamData?.title || '',
-      curriculumId: ExamData?.curriculumId || [],
+      curriculumId:  ExamData?.curriculum.map(c => c.id)  || [],
       batchId: ExamData?.batchId || '',
       // startsAt: ExamData?.starts_at || '',
       // endsAt: ExamData?.ends_at || '',
@@ -263,8 +267,8 @@ const ExamScheduling = ({ ExamData }) => {
                 }}
                 SelectProps={{
                   multiple: true, // Enable multi-select
-                  renderValue: (selected) =>{
-                    const selectedNames = curriculumList.data
+                  renderValue: (selected) => {
+                    const selectedNames = (curriculumList?.data || [])
                         .filter(option => selected.includes(option.id))
                         .map(option => option.name);
                     return selectedNames.join(', ');

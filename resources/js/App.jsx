@@ -28,7 +28,7 @@ function App() {
         <Route path="/administrator/:id/exams/ExamForm" element={<ExamScheduling />} />
         <Route path="/administrator/:id/exams/addquestion" element={<QuestionBankComponent />} />
         <Route path="/administrator/:id/exams/addQuestionBank" element={<AddQuestionBank />} />
-        <Route path="/administrator/:id/exams/marksList" element={<MarksList />} />
+        <Route path="/administrator/:id/exams/listMarks" element={<MarksList />} />
         <Route path="/administrator/:id/exams/manageQuestions" element={<ManageQuestionsComponent />} />
         <Route path="/administrator/:id/payment-details" element={<PaymentDetails/>} />
 

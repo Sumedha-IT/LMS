@@ -1,121 +1,96 @@
 import React, { useEffect, useState } from 'react';
 import { Box, Button, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, Typography, CircularProgress } from '@mui/material';
-import { useGetExamStatisticMutation } from '../store/service/user/UserService';
-import { useNavigate } from 'react-router-dom';
+import { useGetMarkListBanksMutation } from '../store/service/admin/AdminService';
+import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
+
 
 const tableHeaders = [
-    { label: 'Section Name', accessor: 'partId', isPart: true },
-    { label: 'No. of Questions', accessor: 'noOfQuestions' },
-    { label: 'Answered', accessor: 'answered' },
-    { label: 'Not Answered', accessor: 'notAnswered' },
-    { label: 'Marked for Review', accessor: 'markForReview' },
-    { label: 'Not Visited', accessor: 'notVisited' },
+    { label: "Student Name", key: "student.name" },
+    { label: "Email", key: "student.email" },
+    { label: "Attempt Count", key: "attempt_count" },
+    { label: "Score", key: "score" },
+    { label: "Time Taken", key: "report.timeTaken" },
+    { label: "Grade", key: "report.aggregateReport.grade" },
+    { label: "Status", key: "status" },
 ];
+
+// const tableHeaders = [
+//     { label: 'Student Name' },
+//     { label: 'Student Email' },
+//     { label: 'Score' },
+//     { label: 'TimeTaken'},
+//     { label: 'Grade'},
+//     { label: 'Percentage'},
+//     { label: 'Total Questions'},
+//     { label: 'Total Marks Obtained'},
+//     { label: 'Total Attempted Count'},
+//     { label: 'Status'},
+//     // { label: 'Not Visited', accessor: 'notVisited' },
+// ];
 const MarksList = () => {
-  const [getExamStatistic] = useGetExamStatisticMutation();
-  const [examStatisticData, setExamStatisticData] = useState();
-  const [errorMessage, setErrorMessage] = useState(" "); // For handling error messages
-  const navigate = useNavigate();
-  useEffect(() => {
-    getData();
-}, []);
-
-const getData = async () => {
-    try {
-        let result = await getExamStatistic({ userId, examId, examAttemptId });
-        if (result?.data?.status === 400) {
-            setErrorMessage(result.data.message); // Handle 400 error
-        } else {
-            setExamStatisticData(result?.data?.data);
+    const [getExamStatistic] = useGetMarkListBanksMutation();
+    const [examStatisticData, setExamStatisticData] = useState();
+    const [searchParams] = useSearchParams();
+    useEffect(() => {
+        const examID = searchParams.get('examId');
+        if (examID) {
+            //  localStorage.setItem("examId", examID)
+            getData(examID)
         }
-    } catch (e) {
-        console.log(e);
-    }
-};
+    }, []);
 
-const handleSubmitQuiz = () => {
-  setTimeLeft(0); // Reset countdown to 00:00
-  setIsTimeOver(true); // Mark exam as over
-  setIsSubmit(true);
-  setIsSubmission(false);
-  localStorage.setItem('isTimeOver', true); // Persist the state in localStorage
-  localStorage.removeItem('examStartTime');
-  localStorage.removeItem('timeLeft'); // Clear timeLeft from localStorage
-};
+    const getData = async (examID) => {
+        let result = await getExamStatistic(examID);
+        const { data } = result;
+        setExamStatisticData(data?.data);
+    };
 
-const handleQuitClick = () => {
-  setIsSubmit(false);
-  setIsSubmission(false);
-};
-const handleGoBack = () => {
-  navigate('/administrator/1/exams/'); // Navigate back to the user page
-};
+    return (
+        <>
+            {
+                examStatisticData ? (
+                    <Box sx={{
+                        display: 'flex',
+                        flexDirection: 'column',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        width: '100%',
+                        height: '100vh',
+                    }}  >
+                        <TableContainer sx={{ border: '1px solid rgba(0, 0, 0, 0.12)', mx: { xl: '50px', md: '40px', sm: '30px', xs: '20px' }, width: "95%" }}>
+                            <Table aria-label="quiz details table">
+                                <TableHead>
+                                    <TableRow >
+                                        {tableHeaders.map((header, index) => (
+                                            <TableCell key={index} sx={{ borderRight: '1px solid rgba(0, 0, 0, 0.12)', fontWeight: 'bold', textAlign: 'center', fontSize: { xs: '11px', sm: '12px', md: '13px', xl: '14px', padding: '5px' } }}>{header.label}</TableCell>
+                                        ))}
+                                    </TableRow>
+                                </TableHead>
+                                <TableBody>
+                                    {examStatisticData.map((row, rowIndex) => (
+                                        <TableRow key={rowIndex}>
+                                            {tableHeaders.map((header, colIndex) => {
+                                                const keys = header.key.split('.');
+                                                const value = keys.reduce((acc, key) => acc && acc[key], row);
 
-  return (
-    <>
-    {errorMessage ? ( // Display error message if 400 error occurs
-        <Box sx={{
-            display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', height: `calc(100vh - 60px)`, textAlign: 'center'
-        }}>
-            <Typography variant="h6" sx={{ color: '#f97316', mb: 2 }}>
-                {errorMessage}
-            </Typography>
-            <Button variant="contained" onClick={handleGoBack} sx={{ bgcolor: '#f97316' }}>
-                Go Back
-            </Button>
-        </Box>
-    ) : examStatisticData ? (
-        <Box sx={{ 
-            display: 'flex', 
-            flexDirection: 'column', 
-            alignItems: 'center', 
-            justifyContent: 'center', 
-            width: '100%', 
-            height: '100vh',
-        }}  >
-            <TableContainer sx={{  border: '1px solid rgba(0, 0, 0, 0.12)', mx: { xl: '50px', md: '40px', sm: '30px', xs: '20px' }, width: "95%" }}>
-                <Table aria-label="quiz details table">
-                    <TableHead>
-                        <TableRow >
-                            {tableHeaders.map((header, index) => (
-                                <TableCell key={index}  sx={{ borderRight: '1px solid rgba(0, 0, 0, 0.12)', fontWeight: 'bold', textAlign: 'center', fontSize: { xs: '11px', sm: '12px', md: '13px', xl: '14px', padding: '5px' } }}>{header.label}</TableCell>
-                            ))}
-                        </TableRow>
-                    </TableHead>
-                    <TableBody>
-                        {examStatisticData?.map((row, rowIndex) => (
-                            <TableRow key={rowIndex}>
-                                {tableHeaders.map((header, colIndex) => (
-                                    <TableCell key={colIndex} sx={{ borderRight: '1px solid rgba(0, 0, 0, 0.12)',  textAlign: 'center',fontSize: { xs: '9px', sm: '10px', md: '12px', xl: '14px' }, padding: '10px' }}>
-                                        {header.isPart ? `Part ${String.fromCharCode(65 + rowIndex)}` : row[header.accessor]}
-                                    </TableCell>
-                                ))}
-                            </TableRow>
-                        ))}
-                    </TableBody>
-                </Table>
-            </TableContainer>
-
-            <Typography variant="h6" align="center" sx={{ fontSize: { xs: '13px', sm: '15px', md: '17px', xl: '20px' }, marginTop: 2 }}>
-                Are you sure you want to submit?
-            </Typography>
-
-            <Box sx={{ display: 'flex', justifyContent: 'center', gap: 1, marginTop: 2 }}>
-                <Button variant="contained" sx={{ fontSize: { xs: '9px', sm: '10px', md: '12px', xl: '14px' } }} color="warning" onClick={handleSubmitQuiz}>
-                    Submit
-                </Button>
-                <Button variant="outlined" sx={{ fontSize: { xs: '9px', sm: '10px', md: '12px', xl: '14px' } }} color="primary" onClick={handleQuitClick}>
-                    No, Go Back To Quiz
-                </Button>
-            </Box>
-        </Box>
-    ) : (
-        <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: `calc(100vh - 60px)` }}>
-            <CircularProgress />
-        </Box>
-    )}
-</>
-  )
+                                                return (
+                                                    <TableCell key={colIndex} sx={{ borderRight: '1px solid rgba(0, 0, 0, 0.12)', textAlign: 'center', fontSize: { xs: '11px', sm: '12px', md: '13px', xl: '14px', padding: '5px' } }}>
+                                                        {value !== undefined ? value : 'N/A'}
+                                                    </TableCell>
+                                                );
+                                            })}
+                                        </TableRow>
+                                    ))}
+                                </TableBody>
+                            </Table>
+                        </TableContainer>
+                    </Box>) : (
+                    <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: `calc(100vh - 60px)` }}>
+                        <CircularProgress />
+                    </Box>
+                )}
+        </>
+    )
 }
 
 export default MarksList
