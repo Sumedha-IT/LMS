@@ -48,7 +48,9 @@ function AdminDashboard() {
         // console.log(id,examId)
         nav(`/administrator/${id}/exams/addquestion?examId=${examId}`)
     }
-
+    const onMarkListClick = (row)=>{
+        nav(`/administrator/${id}/exams/marksList?batchId=${row.batchId}`)
+    }
     const nav = useNavigate();
     const handleAddNewExam = () => {
         nav(`/administrator/${id}/exams/ExamForm`);
@@ -140,7 +142,7 @@ function AdminDashboard() {
                 rowsPerPage={rowsPerPage}
                 onPageChange={handlePageChange}
                 onRowsPerPageChange={handleRowsPerPageChange}
-                onMarksListClick={(row) => console.log('Marks List Clicked for', row)}
+                onMarksListClick={(row) => onMarkListClick(row)}
                 onViewAttendanceClick={(row) => console.log('View Attendance Clicked for', row)}
                 onEditClick={onEditClick}
             />

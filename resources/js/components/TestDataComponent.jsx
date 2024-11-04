@@ -1,9 +1,10 @@
 
 import { Delete as DeleteIcon } from '@mui/icons-material'; // Import Delete icon
-import { Box, Button, IconButton, Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Typography } from '@mui/material';
+import EditIcon from '@mui/icons-material/Edit'; //Import Edit icon
+import { Box, Button, IconButton, Modal, Paper, Table, TableBody, TextField, TableCell, TableContainer, TableHead, TableRow, Typography } from '@mui/material';
 import React, { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { useNavigate,useParams} from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { useAddQuestionBanksMutation, useGetRandomQuestionIdsMutation } from '../store/service/admin/AdminService';
 import { getBankCount } from '../store/slices/adminSlice/ExamSlice';
@@ -22,13 +23,44 @@ const TestDataComponent = ({ Meta }) => {
     const [getRandomQuestionIds] = useGetRandomQuestionIdsMutation();
     const selector = useSelector((state) => state.ExamReducer.QuestionBankCount);
     const examId = localStorage.getItem('examId')
+    const [editablePartId, setEditablePartId] = useState(null);
+    const [editablePartData, setEditablePartData] = useState('');
+    const [isAddingPart, setIsAddingPart] = useState(false);
+
+    const [newPartId, setNewPartId] = useState('');
+    // const[partId,setPartIds] = useState([])
 
     // Helper function to convert part index to letters (A, B, C, ...)
     const getPartLabel = (index) => {
         const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
         return letters[index] || `Part ${index + 1}`; // Fallback if too many parts
     };
+    const handleEdit = (part) => {
+        setEditablePartId(part.partId);
+        setEditablePartData(part.partId);
+    };
 
+    const handleSaveEdit = (partId) => {
+        if (editablePartData.trim() === '') {
+            toast.error("Part ID cannot be empty");
+            return;
+        }
+
+        // Check for duplicates
+        const isDuplicate = parts.some(part => part.partId === editablePartData && part.partId !== partId);
+        if (isDuplicate) {
+            toast.error("Part ID must be unique");
+            return;
+        }
+
+        // Update the part if valid
+        setParts((prevParts) =>
+            prevParts.map(part =>
+                part.partId === partId ? { ...part, partId: editablePartData } : part
+            )
+        );
+        setEditablePartId(null); // Reset editable part ID
+    };
     useEffect(() => {
         console.log("Meta", Meta);
         if (Meta && Meta.length > 0) {
@@ -128,11 +160,42 @@ const TestDataComponent = ({ Meta }) => {
         }]);
     };
 
+    const handleAddNewPart = () => {
+        if (newPartId.trim() === '') {
+            toast.error("Part ID cannot be empty");
+            return;
+        }
+
+        // Check for duplicates when adding a new part
+        if (parts.some(part => part.partId === newPartId)) {
+            toast.error("Part ID must be unique");
+            return;
+        }
+
+        setParts([...parts, { partId: newPartId, banks: [] }]);
+        setNewPartId(''); // Reset new part ID
+        setIsAddingPart(false); // Close the input field
+
+        toast.success("Part added successfully!");
+    };
+
     // Delete Part Functionality
     const handleDeletePart = (partId) => {
         const updatedParts = parts.filter(part => part.partId !== partId);  // Filter out the part to be deleted
         setParts(updatedParts);
         toast.success("Part Removed Successfully");
+    };
+
+    const handleEditPart = (partId) => {
+        console.log("mohit", parts)
+        const updatedParts = parts.filter(part => part.partId !== partId);  // Filter out the part to be deleted
+        console.log("mohit", updatedParts)
+        // if(updatedParts.length == 0){
+        //     setParts(...parts,partId)
+        // }
+
+        // setParts(updatedParts);
+        toast.success("Part Edit Successfully");
     };
 
     const handleSelectedQuestionsCountForPart = (partId, bankId, count) => {
@@ -186,18 +249,34 @@ const TestDataComponent = ({ Meta }) => {
                     {/* Content for Test Data - This will show the parts */}
                     {parts.map((part, partIndex) => {
                         const filteredBanks = selector.filter((q) => q.partId === part.partId);
-                        const partLabel = getPartLabel(partIndex); // Get letter label for the part
-
+                        // const partLabel = getPartLabel(partIndex); // Get letter label for the part
+                        console.log("search", part, "part", partIndex)
                         return (
                             <Paper key={part.partId || partIndex} square sx={{ borderRadius: '5px', mb: 2, padding: 2 }}>
                                 {/* Part Header with Label and Delete Button */}
                                 <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', p: 2, border: 1, backgroundColor: '#f4f5f7' }}>
-                                    <Typography variant="subtitle1" fontWeight="bold">
-                                        Part {partLabel} (Questions Randomized: No, Options Randomized: No) for Part {partIndex + 1}
-                                    </Typography>
-                                    <IconButton color="error" onClick={() => handleDeletePart(part.partId)}>
-                                        <DeleteIcon />
-                                    </IconButton>
+                                    {editablePartId === part.partId ? (
+                                        <TextField
+                                            value={editablePartData}
+                                            onChange={(e) => setEditablePartData(e.target.value)}
+                                            onBlur={() => handleSaveEdit(part.partId)} // Save on blur
+                                            variant="outlined"
+                                            size="small"
+                                            sx={{ flexGrow: 1, marginRight: 2 }}
+                                        />
+                                    ) : (
+                                        <Typography variant="subtitle1" fontWeight="bold">
+                                            {part.partId} (Questions Randomized: No, Options Randomized: No) for Part {partIndex + 1}
+                                        </Typography>
+                                    )}
+                                    <div>
+                                        <IconButton color="error" onClick={() => handleDeletePart(part.partId)}>
+                                            <DeleteIcon />
+                                        </IconButton>
+                                        <IconButton color="error" onClick={() => handleEdit(part)}>
+                                            <EditIcon />
+                                        </IconButton>
+                                    </div>
                                 </Box>
 
                                 {/* Display Question Bank Details */}
@@ -234,9 +313,9 @@ const TestDataComponent = ({ Meta }) => {
                                                         </TableRow>
                                                     ))
                                                 ) : (
-                                                        <TableRow>
-                                                            <TableCell colSpan={3}>No data available</TableCell>
-                                                        </TableRow>
+                                                    <TableRow>
+                                                        <TableCell colSpan={3}>No data available</TableCell>
+                                                    </TableRow>
                                                 )}
                                             </TableBody>
                                         </Table>
@@ -251,17 +330,49 @@ const TestDataComponent = ({ Meta }) => {
                     })}
 
                     <Box sx={{ display: "flex", justifyContent: "space-between" }}>
-                        <Button variant="contained" color="primary" onClick={addNewPart}>
-                            Add New Part
-                        </Button>
+                        {isAddingPart ? (
+                            <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+                                <TextField
+                                    value={newPartId}
+                                    onChange={(e) => setNewPartId(e.target.value)}
+                                    placeholder="Enter Part ID"
+                                    variant="outlined"
+                                    size="small"
+                                    sx={{ marginRight: 2 }}
+                                />
+                                <Button variant="contained" color="primary" onClick={handleAddNewPart}>
+                                    Add Part
+                                </Button>
+                                <Button variant="outlined" onClick={() => setIsAddingPart(false)} sx={{ marginLeft: 1 }}>
+                                    Cancel
+                                </Button>
+                            </Box>
+                        ) : (
+                            <Button variant="contained" color="primary" onClick={() => setIsAddingPart(true)}>
+                                Add New Part
+                            </Button>
+                        )}
                         <Button variant="contained" color="primary" onClick={handleSubmit}>
                             Submit
                         </Button>
                     </Box>
+                </Box >
 
-
-                </Box>
             )}
+            {/* <Modal open={openEditTab} onClose={handleCloseEditModal}>
+                <Box sx={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', padding: 4, backgroundColor: 'white', borderRadius: 2, boxShadow: 24 }}>
+                    <Typography variant="h6">Edit Part</Typography>
+                    <TextField
+                        label="Part Data"
+                        value={editedPartData}
+                        onChange={(e) => setEditedPartData(e.target.value)}
+                        sx={{ marginTop: 2, width: '300px' }}
+                    />
+                    <Button variant="contained" onClick={handleSaveEdit} sx={{ marginTop: 2 }}>
+                        Save
+                    </Button>
+                </Box>
+            </Modal> */}
         </>
     );
 };
