@@ -252,7 +252,7 @@ const ExamScheduling = ({ ExamData }) => {
 
             {/* Subject Name */}
             <div className="flex items-center gap-4">
-              <label className="w-1/3">Subject Name <span className="text-[red]">*</span></label>
+              <label className="w-1/3">Curriculums <span className="text-[red]">*</span></label>
               <TextField
                 fullWidth
                 id="curriculumId"

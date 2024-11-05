@@ -25,16 +25,17 @@ class ExamAttemptController extends Controller
         if (!empty($data['message'])) {
             return response()->json($data, 400);
         }
-
         if(empty($data['examAttemptLog'])){
-            $data['examAttemptLog'] = ExamAttempt::create([
+            $payload = [
                 'student_id' => $data['id'],
                 'exam_id' => $data['exam']->id,
                 'attempt_count' => 1,
                 'status' => "started",
                 'ends_at' => $data['ends_at']
-            ]);
+            ];
+            $data['examAttemptLog'] = ExamAttempt::create($payload);
         }else{
+
             $data['examAttemptLog']->update([
                 'attempt_count' => $data['examAttemptLog']->attempt_count + 1,
             ]);
@@ -105,7 +106,6 @@ class ExamAttemptController extends Controller
     }
 
     public function submitExam(Request $request,ExamService $es){
-        
         $examAttempLog = ExamAttempt::find($request->attemptId);
         if(empty($examAttempLog))
             return response()->json(['message' => 'Attempt Id not found', 'data' => $examAttempLog->report, 'status' => 404, 'success' => false], 200);
