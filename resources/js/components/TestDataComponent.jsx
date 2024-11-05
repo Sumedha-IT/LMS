@@ -143,8 +143,10 @@ const TestDataComponent = ({ Meta }) => {
         setEditablePartData(part.partId);
     };
     // Delete Part Functionality
-    const handleDeletePart = (partId) => {
+    const handleDeletePart = (partId,partIndex) => {
         const updatedParts = parts.filter(part => part.partId !== partId);  // Filter out the part to be deleted
+        console.log(updatedParts)
+        dispatch(getBankCount(updatedParts));
         setParts(updatedParts);
         toast.success("Part Removed Successfully");
     };
@@ -253,7 +255,7 @@ const TestDataComponent = ({ Meta }) => {
                                         </Typography>
                                     )}
                                     <div>
-                                        <IconButton color="error" onClick={() => handleDeletePart(part.partId)}>
+                                        <IconButton color="error" onClick={() => handleDeletePart(part.partId,partIndex)}>
                                             <DeleteIcon />
                                         </IconButton>
                                         <IconButton color="error" onClick={() => handleEdit(part)}>
