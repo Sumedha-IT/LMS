@@ -9,6 +9,7 @@ import { toast } from 'react-toastify';
 import { useAddQuestionBanksMutation, useGetRandomQuestionIdsMutation } from '../store/service/admin/AdminService';
 import { getBankCount } from '../store/slices/adminSlice/ExamSlice';
 import ManageQuestionsComponent from './ManageQuestionsComponent';
+import CheckIcon from '@mui/icons-material/Check';
 
 const TestDataComponent = ({ Meta }) => {
     const [open, setOpen] = useState(false);
@@ -27,6 +28,7 @@ const TestDataComponent = ({ Meta }) => {
     const [editablePartData, setEditablePartData] = useState('');
     const [isAddingPart, setIsAddingPart] = useState(false);
     const [newPartId, setNewPartId] = useState('');
+    const [isEditing, setIsEditing] = useState(false);
     useEffect(() => {
         console.log("Meta", Meta);
         if (Meta && Meta.length > 0) {
@@ -45,21 +47,21 @@ const TestDataComponent = ({ Meta }) => {
             dispatch(getBankCount(updatedMeta));
         }
     }, [Meta])
-    
+
     // Function to extract unique partIds and create parts dynamically
     useEffect(() => {
         const initialCount = {};
         const uniqueParts = [];
-        console.log("calling",selector)
+        console.log("calling", selector)
         // Iterate over the selector to initialize parts and selectedQuestionsCount
         selector.forEach((part) => {
             const banksCount = part.banks.reduce((acc, bank) => {
                 acc[bank.id] = selectedQuestionsCount[part.partId]?.[bank.id] || 0;  // Set initial count for each bank
                 return acc;
             }, {});
-            
+
             initialCount[part.partId] = banksCount;
-            
+
             // Add unique parts to parts array
             const existingPart = uniqueParts.find(p => p.partId === part.partId);
             if (!existingPart) {
@@ -69,20 +71,20 @@ const TestDataComponent = ({ Meta }) => {
                 });
             }
         });
-        
+
         if (uniqueParts.length === 0) {
             uniqueParts.push({ partId: Date.now().toString(), banks: [] });
         }
-        
+
         // Set initial state for selectedQuestionsCount and parts
         setSelectedQuestionsCount(initialCount);
         setParts(uniqueParts);
-        
-    }, [selector]);
-    
-    const handleDeleteQuestion = (id, partId,partIndex) => {
 
-        const updatedSelector = selector.map((part,i) => {
+    }, [selector]);
+
+    const handleDeleteQuestion = (id, partId, partIndex) => {
+
+        const updatedSelector = selector.map((part, i) => {
             if (part.partId === partId || i === partIndex) {
                 return {
                     ...part,
@@ -96,9 +98,9 @@ const TestDataComponent = ({ Meta }) => {
     };
     const { id } = useParams();
     const addQuestions = (partId) => nav(`/administrator/${id}/exams/addquestionBank?partId=${partId}`);
-    
+
     const handleOpen = () => setOpen(prevOpen => !prevOpen);
-    
+
     const handleManageQuestions = async (partId, bankId, Ids) => {
         // console.log("this is your row data", Ids, typeof bankId);
         if (!Ids) {
@@ -107,45 +109,47 @@ const TestDataComponent = ({ Meta }) => {
                 const { data } = getIds;
                 setRandomQuestionsIds(data?.data)
             } catch (e) {
-                
+
             }
         } else {
-            
+
             setRandomQuestionsIds(Ids)
         }
         setCurrentPartId(partId); // Set the current partId
         setCurrentBankId(bankId); // Set the current bankId
         setOpen(true); // Open the ManageQuestionsComponent
     };
-    
-    
+
+
     const handleAddNewPart = () => {
         if (newPartId.trim() === '') {
             toast.error("Part ID cannot be empty");
             return;
         }
-        
+
         // Check for duplicates when adding a new part
         if (parts.some(part => part.partId === newPartId)) {
             toast.error("Part ID must be unique");
             return;
         }
-        
+
         setParts([...parts, { partId: newPartId, banks: [] }]);
+        //const updatedParts = parts.filter(part => part.partId !== partId);
+        console.log(parts, "mohit")
         setNewPartId(''); // Reset new part ID
         setIsAddingPart(false); // Close the input field
-        
+        dispatch(getBankCount([...parts, { partId: newPartId, banks: [] }]));
         toast.success("Part added successfully!");
     };
-    
+
     const handleEdit = (part) => {
         setEditablePartId(part.partId);
         setEditablePartData(part.partId);
+        setIsEditing(true);
     };
     // Delete Part Functionality
-    const handleDeletePart = (partId,partIndex) => {
+    const handleDeletePart = (partId, partIndex) => {
         const updatedParts = parts.filter(part => part.partId !== partId);  // Filter out the part to be deleted
-        console.log(updatedParts)
         dispatch(getBankCount(updatedParts));
         setParts(updatedParts);
         toast.success("Part Removed Successfully");
@@ -156,14 +160,13 @@ const TestDataComponent = ({ Meta }) => {
             toast.error("Part ID cannot be empty");
             return;
         }
-        
         // Check for duplicates
         const isDuplicate = parts.some(part => part.partId === editablePartData && part.partId !== partId);
         if (isDuplicate) {
             toast.error("Part ID must be unique");
             return;
         }
-        
+
         // Update the part if valid
         setParts((prevParts) =>
             prevParts.map(part =>
@@ -175,10 +178,11 @@ const TestDataComponent = ({ Meta }) => {
         const updatedParts = parts.map(part =>
             part.partId === partId ? { ...part, partId: editablePartData } : part
         );
-        dispatch(getBankCount(updatedParts)); 
+        dispatch(getBankCount(updatedParts));
         setEditablePartId(null); // Reset editable part ID
+        setIsEditing(false);
     };
-   
+
 
     const handleSelectedQuestionsCountForPart = (partId, bankId, count) => {
         setSelectedQuestionsCount((prev) => {
@@ -196,7 +200,7 @@ const TestDataComponent = ({ Meta }) => {
     const handleSubmit = async () => {
 
         try {
-            console.log("exam id", examId,"PARTS",parts);
+            console.log("exam id", examId, "PARTS", parts);
             let result = await AddQuestionBanks({ examId, data: { data: parts } })
             const { data, error } = result;
             console.log(data, error, result);
@@ -230,12 +234,10 @@ const TestDataComponent = ({ Meta }) => {
 
                     {/* Content for Test Data - This will show the parts */}
                     {parts.map((part, partIndex) => {
-                       console.log("search", selector, "part", part.partId)
-                     //  const filteredBanks = selector.filter((q) => q.partId === part.partId);
-                       const filteredBanks = selector.filter((q,i) => q.partId === part.partId || i === partIndex);
+                        //  const filteredBanks = selector.filter((q) => q.partId === part.partId);
+                        const filteredBanks = selector.filter((q, i) => q.partId === part.partId || i === partIndex);
 
                         // const partLabel = getPartLabel(partIndex); // Get letter label for the part
-                       // console.log("search", part, "part", filteredBanks)
                         return (
                             <Paper key={part.partId || partIndex} square sx={{ borderRadius: '5px', mb: 2, padding: 2 }}>
                                 {/* Part Header with Label and Delete Button */}
@@ -248,6 +250,7 @@ const TestDataComponent = ({ Meta }) => {
                                             variant="outlined"
                                             size="small"
                                             sx={{ flexGrow: 1, marginRight: 2 }}
+                                            autoFocus
                                         />
                                     ) : (
                                         <Typography variant="subtitle1" fontWeight="bold">
@@ -255,12 +258,17 @@ const TestDataComponent = ({ Meta }) => {
                                         </Typography>
                                     )}
                                     <div>
-                                        <IconButton color="error" onClick={() => handleDeletePart(part.partId,partIndex)}>
+                                        <IconButton color="error" onClick={() => handleDeletePart(part.partId, partIndex)}>
                                             <DeleteIcon />
                                         </IconButton>
-                                        <IconButton color="error" onClick={() => handleEdit(part)}>
-                                            <EditIcon />
-                                        </IconButton>
+                                        {isEditing ?
+                                            <IconButton color="success">
+                                                <CheckIcon />
+                                            </IconButton>
+                                            :
+                                            <IconButton color="primary" onClick={() => handleEdit(part)}>
+                                                <EditIcon />
+                                            </IconButton>}
                                     </div>
                                 </Box>
 
@@ -270,9 +278,9 @@ const TestDataComponent = ({ Meta }) => {
                                         <Table>
                                             <TableHead>
                                                 <TableRow>
-                                                    <TableCell>Question Bank</TableCell>
-                                                    <TableCell>Usage</TableCell>
-                                                    <TableCell align="center">Actions</TableCell>
+                                                    <TableCell sx={{ width: "30%" }}>Question Bank</TableCell>
+                                                    <TableCell sx={{ width: "40%" }}>Usage</TableCell>
+                                                    <TableCell align="center" sx={{ width: "30%" }}>Actions</TableCell>
                                                 </TableRow>
                                             </TableHead>
                                             <TableBody>
@@ -292,7 +300,7 @@ const TestDataComponent = ({ Meta }) => {
                                                                     Manage Questions
                                                                 </Button>
                                                                 {/* <IconButton color="error" onClick={() => console.log("rows",row.id,part.partId,index)}> */}
-                                                               <IconButton color="error" onClick={() => handleDeleteQuestion(row.id, part.partId,partIndex)}>
+                                                                <IconButton color="error" onClick={() => handleDeleteQuestion(row.id, part.partId, partIndex)}>
                                                                     <DeleteIcon />
                                                                 </IconButton>
                                                             </TableCell>
@@ -345,7 +353,7 @@ const TestDataComponent = ({ Meta }) => {
                 </Box >
 
             )}
-           
+
         </>
     );
 };
