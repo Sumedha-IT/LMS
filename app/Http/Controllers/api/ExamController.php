@@ -343,9 +343,11 @@ class ExamController extends Controller
 
         $attemptedExamUsers = ExamAttempt::with(['student' => function($query) {
             $query->select('id', 'name', 'email');
-        }])->where('exam_id', $examId)->orderBy('score','desc')->get()->toArray();
+
+        }])->select("*", DB::raw("UPPER(status) as status"))->where('exam_id', $examId)->orderBy('score','desc')->get()->toArray();
       
         $userIds = collect($attemptedExamUsers)->pluck('student.id')->toArray();
+
         $notAttemptedExamUser = collect($batchUsers)->whereNotIn('id', $userIds)->map(function ($user) {
             return [
                 'student' => $user,

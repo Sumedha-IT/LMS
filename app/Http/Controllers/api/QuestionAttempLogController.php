@@ -49,7 +49,7 @@ class QuestionAttempLogController extends Controller
                 'question' => $examQuestion->question,
                 'question_id' => $examQuestion->question_id,
                 'meta' =>    array_map(function ($option) {
-                    return [/*  */
+                    return [
                         'id' => $option['id'],
                         'option' => $option['option'],
                     ];
