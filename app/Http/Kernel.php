@@ -37,6 +37,8 @@ class Kernel extends HttpKernel
             \App\Http\Middleware\VerifyCsrfToken::class,
             \Illuminate\Routing\Middleware\SubstituteBindings::class,
             \App\Http\Middleware\CheckSession::class,
+            \App\Http\Middleware\CheckFeatureAccessMiddleware::class,
+
         ],
 
         'api' => [
@@ -57,6 +59,8 @@ class Kernel extends HttpKernel
         \Illuminate\Session\Middleware\AuthenticateSession::class,
         \Illuminate\Routing\Middleware\SubstituteBindings::class,
         \Illuminate\Auth\Middleware\Authorize::class,
+        \App\Http\Middleware\CheckFeatureAccessMiddleware::class
+
     ];
 
     /**
@@ -83,5 +87,6 @@ class Kernel extends HttpKernel
         'addHeader'=>\App\Http\Middleware\AddHeader::class,
         'encryptCookie' =>\App\Http\Middleware\EncryptCookies::class,
         'zohoAuth' =>\App\Http\Middleware\ZohoMiddleware::class,
+        'checkFeatureAcc' =>\App\Http\Middleware\CheckFeatureAccessMiddleware::class
     ];
 }

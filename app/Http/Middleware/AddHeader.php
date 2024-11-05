@@ -15,7 +15,11 @@ class AddHeader
      * @param  \Closure(\Illuminate\Http\Request): (\Symfony\Component\HttpFoundation\Response)  $next
      */
     public function handle(Request $request, Closure $next): Response
-    {       
+    {
+
+        if (!empty($request->header('Authorization'))) {
+            return $next($request);
+        }
         $cookieValue = Cookie::get('user_info');
         $cookieValue = json_decode($cookieValue,true);
         if(empty($cookieValue) || ($request->header('User-Agent') != $cookieValue['user_agent'] && $request->ip() != $cookieValue['ip_address']) ){

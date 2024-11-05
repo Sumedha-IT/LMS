@@ -30,9 +30,8 @@ class FeaturDisableCommand extends Command
     {
         $today = date('Y-m-d');
         $studentRoleId = Role::where('name', 'Student')->first()->id;
-        $userIds = ZohoInvoice::whereDate('due_date', '<=', $today)
-                            ->distinct()
-                            ->pluck('user_id')->toArray();
+        $userIds = ZohoInvoice::whereDate('due_date', '<=', $today)->where('status','!=','paid')
+                   ->distinct()->pluck('user_id')->toArray();
         User::where('role_id',$studentRoleId)->whereIn('id', $userIds)->update(['feature_access' => 0]);
     }
 }
