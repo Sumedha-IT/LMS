@@ -150,9 +150,8 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
 
 
 Route::group(['middleware' => [
-    // 'encryptCookie',
-    // 'addHeader', 
-    // 'auth:sanctum',
+    'addHeader', 
+    'auth:sanctum',
     ]], function () {
 
 

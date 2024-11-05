@@ -137,7 +137,7 @@ const QuestionPanel = ({ question, onAnswer, onNext, onMarkForReview, onClearRes
                                             }
                                         }}
                                     >
-                                        {`Part`} {String.fromCharCode(65 + index)}
+                                         {partId}
                                     </Box>
                                 ))}
                             </Box>

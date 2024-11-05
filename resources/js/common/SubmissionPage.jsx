@@ -92,7 +92,7 @@ const SubmissionPage = ({
                                     <TableRow key={rowIndex}>
                                         {tableHeaders.map((header, colIndex) => (
                                             <TableCell key={colIndex} sx={{ borderRight: '1px solid rgba(0, 0, 0, 0.12)',  textAlign: 'center',fontSize: { xs: '9px', sm: '10px', md: '12px', xl: '14px' }, padding: '10px' }}>
-                                                {header.isPart ? `Part ${String.fromCharCode(65 + rowIndex)}` : row[header.accessor]}
+                                                {header.isPart ? row.partId : row[header.accessor]}
                                             </TableCell>
                                         ))}
                                     </TableRow>
