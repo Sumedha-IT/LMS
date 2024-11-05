@@ -308,14 +308,14 @@ const UserExamModule = () => {
                 </Box>
                 {/* Main Content Section */}
                 <Grid container spacing={0} sx={{ height: `calc(100vh - 90px)`, '@media (min-width: 0px) and (max-width: 599px)': { height: `calc(100vh - 63px)` }, '@media (min-width: 599px) and (max-width: 1100px)': { height: `calc(100vh - 42px)` } }}>
-                    <Grid item xs={12} sm={8} md={9} sx={{ p: 0 }}>
+                    <Grid item xs={12} sm={8} md={9} sx={{ p:0}}>
                         {quitConfirmation ? <QuitConfirmation setQuitConfirmation={setQuitConfirmation} setIsSubmission={setIsSubmission}
                             setIsSubmit={setIsSubmit} setTimeLeft={setTimeLeft}
                             setIsTimeOver={setIsTimeOver} /> : <>
                             {
                                 isSubmission ? (
-                                    <SubmissionPage userId={userId} examId={examId} examAttemptId={examAttemptId} setIsSubmit={setIsSubmit} setIsSubmission={setIsSubmission} setSubmitButton={setSubmitButton} setTimeLeft={setTimeLeft}
-                                        setIsTimeOver={setIsTimeOver} />
+                                    <SubmissionPage style="background-color:red;" userId={userId} examId={examId} examAttemptId={examAttemptId} setIsSubmit={setIsSubmit} setIsSubmission={setIsSubmission} setSubmitButton={setSubmitButton} setTimeLeft={setTimeLeft}
+                                        setIsTimeOver={setIsTimeOver}/>
                                 ) : isSubmit ? (
                                     <ResultComponent userId={userId} examId={examId} examAttemptId={examAttemptId} handleReviewQuestion={handleReviewQuestion} />
                                 ) : (

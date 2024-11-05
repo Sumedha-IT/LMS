@@ -150,7 +150,6 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
 
 
 Route::group(['middleware' => [
-    // 'encryptCookie',
     'addHeader', 
     'auth:sanctum',
     ]], function () {
@@ -208,6 +207,10 @@ Route::group(['middleware' => [
     // Courses
     Route::get('/courses', [CourseController::class,'getAllCourses']);
     Route::get('/courses/{id}', [CourseController::class,'show']);
+
+    //Curriculam
+    Route::get('/curriculums', [BatchController::class,'getCurriculams']);
+
     // Chapters
     Route::get('/chapters/{id}', [QuestionBankChapterController::class,'show']);
     Route::get('/chapters', [QuestionBankChapterController::class,'index']);
@@ -227,13 +230,14 @@ Route::group(['middleware' => [
     Route::put('/options', [QuestionOptionController::class,'update']);
 
     // Exams
-    Route::get('/exams', [ExamController::class,'index']);
     Route::get('/exams/{id}', [ExamController::class,'show']);
     Route::put('/exams/{id}', [ExamController::class,'update']);
     Route::delete('/exams/{id}', [ExamController::class,'delete']);
+    Route::get('/exams', [ExamController::class,'index']);
 
     //Exam Question
     Route::get('/{examId}/examQuestions', [ExamQuestionController::class,'index']);
+    Route::get('exams/{id}/listMarks',[ExamController::class,'getMarkList']);
 
 
     // Api for Post/Timeline
@@ -262,3 +266,4 @@ Route::middleware(['zohoAuth'])->group(function () {
     Route::put('/batches/{id}', [BatchController::class,'update']);
 
 });
+

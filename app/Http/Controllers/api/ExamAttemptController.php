@@ -112,10 +112,13 @@ class ExamAttemptController extends Controller
 
         if($examAttempLog->status == 'completed')
             return response()->json(['message' => 'Exam Already Submitted', 'data' => $examAttempLog->report, 'status' => 400, 'success' => false], 200);
-
-        $examAttempLog->report = (array)$es->generateReport($examAttempLog);
+        
+        $result = (array)$es->generateReport($examAttempLog);
+        $examAttempLog->report = $result;
         $examAttempLog->status = 'completed';
+        $examAttempLog->score = $result['aggregateReport']['totalMarksObtained'];
         $examAttempLog->save();
+
         return response()->json(['message' => 'Exam submitted succesfully', 'data' => $examAttempLog->report, 'status' => 200, 'success' => true], 200);
     }
 
