@@ -127,7 +127,7 @@ const MarksList = ({ open, onClose, examId }) => {
             const result = await getExamStatistic(examID);
             const { data } = result;
             console.log(data,"data")
-            setExamStatisticData(data);
+            setExamStatisticData(data.data);
         } catch (error) {
             console.error("Error fetching exam statistics:", error);
         } finally {
