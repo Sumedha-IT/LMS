@@ -143,13 +143,13 @@ class ZohoService
             $totalPayment += $amount;
 
             // Check status
-            if ($payment['status'] === 'paid') {
+            if ($payment['status'] == 'paid') {
                 $totalPaid += $amount;
             } else {
                 // Store due payments
                 $duePayments[] = $payment;
             }
-            $payment['status'] = ($payment['status'] == 'draft') ? 'Verification_Pending' : ($payment['status'] == 'sent' ? 'Due' : 'Paid');
+            $payment['status'] = ($payment['status'] == 'draft') ? 'Verification_Pending' : ($payment['status'] == 'sent' || $payment['status'] == 'approved' ? 'Due' : 'Paid');
         }
 
         // Calculate remaining due
