@@ -30,10 +30,9 @@ class CheckFeatureAccessMiddleware
     
                 if (!empty($snapshot['memo']['path'])) {
                     $path = '/' . ltrim($snapshot['memo']['path'], '/');  // Normalize path with leading slash
-    
                     // Define patterns in a single regex with alternation
-                    $modelToDisablePattern = "/^\/administrator\/\d+\/(calendar|calendars|timeline|examinations|feedback|my-profile|announcements|attendances|leaves|holidays|teaching-material-statuses|master\/batches)?$/";
-    
+                    $modelToDisablePattern = "/^\/administrator\/\d+(\/(calendar|calendars|timeline|examinations|feedback|my-profile|announcements|attendances|leaves|holidays|teaching-material-statuses|master\/batches)?)?$/";
+
                     // Match pattern
                     if (preg_match($modelToDisablePattern, $path)) {
                         // Redirect if match is found
