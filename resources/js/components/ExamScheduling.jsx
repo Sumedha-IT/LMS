@@ -118,7 +118,7 @@ const ExamScheduling = ({ ExamData }) => {
     initialValues: {
       examDate: ExamData?.examDate || '',
       title: ExamData?.title || '',
-      curriculumId:  ExamData?.curriculum.map(c => c.id)  || [],
+      curriculumId: ExamData?.curriculum?.map(c => c.id) || [],
       batchId: ExamData?.batchId || '',
       // startsAt: ExamData?.starts_at || '',
       // endsAt: ExamData?.ends_at || '',
