@@ -22,7 +22,7 @@ class UserService
 
 
         $user =  User::updateOrCreate(['email' => $data['email'],'phone'=>$data['phone']], $input);
-        // $response = $this->sendUserCredentisalseViaMail($input['email'], $password);
+        $response = $this->sendUserCredentisalseViaMail($input['email'], $password);
         return ['user' => $user];
     }
 
