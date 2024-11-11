@@ -26,7 +26,7 @@ class ZohoService
             }, $data);
             $response =  $this->savePaymentDetailsToDb($data, $userId);
 
-            $isFeatureAccessible = $this->checkFeatureAccess($user->zoho_crm_id);
+            $isFeatureAccessible = $this->checkFeatureAccess($user);
 
 
             return  $response ;
@@ -254,14 +254,16 @@ class ZohoService
         }
     }
 
-    public function checkFeatureAccess($zohoCrmId){
+    public function checkFeatureAccess($user){
         $today = date('Y-m-d');
         $studentRoleId = Role::where('name', 'Student')->first()->id;
 
-        $userIds = ZohoInvoice::whereDate('due_date', '<=', $today)->where('status','!=','paid')
-                            ->distinct()
-                            ->pluck('user_id')->toArray();
-        User::where('role_id',$studentRoleId)->where('zoho_crm_id','=', $zohoCrmId)->update(['feature_access' => 0]);
+        $userIds= ZohoInvoice::where("user_id", $user->id)
+            ->whereDate('due_date', '>=', $today)->where('status', '!=', 'paid')
+            ->pluck('user_id')
+            ->toArray();
+        
+        User::where('role_id', $studentRoleId)->where('id', array_unique($userIds))->update(['feature_access' => 0]);
     }
     
 }
