@@ -87,4 +87,9 @@ class Team extends Model
         return $this->hasMany(Post::class);
     }
 
+    public function feedbackforms()
+    {
+        return $this->hasMany(FeedbackForm::class, 'team_id');
+    }
+
 }

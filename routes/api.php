@@ -267,3 +267,4 @@ Route::middleware(['zohoAuth'])->group(function () {
 
 });
 
+Route::get('/test', [TestingController::class,'testMail']);
