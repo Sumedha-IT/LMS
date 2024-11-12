@@ -14,10 +14,11 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasManyThrough;
 use Illuminate\Database\Eloquent\Relations\MorphToMany;
 use Spatie\Permission\Traits\HasRoles;
+use Illuminate\Notifications\Notifiable;
 
 class Batch extends Model
 {
-    use HasFactory, HasRoles, HasPanelShield;
+    use HasFactory, HasRoles, HasPanelShield,Notifiable;
 
     //protected $table = "batches";
 
@@ -138,6 +139,11 @@ class Batch extends Model
     public function calendars()
     {
         return $this->hasMany(Calendar::class);
+    }
+
+    public function feedbackForms()
+    {
+        return $this->belongsToMany(FeedbackForm::class, 'batch_feedback_form', 'batch_id', 'feedback_form_id');
     }
 
     public function getCalendarCountAttribute()
