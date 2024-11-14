@@ -155,7 +155,8 @@ class UserController extends Controller
             'name' =>  'required|string',
             "phone" => "required|string|max:12",
             "branchLocation" => 'required|string|exists:branches,name',
-            "zohoCustomerId" => 'required|integer'
+            "zohoCustomerId" => 'required|integer',
+            "batchId" => 'required|exists:batches,id'
         ]);
 
         if (!empty($validator->errors()->messages())) {
