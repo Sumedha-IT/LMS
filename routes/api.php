@@ -286,6 +286,7 @@ Route::middleware(['zohoAuth'])->group(function () {
     Route::get('/{user}/job/{job}/apply', [JobStatusController::class, 'applyJob']);
     Route::get('/{user}/appliedJobs', [JobStatusController::class, 'indexJobs']);
     Route::get('/{user}/job/{job}', [JobStatusController::class, 'deleteJobApplication']);
+    
     Route::patch('/{user}/jobStatus/{jobStatus}', [JobStatusController::class, 'updateJobStatus']);
 
 
