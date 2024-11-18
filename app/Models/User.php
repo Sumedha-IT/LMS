@@ -261,4 +261,44 @@ class User extends Authenticatable implements HasTenants, FilamentUser, HasAvata
     {
         return $this->hasMany(ExamAttempt::class,'student_id');
     }
+
+    public function jobProfile()
+    {
+        return $this->hasOne(JobProfile::class);
+    }
+
+    public function profileEducations()
+    {
+        return $this->hasMany(ProfileEducation::class);
+    }
+
+    public function profileExperiences()
+    {
+        return $this->hasMany(ProfileExperience::class);
+    }
+
+    public function jobStatuses()
+    {
+        return $this->hasMany(JobStatus::class);
+    }
+
+    public function jobs()
+    {
+        return $this->hasMany(Job::class, 'recruiter_id');
+    }
+
+    public function projects()
+    {
+        return $this->hasMany(Project::class);
+    }
+
+    public function certificates()
+    {
+        return $this->hasMany(Certificate::class);
+    }
+
+    public function isRecruitor()
+    {
+        return $this->role && in_array($this->role->id, [4]) ? true : false;
+    }
 }

@@ -2,6 +2,8 @@
 
 use App\Http\Controllers\api\ExamAttemptController;
 use App\Http\Controllers\api\ExamController;
+use App\Http\Controllers\api\JobProfileController;
+use App\Http\Controllers\api\ProfileController;
 use App\Http\Controllers\api\QuestionOptionController;
 use App\Http\Controllers\api\StudentsController;
 use App\Http\Controllers\api\QuestionAttempLogController;
@@ -20,6 +22,8 @@ use App\Http\Controllers\ChaptersController;
 use App\Http\Controllers\CourseController;
 use App\Http\Controllers\ExamQuestionController;
 use App\Http\Controllers\ExamSectionController;
+use App\Http\Controllers\JobController;
+use App\Http\Controllers\JobStatusController;
 use App\Http\Controllers\TeachingMaterialController;
 use App\Http\Controllers\QualificationController;
 use App\Http\Controllers\LeaveController;
@@ -264,6 +268,29 @@ Route::middleware(['zohoAuth'])->group(function () {
     Route::post('/student', [UserController::class,'createStudent']);
     Route::post('/batches', [BatchController::class,'create']);
     Route::put('/batches/{id}', [BatchController::class,'update']);
+
+    Route::post('/profile/{user}', [JobProfileController::class,'create']);
+    Route::get('/profile/{user}', [JobProfileController::class,'show']);
+
+    Route::post('/profileEducations/{user}', [JobProfileController::class,'createProfileEducations']);
+    Route::post('/profileExperience/{user}', [JobProfileController::class,'createProfileExperience']);
+    Route::post('/projects/{user}', [JobProfileController::class,'createProject']);
+    Route::post('/documents/{user}', [JobProfileController::class,'updateCertificate']);
+
+    // Route::post('/jobs/{user}')
+    Route::post('/{user}/job', [JobController::class, 'create']);
+    Route::put('/{user}/job/{jobId}', [JobController::class, 'update']);
+    Route::delete('/{user}/job/{jobId}', [JobController::class, 'delete']);
+    Route::get('/{user}/job', [JobController::class, 'index']);
+
+    Route::get('/{user}/job/{job}/apply', [JobStatusController::class, 'applyJob']);
+    Route::get('/{user}/appliedJobs', [JobStatusController::class, 'indexJobs']);
+    Route::get('/{user}/job/{job}', [JobStatusController::class, 'deleteJobApplication']);
+    Route::patch('/{user}/jobStatus/{jobStatus}', [JobStatusController::class, 'updateJobStatus']);
+
+
+
+
 
 });
 
