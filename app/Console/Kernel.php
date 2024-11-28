@@ -16,6 +16,8 @@ class Kernel extends ConsoleKernel
         $schedule->command('assignments:send-reminders')->daily();
         $schedule->command('notifications:send-pending')->everyMinute();
         $schedule->command('feature-disable-command')->dailyAt('00:00');
+        $schedule->command('exam-complete-command')->everyTenMinutes();
+
 
         // $schedule->command('inspire')->hourly();
     }
