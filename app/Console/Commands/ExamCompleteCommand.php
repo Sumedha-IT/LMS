@@ -7,6 +7,7 @@ use App\Models\ExamAttempt;
 use App\Services\ExamService;
 use Carbon\Carbon;
 use Illuminate\Console\Command;
+use Illuminate\Support\Facades\Log;
 
 class ExamCompleteCommand extends Command
 {
@@ -53,5 +54,9 @@ class ExamCompleteCommand extends Command
             $log->score = $result['aggregateReport']['totalMarksObtained'];
             $log->save();
         }
+        Log::channel('cron_log')->info(json_encode([
+            "cmd" => "Exam CC",
+            "totalCnt" => count($examAttempts)
+        ]));
     }
 }
