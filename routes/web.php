@@ -18,8 +18,8 @@ Route::get('/', function () {
     //return view('welcome');
 });
 
-Route::get('/api/events/meetings', 'EventController@getMeetings');
-Route::get('/api/events/deadlines', 'EventController@getDeadlines');
+// Route::get('/api/events/meetings', 'EventController@getMeetings');
+// Route::get('/api/events/deadlines', 'EventController@getDeadlines');
 
 Route::get('clear-cache', function () {
     //Artisan::call('storage:link');

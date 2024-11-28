@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Models\Role;
 use App\Models\User;
 use App\Models\ZohoInvoice;
 use Illuminate\Support\Facades\Http;
@@ -23,10 +24,15 @@ class ZohoService
                 $item['payment_url'] = random_int(100, 1000000);
                 return $item;
             }, $data);
+            $response =  $this->savePaymentDetailsToDb($data, $userId);
 
-            return  $this->savePaymentDetailsToDb($data, $userId);
+            $isFeatureAccessible = $this->checkFeatureAccess($user);
+
+
+            return  $response ;
+
         }
-        return ['success' => false, 'message' => 'zoho details not found', 'status' => 400];
+        return ['success' => false, 'message' => 'Zoho details not found', 'status' => 400];
     }
 
     protected function savePaymentDetailsToDb($data, $userId)
@@ -110,8 +116,10 @@ class ZohoService
         // Check if the data is empty, then refresh payment details
         if (empty($data)) {
             $result = $this->refreshStudentPaymentDetails($user);
+
             if ($result['success']) {
                 $data = ZohoInvoice::where('user_id', $user->id)->get()->toArray();
+
                 return $this->appendReceipt($data);
             } else {
                 return $result;
@@ -128,7 +136,6 @@ class ZohoService
         $totalPayment = 0;
         $totalPaid = 0;
         $duePayments = [];
-
         foreach ($payments as &$payment) {
             // Convert amount to a float for calculations
             $amount = (float) $payment['amount'];
@@ -137,13 +144,13 @@ class ZohoService
             $totalPayment += $amount;
 
             // Check status
-            if ($payment['status'] === 'paid') {
+            if ($payment['status'] == 'paid') {
                 $totalPaid += $amount;
             } else {
                 // Store due payments
                 $duePayments[] = $payment;
             }
-            $payment['status'] = ($payment['status'] == 'draft') ? 'Verification_Pending' : ($payment['status'] == 'sent' ? 'Due' : 'Paid');
+            $payment['status'] = ($payment['status'] == 'draft') ? 'Verification_Pending' : ($payment['status'] == 'sent' || $payment['status'] == 'approved' ? 'Due' : 'Paid');
         }
 
         // Calculate remaining due
@@ -245,6 +252,18 @@ class ZohoService
                 'success' => false
             ];
         }
+    }
+
+    public function checkFeatureAccess($user){
+        $today = date('Y-m-d');
+        $studentRoleId = Role::where('name', 'Student')->first()->id;
+
+        $userIds= ZohoInvoice::where("user_id", $user->id)
+            ->whereDate('due_date', '>=', $today)->where('status', '!=', 'paid')
+            ->pluck('user_id')
+            ->toArray();
+        
+        User::where('role_id', $studentRoleId)->where('id', array_unique($userIds))->update(['feature_access' => 0]);
     }
     
 }

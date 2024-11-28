@@ -19,6 +19,11 @@ class ExaminationResource extends Resource
     protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
 
 
+    public static function getNavigationLabel(): string
+    {
+        return 'Exams'; // Custom label for clarity
+    }
+
     public static function shouldRegisterNavigation(): bool
     {
         // Ensure there's a logged-in user
@@ -31,6 +36,13 @@ class ExaminationResource extends Resource
         return false;
     }
 
+    public function mount()
+    {
+        // Apply middleware to this page only
+        $this->middleware(['checkFeatureAcc']);
+
+        parent::mount();
+    }
     public static function form(Form $form): Form
     {
         return $form

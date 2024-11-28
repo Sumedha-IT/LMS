@@ -6,8 +6,8 @@ const PaymentDetails = () => {
   const [installments1, setInstallments] = useState([]);
   // Sample data for Admission/Fee
   const courseDetails = {
-    name: "PHYSICAL DESIGN",
-    registeredOn: "09/10/2023",
+    // name: "PHYSICAL DESIGN",
+    // registeredOn: "09/10/2023",
   };
   const { data, isLoading, isError } = useGetPaymentDataQuery();
 
@@ -21,25 +21,25 @@ const PaymentDetails = () => {
 
 
   const amountDetails = {
-    totalCost: 86480,
-    discount: 0,
-    netAmount: 86480,
-    paidAmount: 15000,
-    pendingFee: 71480,
+    // totalCost: 86480,
+    // discount: 0,
+    // netAmount: 86480,
+    // paidAmount: 15000,
+    // pendingFee: 71480,
   };
 
   const installments = [
-    { name: "Installment 1", status: "Cleared", dueDate: "09 Oct 2023", amount: 5000, due: 0, paidOn: "09 Oct 2023", invoice: true },
-    { name: "Installment 2", status: "Pending", dueDate: "09 Oct 2023", amount: 20000, due: 10000, paidOn: "31 Jul 2024", invoice: true },
-    { name: "Installment 3", status: "Pending", dueDate: "09 Nov 2023", amount: 20494, due: 20494, paidOn: null, invoice: true },
-    { name: "Installment 4", status: "Pending", dueDate: "09 Dec 2023", amount: 20493, due: 20493, paidOn: null, invoice: true },
-    { name: "Installment 5", status: "Pending", dueDate: "09 Jan 2024", amount: 20493, due: 20493, paidOn: null, invoice: true },
+    // { name: "Installment 1", status: "Cleared", dueDate: "09 Oct 2023", amount: 5000, due: 0, paidOn: "09 Oct 2023", invoice: true },
+    // { name: "Installment 2", status: "Pending", dueDate: "09 Oct 2023", amount: 20000, due: 10000, paidOn: "31 Jul 2024", invoice: true },
+    // { name: "Installment 3", status: "Pending", dueDate: "09 Nov 2023", amount: 20494, due: 20494, paidOn: null, invoice: true },
+    // { name: "Installment 4", status: "Pending", dueDate: "09 Dec 2023", amount: 20493, due: 20493, paidOn: null, invoice: true },
+    // { name: "Installment 5", status: "Pending", dueDate: "09 Jan 2024", amount: 20493, due: 20493, paidOn: null, invoice: true },
   ];
 
   // Sample data for Payments
   const payments = [
-    { receiptNo: "#46", paidOn: "09 Oct 2023", mode: "UPI", refNo: "", amountPaid: 5000 },
-    { receiptNo: "#56", paidOn: "31 Jul 2024", mode: "UPI", refNo: "123", amountPaid: 10000 },
+    // { receiptNo: "#46", paidOn: "09 Oct 2023", mode: "UPI", refNo: "", amountPaid: 5000 },
+    // { receiptNo: "#56", paidOn: "31 Jul 2024", mode: "UPI", refNo: "123", amountPaid: 10000 },
   ];
 
   return (
@@ -49,17 +49,6 @@ const PaymentDetails = () => {
       <div className="flex">
         {/* Course and Installment Details */}
         <div className="w-2/3">
-
-          {/* Course Details */}
-          <div className="bg-yellow-100 p-4 mb-6 rounded shadow">
-            <div className="flex items-center">
-              <img src="https://via.placeholder.com/150" alt="Course" className="w-16 h-16 mr-4" />
-              <div>
-                <h3 className="text-xl font-semibold">{courseDetails.name}</h3>
-                <p className="text-gray-500">Registered On: {courseDetails.registeredOn}</p>
-              </div>
-            </div>
-          </div>
 
           {/* Installment Table */}
           <table className="min-w-full bg-white rounded shadow">

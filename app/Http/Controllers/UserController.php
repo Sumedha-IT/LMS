@@ -155,7 +155,8 @@ class UserController extends Controller
             'name' =>  'required|string',
             "phone" => "required|string|max:12",
             "branchLocation" => 'required|string|exists:branches,name',
-            "zohoCustomerId" => 'required|integer'
+            "zohoCustomerId" => 'required|integer',
+            "batchId" => 'required|exists:batches,id'
         ]);
 
         if (!empty($validator->errors()->messages())) {
@@ -187,6 +188,7 @@ class UserController extends Controller
     public function getPaymentDetails(ZohoService $zs)
     {
         $user = Auth::user();
+
         if(empty($user))
             return response()->json([ 'message' => 'User not found', "success" => false,'status' => 404], 404);
 
@@ -199,10 +201,11 @@ class UserController extends Controller
 
         try{
             $paymentData = $zs->getInvoiceDetails($user);
+            return response()->json($paymentData,200);
         }catch(\Exception $e){
             return response()->json([ 'message' => $e->getMessage(), "success" => false,'status' => 500], 500);
         }
 
-        return response()->json(($paymentData));
+        return response()->json($paymentData,404);
     }
 }

@@ -21,6 +21,12 @@ class PaymentDetailsResource extends Resource
 
     protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
 
+
+    public static function getNavigationLabel(): string
+    {
+        return 'Payment Centre'; // Custom label for clarity
+    }
+
     public static function shouldRegisterNavigation(): bool
     {
         // Ensure there's a logged-in user
