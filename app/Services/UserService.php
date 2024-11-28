@@ -36,7 +36,7 @@ class UserService
         $query = "INSERT INTO ".$dbName.".team_user (team_id, user_id, created_at, updated_at) VALUES (".$team['id'].", ".$user->id.", NOW(), NOW())";
         DB::statement($query);
        
-        // $response = $this->sendUserCredentisalseViaMail($input['email'], $password);
+        $response = $this->sendUserCredentisalseViaMail($input['email'], $password);
         return ['user' => $user];
     }
 
