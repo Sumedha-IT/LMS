@@ -18,7 +18,6 @@ const UserDashboard = () => {
 
     const handleMainTabChange = (event, newValue) => {
         setMainTab(newValue);
-        console.log("newValue", newValue);
     }
 
 

@@ -58,7 +58,6 @@ const UserExamModule = () => {
             setActivePartId(partId)
             setQuestions(QuestionsData[partId]);
             let activeIndex = QuestionsData[partId].findIndex(q => ((!q.answered && q.answer === null) || q.answer !== null))
-            // console.log("Active", activeIndex);
             setActiveQuestion(QuestionsData[partId][activeIndex]); // Set the first question as active
         } else {
             try {
@@ -125,7 +124,6 @@ const UserExamModule = () => {
                 setExamDuration(timeLeftInMs);
                 setTimeLeft(timeLeftInMs); // Set time left
                 setStartTime(currentTime);
-                console.log("examDetails",timeLeftInMs)
                 localStorage.setItem('timeLeft', timeLeftInMs); // Persist time left in localStorage
             } else {
                 console.log('Exam has already ended.');
@@ -143,7 +141,6 @@ const UserExamModule = () => {
     // Updated handleAnswer to dispatch changes to Redux
     const handleAnswer = (questionId, selectedOption) => {
         const data = questions.find((q) => q.id === questionId)
-        // console.log("hello", questionId, selectedOption);
         let updatedQuestions = []
 
         if (data.saved) {
@@ -229,7 +226,6 @@ const UserExamModule = () => {
             id: q.id,
             selectedOption: q.selectedOption
         }));
-        // console.log("questions", questions);
         setOpenStatusPanel(false);
         setIsSubmit(false);
         localStorage.removeItem('examStartTime');

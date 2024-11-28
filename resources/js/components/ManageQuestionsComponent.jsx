@@ -25,10 +25,8 @@ const ManageQuestionsComponent = ({ handleOpen, setSelectedQuestionsCount, partI
     useEffect(() => {
         if (data && !isLoading && !isError) {
             if (randomQuestionsIds?.length > 0) {
-                // console.log("!randomQuestionsIds.includes(e.id)", randomQuestionsIds);
                 const filteredData = data.data?.filter((e) => randomQuestionsIds.includes(e.id));
                 setQuestions(filteredData)
-                // console.log(data.data?.filter((e) => randomQuestionsIds.includes(e.id)));
             } else {
 
                 setQuestions(data.data);
@@ -49,7 +47,6 @@ const ManageQuestionsComponent = ({ handleOpen, setSelectedQuestionsCount, partI
 
     // Handle submit for selected questions
     const handleSubmitSelectedQuestions = (randomIds = []) => {
-        console.log('randomIds', randomIds);
         const questionsIds = selectedQuestions.map((e) => e.id);
         const updatedParts = selector.map((part) => {
             if (String(part.partId) === String(partId)) {
@@ -78,11 +75,9 @@ const ManageQuestionsComponent = ({ handleOpen, setSelectedQuestionsCount, partI
     const handleModalUpdate = async ({ autoSelect, totalQuestion, questionCount }) => {
         setAutoSelect(autoSelect);
         setTotalQuestions(questionCount);
-        console.log("in the box", autoSelect, totalQuestion, questionCount);
         if (autoSelect) {
             let result = await GetQuestionId({ data: { autoSelect, totalQuestion, questionCount, questionBankId: bankId } })
             const { data } = result;
-            console.log(data);
             handleSubmitSelectedQuestions(data?.data)
             // Auto-select questions logic here (example: take all questions automatically)
             // const updatedQuestions = questions.map((q, index) => ({
@@ -100,8 +95,6 @@ const ManageQuestionsComponent = ({ handleOpen, setSelectedQuestionsCount, partI
             }));
 
             setQuestions(updatedQuestions);  // Set the questions with the correct selected state
-
-            console.log("Updated questions with randomQuestionsIds", updatedQuestions);
         }
     };
 

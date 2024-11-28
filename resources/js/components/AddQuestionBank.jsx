@@ -60,7 +60,6 @@ const AddQuestionBank = () => {
     };
     const handlePageChange = (event, newPage) => {
         setPage(newPage);
-        console.log("new page", newPage);
     };
 
     const handleRowsPerPageChange = (newRowsPerPage) => {
@@ -80,15 +79,12 @@ const AddQuestionBank = () => {
 
         if (isBankAddedInAnyPart) {
             // If the bank is already added in any part, show a warning or prevent the addition
-            console.log('This question bank is already added in another part.');
             toast.error("This question bank is already added in another part.")
             return;
         }
 
         // Check if the partId already exists in the selector
         const existingPart = selector.find((e) => e.partId === partId);
-
-        console.log("hello",);
         if (existingPart) {
             // If partId exists, add the bank to the existing part's banks array
             const isBankExist = existingPart.banks.some((bank) => bank.id === row.id);
@@ -107,7 +103,6 @@ const AddQuestionBank = () => {
                 setAddedBanks((prev) => [...prev, row.id]);
 
             } else {
-                console.log("Bank already added for this part.");
                 toast.error("Bank already added for this part.")
             }
         } else {

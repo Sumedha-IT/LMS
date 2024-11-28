@@ -35,7 +35,6 @@ function AdminDashboard() {
 
     const handlePageChange = (event, newPage) => {
         setPage(newPage);
-        console.log("new page", newPage);
     };
 
     const handleRowsPerPageChange = (newRowsPerPage) => {
@@ -50,15 +49,11 @@ function AdminDashboard() {
     };
 
     const onEditClick = async (examId) => {
-        // console.log(id,examId)
         nav(`/administrator/${id}/exams/addquestion?examId=${examId}`)
     }
     const onMarkListClick = async (examId) => {
-        console.log(examId, "mohit")
         setSelectedExamId(examId.id);
         setIsPopupOpen(true);
-      //  nav(`/administrator/${id}/exams/listMarks?examId=${examId.id}`)
-        // nav(`/exams/${row.id}/listMarks`)
     }
     const nav = useNavigate();
     const handleAddNewExam = () => {
