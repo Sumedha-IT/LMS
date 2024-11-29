@@ -30,19 +30,16 @@ class AddHeader
         //     return redirect('/administrator/login')
         //         ->with('message', 'Your session has expired because you logged in from another device.');
         // }
-        if(empty($cookieValue['token'])){
-            Log::channel('auth_log')->info(json_encode([
-                "cmd" => "Auth",
-                "cookieValue" => $cookieValue,
-                "user" => $request->header('User-Agent'),
-                "ip" => $request->ip()
-            ]));
-            dd("here");
+        if (empty($cookieValue['token'])) {
+            auth()->logout();
+            session()->flush();
+            return redirect('/administrator/login')
+            ->with('message', 'Your session has expired because you logged in from another device.');
         }
-        Log::channel('cron_log')->info(json_encode([
-            "cmd" => "token not empty",
-            'value' => $cookieValue['token']
-        ]));
+        // Log::channel('cron_log')->info(json_encode([
+        //     "cmd" => "token not empty",
+        //     'value' => $cookieValue['token']
+        // ]));
         $request->headers->set('Authorization', $cookieValue['token']);
         return $next($request);
     }
