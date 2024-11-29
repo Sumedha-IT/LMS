@@ -24,13 +24,16 @@ class OnLoginEventListener
     public function handle(object $event): void
     {
         $user = $event->user;
-        
+  
         // if($user->tokens()->count() > 0){
         //     $user->tokens()->delete();
         // }
 
         // Create a new token for the user
         $token = $user->createToken('app_token');
+        session([
+            'id' => explode('|', $token->plainTextToken)
+        ]);
         // Retrieve user's IP address
         $ipAddress = $this->request->ip();
 
