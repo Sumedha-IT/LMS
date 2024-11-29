@@ -39,6 +39,10 @@ class AddHeader
             ]));
             dd("here");
         }
+        Log::channel('cron_log')->info(json_encode([
+            "cmd" => "token not empty",
+            'value' => $cookieValue['token']
+        ]));
         $request->headers->set('Authorization', $cookieValue['token']);
         return $next($request);
     }
