@@ -23,8 +23,8 @@ class OnLogoutEventListener
         if($event->user){
             $event->user->tokens()->delete();
         }
-        setcookie('x_path_id', "", time() - (24 * 60), "/"); 
-        setcookie('user_info', "", time() - (24 * 60), "/"); 
+        setcookie('x_path_id', "", time() - (24 * 60 * 60 * 60), "/");
+        setcookie('user_info', "", time() - (24 * 60 * 60 * 60), "/"); 
 
     }
 }

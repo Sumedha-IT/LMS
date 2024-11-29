@@ -45,8 +45,8 @@ class OnLoginEventListener
         ]);
 
         // Create a cookie with the combined IP and User-Agent data
-        setcookie('user_info', json_encode($cookieValue), time() +24*60,"/"); // Cookie set for 60 minutes
-        setcookie('x_path_id', $user->id, time() + (24*60), "/");
+        setcookie('user_info', json_encode($cookieValue), time() + 24 * 60 * 60, "/"); // Cookie set for 60 minutes
+        setcookie('x_path_id', $user->id, time() + (24 * 60 * 60), "/");
 
     }   
 }
