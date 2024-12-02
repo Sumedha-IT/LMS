@@ -60,7 +60,6 @@ class JobProfileController extends Controller
         $profileData['certificates'] = Certificate::where('user_id', $user->id)->where('is_resume', false)->get() ?? null;
         $profileData['awards'] = Award::where('user_id', $user->id)->get();
 
-        // $completedDetails += $incompleteDetails['socialLinks'] = (int)(!empty($data['profile']->social_links));
         $completedDetails += $incompleteDetails['profileDetails'] = (int)(!empty($data['profile']->about_me));
 
         foreach ($profileData as $key => $value) {
@@ -79,7 +78,7 @@ class JobProfileController extends Controller
         ];
         
         unset($incompleteDetails['awards']);
-        $data['profileScore']  = ($completedDetails / (count($incompleteDetails))) * 100;
+        $data['profileScore']  = (($completedDetails-1)/ (count($incompleteDetails))) * 100;
         $data['completeDetails'] = $incompleteDetails;
         $data['percentageContribution'] = (1 / count($incompleteDetails)) * 100;
 

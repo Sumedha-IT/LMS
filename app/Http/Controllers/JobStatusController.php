@@ -192,7 +192,7 @@ class JobStatusController extends Controller
             return ['message' => $validator->errors()->all()[0], 'status' => 400, 'success' => false];
         }
         $filters = $validator->validate();
-        if ($filters['domain']) {
+        if (!empty($filters['domain'])) {
             $domains = Domain::all()->pluck('name', 'id');
 
             $idx = array_search($filters['domain'],$domains->toArray());

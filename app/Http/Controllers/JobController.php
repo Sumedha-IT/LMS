@@ -20,10 +20,9 @@ class JobController extends Controller
         $offset = ($pageNo - 1) * $size;
         $totalRecords = 0;
 
-        if (!empty($request->filters)) {
-            $filters =  $this->validateFilters($request->filters);
-            
-            if (!empty($data['message'])) {
+        if (!empty($request->query())) {
+            $filters =  $this->validateFilters($request->query());
+            if (!empty($filters['message'])) {
                 return response()->json($filters, $filters['status']);
             }
         }
@@ -50,38 +49,45 @@ class JobController extends Controller
         
         if(!empty($filters)){
 
-            $jobs->when(!empty($filters['experieceFilter']), function ($query) use($filters) {
-                return $query->where('min_experience', '>=', $filters['experieceFilter']['min_experience'])
-                    ->where('max_experience', '<=', $filters['experieceFilter']['max_experience']);
+            $jobs->when(!(empty($filters['maxExperience']) && empty($filters['minExperience'])), function ($query) use ($filters) {
+                return $query->where('min_experience', '>=', $filters['minExperience'])
+                    ->where('max_experience', '<=', $filters['maxExperience']);
             });
 
-            $jobs->when(!empty($filters['jobStatus']), function ($query) use($filters) {
-                return $query->where('status',$filters['jobStatus']);
+            $jobs->when(!empty($filters['status']), function ($query) use($filters) {
+                return $query->where('status',$filters['status']);
             });
 
             $jobs->when(!empty($filters['jobType']), function ($query) use($filters) {
                 return $query->where('job_type',$filters['jobType']);
             });
             
+            $jobs->when(!empty($filters['officePolicy']), function ($query) use($filters) {
+                return $query->where('office_policy',$filters['officePolicy']);
+            });
+
             $jobs->when(isset($filters['jobPosted']), function ($query) use ($filters) {
 
                 $days = $filters['jobPosted'];
-            
                 if ($days < 0) {
                     // Filter jobs created within the last |$days| days
-                    return $query->where('created_at', '>=', now()->addDays($days));
+                    return $query->whereDate('created_at', '=', now()->addDays($days)->toDateString());
+
                 } else {
                     // Filter jobs created from now to the next $days days
-                    return $query->where('created_at', '<=', now()->addDays($days));
+                    return $query->where('created_at', '=', now()->addDays($days));
                 }
             });
 
-            $jobs->when(!empty($filters['experieceFilter']), function ($query) use($filters) {
-                return $query->where('salary', '>=', $filters['salary']['minSalary'])
-                    ->where('salary', '<=', $filters['salary']['maxSalary']);
+            $jobs->when( !( empty($filters['minSalary'])  && empty($filters['maxSalary']) ), function ($query) use ($filters) {
+
+                return $query->where('salary', '>=', $filters['minSalary'])
+                    ->where('salary', '<=', $filters['maxSalary']);
             });
 
-            
+            $jobs->when(!empty($filters['search']), function ($query) use ($filters) {
+                return  $query->where('name', 'like', '%' . $filters['search'] . '%');
+            });
         }   
         // Paginate jobs
         $totalRecords = $jobs->count();
@@ -221,35 +227,26 @@ class JobController extends Controller
     }
 
     public function validateFilters($filter){
-
         $rules = [
-            // Experience Filter Validation
-            'experieceFilter' => 'required|array',
-            'experieceFilter.min_experience' => 'required_if:experieceFilter,!=,null|numeric|min:0',
-            'experieceFilter.max_experience' => 'required_if:experieceFilter,!=,null|numeric|min:0|gte:experieceFilter.min_experience',
-        
-            // Job Status and Type Validation
-            'jobStatus' => 'nullable|string|in:ACTIVE,INACTIVE,CLOSED',
+            'maxExperience' => 'nullable|numeric|min:0|gte:minExperience',
+            'minExperience' => 'nullable|numeric|min:0',
+            'status' => 'nullable|string|in:ACTIVE,INACTIVE,CLOSED',
             'jobType' => 'nullable|string|in:remote,full_time,part_time,internship,contractual',
-            
-            // Job Posted Validation
-            'jobPosted' => 'nullable|integer', // Add any specific range if needed, e.g., 'min:-30|max:30'
-        
-            // Salary Validation
-            'salary' => 'required|array',
-            'salary.minSalary' => 'required_if:salary,!=,null|numeric|min:0',
-            'salary.maxSalary' => 'required_if:salary,!=,null|numeric|min:0|gte:salary.minSalary',
-        
-            // Office Policy Validation
+            'jobPosted' => 'nullable|integer|min:-30|max:30',
             'officePolicy' => 'nullable|string|in:wfh,wfo,remote',
+            'maxSalary' => 'nullable|numeric|min:0|gte:minSalary',
+            'minSalary' => 'nullable|numeric|min:0',
+            'search' => 'nullable|string'
         ];
         
         $validator = Validator::make($filter, $rules);
         if (!empty($validator->errors()->messages())) {
             return ['message' => $validator->errors()->all()[0], 'status' => 400, 'success' => false];
         }
-
         $filters = $validator->validate();
+        $filters = collect($validator->validated())->filter(function ($value) {
+            return !is_null($value); // Remove keys with null values
+        })->toArray();
         return $filters;
 
     }
