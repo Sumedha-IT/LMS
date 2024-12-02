@@ -16,10 +16,9 @@ class ProfileResource extends JsonResource
     {
 
         $socialLinks = [];
-        if (property_exists($this, 'social_links')) {
+        if (!empty($this->social_links)) {
             $socialLinks = $this->social_links;
         }
-
         if (empty($socialLinks['linkedIn'])) {
             $socialLinks['linkedIn'] = [
                 'url' => '',
