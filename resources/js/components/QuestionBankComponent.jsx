@@ -20,7 +20,6 @@ const QuestionBankComponent = () => {
     useEffect(() => {
         const examID = searchParams.get('examId');
         if (examID) {
-            console.log("id", examID);
             localStorage.setItem("examId", examID)
             getExamData(examID)
         }
@@ -31,8 +30,6 @@ const QuestionBankComponent = () => {
             let result = await getExamDataById(id);
             const { data } = result;
             setExamData(data?.data)
-            console.log(result);
-
         } catch (e) {
             console.log(e);
         }

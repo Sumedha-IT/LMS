@@ -19,7 +19,6 @@ const PaymentDetails = () => {
     }
   }, [data])
 
-  // console.log("this is your amount",data?.amountDetails)
 
   const amountDetails = {
     // totalCost: 86480,

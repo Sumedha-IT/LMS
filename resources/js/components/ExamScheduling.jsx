@@ -36,9 +36,9 @@ const validationSchema = Yup.object({
 
   title: Yup.string().required('Title is required'),
   curriculumId:  Yup.array()
-    .of(Yup.string().required('Each subject name is required'))
-    .required('Subjects array is required')
-    .min(1, 'At least one subject is required'),
+    .of(Yup.string().required('Each curriculum name is required'))
+    .required('Curriculum array is required')
+    .min(1, 'At least one curriculum is required'),
   batchId: Yup.string().required('Batch name is required'),
 
   startsAtHours: Yup.string()
@@ -61,7 +61,6 @@ const validationSchema = Yup.object({
       const { startsAtHours, startsAtMinutes, endsAtMinutes } = this.parent;
       const startTime = `${startsAtHours}:${startsAtMinutes}`;
       const endTime = `${value}:${endsAtMinutes}`;
-      // console.log(startTime, endTime, startTime < endTime);
       return endTime > startTime;  // Validate that end time is after start time
     }),
 
@@ -95,7 +94,6 @@ const ExamScheduling = ({ ExamData }) => {
   const { id } = useParams();
   // const subjectCurricullum = [{"id":1,"name":"abc"},{"id":2,"name":"cdjc"},{"id":3,"name":"sj"}]
   useEffect(() => {
-    console.log("ExamData", ExamData);
     if (ExamData?.invigilators?.length > 0) {
       const updatedInvigilators = ExamData.invigilators.map((invigilator) => ({
         invigilator: {
@@ -107,10 +105,6 @@ const ExamScheduling = ({ ExamData }) => {
       }));
       setInvigilators(updatedInvigilators);
       formik.setFieldValue('invigilators', updatedInvigilators);
-      //  if (ExamData?.curriculum) {
-      //       const curriculumIds = ExamData.curriculum.map(c => c.id);
-      //       formik.setFieldValue('curriculumId', curriculumIds);
-      //   }
     }
   }, [ExamData]);
 
@@ -118,10 +112,8 @@ const ExamScheduling = ({ ExamData }) => {
     initialValues: {
       examDate: ExamData?.examDate || '',
       title: ExamData?.title || '',
-      curriculumId: ExamData?.curriculum?.map(c => c.id) || [],
+      curriculumId: ExamData?.curriculum?.map(c => c.id) || [],   //mapping the curriculum data and set it
       batchId: ExamData?.batchId || '',
-      // startsAt: ExamData?.starts_at || '',
-      // endsAt: ExamData?.ends_at || '',
       startsAtHours: ExamData?.starts_at ? ExamData.starts_at.split(':')[0] : '',
       startsAtMinutes: ExamData?.starts_at ? ExamData.starts_at.split(':')[1] : '',
       endsAtHours: ExamData?.ends_at ? ExamData.ends_at.split(':')[0] : '',
@@ -159,7 +151,7 @@ const ExamScheduling = ({ ExamData }) => {
     setInvigilators(newInvigilators);
     formik.setFieldValue('invigilators', newInvigilators); // Update formik value
   };
-
+  // Submite the form
   const handleConfirmSubmit = async () => {
     setIsReadOnly(true);
     setConfirmationOpen(false);
@@ -179,12 +171,10 @@ const ExamScheduling = ({ ExamData }) => {
     try {
       let result;
       if (ExamData && ExamData.hasOwnProperty('id')) {
-        // console.log("this is your data with id", examDetails, ExamData.id);
         result = await UpdateExamData({ data: { data: examDetails }, id: ExamData.id });
       } else {
         result = await AddExamData({ data: examDetails });
       }
-      // console.log(result);
       const { data, error } = result;
       if (result.data?.success === true) {
         localStorage.setItem("examId", data.data?.id)
@@ -285,15 +275,6 @@ const ExamScheduling = ({ ExamData }) => {
                 ) : (
                   <MenuItem disabled>No Subjects Available</MenuItem>
                 )}
-                {/* {subjectList?.data.length > 0 ? (
-                  subjectList.data.map((subject) => (
-                    <MenuItem key={subject.id} value={subject.id}>
-                      {subject.name}
-                    </MenuItem>
-                  ))
-                ) : (
-                  <MenuItem disabled>No Subjects Available</MenuItem>
-                )} */}
               </TextField>
             </div>
 

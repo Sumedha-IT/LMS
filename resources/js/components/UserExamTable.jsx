@@ -81,7 +81,6 @@ const UserExamTable = ({ Value,  userId }) => {
         const startTime = combineDateAndTime(examDate, startsAt); // Combine date and start time
         const endTime = combineDateAndTime(examDate, endsAt); // Combine date and end time
 
-        // console.log(currentTime, startTime, endTime); // Debug to ensure times are correct
         return currentTime >= startTime && currentTime <= endTime;
         // Check if the current time is between the start and end times
     }
