@@ -231,7 +231,7 @@ class JobController extends Controller
         $rules = [
             'maxExperience' => 'nullable|numeric|min:0|gte:minExperience',
             'minExperience' => 'nullable|numeric|min:0',
-            'status' => 'nullable|string|in:ACTIVE,INACTIVE,CLOSED',
+            'status' => 'nullable|string|in:ACTIVE,ONHOLD,CLOSED',
             'jobType' => 'nullable|string|in:remote,full_time,part_time,internship,contractual',
             'jobPosted' => 'nullable|integer|min:-30|max:30',
             'officePolicy' => 'nullable|string|in:wfh,wfo,remote',

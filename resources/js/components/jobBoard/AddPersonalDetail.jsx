@@ -25,7 +25,7 @@ const AddPersonalDetail = ({ studentProfileData, open, onClose, onProfileUpdate 
         },
         validationSchema: validationSchema,
         onSubmit: async (values) => {
-            console.log("value", values)
+           
             let payload = { data: { ...values } }
             let result = await updateProfileData({payload }).unwrap();
             if (result.success === true) {

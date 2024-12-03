@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Resources\JobStatusResource;
 use App\Models\Domain;
 use App\Models\Job;
+use App\Models\JobProfile;
 use App\Models\JobStatus;
 use App\Models\User;
 use Illuminate\Http\Request;
@@ -14,9 +15,30 @@ class JobStatusController extends Controller
 {
     public function applyJob(User $user, Job $job)
     {
+
+
         if (!$user->getIsStudentAttribute()) {
             return response()->json(['message' => 'Only students can apply for the job', 'status' => 400, 'success' => false], 400);
         }
+
+        $jobProfile = JobProfile::where('user_id', $user->id)->first();
+        if(empty($jobProfile)){
+            return response()->json(['message' => 'Complete your job profile', 'status' => 400, 'success' => false], 400);
+
+        }
+
+        $profilePercentage =  (int)($jobProfile->education()->count() > 0);
+        $profilePercentage +=  (int)($jobProfile->experience()->count() > 0);
+        $profilePercentage +=  (int)($jobProfile->projects()->count() > 0);
+        $profilePercentage +=  (int)($jobProfile->certificates()->where('is_resume', false)->count() > 0);
+        $profilePercentage +=  (int)($jobProfile->certificates()->where('user_id', $user->id)->where('is_resume', true)->count() > 0);
+        $profilePercentage += (int)(!empty($jobProfile->about_me));
+
+        $profilePercentage = ($profilePercentage / 6 ) * 100 ;
+        if($profilePercentage < 80) {
+            return response()->json(['message' => 'Profile completion must be atleast 80% ', 'status' => 400, 'success' => false], 400);
+
+        } 
 
         try {
             $job = JobStatus::create([

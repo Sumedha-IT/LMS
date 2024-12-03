@@ -203,6 +203,7 @@ const JobBoard = () => {
                                 headerCell: { fontWeight: 'bold' },
                                 button: { padding: '5px 10px' },
                             }}
+                            onApply = {()=>refetch()}
 
                         />
 
@@ -267,8 +268,8 @@ const JobBoard = () => {
                                     <FormControlLabel
                                         key={index}
                                         control={<Checkbox
-                                            checked={jobTypeSelected === item.label}
-                                            onChange={(e) => handleFilter(e, item.label, "jobType")}
+                                            checked={jobTypeSelected === item.value}
+                                            onChange={(e) => handleFilter(e, item.value, "jobType")}
                                         />}
                                         label={item.label}
                                     />))}

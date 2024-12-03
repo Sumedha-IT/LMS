@@ -44,6 +44,7 @@ const JobDashboard = ({
     rowsPerPage,
     onPageChange,
     onRowsPerPageChange,
+    onApply
 }) => {
     const [ApplyJob] = useApplyJobMutation();
     const nav = useNavigate();
@@ -58,11 +59,12 @@ const JobDashboard = ({
     const handleApply = async (jobApplyData) => {
         try {
             const result = await ApplyJob({ jobId: jobApplyData.id })
-            if (result.success === true || result.data.success === true) {
+            console.log(result)
+            if (result?.success === true || result?.data?.success === true) {
                 toast.success(result.message || result.data.message);
-
+                onApply();
             } else {
-                toast.error(result.error?.message || result?.error.data.message);
+                toast.error(result.error?.message || result?.error?.data?.message);
             }
 
         } catch (error) {
@@ -72,7 +74,7 @@ const JobDashboard = ({
     }
     const handleEditJob = (jobData) => {
 
-        nav(`/recruiter/${id}/createJob`, { state: { jobData } });
+        nav(`/administrator/${id}/recruter-jobs`, { state: { jobData } });
     }
 
     const statusColorChange = (value) => {

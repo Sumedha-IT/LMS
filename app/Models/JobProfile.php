@@ -31,4 +31,22 @@ class JobProfile extends Model
     {
         return $this->hasMany(ProfileExperience::class, 'user_id', 'user_id');
     }
+
+    public function projects()
+    {
+        return $this->hasMany(Project::class, 'user_id', 'user_id');
+
+    }
+
+    public function award()
+    {
+        return $this->hasMany(Award::class, 'user_id', 'user_id');
+    }
+
+    public function certificates()
+    {
+        return $this->hasMany(Certificate::class, 'user_id', 'user_id');
+    }
+
+
 }

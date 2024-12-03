@@ -37,6 +37,7 @@ class ProfileResource extends JsonResource
             'phone' => $this['user']['phone'],
             'birthday' => $this['user']['birthday'] ?? null,
         ];
+        $laguagesKnown = gettype($this->languages_known)  == 'string' ? [$this->languages_known] : $this->languages_known;
         $data = array_merge($data, [
             'id' => $this->id ?? null,
             'userId' => $this->user_id ?? null,
@@ -44,7 +45,7 @@ class ProfileResource extends JsonResource
             'currentLocation' => $this->current_location ?? null,
             'totalExperience' => $this->total_experience ?? null,
             'socialLinks' => array_values($socialLinks),
-            'languagesKnown' => $this->languages_known ?? [],
+            'languagesKnown' =>  $laguagesKnown ?? [],
             'aboutMe' => $this->about_me ?? null,
             'awards' => $this->awards ?? null,
             'resumeId' => $this->resumeId ?? null,
