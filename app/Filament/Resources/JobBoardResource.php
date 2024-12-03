@@ -19,18 +19,23 @@ class JobBoardResource extends Resource
     protected static ?string $model = Job::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
-    protected static ?string $label = 'Apply Jobs';
+
+    public static function getModelLabel(): string
+    {
+        return (auth()->user()->getIsStudentAttribute()) ? 'Apply Jobs' : 'Jobs';
+    }
+
     protected static ?string $navigationGroup = 'Job Panel';
 
     public static function shouldRegisterNavigation(): bool
     {
         if (auth()->check() && auth()->user()) {
-            return (auth()->user()->getIsStudentAttribute());
+            return (auth()->user()->getIsStudentAttribute()) || auth()->user()->isRecruitor();
         }
-    
         // Return false if no user is logged in or role is not 'Student'
         return false;
     }
+
     public static function form(Form $form): Form
     {
         return $form
