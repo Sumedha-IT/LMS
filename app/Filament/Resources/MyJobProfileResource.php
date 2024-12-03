@@ -2,9 +2,10 @@
 
 namespace App\Filament\Resources;
 
-use App\Filament\Resources\MyJobsResource\Pages;
-use App\Filament\Resources\MyJobsResource\RelationManagers;
-use App\Models\JobStatus;
+use App\Filament\Resources\MyJobProfileResource\Pages;
+use App\Filament\Resources\MyJobProfileResource\RelationManagers;
+use App\Models\JobProfile;
+use App\Models\MyJobProfile;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
@@ -13,14 +14,11 @@ use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 
-class MyJobsResource extends Resource
+class MyJobProfileResource extends Resource
 {
-    protected static ?string $model = JobStatus::class;
+    protected static ?string $model = JobProfile::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
-    protected static ?string $navigationGroup = 'Jobs';
-    protected static ?string $label = 'My Jobs';
-
 
     public static function form(Form $form): Form
     {
@@ -59,7 +57,9 @@ class MyJobsResource extends Resource
     public static function getPages(): array
     {
         return [
-            'index' => Pages\MyJobs::route('/'),
+            'index' => Pages\MyJobProfile::route('/'),
+            // 'create' => Pages\CreateMyJobProfile::route('/create'),
+            // 'edit' => Pages\EditMyJobProfile::route('/{record}/edit'),
         ];
     }
 }
