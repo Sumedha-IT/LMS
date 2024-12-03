@@ -39,6 +39,7 @@ function App() {
         <Route path="/user/:userId/exam/:examId/assessment/:examAttemptId" element={<UserExamModuel />} />
         <Route path="/administrator/:id/examinations/user/:userId/exam/:examId/review" element={<ReviewPage />} />
         <Route path="/user/:userId/exam/:examId/result" element={<ResultComponent />} />
+
         {/* <Route path='/administrator/:id/placement' element={<PlacementCoordinator />} /> */}
         <Route path="/administrator/:id/feedback" element={<FeedbackPanel />} />
 

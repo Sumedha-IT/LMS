@@ -296,7 +296,7 @@ class ExamController extends Controller
                 $data['pastExams'][] = $examResource;
             } else {
                 if($exam->exam_date == $today){
-                    if(($exam->ends_at >  date('H:i') && $exam->starts_at < date('H:i'))) {
+                    if(($exam->ends_at >  date('H:i') && $exam->starts_at <= date('H:i'))) {
                         $exam->status = 'Available';
                         $examResource = new StudentExamResource($exam);
                         $data['upcomingExams'][] = $examResource;

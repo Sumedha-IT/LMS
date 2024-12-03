@@ -30,7 +30,6 @@ const TestDataComponent = ({ Meta }) => {
     const [newPartId, setNewPartId] = useState('');
     const [isEditing, setIsEditing] = useState(false);
     useEffect(() => {
-        console.log("Meta", Meta);
         if (Meta && Meta.length > 0) {
             const updatedMeta = Meta.map((val) => {
                 return {
@@ -43,7 +42,6 @@ const TestDataComponent = ({ Meta }) => {
                     })
                 }
             })
-            console.log("new", updatedMeta);
             dispatch(getBankCount(updatedMeta));
         }
     }, [Meta])
@@ -52,7 +50,6 @@ const TestDataComponent = ({ Meta }) => {
     useEffect(() => {
         const initialCount = {};
         const uniqueParts = [];
-        console.log("calling", selector)
         // Iterate over the selector to initialize parts and selectedQuestionsCount
         selector.forEach((part) => {
             const banksCount = part.banks.reduce((acc, bank) => {
@@ -102,7 +99,6 @@ const TestDataComponent = ({ Meta }) => {
     const handleOpen = () => setOpen(prevOpen => !prevOpen);
 
     const handleManageQuestions = async (partId, bankId, Ids) => {
-        // console.log("this is your row data", Ids, typeof bankId);
         if (!Ids) {
             try {
                 const getIds = await getRandomQuestionIds({ partId, bankId, examId })
@@ -135,7 +131,6 @@ const TestDataComponent = ({ Meta }) => {
 
         setParts([...parts, { partId: newPartId, banks: [] }]);
         //const updatedParts = parts.filter(part => part.partId !== partId);
-        console.log(parts, "mohit")
         setNewPartId(''); // Reset new part ID
         setIsAddingPart(false); // Close the input field
         dispatch(getBankCount([...parts, { partId: newPartId, banks: [] }]));
@@ -200,10 +195,8 @@ const TestDataComponent = ({ Meta }) => {
     const handleSubmit = async () => {
 
         try {
-            console.log("exam id", examId, "PARTS", parts);
             let result = await AddQuestionBanks({ examId, data: { data: parts } })
             const { data, error } = result;
-            console.log(data, error, result);
             if (data?.success === true) {
                 toast.success(data?.message)
                 nav(`/administrator/${id}/exams/`)
@@ -299,7 +292,6 @@ const TestDataComponent = ({ Meta }) => {
                                                                 >
                                                                     Manage Questions
                                                                 </Button>
-                                                                {/* <IconButton color="error" onClick={() => console.log("rows",row.id,part.partId,index)}> */}
                                                                 <IconButton color="error" onClick={() => handleDeleteQuestion(row.id, part.partId, partIndex)}>
                                                                     <DeleteIcon />
                                                                 </IconButton>

@@ -61,7 +61,7 @@ class ExamService
 
     public function generateReport($examAttempLog){
 
-        $timeTaken = $this->subtractTime($examAttempLog->created_at->format('H:i:s'),date('H:i:s'));
+        $timeTaken = subtractTime($examAttempLog->created_at->format('H:i:s'),date('H:i:s'));
         $report = $this->getReport($examAttempLog,true);
         
         $partWiseReport = collect($report);
@@ -113,22 +113,7 @@ class ExamService
         return $result;
     } 
 
-    public function subtractTime($timeA , $timeB){
-
-        // Convert both times to timestamps
-        $timeA = strtotime($timeA);
-        $timeB = strtotime($timeB);
-        
-        // Calculate the difference in seconds
-        $diffInSeconds = $timeB - $timeA;
-        
-        // Convert the difference into hours and minutes
-        $hours = floor($diffInSeconds / 3600); // Get hours
-        $minutes = floor(($diffInSeconds % 3600) / 60); // Get minutes
-        
-        // Format hours and minutes as HH:MM
-        return  sprintf('%02d:%02d', $hours, $minutes);
-    }
+    
  
     public function assignGrade($percentage) {
         switch (true) {

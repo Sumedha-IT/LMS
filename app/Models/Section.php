@@ -20,10 +20,14 @@ class Section extends Model
 
     public function batches()
     {
+        // $tenant = Filament::getTenant();
+        // return $this->belongsToMany(Batch::class,'batch_section',
+        //     'section_id','batch_id')
+        //     ->wherePivot('batches.branch_id', $tenant->id);
+
         $tenant = Filament::getTenant();
-        return $this->belongsToMany(Batch::class,'batch_section',
-            'section_id','batch_id')
-            ->wherePivot('batches.branch_id', $tenant->id);
+        return $this->belongsToMany(Batch::class, 'batch_section', 'section_id', 'batch_id')
+        ->where('batches.branch_id', $tenant->id);
     }
 
     public function teaching_material()

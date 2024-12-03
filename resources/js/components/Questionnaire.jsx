@@ -69,8 +69,6 @@ const Questionnaire = ({ examDetails, setQuestionBank }) => {
     setQuestionBank(selectedQuestionIds);
     // setExamScheduled(false)
 
-    console.log("Selected Question IDs: ", selectedQuestionIds);
-    console.log("Total Marks: ", totalMarks);
   };
 
   return (

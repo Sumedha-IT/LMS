@@ -25,7 +25,7 @@
                 <p class="text-gray-600 text-sm font-semibold">
                     <a href="{{ url('administrator/' . $tenantId . '/users/' . $comment->user->id) }}" class="text-blue-500 hover:underline">{{ $comment->user->name }}</a>
                 </p>
-                <p class="text-gray-600 text-sm">{{ $comment->content }}</p>
+                <p class="text-gray-600 text-sm">{!! $comment->content !!}</p> <!-- Updated to render HTML -->
                 <p class="text-gray-400 text-xs">{{ $comment->formatted_published_time }}</p>
             </div>
         </div>

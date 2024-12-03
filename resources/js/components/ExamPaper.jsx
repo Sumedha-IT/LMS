@@ -32,7 +32,6 @@ const ExamPaper = ({ questionId }) => {
     };
 
     const handleConfirmSubmit = () => {
-        console.log("Selected Options:", selectedOptions);
         setConfirmationOpen(false);
     };
 

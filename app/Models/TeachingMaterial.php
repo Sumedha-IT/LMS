@@ -25,10 +25,23 @@ class TeachingMaterial extends Model
 
     public function batches()
     {
+        // $tenant = Filament::getTenant();
+        // return $this->belongsToMany(Batch::class, 'batch_teaching_materials',
+        //     'teaching_material_id', 'batch_id')
+        //     ->wherePivot('batches.branch_id', $tenant->id);;
+
         $tenant = Filament::getTenant();
         return $this->belongsToMany(Batch::class, 'batch_teaching_materials',
             'teaching_material_id', 'batch_id')
-            ->wherePivot('batches.branch_id', $tenant->id);;
+            ->where('batches.branch_id', $tenant->id);
+        
+        // $tenant = Filament::getTenant();
+        // return $this->belongsToMany(Batch::class, 'batch_teaching_materials',
+        //     'teaching_material_id', 'batch_id')
+        //     ->whereHas('batches', function($query) use ($tenant) {
+        //         $query->where('branch_id', $tenant->id);
+        //     });
+
     }
 
 
