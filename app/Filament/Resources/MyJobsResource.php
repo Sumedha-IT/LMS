@@ -2,30 +2,36 @@
 
 namespace App\Filament\Resources;
 
-use App\Filament\Resources\ExamResource\Pages;
-use App\Models\Exam;
+use App\Filament\Resources\MyJobsResource\Pages;
+use App\Filament\Resources\MyJobsResource\RelationManagers;
+use App\Models\JobStatus;
+use App\Models\MyJobs;
+use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
-use Illuminate\Support\Facades\Auth;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\SoftDeletingScope;
 
-
-class ExamResource extends Resource
+class MyJobsResource extends Resource
 {
-    protected static ?string $model = Exam::class;
+    protected static ?string $model = JobStatus::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
+    protected static ?string $label = 'My Jobs';
+    protected static ?string $navigationGroup = 'Job Panel';
 
     public static function shouldRegisterNavigation(): bool
     {
-        if (Auth::check() && Auth::user()) {
-            return !(Auth::user()->getIsStudentAttribute());
+        if (auth()->check() && auth()->user()) {
+            return (auth()->user()->getIsStudentAttribute());
         }
     
         // Return false if no user is logged in or role is not 'Student'
         return false;
     }
+    
     public static function form(Form $form): Form
     {
         return $form
@@ -63,11 +69,7 @@ class ExamResource extends Resource
     public static function getPages(): array
     {
         return [
-            'index' => Pages\Examination::route(''),
-            'form' => Pages\ExamForm::route('/ExamForm'),
-            'question' => Pages\ExamAddQuestion::route('/addquestion'),
-            'questionbank' => Pages\ExamAddQuestionBank::route('/addquestionBank'),
-            'managequestions' => Pages\ExamManageQuestions::route('/manageQuestions'),
+            'index' => Pages\MyJobs::route('/'),
         ];
     }
 }

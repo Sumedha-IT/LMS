@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Resources\StudentResource;
 use App\Http\Resources\UserResource;
 use App\Models\Qualification;
+use App\Models\Team;
 use App\Models\User;
 use App\Services\UserService;
 use App\Services\ZohoService;
@@ -207,5 +208,10 @@ class UserController extends Controller
         }
 
         return response()->json($paymentData,404);
+    }
+
+    public function getTeams(User $user){
+        $teams = Team::where('allow_registration',true)->get();
+        return response()->json($teams);
     }
 }

@@ -2,6 +2,8 @@
 
 use App\Http\Controllers\api\ExamAttemptController;
 use App\Http\Controllers\api\ExamController;
+use App\Http\Controllers\api\JobProfileController;
+use App\Http\Controllers\api\ProfileController;
 use App\Http\Controllers\api\QuestionOptionController;
 use App\Http\Controllers\api\StudentsController;
 use App\Http\Controllers\api\QuestionAttempLogController;
@@ -20,6 +22,8 @@ use App\Http\Controllers\ChaptersController;
 use App\Http\Controllers\CourseController;
 use App\Http\Controllers\ExamQuestionController;
 use App\Http\Controllers\ExamSectionController;
+use App\Http\Controllers\JobController;
+use App\Http\Controllers\JobStatusController;
 use App\Http\Controllers\TeachingMaterialController;
 use App\Http\Controllers\QualificationController;
 use App\Http\Controllers\LeaveController;
@@ -32,6 +36,8 @@ use App\Http\Controllers\QuestionTypesController;
 use App\Http\Controllers\SubjectController;
 use App\Http\Controllers\TestingController;
 use App\Http\Controllers\ZohoInvoiceController;
+use App\Models\JobProfile;
+use Illuminate\Support\Facades\Storage;
 
 /*
 |--------------------------------------------------------------------------
@@ -255,16 +261,64 @@ Route::group(['middleware' => [
         Route::post('/questionIds', [ExamQuestionController::class,'getQuestionIds']);
         Route::post('/student/{id}/examQuestions', [QuestionAttempLogController::class,'attemptQuestion']);
 
+
+        Route::patch('{user}/profile', [JobProfileController::class,'create']);
+     
+        Route::post('/{user}/profileEducations', [JobProfileController::class,'createProfileEducations']);
+        Route::put('/{user}/profileEducations/{profileEducation}', [JobProfileController::class,'updateProfileEducation']);
+
+        Route::post('/{user}/profileExperience', [JobProfileController::class,'createProfileExperience']);
+        Route::put('/{user}/profileExperience/{profileExperience}', [JobProfileController::class,'updateProfileExperience']);
+
+        Route::post('/{user}/projects', [JobProfileController::class,'createProject']);
+        Route::put('/{user}/projects/{project}', [JobProfileController::class,'updateProject']);
+
+        Route::post('/{user}/job', [JobController::class, 'create']);
+        Route::put('/{user}/job/{job}', [JobController::class, 'update']);
+        
+        Route::patch('/{user}/jobStatus/{jobStatus}', [JobStatusController::class, 'updateJobStatus']);
+
+        Route::post('/{user}/awards', [JobProfileController::class,'createAwards']);
+        Route::put('/{user}/awards/{award}', [JobProfileController::class,'updateAwards']);
+        Route::delete('/{user}/awards/{award}', [JobProfileController::class,'deleteAwards']);
+
     });
     Route::get("/paymentCentre", [UserController::class, "getPaymentDetails"]);
+
+
+     // Profile Api
+     Route::get('/profile/{user}', [JobProfileController::class,'show']);
+     Route::delete('/{user}/profileEducations/{profileEducation}', [JobProfileController::class,'deleteProfileEducation']);
+     Route::delete('/{user}/profileExperience/{profileExperience}', [JobProfileController::class,'deleteProfileExperience']);
+     Route::delete('/{user}/projects/{project}', [JobProfileController::class,'deleteProject']);
+ 
+     Route::get('/{user}/documents', [JobProfileController::class,'addCertificate']);
+     
+     Route::post('/{user}/documents', [JobProfileController::class,'addCertificate']);
+     Route::delete('/{user}/documents/{certificate}', [JobProfileController::class,'deleteCertificate']);
+     Route::get('/{user}/documents', [JobProfileController::class,'getDocuments'])->name('api.certificate');
+     Route::get('/{user}/documents/{certificate}', [JobProfileController::class,'previewCertificate'])->name('api.certificate');
+ 
+ 
+     Route::delete('/{user}/job/{jobId}', [JobController::class, 'delete']);
+     Route::get('/{user}/job', [JobController::class, 'index']);
+ 
+     Route::post('/{user}/job/{job}/apply', [JobStatusController::class, 'applyJob']);
+     Route::get('/{user}/appliedJobs', [JobStatusController::class, 'indexJobs']);
+     Route::get('/{user}/job/{job}', [JobStatusController::class, 'deleteJobApplication']);
+     
 });
 
 Route::middleware(['zohoAuth'])->group(function () {
     Route::get('/paymentDetails/{zohoCrmId}/refresh', [ZohoInvoiceController::class,'refreshZoho']);
+  
     Route::post('/student', [UserController::class,'createStudent']);
     Route::post('/batches', [BatchController::class,'create']);
     Route::put('/batches/{id}', [BatchController::class,'update']);
 
+   
 });
 
 Route::get('/test', [TestingController::class,'testMail']);
+
+Route::get("/teams", [UserController::class, "getTeams"]);

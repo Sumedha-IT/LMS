@@ -21,6 +21,7 @@ class AddHeader
         if (!empty($request->header('Authorization'))) {
             return $next($request);
         }
+
         $cookieValue = Cookie::get('user_info');
         $cookieValue = json_decode(urldecode($cookieValue),true);
         // if(empty($cookieValue) || ($request->header('User-Agent') != $cookieValue['user_agent'] && $request->ip() != $cookieValue['ip_address']) ){

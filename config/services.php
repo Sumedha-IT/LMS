@@ -40,6 +40,7 @@ return [
     ],
     'app' =>[
         'secret' => env('SECRET'),
-        'supportMail' => env('SUPPORT_MAIL')
+        'supportMail' => env('SUPPORT_MAIL'),
+        'url' => env('APP_URL')
     ]
 ];
