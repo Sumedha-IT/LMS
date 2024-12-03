@@ -58,7 +58,6 @@ class JobProfileController extends Controller
         $profileData['profileExperiences'] = ProfileExperience::where('user_id', $user->id)->get() ?? null;
         $profileData['projects'] = Project::where('user_id', $user->id)->get() ?? null;
         $profileData['certificates'] = Certificate::where('user_id', $user->id)->where('is_resume', false)->get() ?? null;
-        $profileData['awards'] = Award::where('user_id', $user->id)->get();
 
         $completedDetails += $incompleteDetails['profileDetails'] = (int)(!empty($data['profile']->about_me));
 
@@ -66,6 +65,7 @@ class JobProfileController extends Controller
             $incompleteDetails[$key] = $value->isEmpty() ? 0 : 1;
             $completedDetails += $incompleteDetails[$key];
         }
+        $profileData['awards'] = Award::where('user_id', $user->id)->get();
 
         $data = [
             'profile' => new ProfileResource($data['profile']),
@@ -77,8 +77,7 @@ class JobProfileController extends Controller
 
         ];
         
-        unset($incompleteDetails['awards']);
-        $data['profileScore']  = (($completedDetails-1)/ (count($incompleteDetails))) * 100;
+        $data['profileScore']  = (($completedDetails)/ (count($incompleteDetails))) * 100;
         $data['completeDetails'] = $incompleteDetails;
         $data['percentageContribution'] = (1 / count($incompleteDetails)) * 100;
 
