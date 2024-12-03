@@ -1,0 +1,158 @@
+import { Button, Dialog, DialogActions, DialogContent, DialogTitle, MenuItem, Select, TextField } from '@mui/material'
+import { useFormik } from 'formik';
+import React, { useEffect } from 'react'
+import * as Yup from "yup";
+import { countryStates } from '../../utils/jsonData';
+import { toast } from 'react-toastify';
+import { useUpdateStudentJobProfileDataMutation } from '../../store/service/user/UserService';
+const validationSchema = Yup.object({
+    birthday: Yup.date().required('Exam date is required'),
+    address: Yup.string().required('Address URL is required'),
+    country: Yup.string().required('country is required'),
+    state: Yup.string().required('state is required'),
+});
+
+
+const AddPersonalDetail = ({ studentProfileData, open, onClose, onProfileUpdate }) => {
+    const [updateProfileData] = useUpdateStudentJobProfileDataMutation();
+    const formik = useFormik({
+        initialValues: {
+            birthday: studentProfileData?.birthday || "",
+            languagesKnown: studentProfileData?.languagesKnown || "",
+            address: studentProfileData?.address || "",
+            country: studentProfileData?.country || "",
+            state: studentProfileData?.state || "",
+        },
+        validationSchema: validationSchema,
+        onSubmit: async (values) => {
+            console.log("value", values)
+            let payload = { data: { ...values } }
+            let result = await updateProfileData({payload }).unwrap();
+            if (result.success === true) {
+                toast.success("success")
+                onProfileUpdate(result.data.profile);
+                onClose();
+            } else {
+                toast.error(result.error?.message)
+            }
+        },
+    });
+
+    useEffect(() => {
+        if (studentProfileData) {
+            formik.setValues({
+                birthday: studentProfileData?.birthday || "",
+                languagesKnown: studentProfileData?.languagesKnown || "",
+                address: studentProfileData?.address || "",
+                country: studentProfileData?.country || "",
+                state: studentProfileData?.state || "",
+            });
+        }
+    }, [studentProfileData, onClose])
+    const getStatesForCountry = (country) => {
+        const countryObj = countryStates.find((item) => item.country === country);
+        return countryObj ? countryObj.state : [];
+    };
+
+    const states = getStatesForCountry(formik.values.country);
+    return (
+        <Dialog open={open} onClose={onClose} fullWidth maxWidth="md">
+            <DialogTitle>Add Personal Detail</DialogTitle>
+            <DialogContent>
+                <form onSubmit={formik.handleSubmit} className="grid gap-6">
+                    <div className="flex items-center gap-4">
+                        <label className="w-1/3">DOB <span className="text-[red]">*</span></label>
+                        <TextField
+                            fullWidth
+                            id="birthday"
+                            name="birthday"
+                            type="date"
+                            value={formik.values.birthday}
+                            onChange={formik.handleChange}
+                            error={formik.touched.birthday && Boolean(formik.errors.birthday)}
+                            helperText={formik.touched.birthday && formik.errors.birthday}
+                        />
+                    </div>
+
+                    <div className="flex items-center gap-4">
+                        <label className="w-1/3">languages<span className="text-[red]">*</span></label>
+                        <TextField
+                            fullWidth
+                            id="languagesKnown"
+                            label=" languages Known"
+                            name="languagesKnown"
+                            value={formik.values.languagesKnown}
+                            onChange={formik.handleChange}
+                            error={formik.touched.languagesKnown
+                                && Boolean(formik.errors.languagesKnown
+                                )}
+                            helperText={formik.touched.languagesKnown
+                                && formik.errors.languagesKnown
+                            }
+                        />
+                    </div>
+                    <div className="flex items-center gap-4">
+                        <label className="w-1/3">address<span className="text-[red]">*</span></label>
+                        <TextField
+                            fullWidth
+                            id="address"
+                            label=" address"
+                            name="address"
+                            value={formik.values.address}
+                            onChange={formik.handleChange}
+                            error={formik.touched.address && Boolean(formik.errors.address)}
+                            helperText={formik.touched.address && formik.errors.address}
+                        />
+                    </div>
+                    <div className="flex items-center gap-4">
+                        <label className="w-1/3">Country<span className="text-[red]">*</span></label>
+                        <Select
+                            fullWidth
+                            id="country"
+                            name="country"
+                            value={formik.values.country}
+                            onChange={formik.handleChange}
+                            error={formik.touched.country && Boolean(formik.errors.country)}
+                        >
+                            {countryStates.map((option) => (
+                                <MenuItem key={option.country} value={option.country}>
+                                    {option.country}
+                                </MenuItem>
+                            ))}
+
+                        </Select>
+                    </div>
+                    <div className="flex items-center gap-4">
+                        <label className="w-1/3">State<span className="text-[red]">*</span></label>
+                        <Select
+                            fullWidth
+                            name="state"
+                            value={formik.values.state}
+                            onChange={formik.handleChange}
+                            error={formik.touched.state && Boolean(formik.errors.state)}
+                        >
+                            {states.length === 0 ? (
+                                <MenuItem value="">Select a country first</MenuItem>
+                            ) : (
+                                states.map((state) => (
+                                    <MenuItem key={state} value={state}>
+                                        {state}
+                                    </MenuItem>
+                                ))
+                            )}
+
+                        </Select>
+                    </div>
+
+                </form>
+            </DialogContent>
+            <DialogActions>
+                <Button onClick={onClose} color="secondary" variant="outlined">Cancel</Button>
+                <Button onClick={formik.handleSubmit} color="primary" variant="contained">Save</Button>
+            </DialogActions>
+        </Dialog >
+    )
+}
+
+export default AddPersonalDetail
+

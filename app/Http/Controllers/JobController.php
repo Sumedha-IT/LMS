@@ -96,7 +96,8 @@ class JobController extends Controller
         return response()->json([
             'data' => JobResource::collection($jobs),
             "totalRecords" => $totalRecords,
-            "totalPages" => ceil($totalRecords / $size)
+            "totalPages" => ceil($totalRecords / $size),
+            "roleId" => $user->role_id
         ]);
     }
 

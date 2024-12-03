@@ -36,7 +36,91 @@ export const timeOptionsHours = [
 
 export const timeOptionsMinutes = ['00', '05', '10', '15', '20', '25', '30', '35', '40', '45', '50', '55'];
 
+export const monthOption = [{ label: 'January', value: '01' },
+{ label: 'February', value: '02' },
+{ label: 'March', value: '03' },
+{ label: 'April', value: '04' },
+{ label: 'May', value: '05' },
+{ label: 'June', value: '06' },
+{ label: 'July', value: '07' },
+{ label: 'August', value: '08' },
+{ label: 'September', value: '09' },
+{ label: 'October', value: '10' },
+{ label: 'November', value: '11' },
+{ label: 'December', value: '12' }];
+
+export const courses = [
+  { label: 'Computer Science', value: 'Computer Science' },
+  { label: 'Mechanical Engineering', value: 'Mechanical Engineering' },
+  { label: 'Electrical Engineering', value: 'Electrical Engineering' },
+  { label: 'Civil Engineering', value: 'Civil Engineering' },
+  { label: 'Mathematics', value: 'Mathematics' },
+  { label: 'Science', value: 'Science' },
+  { label: 'English', value: 'English' },
+  { label: 'Social Studies', value: 'Social Studies' },
+  { label: 'Physics', value: 'Physics' },
+  { label: 'Chemistry', value: 'Chemistry' },
+  { label: 'Biology', value: 'Biology' },
+  { label: 'Data Science', value: 'Data Science' },
+  { label: 'Software Engineering', value: 'Software Engineering' }
+];
+export const countryStates = [
+  { country: 'USA', state: ['California', 'Florida', 'Texas'] },
+  { country: 'Canada', state: ['Ontario', 'Quebec', 'British Columbia'] },
+  { country: 'India', state: ['Delhi', 'Madhya Pradesh', 'Punjab'] },
+  // Add more countries and their corresponding states as needed
+];
+export const jobStatus = [
+  { label: 'ACTIVE', value: 'ACTIVE', checked: false },
+  { label: 'CLOSED', value: 'CLOSED', checked: false },
+  { label: 'ONHOLD', value: 'ONHOLD', checked: false },
+];
+
+export const applicationStatus = [
+  { label: 'Applied', value: 'Applied', checked: false },
+  // { label: 'Shortlisted', value: 'Shortlisted', checked: false },
+  { label: 'In Interview', value: 'In Interview', checked: false },
+  { label: 'Offered', value: 'Offered', checked: false },
+  { label: 'Rejected', value: 'Rejected', checked: false },
+
+];
+export const jobType = [
+  { label: 'internship', value: 'internship', checked: false },
+  { label: 'Full Time', value: 'full_time', checked: false },
+  { label: 'Part Time', value: 'part_time', checked: false },
+  { label: 'contract', value: 'contract', checked: false },
+  { label: 'volunteer', value: 'volunteer', checked: false },
+]
+
+export const experienceRange = [
+  { label: ['0-1'], checked: false },
+  { label: ['1-2'], checked: false },
+  { label: ['3-4'], checked: false },
+  { label: ['5-6'], checked: false },
+  { label: ['7-9'], checked: false },
+  { label: ['10-15'], checked: false },
+  { label: ['15-20'], checked: false }
+]
 
 
-
-
+export const jobPostedIn = [
+  { label: "7days", value: 7, checked: false },
+  { label: "30days", value: 30, checked: false }
+]
+export const officePolicy = [
+  { label: "remote", value: 'wfh', checked: false },
+  { label: "hybrid", value: 'hybrid', checked: false },
+  { label: "inOffice", value: 'wfo', checked: false }]
+export const ctcRange = [
+  { label: "0-3L", value: [0, 3], checked: false },
+  { label: "3-6L", value: [3, 6], checked: false },
+  { label: "6-10L", value: [6, 10], checked: false },
+  { label: "15-25L", value: [15, 25], checked: false },
+  { label: "25-50L", value: [25, 50], checked: false },
+  { label: "50-75L", value: [50, 75], checked: false },
+  { label: "75L-1C", value: [75, 100], checked: false },
+]
+export const jobSource = [
+  { label: "sumedhaIT", value: 'sumedhaIT', checked: false },
+  { label: "importedJobs", value: 'importedJobs', checked: false },
+  { label: "invitedJobs", value: 'invitedJobs', checked: false },]

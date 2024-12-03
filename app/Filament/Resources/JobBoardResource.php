@@ -2,10 +2,10 @@
 
 namespace App\Filament\Resources;
 
-use App\Filament\Resources\MyJobProfileResource\Pages;
-use App\Filament\Resources\MyJobProfileResource\RelationManagers;
-use App\Models\JobProfile;
-use App\Models\MyJobProfile;
+use App\Filament\Resources\JobBoardResource\Pages;
+use App\Filament\Resources\JobBoardResource\RelationManagers;
+use App\Models\Job;
+use App\Models\JobBoard;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
@@ -14,13 +14,12 @@ use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 
-class MyJobProfileResource extends Resource
+class JobBoardResource extends Resource
 {
-    protected static ?string $model = JobProfile::class;
+    protected static ?string $model = Job::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
-
-    protected static ?string $label = 'Profile Details';
+    protected static ?string $label = 'Apply Jobs';
     protected static ?string $navigationGroup = 'Job Panel';
 
     public static function shouldRegisterNavigation(): bool
@@ -32,7 +31,6 @@ class MyJobProfileResource extends Resource
         // Return false if no user is logged in or role is not 'Student'
         return false;
     }
-    
     public static function form(Form $form): Form
     {
         return $form
@@ -70,9 +68,9 @@ class MyJobProfileResource extends Resource
     public static function getPages(): array
     {
         return [
-            'index' => Pages\MyJobProfile::route('/'),
-            // 'create' => Pages\CreateMyJobProfile::route('/create'),
-            // 'edit' => Pages\EditMyJobProfile::route('/{record}/edit'),
+            'index' => Pages\JobBoard::route('/'),
+            // 'create' => Pages\CreateJobBoard::route('/create'),
+            // 'edit' => Pages\EditJobBoard::route('/{record}/edit'),
         ];
     }
 }

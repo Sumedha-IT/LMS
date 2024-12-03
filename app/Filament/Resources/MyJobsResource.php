@@ -2,10 +2,10 @@
 
 namespace App\Filament\Resources;
 
-use App\Filament\Resources\MyJobProfileResource\Pages;
-use App\Filament\Resources\MyJobProfileResource\RelationManagers;
-use App\Models\JobProfile;
-use App\Models\MyJobProfile;
+use App\Filament\Resources\MyJobsResource\Pages;
+use App\Filament\Resources\MyJobsResource\RelationManagers;
+use App\Models\JobStatus;
+use App\Models\MyJobs;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
@@ -14,24 +14,23 @@ use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 
-class MyJobProfileResource extends Resource
+class MyJobsResource extends Resource
 {
-    protected static ?string $model = JobProfile::class;
+    protected static ?string $model = JobStatus::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
-
-    protected static ?string $label = 'Profile Details';
+    protected static ?string $label = 'My Jobs';
     protected static ?string $navigationGroup = 'Job Panel';
 
-    public static function shouldRegisterNavigation(): bool
-    {
-        if (auth()->check() && auth()->user()) {
-            return (auth()->user()->getIsStudentAttribute());
-        }
+    // public static function shouldRegisterNavigation(): bool
+    // {
+    //     if (auth()->check() && auth()->user()) {
+    //         return (auth()->user()->getIsStudentAttribute());
+    //     }
     
-        // Return false if no user is logged in or role is not 'Student'
-        return false;
-    }
+    //     // Return false if no user is logged in or role is not 'Student'
+    //     return false;
+    // }
     
     public static function form(Form $form): Form
     {
@@ -70,9 +69,7 @@ class MyJobProfileResource extends Resource
     public static function getPages(): array
     {
         return [
-            'index' => Pages\MyJobProfile::route('/'),
-            // 'create' => Pages\CreateMyJobProfile::route('/create'),
-            // 'edit' => Pages\EditMyJobProfile::route('/{record}/edit'),
+            'index' => Pages\MyJobs::route('/'),
         ];
     }
 }
