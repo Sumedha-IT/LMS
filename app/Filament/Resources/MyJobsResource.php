@@ -22,15 +22,15 @@ class MyJobsResource extends Resource
     protected static ?string $label = 'My Jobs';
     protected static ?string $navigationGroup = 'Job Panel';
 
-    // public static function shouldRegisterNavigation(): bool
-    // {
-    //     if (auth()->check() && auth()->user()) {
-    //         return (auth()->user()->getIsStudentAttribute());
-    //     }
+    public static function shouldRegisterNavigation(): bool
+    {
+        if (auth()->check() && auth()->user()) {
+            return (auth()->user()->getIsStudentAttribute());
+        }
     
-    //     // Return false if no user is logged in or role is not 'Student'
-    //     return false;
-    // }
+        // Return false if no user is logged in or role is not 'Student'
+        return false;
+    }
     
     public static function form(Form $form): Form
     {
