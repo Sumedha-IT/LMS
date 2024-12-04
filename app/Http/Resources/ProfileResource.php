@@ -48,19 +48,18 @@ class ProfileResource extends JsonResource
         $data = array_merge($data, [
             'id' => $this->id ?? null,
             'userId' => $this->user_id ?? null,
-            'meta' => $this->meta ?? null,
             'currentLocation' => $this->current_location ?? null,
             'totalExperience' => $this->total_experience ?? null,
             'socialLinks' => array_values($socialLinks),
             'languagesKnown' =>  $laguagesKnown ?? [],
             'aboutMe' => $this->about_me ?? null,
-            'awards' => $this->awards ?? null,
+            'achievements' => $this->achievements ?? null,
             'resumeId' => $this->resumeId ?? null,
             'resumeUrl' => $this->resumeUrl ?? null,
             'address' => $this->address ?? null,
             'state' => $this->state ?? null,
             'country' => $this->country ?? null,
-
+            'otherDetails' => $this->meta['otherDetails'] ?? null
         ]);
 
         return $data;

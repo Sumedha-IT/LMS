@@ -9,7 +9,6 @@ use App\Http\Resources\ProfileEducationResource;
 use App\Http\Resources\ProfileExperienceResource;
 use App\Http\Resources\ProfileResource;
 use App\Http\Resources\ProjectResource;
-use App\Models\Award;
 use App\Models\Certificate;
 use App\Models\JobProfile;
 use App\Models\ProfileEducation;
@@ -60,12 +59,13 @@ class JobProfileController extends Controller
         $profileData['certificates'] = Certificate::where('user_id', $user->id)->where('is_resume', false)->get() ?? null;
 
         $completedDetails += $incompleteDetails['profileDetails'] = (int)(!empty($data['profile']->about_me));
+        $completedDetails += $incompleteDetails['profileDetails'] = (int)(!empty($data['profile']->achievements));
+
 
         foreach ($profileData as $key => $value) {
             $incompleteDetails[$key] = $value->isEmpty() ? 0 : 1;
             $completedDetails += $incompleteDetails[$key];
         }
-        $profileData['awards'] = Award::where('user_id', $user->id)->get();
 
         $data = [
             'profile' => new ProfileResource($data['profile']),
@@ -73,8 +73,6 @@ class JobProfileController extends Controller
             'profileExperiences' => ProfileExperienceResource::collection($profileData['profileExperiences']),
             'projects' => ProjectResource::collection($profileData['projects']),
             'certificates' => CertificateResource::collection($profileData['certificates']),
-            'awards' => AwardsResource::collection($profileData['awards']),
-
         ];
         
         $data['profileScore']  = (($completedDetails)/ (count($incompleteDetails))) * 100;
@@ -437,47 +435,47 @@ class JobProfileController extends Controller
         ];
     }
 
-    public function createAwards(Request $req, User $user, JobService $js)
-    {
+    // public function createAwards(Request $req, User $user, JobService $js)
+    // {
 
-        $data = $js->validateAwards($req->data);
-        if (!empty($data['message'])) {
-            return response()->json($data, $data['status']);
-        }
-        $data['user_id'] = $user->id;
-        $award = Award::create($data);
+    //     $data = $js->validateAwards($req->data);
+    //     if (!empty($data['message'])) {
+    //         return response()->json($data, $data['status']);
+    //     }
+    //     $data['user_id'] = $user->id;
+    //     $award = Award::create($data);
 
-        return response()->json([
-            'data' => ['awards' => new AwardsResource($award)],
-            'success' => true,
-            'message' => "Award Added Successfully",
-            'status' => 200
+    //     return response()->json([
+    //         'data' => ['awards' => new AwardsResource($award)],
+    //         'success' => true,
+    //         'message' => "Award Added Successfully",
+    //         'status' => 200
 
-        ], 200);
-    }
+    //     ], 200);
+    // }
 
-    public function updateAwards(Request $req, User $user, Award $award, JobService $js)
-    {
-        $data = $js->validateAwards($req->data);
-        if (!empty($data['message'])) {
-            return response()->json($data, $data['status']);
-        }
-        $award->update($data);
-        return response()->json([
-            'data' => ['awards' => new AwardsResource($award)],
-            'success' => true,
-            'status' => 200,
-            'message' => "Award Updated Successfully"
-        ], 200);
-    }
+    // public function updateAwards(Request $req, User $user, Award $award, JobService $js)
+    // {
+    //     $data = $js->validateAwards($req->data);
+    //     if (!empty($data['message'])) {
+    //         return response()->json($data, $data['status']);
+    //     }
+    //     $award->update($data);
+    //     return response()->json([
+    //         'data' => ['awards' => new AwardsResource($award)],
+    //         'success' => true,
+    //         'status' => 200,
+    //         'message' => "Award Updated Successfully"
+    //     ], 200);
+    // }
 
-    public function  deleteAwards(Request $req, User $user, Award $award, JobService $js)
-    {
-        $award->delete();
-        return response()->json([
-            'data' => [
-                'message' => 'Award deleted Successfully'
-            ]
-        ], 200);
-    }
+    // public function  deleteAwards(Request $req, User $user, Award $award, JobService $js)
+    // {
+    //     $award->delete();
+    //     return response()->json([
+    //         'data' => [
+    //             'message' => 'Award deleted Successfully'
+    //         ]
+    //     ], 200);
+    // }
 }

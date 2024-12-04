@@ -23,6 +23,8 @@ import LinkedInIcon from '@mui/icons-material/LinkedIn';
 import LinkIcon from '@mui/icons-material/Link';
 import AddEducation from './jobBoard/AddEducation';
 import AddAward from './jobBoard/AddAward';
+import parse from 'html-react-parser';
+import AddOtherDetails from './jobBoard/AddOtherDetails';
 const StudentProfile = ({ data, onDataChange, changeTap }) => {
     const [isPopupOpen, setIsPopupOpen] = useState(false);
     const [isPopUpPersonal, setIsPopUpPersonal] = useState(false);
@@ -39,6 +41,9 @@ const StudentProfile = ({ data, onDataChange, changeTap }) => {
     const [educationData, setEducationData] = useState([])
     const [projectData, setProjectData] = useState([])
     const [awardData, setAwardData] = useState([])
+    const [otherData, setOtherData] = useState([])
+    const [otherPopup, setOtherPopup] = useState(false)
+
     useEffect(() => {
         if (data) {
             setStudentData(data.data);
@@ -139,6 +144,60 @@ const StudentProfile = ({ data, onDataChange, changeTap }) => {
         setAwardData(changeAward)
         setAwardPopup(true)
     }
+    const handleAddOthers = (otherData) => {
+        setOtherData(otherData)
+        setOtherPopup(true)
+    }
+    const [showFullText, setShowFullText] = useState(false);
+
+    const getDisplayedText = (text) => {
+        if (!text) return '';
+        const words = text.split(' ');
+        if (words.length > 10 && !showFullText) {
+            return words.slice(0, 10).join(' ') + '...';
+        }
+        return text;
+    };
+    const convertHtmlToText = (html) => {
+        // Use DOMParser to convert HTML to text content
+        console.log(html, "xdsjdij")
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(html, "text/html");
+        console.log(doc, "xdsjdij")
+        const renderNode = (node) => {
+            console.log(node)
+            switch (node.nodeName.nodeName) {
+                case 'BODY':
+                    return <Typography variant="body1" sx={{ fontWeight: 600 }}> {node.textContent} </Typography>;
+                case 'P':
+                    return <Typography variant="body1" sx={{ fontWeight: 600 }}> {node.textContent} </Typography>;
+                case 'UL':
+                    return (
+                        <ul>
+                            {Array.from(node.children).map((child, index) => (
+                                <li key={index}>{renderNode(child)} </li>
+                            ))}
+                        </ul>
+                    );
+                case 'LI':
+                    return <Typography variant="body2">{node.textContent} </Typography>;
+                case 'B':
+                    return <b>{node.textContent} </b>;
+                case 'I':
+                    return <i>{node.textContent} </i>;
+                case 'H1':
+                    return <Typography variant="h1">{node.textContent} </Typography>;
+                case 'H2':
+                    return <Typography variant="h2">{node.textContent} </Typography>;
+                // Add more cases as needed for other tags
+                default:
+                    return <span>{node.textContent}</span>;  // Default rendering for unsupported tags
+            }
+        };
+        return renderNode(doc.body);
+    }
+
+    const awardsText = convertHtmlToText(studentData?.profile?.achievements);
 
     return (
         <Box display="flex" width="100%" mt={2} >
@@ -170,12 +229,20 @@ const StudentProfile = ({ data, onDataChange, changeTap }) => {
                                 </Box>
 
                             </Box>
-                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 2 }}>
-                                <Typography variant="h6">About Me :</Typography>
-
-                                <Typography variant="h6">
-                                    {studentData?.profile?.aboutMe}
-                                </Typography>
+                            <Box sx={{ display: 'flex', flexWrap: 'wrap', alignItems: "center", gap: 1, mt: 2 }}>
+                                <Typography variant="h6" >About Me :</Typography>
+                                <Typography>
+                                    {getDisplayedText(studentData?.profile?.aboutMe)}</Typography>
+                                {studentData?.profile?.aboutMe && studentData.profile.aboutMe.split(' ').length > 10 && (
+                                    <Button
+                                        variant="text"
+                                        color="primary"
+                                        sx={{ padding: 0 }}
+                                        onClick={() => setShowFullText(!showFullText)} // Toggle showFullText on button click
+                                    >
+                                        {showFullText ? 'See less' : 'See more'}
+                                    </Button>
+                                )}
                             </Box>
                         </CardContent>
                     </CardContent>
@@ -433,30 +500,27 @@ const StudentProfile = ({ data, onDataChange, changeTap }) => {
                     <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                         <Box sx={{ display: 'flex', alignItems: 'center' }}>
                             <SvgIcon component={EmojiEventsIcon} sx={{ fontSize: 30, mr: 1 }} />
-                            <Typography variant="h6">Awards</Typography>
+                            <Typography variant="h6">Awards and Achievement</Typography>
                         </Box>
-                        <IconButton aria-label="Add Awards" onClick={() => handleAddAward("")}>
+                        {/* <IconButton aria-label="Add Awards" onClick={() => handleAddAward("")}>
                             <AddIcon sx={{ border: 1, borderRadius: 3, color: "black" }} />
-                        </IconButton>
+                        </IconButton> */}
                     </Box>
 
-                    {studentData?.awards?.length > 0 ? (
-                        <Box sx={{ mt: 3 }}>
-                            {studentData?.awards.map((award, index) => (
-                                <Box sx={{ my: 3, ml: 1 }} key={index}>
-                                    <Box sx={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', justifyContent: 'space-between' }}>
-                                        <Typography variant="body1" sx={{ fontWeight: 600 }}>{award.name} </Typography>
-                                        <IconButton aria-label="Edit project" onClick={() => handleAddAward(award)}>
-                                            <EditIcon sx={{ fontSize: 20 }} />
-                                        </IconButton>
-                                    </Box>
-                                    <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                                        <Typography variant="body2" sx={{ color: 'text.secondary' }}>{award.description} </Typography>
-                                        <Typography variant="body2" color="text.secondary" sx={{ ml: 2 }}>{award.issueAt}</Typography>
-                                    </Box>
-                                </Box>
-                            ))}
+                    {studentData?.profile?.achievements ? (<>
+                        <Box sx={{ mt: 3, display: "flex", justifyContent: "space-between" }}>
+                            <div>
+                                {parse(studentData?.profile?.achievements)}
+                            </div>
+                            {/* <Box sx={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', justifyContent: 'space-between' }}>
+                                        <Typography variant="body1" sx={{ fontWeight: 600 }}>{awardsText} </Typography> */}
+                            <IconButton aria-label="Edit project" onClick={() => handleAddAward(studentData?.profile?.achievements)}>
+                                <EditIcon sx={{ fontSize: 20 }} />
+                            </IconButton>
+                            {/* </Box> */}
                         </Box>
+                    </>
+
                     ) : (
                         <Box display="flex" flexDirection="column" justifyContent="center" alignItems="center" sx={{ textAlign: 'center' }}>
                             <CardMedia
@@ -477,7 +541,7 @@ const StudentProfile = ({ data, onDataChange, changeTap }) => {
                                     padding: '8px 20px',
                                 }}
                             >
-                                Add Awards
+                                Add Awards and Achievements
                             </Button>
                         </Box>
                     )}
@@ -486,8 +550,7 @@ const StudentProfile = ({ data, onDataChange, changeTap }) => {
                         awards={awardData}
                         open={awardPopup}
                         onClose={() => setAwardPopup(false)}
-                        awardsUpdate={handleAwardsUpdate}
-                        onDataChange={onDataChange}
+                        awardsUpdate={handleProfileUpdate}
                     />
                 </Card>
 
@@ -497,10 +560,50 @@ const StudentProfile = ({ data, onDataChange, changeTap }) => {
                             <SvgIcon component={InfoIcon} sx={{ fontSize: 30, mr: 1 }} />
                             <Typography variant="h6">Other Details</Typography>
                         </Box>
-                        <IconButton aria-label="Add Awards">
+                        {/* <IconButton aria-label="Add Awards" onClick={handleAddOthers}>
                             <EditIcon />
-                        </IconButton>
+                        </IconButton> */}
                     </Box>
+                    {studentData?.profile?.achievements ? (<>
+                        <Box sx={{ mt: 3 }}>
+
+                            <Box sx={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', justifyContent: 'space-between' }}>
+                                <Typography variant="body2" > {studentData?.profile?.otherDetails}</Typography>
+                                <IconButton aria-label="Edit project" onClick={() => handleAddOthers(studentData?.profile?.otherDetails)}>
+                                    <EditIcon sx={{ fontSize: 20 }} />
+                                </IconButton>
+                            </Box>
+                        </Box>
+                    </>) : (
+                        <Box display="flex" flexDirection="column" justifyContent="center" alignItems="center" sx={{ textAlign: 'center' }}>
+                            <CardMedia
+                                component="img"
+                                image="https://files.lineupx.com/660bdfb2f2dcdcf3660eff8f/lineupx-candidate-recruiter-resume/9919181254.png"
+                                alt="Profile"
+                                sx={{ borderRadius: '50%', width: "30%" }}
+                            />
+                            <Button
+                                onClick={handleAddOthers}
+                                variant="outlined"
+                                sx={{
+                                    marginTop: 2,
+                                    borderColor: 'black',
+                                    borderWidth: 2,
+                                    borderRadius: 2,
+                                    color: 'black',
+                                    padding: '8px 20px',
+                                }}
+                            >
+                                Other Details
+                            </Button>
+                        </Box>
+                    )}
+                    <AddOtherDetails
+                        otherDetails={otherData}
+                        open={otherPopup}
+                        onClose={() => setOtherPopup(false)}
+                        otherUpdate={handleProfileUpdate}
+                    />
                 </Card>
             </Box>
             <Box sx={{ flex: 1 }}>
@@ -565,7 +668,6 @@ const StudentProfile = ({ data, onDataChange, changeTap }) => {
                         {studentData?.profile?.socialLinks?.map((socialLink, index) => (
                             <Box key={index} display="flex" alignItems="center" justifyContent="space-between" border={1} borderRadius={3} mx={1}>
                                 <Box display="flex" alignItems="center" ml={1}>
-                                    {console.log(socialLink.type)}
                                     {socialLink.type === "linkedIn" ? <LinkedInIcon /> : <LinkIcon />}
                                     <Typography variant="body2" sx={{ ml: 1 }}>
                                         {socialLink.url || (socialLink.type === "linkedIn" ? 'LinkedIn' : 'Other Links')}

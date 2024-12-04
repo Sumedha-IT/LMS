@@ -22,7 +22,6 @@ const JobProfile = () => {
     };
 
     const handleFileChange = async (event) => {
-        console.log("mohit  ", event.target)
         const selectedFile = event.target.files[0];
         if (selectedFile) {
             const formData = new FormData();

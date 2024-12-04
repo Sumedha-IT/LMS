@@ -14,7 +14,8 @@ class JobProfile extends Model
     protected $casts = [
         'social_links' => 'array',  // Automatically casts the social_links column to an array
         'languages_known' => 'array',  // Automatically casts the social_links column to an array
-        'awards' => 'array',  // Automatically casts the social_links column to an array
+        'meta' => 'array',  // Automatically casts the social_links column to an array
+
     ];
     
     public function user()

@@ -50,19 +50,58 @@ export const monthOption = [{ label: 'January', value: '01' },
 { label: 'December', value: '12' }];
 
 export const courses = [
-  { label: 'Computer Science', value: 'Computer Science' },
-  { label: 'Mechanical Engineering', value: 'Mechanical Engineering' },
-  { label: 'Electrical Engineering', value: 'Electrical Engineering' },
-  { label: 'Civil Engineering', value: 'Civil Engineering' },
-  { label: 'Mathematics', value: 'Mathematics' },
-  { label: 'Science', value: 'Science' },
-  { label: 'English', value: 'English' },
-  { label: 'Social Studies', value: 'Social Studies' },
-  { label: 'Physics', value: 'Physics' },
-  { label: 'Chemistry', value: 'Chemistry' },
-  { label: 'Biology', value: 'Biology' },
-  { label: 'Data Science', value: 'Data Science' },
-  { label: 'Software Engineering', value: 'Software Engineering' }
+  {
+    label: "10th", value: "10", course: ["Mathematics, Physics,Chemistry",
+      "Biology,Physics,Chemistry",
+      " Mathematics, Economics, Commerce",
+      "History, Economics,Civics",
+      "Civics, Economics, Commerce"]
+  },
+  {
+    label: "12th", value: "12", course: ["Mathematics, Physics,Chemistry",
+      "Biology,Physics,Chemistry",
+      " Mathematics, Economics, Commerce",
+      "History, Economics,Civics",
+      "Civics, Economics, Commerce"]
+  },
+  {
+    label: "Diploma", value: "Diploma", course: ["Chemical Engineering Degree",
+      "Mechanical Engineering Degree",
+      "Civil Engineering Degree",
+      "Computer Science Engineering",
+      "Aeronautical Engineering",
+      "Biotech Engineering Degree",
+      "Aerospace Engineering Degree",
+      "Electrical & Electronics  Engineering",
+      "Electronics & Communication Engineering"
+    ]
+  },
+  {
+    label: "Btech/UG", value: "UG", course: [
+      "Chemical Engineering Degree",
+      "Mechanical Engineering Degree",
+      "Civil Engineering Degree",
+      "Computer Science Engineering",
+      "Aeronautical Engineering",
+      "Biotech Engineering Degree",
+      "Aerospace Engineering Degree",
+      "Electrical & Electronics  Engineering",
+      "Electronics & Communication Engineering"
+    ]
+  },
+  {
+    label: "Mtech/PG", value: "PG", course: [
+      "Chemical Engineering Degree",
+      "Mechanical Engineering Degree",
+      "Civil Engineering Degree",
+      "Computer Science Engineering",
+      "Aeronautical Engineering",
+      "Biotech Engineering Degree",
+      "Aerospace Engineering Degree",
+      "Electrical & Electronics  Engineering",
+      "Electronics & Communication Engineering"
+    ]
+  },
 ];
 export const countryStates = [
   { country: 'USA', state: ['California', 'Florida', 'Texas'] },

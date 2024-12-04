@@ -25,19 +25,14 @@ use App\Http\Controllers\ExamSectionController;
 use App\Http\Controllers\JobController;
 use App\Http\Controllers\JobStatusController;
 use App\Http\Controllers\TeachingMaterialController;
-use App\Http\Controllers\QualificationController;
 use App\Http\Controllers\LeaveController;
-//use App\Http\Controllers\AttendanceController;
 use App\Http\Controllers\PasswordResetController;
 use App\Http\Controllers\PostController;
 use App\Http\Controllers\QuestionBankChapterController;
 use App\Http\Controllers\QuestionBankController;
-use App\Http\Controllers\QuestionTypesController;
 use App\Http\Controllers\SubjectController;
 use App\Http\Controllers\TestingController;
 use App\Http\Controllers\ZohoInvoiceController;
-use App\Models\JobProfile;
-use Illuminate\Support\Facades\Storage;
 
 /*
 |--------------------------------------------------------------------------
@@ -278,9 +273,9 @@ Route::group(['middleware' => [
         
         Route::patch('/{user}/jobStatus/{jobStatus}', [JobStatusController::class, 'updateJobStatus']);
 
-        Route::post('/{user}/awards', [JobProfileController::class,'createAwards']);
-        Route::put('/{user}/awards/{award}', [JobProfileController::class,'updateAwards']);
-        Route::delete('/{user}/awards/{award}', [JobProfileController::class,'deleteAwards']);
+        // Route::post('/{user}/awards', [JobProfileController::class,'createAwards']);
+        // Route::put('/{user}/awards/{award}', [JobProfileController::class,'updateAwards']);
+        // Route::delete('/{user}/awards/{award}', [JobProfileController::class,'deleteAwards']);
 
     });
     Route::get("/paymentCentre", [UserController::class, "getPaymentDetails"]);

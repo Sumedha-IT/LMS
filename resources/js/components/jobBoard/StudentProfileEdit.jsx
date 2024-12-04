@@ -10,16 +10,6 @@ const validationSchema = Yup.object({
         .required('Name is required')
         .min(3, 'Name must be at least 3 characters')
         .max(50, 'Name must not exceed 50 characters'),
-
-    phone: Yup.string()
-        .required('Mobile number is required')
-        .matches(
-            /^(?:\+?\d{1,2})?\(?\d{3}\)?[\s.-]?\d{3}[\s.-]?\d{4}$/,
-            'Mobile number is not valid'
-        ),
-    email: Yup.string()
-        .required('Email is required')
-        .email('Please enter a valid email address'),
     currentLocation: Yup.string(),
     experience: Yup.number().required("Experience is required")
 });
@@ -80,30 +70,26 @@ const StudentProfileEdit = ({ studentProfileData, open, onClose, onProfileUpdate
                     </div>
                     {/* </div> */}
                     <div className="flex items-center gap-4 my-2">
-                        <label className="w-1/3">Mobile Number<span className="text-[red]">*</span></label>
+                        <label className="w-1/3">Mobile Number</label>
                         <TextField
                             fullWidth
                             id="phone"
                             label="Mobile Number"
                             name="phone"
                             value={formik.values.phone}
-                            onChange={formik.handleChange}
-                            error={formik.touched.phone && Boolean(formik.errors.phone)}
-                            helperText={formik.touched.phone && formik.errors.phone}
+                           disabled
                         />
                     </div>
 
                     <div className="flex items-center gap-4 my-2">
-                        <label className="w-1/3">Email<span className="text-[red]">*</span></label>
+                        <label className="w-1/3">Email</label>
                         <TextField
                             fullWidth
                             id="email"
                             label="Enter email"
                             name="email"
                             value={formik.values.email}
-                            onChange={formik.handleChange}
-                            error={formik.touched.email && Boolean(formik.errors.email)}
-                            helperText={formik.touched.email && formik.errors.email}
+                     disabled
                         />
                     </div>
 

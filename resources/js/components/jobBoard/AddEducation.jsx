@@ -16,7 +16,7 @@ const validationSchema = Yup.object({
     validStartYear: Yup.number().nullable().required('Start Year is required').typeError('Start Year must be a valid number'),
     validEndMonth: Yup.string().required('End Month is required'),
     validEndYear: Yup.number().nullable().required('End Year is required').typeError('End Year must be a valid number'),
-    result: Yup.string().required('Result is required'),
+    result:Yup.number().typeError('Result must be a number').integer('Result must be an integer') .required('Result is required'),
 });
 
 const AddEducation = ({ educationData, open, onClose, onEductionsUpdate, onDataChange }) => {
@@ -102,6 +102,13 @@ const AddEducation = ({ educationData, open, onClose, onEductionsUpdate, onDataC
             formik.setFieldValue('validEndYear', null); // Explicitly set to null if no date is selected
         }
     };
+    const getStatesForCountry = (country) => {
+        console.log(country)
+        const countryObj = courses.find((item) => item.value === country);
+        return countryObj ? countryObj.course : [];
+    };
+
+    const courceName = getStatesForCountry(formik.values.degreeType);
 
 
     return (
@@ -140,11 +147,11 @@ const AddEducation = ({ educationData, open, onClose, onEductionsUpdate, onDataC
                                 'aria-label': 'Degree Type'
                             }}
                         >
-                            <MenuItem key="10th" value="10">10th</MenuItem>
-                            <MenuItem key="12th" value="12">12th</MenuItem>
-                            <MenuItem key="UG" value="UG">UG</MenuItem>
-                            <MenuItem key="PG" value="PG">PG</MenuItem>
-                            <MenuItem key="PhD" value="PhD">PhD</MenuItem>
+                             {courses.map((option) => (
+                                <MenuItem key={option.value} value={option.value}>
+                                    {option.label}
+                                </MenuItem>
+                            ))} 
                         </Select>
                     </div>
 
@@ -160,11 +167,15 @@ const AddEducation = ({ educationData, open, onClose, onEductionsUpdate, onDataC
                             error={formik.touched.course && Boolean(formik.errors.course)}
                             helperText={formik.touched.course && formik.errors.course}
                         >
-                            {courses.map((option) => (
-                                <MenuItem key={option.value} value={option.value}>
-                                    {option.label}
-                                </MenuItem>
-                            ))}
+                             {courceName.length === 0 ? (
+                                <MenuItem value="">Select a country first</MenuItem>
+                            ) : (
+                                courceName.map((option) => (
+                                    <MenuItem key={option} value={option}>
+                                        {option}
+                                    </MenuItem>
+                                ))
+                            )}
                         </Select>
                     </div>
 
@@ -245,7 +256,7 @@ const AddEducation = ({ educationData, open, onClose, onEductionsUpdate, onDataC
 
                     {/* Result */}
                     <div className="flex items-center gap-4">
-                        <label className='w-1/3'>Result<span className="text-[red]">*</span></label>
+                        <label className='w-1/3'>Percentage<span className="text-[red]">*</span></label>
                         <TextField
                             fullWidth
                             id="result"

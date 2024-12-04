@@ -237,14 +237,14 @@ class JobService
 
     public function validateProfileData($data, $jobProfile = null)
     {
-        if(isset($data['aboutMe']) && empty($data['aboutMe'])){
+        if (isset($data['aboutMe']) && empty($data['aboutMe'])) {
             $data['aboutMe'] = null;
         }
 
-        if(isset($data['achievements']) && empty($data['achievements'])){
+        if (isset($data['achievements']) && empty($data['achievements'])) {
             $data['achievements'] = null;
         }
-        if(isset($data['languagesKnown']) && empty($data['languagesKnown'])){
+        if (isset($data['languagesKnown']) && empty($data['languagesKnown'])) {
             $data['languagesKnown'] = null;
         }
 
@@ -255,11 +255,14 @@ class JobService
             'aboutMe' => 'nullable|string',
             'phone' => 'nullable|string|max:12',
             'birthday' => 'nullable|date_format:Y-m-d',
-            'awards' => 'nullable|array',
+            'achievements' => 'nullable|string',
+
             // 'achievements.*.title' => 'required_if:achievements,!=,null|string',
             // 'achievements.*.description' => 'required_if:achievements,!=,null|string',
+            
             'socialLinks.url' => 'nullable|url', // Each URL must be a valid URL
-            'socialLinks.type' => [ 'required_with:socialLinks.url',
+            'socialLinks.type' => [
+                'required_with:socialLinks.url',
                 function ($attribute, $value, $fail) use ($data) {
                     // Check if type is unique
                     $types = array_column($data['socialLinks'], 'type');
@@ -274,6 +277,7 @@ class JobService
             ],
 
             'languagesKnown' => 'nullable|distinct',
+            'otherDetails' => 'nullable|string',
             'address' => 'nullable|string',
             'country' => 'nullable|string',
             'state' => 'nullable|string',
@@ -282,26 +286,29 @@ class JobService
         if (!empty($validator->errors()->messages())) {
             return ['message' => $validator->errors()->all()[0], 'status' => 400, 'success' => false];
         }
-        
+
         $data = $validator->validate();
 
-        if (array_key_exists('currentLocation',$data))
+        if (array_key_exists('currentLocation', $data))
             $data['current_location'] = $data['currentLocation'];
 
-        if (array_key_exists('aboutMe',$data))
+        if (array_key_exists('aboutMe', $data))
             $data['about_me'] = $data['aboutMe'];
 
-        
-        if (array_key_exists('socialLinks',$data)){
+
+        if (array_key_exists('socialLinks', $data)) {
             $data['social_links'] = !empty($jobProfile) ? $jobProfile->social_links : [];
             $data['social_links'][$data['socialLinks']['type']] = $data['socialLinks'];
         }
 
 
-        if (array_key_exists('languagesKnown',$data))
+        if (array_key_exists('languagesKnown', $data))
             $data['languages_known'] = $data['languagesKnown'];
-        
-        unset($data['currentLocation'], $data['aboutMe'], $data['socialLinks'], $data['languagesKnown']);
+
+        if (array_key_exists('otherDetails', $data))
+            $data['meta']['otherDetails'] = $data['otherDetails'];
+
+        unset($data['currentLocation'], $data['aboutMe'], $data['socialLinks'], $data['languagesKnown'], $data['otherDetails']);
         return $data;
     }
 

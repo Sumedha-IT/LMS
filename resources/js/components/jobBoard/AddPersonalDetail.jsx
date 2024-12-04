@@ -1,6 +1,6 @@
-import { Button, Dialog, DialogActions, DialogContent, DialogTitle, MenuItem, Select, TextField } from '@mui/material'
+import { Button, Chip, Dialog, DialogActions, DialogContent, DialogTitle, MenuItem, Select, TextField } from '@mui/material'
 import { useFormik } from 'formik';
-import React, { useEffect } from 'react'
+import React, { useEffect, useState } from 'react'
 import * as Yup from "yup";
 import { countryStates } from '../../utils/jsonData';
 import { toast } from 'react-toastify';
@@ -15,10 +15,12 @@ const validationSchema = Yup.object({
 
 const AddPersonalDetail = ({ studentProfileData, open, onClose, onProfileUpdate }) => {
     const [updateProfileData] = useUpdateStudentJobProfileDataMutation();
+    const [inputValue, setInputValue] = useState('');
+    const [languages, setLanguages] = useState([]); 
     const formik = useFormik({
         initialValues: {
             birthday: studentProfileData?.birthday || "",
-            languagesKnown: studentProfileData?.languagesKnown || "",
+            languagesKnown: studentProfileData?.languagesKnown || [],
             address: studentProfileData?.address || "",
             country: studentProfileData?.country || "",
             state: studentProfileData?.state || "",
@@ -27,7 +29,7 @@ const AddPersonalDetail = ({ studentProfileData, open, onClose, onProfileUpdate 
         onSubmit: async (values) => {
            
             let payload = { data: { ...values } }
-            let result = await updateProfileData({payload }).unwrap();
+            let result = await updateProfileData({ payload }).unwrap();
             if (result.success === true) {
                 toast.success("success")
                 onProfileUpdate(result.data.profile);
@@ -42,11 +44,12 @@ const AddPersonalDetail = ({ studentProfileData, open, onClose, onProfileUpdate 
         if (studentProfileData) {
             formik.setValues({
                 birthday: studentProfileData?.birthday || "",
-                languagesKnown: studentProfileData?.languagesKnown || "",
+                languagesKnown: studentProfileData?.languagesKnown || [],
                 address: studentProfileData?.address || "",
                 country: studentProfileData?.country || "",
                 state: studentProfileData?.state || "",
             });
+            setLanguages(studentProfileData?.languagesKnown)
         }
     }, [studentProfileData, onClose])
     const getStatesForCountry = (country) => {
@@ -55,6 +58,26 @@ const AddPersonalDetail = ({ studentProfileData, open, onClose, onProfileUpdate 
     };
 
     const states = getStatesForCountry(formik.values.country);
+
+  
+    const handleKeyDown = (e) => {
+        if (e.key === 'Enter' && inputValue.trim() !== '') {
+          // Add the language and clear the input field
+          setLanguages((prevLanguages) => {
+            const newLanguages = [...prevLanguages, inputValue.trim()];
+            formik.setFieldValue('languagesKnown', newLanguages);  // Update Formik value
+            return newLanguages;
+          });
+          setInputValue('');  // Clear the input field
+        }
+      };
+    
+      // Handle removing a language
+      const handleRemoveLanguage = (languageToRemove) => {
+        const updatedLanguages = languages.filter((language) => language !== languageToRemove);
+        setLanguages(updatedLanguages);
+        formik.setFieldValue('languagesKnown', updatedLanguages);  // Update Formik value
+      };
     return (
         <Dialog open={open} onClose={onClose} fullWidth maxWidth="md">
             <DialogTitle>Add Personal Detail</DialogTitle>
@@ -75,21 +98,32 @@ const AddPersonalDetail = ({ studentProfileData, open, onClose, onProfileUpdate 
                     </div>
 
                     <div className="flex items-center gap-4">
-                        <label className="w-1/3">languages<span className="text-[red]">*</span></label>
-                        <TextField
-                            fullWidth
-                            id="languagesKnown"
-                            label=" languages Known"
-                            name="languagesKnown"
-                            value={formik.values.languagesKnown}
-                            onChange={formik.handleChange}
-                            error={formik.touched.languagesKnown
-                                && Boolean(formik.errors.languagesKnown
-                                )}
-                            helperText={formik.touched.languagesKnown
-                                && formik.errors.languagesKnown
-                            }
-                        />
+                        <label className="w-1/3">Languages <span className="text-[red]">*</span></label>
+                        <div className="w-full ">
+                            <TextField
+                                fullWidth
+                                id="languagesKnown"
+                                label="Languages Known"
+                                name="languagesKnown"
+                                value={inputValue}
+                                onChange={(e) => setInputValue(e.target.value)}
+                                onKeyDown={handleKeyDown}
+                                error={formik.touched.languagesKnown && Boolean(formik.errors.languagesKnown)}
+                                helperText={formik.touched.languagesKnown && formik.errors.languagesKnown}
+                                variant="outlined"
+                                margin="normal"
+                            />
+                              {languages.map((language, index) => (
+                                <Chip
+                                sx={{gap:1, ml:1}}
+                                    key={index}
+                                    label={language}
+                                    onDelete={() => handleRemoveLanguage(language)}
+                                    color="primary"
+                                    size="small"
+                                />
+                            ))}
+                        </div>
                     </div>
                     <div className="flex items-center gap-4">
                         <label className="w-1/3">address<span className="text-[red]">*</span></label>

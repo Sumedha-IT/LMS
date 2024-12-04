@@ -3,7 +3,7 @@ import { useFormik } from 'formik';
 import React, { useEffect } from 'react'
 import * as Yup from "yup";
 import { DatePicker, LocalizationProvider } from '@mui/x-date-pickers';
-import { monthOption } from '../../utils/jsonData';
+import { jobType,monthOption } from '../../utils/jsonData';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import { useAddStudentExperienceDataMutation, useUpdateStudentExperienceDataMutation } from '../../store/service/user/UserService';
 import { toast } from 'react-toastify';
@@ -129,8 +129,18 @@ const AddWorkExperience = ({ experienceData, open, onClose, onExperienceUpdate, 
                     <div className="flex items-center">
                         <label className="w-1/3">Job Types<span className="text-[red]">*</span></label>
 
-                        {/* Nature of Employment */}
                         <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                        <FormControlLabel
+                                control={
+                                    <Radio
+                                        checked={formik.values.jobType === 'internship'}
+                                        onChange={formik.handleChange}
+                                        value="internship"
+                                        name="jobType"
+                                    />
+                                }
+                                label="internship"
+                            />
                             <FormControlLabel
                                 control={
                                     <Radio
@@ -164,6 +174,7 @@ const AddWorkExperience = ({ experienceData, open, onClose, onExperienceUpdate, 
                                 }
                                 label="Contractual"
                             />
+            
                         </div>
                     </div>
                     <div className="flex items-center gap-4">
