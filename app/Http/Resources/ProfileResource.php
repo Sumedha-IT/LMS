@@ -37,7 +37,14 @@ class ProfileResource extends JsonResource
             'phone' => $this['user']['phone'],
             'birthday' => $this['user']['birthday'] ?? null,
         ];
-        $laguagesKnown = gettype($this->languages_known)  == 'string' ? [$this->languages_known] : $this->languages_known;
+
+        if (!empty($this->languages_known)) {
+            $laguagesKnown =  gettype($this->languages_known)  == 'string' ? [$this->languages_known] : $this->languages_known;
+        } else {
+            $laguagesKnown = null;
+        }
+
+
         $data = array_merge($data, [
             'id' => $this->id ?? null,
             'userId' => $this->user_id ?? null,
