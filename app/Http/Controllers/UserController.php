@@ -214,4 +214,16 @@ class UserController extends Controller
         $teams = Team::where('allow_registration',true)->get();
         return response()->json($teams);
     }
+
+    public function getCountryAndStates(){
+        $data = collect(config("countriesAndStates.data"));
+        $data = collect($data)->map(function ($country) {
+            return [
+                'country' => $country['name'],
+                'states' => collect($country['states'])->pluck('name')->toArray()
+            ];
+        });
+        
+        return response()->json(["data" => $data]);
+    }
 }

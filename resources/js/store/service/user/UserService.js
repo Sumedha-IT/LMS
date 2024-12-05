@@ -190,10 +190,12 @@ export const userApi = createApi({
                 method: "POST",
                 body: payload
             })
-        })
+        }),
+        getCountryAndStates: builder.query({
+            query: () => `/countryAndStates`,
+        }),
     }),
 })
-
 
 export const { useGetStudentDataQuery,
     useGetUserExamDataQuery,
@@ -225,5 +227,6 @@ export const { useGetStudentDataQuery,
     useUpdateJobDataMutation,
     useApplyJobMutation,
     useUpdateStudentAwardDataMutation,
-    useAddStudentAwardDataMutation
+    useAddStudentAwardDataMutation,
+    useGetCountryAndStatesQuery,
 } = userApi

@@ -2,9 +2,9 @@ import { Button, Chip, Dialog, DialogActions, DialogContent, DialogTitle, MenuIt
 import { useFormik } from 'formik';
 import React, { useEffect, useState } from 'react'
 import * as Yup from "yup";
-import { countryStates } from '../../utils/jsonData';
+
 import { toast } from 'react-toastify';
-import { useUpdateStudentJobProfileDataMutation } from '../../store/service/user/UserService';
+import { useUpdateStudentJobProfileDataMutation,useGetCountryAndStatesQuery } from '../../store/service/user/UserService';
 const validationSchema = Yup.object({
     birthday: Yup.date().required('Exam date is required'),
     address: Yup.string().required('Address URL is required'),
@@ -15,6 +15,8 @@ const validationSchema = Yup.object({
 
 const AddPersonalDetail = ({ studentProfileData, open, onClose, onProfileUpdate }) => {
     const [updateProfileData] = useUpdateStudentJobProfileDataMutation();
+    const [countryStates,setContryStates] = useState([])
+    const {data} = useGetCountryAndStatesQuery();
     const [inputValue, setInputValue] = useState('');
     const [languages, setLanguages] = useState([]); 
     const formik = useFormik({
@@ -50,16 +52,15 @@ const AddPersonalDetail = ({ studentProfileData, open, onClose, onProfileUpdate 
                 state: studentProfileData?.state || "",
             });
             setLanguages(studentProfileData?.languagesKnown)
+            setContryStates(data.data)
         }
     }, [studentProfileData, onClose])
     const getStatesForCountry = (country) => {
-        const countryObj = countryStates.find((item) => item.country === country);
-        return countryObj ? countryObj.state : [];
+        return countryStates.find((item) => item.country === country)?.states;
     };
 
-    const states = getStatesForCountry(formik.values.country);
+     const states = getStatesForCountry(formik.values.country) || [];
 
-  
     const handleKeyDown = (e) => {
         if (e.key === 'Enter' && inputValue.trim() !== '') {
           // Add the language and clear the input field
@@ -165,6 +166,8 @@ const AddPersonalDetail = ({ studentProfileData, open, onClose, onProfileUpdate 
                             onChange={formik.handleChange}
                             error={formik.touched.state && Boolean(formik.errors.state)}
                         >
+                           
+
                             {states.length === 0 ? (
                                 <MenuItem value="">Select a country first</MenuItem>
                             ) : (

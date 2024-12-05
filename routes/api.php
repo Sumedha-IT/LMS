@@ -240,6 +240,8 @@ Route::group(['middleware' => [
     Route::get('/{examId}/examQuestions', [ExamQuestionController::class,'index']);
     Route::get('exams/{id}/listMarks',[ExamController::class,'getMarkList']);
 
+    Route::get("/countryAndStates", [UserController::class, "getCountryAndStates"]);
+
 
     // Api for Post/Timeline
     Route::middleware(['payloadCheck'])->group(function () {
@@ -313,6 +315,8 @@ Route::middleware(['zohoAuth'])->group(function () {
 
    
 });
+
+    
 
 Route::get('/test', [TestingController::class,'testMail']);
 
