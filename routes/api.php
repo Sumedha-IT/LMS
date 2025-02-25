@@ -1,38 +1,39 @@
 <?php
 
-use App\Http\Controllers\api\ExamAttemptController;
-use App\Http\Controllers\api\ExamController;
-use App\Http\Controllers\api\JobProfileController;
-use App\Http\Controllers\api\ProfileController;
-use App\Http\Controllers\api\QuestionOptionController;
-use App\Http\Controllers\api\StudentsController;
-use App\Http\Controllers\api\QuestionAttempLogController;
 use Illuminate\Http\Request;
-use App\Http\Controllers\api\QuestionController;
-use Illuminate\Http\Resources\Json\JsonResource;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\JobController;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\PostController;
 use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Password;
 use App\Http\Controllers\BatchController;
-use App\Http\Controllers\CurriculumController;
-use App\Http\Controllers\SectionController;
-use App\Http\Controllers\CalendarController;
-use App\Http\Controllers\ChaptersController;
-use App\Http\Controllers\CourseController;
-use App\Http\Controllers\ExamQuestionController;
-use App\Http\Controllers\ExamSectionController;
-use App\Http\Controllers\JobController;
-use App\Http\Controllers\JobStatusController;
-use App\Http\Controllers\TeachingMaterialController;
 use App\Http\Controllers\LeaveController;
-use App\Http\Controllers\PasswordResetController;
-use App\Http\Controllers\PostController;
-use App\Http\Controllers\QuestionBankChapterController;
-use App\Http\Controllers\QuestionBankController;
+use App\Http\Controllers\CourseController;
+use App\Http\Controllers\SectionController;
 use App\Http\Controllers\SubjectController;
 use App\Http\Controllers\TestingController;
+use App\Http\Controllers\api\ExamController;
+use App\Http\Controllers\CalendarController;
+use App\Http\Controllers\ChaptersController;
+use App\Http\Controllers\JobStatusController;
+use App\Http\Controllers\CurriculumController;
+use App\Http\Controllers\api\ProfileController;
+use App\Http\Controllers\ExamSectionController;
 use App\Http\Controllers\ZohoInvoiceController;
+use App\Http\Controllers\api\QuestionController;
+use App\Http\Controllers\api\StudentsController;
+use App\Http\Controllers\ExamQuestionController;
+use App\Http\Controllers\QuestionBankController;
+use Illuminate\Http\Resources\Json\JsonResource;
+use App\Http\Controllers\PasswordResetController;
+use App\Http\Controllers\api\JobProfileController;
+use App\Http\Controllers\api\ExamAttemptController;
+use App\Http\Controllers\api\UserProfileController;
+use App\Http\Controllers\TeachingMaterialController;
+use App\Http\Controllers\api\QuestionOptionController;
+use App\Http\Controllers\QuestionBankChapterController;
+use App\Http\Controllers\api\QuestionAttempLogController;
 
 /*
 |--------------------------------------------------------------------------
@@ -62,9 +63,11 @@ Route::post('login', [AuthController::class, 'login']);
 Route::get('cities', function() {
     return \App\Http\Resources\CityResource::collection(\App\Models\City::all());
 });
+//states api 
 Route::get('states', function() {
     return \App\Http\Resources\StateResource::collection(\App\Models\State::all());
 });
+//
 Route::get('qualifications', function() {
     return \App\Http\Resources\QualificationResource::collection(\App\Models\Qualification::all());
 });
@@ -121,6 +124,10 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
     
     Route::get('/assignment-chart', [TeachingMaterialController::class, 'getChartData']);
 
+
+    //Api for user profile
+    Route::get('/profile',[UserProfileController::class,'Index']);
+    Route::put('/profile',[UserProfileController::class,'Update']);
 
 
 
