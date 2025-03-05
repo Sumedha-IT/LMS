@@ -17,7 +17,8 @@ class SpeacializationResource extends JsonResource
         return [
             'id'=>$this->id,
             'name'=>$this->name,
-            'degree_type'=>new DegreeResource($this->degreeType)
+            'degree_type'=>new DegreeResource($this->degreeType),
+            
         ];
     }
 }

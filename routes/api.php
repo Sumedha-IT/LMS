@@ -134,7 +134,8 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
     Route::get('get/degrees',[StudentEducationController::class,'GetDegreeTypes']);
     Route::get('get/specialization/{id}',[StudentEducationController::class,'GetSpecializations']);
 
-
+    Route::post('education',[StudentEducationController::class,'store']);
+    Route::get('get/education',[StudentEducationController::class,"Get_education"]);
 
     Route::post('/leaves/apply', [LeaveController::class, 'applyLeave']);
     Route::get('/leaves/list',[LeaveController::class,'index']);
