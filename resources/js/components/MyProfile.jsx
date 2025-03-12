@@ -4,9 +4,9 @@ import { FaChevronDown, FaChevronUp } from 'react-icons/fa';
 import { BsPersonLinesFill } from 'react-icons/bs';
 import { MdDescription, MdWork, MdSchool, MdBuild, MdStar, MdLink } from 'react-icons/md';
 import { FiEdit } from 'react-icons/fi';
-import { useParams } from 'react-router-dom'; // To get user ID from URL
+import { useParams, useNavigate } from 'react-router-dom';
 
-const API_URL = 'http://localhost:8000';
+const API_URL = 'http://localhost:8000/api';
 
 const mainMenu = [
   {
@@ -18,7 +18,7 @@ const mainMenu = [
       { id: 'additional', label: 'Additional Details', icon: <MdDescription /> },
       { id: 'docs', label: 'Docs', icon: <MdDescription /> },
       { id: 'parent', label: 'Parent Details', icon: <BsPersonLinesFill /> },
-      { id: 'notification', label: 'Notification', icon: <MdDescription /> },
+      { id: 'qualification', label: 'Qualification', icon: <MdDescription /> },
     ],
   },
   { id: 'work', label: 'Work Experience', icon: <MdWork /> },
@@ -29,7 +29,6 @@ const mainMenu = [
   { id: 'social', label: 'Social Links', icon: <MdLink /> },
 ];
 
-// Custom CSS for slow blinking animation and active menu styling
 const styles = `
   @keyframes slowBlink {
     0% { border-color: #f97316; }
@@ -51,71 +50,94 @@ const styles = `
 `;
 
 const MyProfile = () => {
-  const { user } = useParams(); // Get user ID from URL (e.g., /1/administrator/my-profile)
+  const { user } = useParams();
+  const navigate = useNavigate();
   const [activeMenu, setActiveMenu] = useState(null);
   const [activeSubTab, setActiveSubTab] = useState(null);
   const [formData, setFormData] = useState({
+    id: '',
+    name: '',
+    email: '',
+    receive_email_notification: 0,
+    receive_sms_notification: 0,
     registration_number: '',
-    domain_id: '',
     phone: '',
-    country_code: '',
     gender: '',
     birthday: '',
-    qualification: [],
     address: '',
-    city: '',
-    state_id: '',
     pincode: '',
+    city: '',
+    qualification: [],
+    state_id: '',
+    country_code: '',
+    state: { id: '', name: '' },
     aadhaar_number: '',
     linkedin_profile: '',
-    upload_resume: null,
-    upload_aadhar: null,
-    parent_name: '',
-    parent_email: '',
-    parent_aadhar: '',
-    parent_occupation: '',
-    residential_address: '',
-    receive_email_notification: false,
-    receive_sms_notification: false,
-    photo: null,
-    work_experience: [],
-    education: [],
-    projects: [],
-    certifications: [],
-    achievements: [],
-    social_links: { linkedin: '', github: '' },
+    upload_resume: '',
+    upload_aadhar: '',
+    avatar_url: '',
+    branch: [],
+    domain: null,
   });
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const [success, setSuccess] = useState(null);
   const [photoPreview, setPhotoPreview] = useState(null);
 
   useEffect(() => {
-    if (user) {
-      axios
-        .get(`${API_URL}/profile/${user}`, { withCredentials: true })
-        .then((response) => {
-          setFormData(response.data);
-          if (response.data.photo_url) {
-            setPhotoPreview(`${API_URL}${response.data.photo_url}`);
-          }
-        })
-        .catch((error) => console.error('Error fetching profile:', error));
-
-      // Fetch certificates separately if not included in /profile/{user}
-      axios
-        .get(`${API_URL}/${user}/documents`, { withCredentials: true })
-        .then((response) => {
-          setFormData((prev) => ({ ...prev, certifications: response.data }));
-        })
-        .catch((error) => console.error('Error fetching documents:', error));
+    const token = localStorage.getItem('token');
+    if (!token) {
+      navigate('/login');
+      return;
     }
-  }, [user]);
+
+    fetchProfile(token);
+  }, [user, navigate]);
+
+  const fetchProfile = (token) => {
+    setLoading(true);
+    console.log('Fetching profile with token:', token);
+    axios.get(`${API_URL}/profile`, {
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Accept': 'application/json',
+        'Cache-Control': 'no-cache', // Prevent caching
+      },
+      withCredentials: true,
+    })
+    .then((response) => {
+      const userData = response.data.data?.user || response.data.user || response.data;
+      console.log('Fetched profile data:', userData);
+      setFormData({
+        ...userData,
+        qualification: Array.isArray(userData.qualification) ? userData.qualification : [],
+      });
+      if (userData.avatar_url) {
+        setPhotoPreview(`${API_URL}${userData.avatar_url}`);
+      }
+      setLoading(false);
+    })
+    .catch((error) => {
+      setError('Failed to load profile data');
+      setLoading(false);
+      if (error.response?.status === 401) {
+        localStorage.removeItem('token');
+        navigate('/login');
+      }
+    });
+  };
 
   const toggleMenu = (id) => {
     setActiveMenu(activeMenu === id ? null : id);
-    setActiveSubTab(null); // Reset subtab when switching main menu
+    setActiveSubTab(null);
+    setSuccess(null);
+    setError(null);
   };
 
   const toggleSubTab = (id) => {
     setActiveSubTab(activeSubTab === id ? null : id);
+    setSuccess(null);
+    setError(null);
   };
 
   const handleChange = (e) => {
@@ -126,102 +148,113 @@ const MyProfile = () => {
     }));
   };
 
+  const handleQualificationChange = (index, field, value) => {
+    setFormData((prev) => {
+      const newQualifications = [...prev.qualification];
+      newQualifications[index] = {
+        ...newQualifications[index],
+        [field]: value,
+      };
+      return { ...prev, qualification: newQualifications };
+    });
+  };
+
   const handleFileChange = (e) => {
     const { name, files } = e.target;
     setFormData((prev) => ({
       ...prev,
       [name]: files[0],
     }));
-    if (name === 'photo') {
+    if (name === 'avatar_url') {
       setPhotoPreview(URL.createObjectURL(files[0]));
     }
   };
 
-  const addItem = (key) => {
-    setFormData((prev) => ({
-      ...prev,
-      [key]:
-        key === 'qualification'
-          ? [...prev[key], { qualification_id: '', year: '', institute_name: '', percentage: '' }]
-          : key === 'work_experience'
-          ? [...prev[key], { company: '', role: '' }]
-          : key === 'education'
-          ? [...prev[key], { degree: '', institute: '' }]
-          : key === 'projects'
-          ? [...prev[key], { name: '', description: '' }]
-          : key === 'certifications'
-          ? [...prev[key], { name: '', issuer: '' }]
-          : key === 'achievements'
-          ? [...prev[key], { title: '', description: '' }]
-          : prev[key],
-    }));
-  };
-
-  const handleItemChange = (key, index, field, value) => {
-    const updatedItems = [...formData[key]];
-    updatedItems[index][field] = value;
-    setFormData((prev) => ({ ...prev, [key]: updatedItems }));
-  };
-
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const token = localStorage.getItem('token'); // Fetch token
-  
-    const data = new FormData();
-    Object.keys(formData).forEach((key) => {
-      if (Array.isArray(formData[key])) {
-        data.append(key, JSON.stringify(formData[key]));
+    setLoading(true);
+    setError(null);
+    setSuccess(null);
+
+    const token = localStorage.getItem('token');
+    const formDataToSend = new FormData();
+    
+    Object.keys(formData).forEach(key => {
+      if (key === 'qualification') {
+        formDataToSend.append(key, JSON.stringify(formData[key]));
+      } else if (key === 'state') {
+        formDataToSend.append('state_id', formData.state.id);
       } else if (formData[key] instanceof File) {
-        data.append(key, formData[key]);
-      } else {
-        data.append(key, formData[key]);
+        formDataToSend.append(key, formData[key]);
+      } else if (formData[key] !== null && formData[key] !== undefined) {
+        formDataToSend.append(key, formData[key]);
       }
     });
-  
+
     try {
-      const response = await axios.put(`${API_URL}/profile`, data, {
+      console.log('Data being sent to server:', Object.fromEntries(formDataToSend));
+      const response = await axios.put(`${API_URL}/profile`, formDataToSend, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'multipart/form-data',
+          'Accept': 'application/json',
         },
         withCredentials: true,
       });
-  
-      setFormData(response.data);
-      alert('Profile updated successfully!');
+      const updatedData = response.data.data?.user || response.data.user || response.data;
+      console.log('Server response after update:', updatedData);
+      // Update state with server response
+      setFormData({
+        ...formData, // Keep local changes until confirmed
+        ...updatedData, // Merge server response
+        qualification: Array.isArray(updatedData.qualification) ? updatedData.qualification : formData.qualification,
+      });
+      setSuccess('Profile updated successfully!');
+      // Refetch profile after a delay to confirm server state
+      setTimeout(() => {
+        setSuccess(null);
+        fetchProfile(token);
+      }, 3000);
     } catch (error) {
-      console.error('Error updating profile:', error);
-      alert('Failed to update profile.');
+      console.error('Update error:', error.response?.data || error.message);
+      setError(error.response?.data?.message || 'Failed to update profile');
+      setTimeout(() => setError(null), 3000);
+    } finally {
+      setLoading(false);
     }
   };
-  
 
-  const renderSubTabContent = (tabId) => {
-    switch (tabId) {
+  const renderSubTabContent = () => {
+    if (loading) return <p>Loading...</p>;
+    if (error) return <p className="text-red-500">{error}</p>;
+    if (success) return <p className="text-green-500">{success}</p>;
+
+    switch (activeSubTab) {
       case 'basic':
         return (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Name</label>
+              <input type="text" name="name" value={formData.name || ''} onChange={handleChange} className="w-full p-2 border rounded" />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
+              <input type="email" name="email" value={formData.email || ''} onChange={handleChange} className="w-full p-2 border rounded" />
+            </div>
+            <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Registration Number</label>
-              <input type="text" name="registration_number" value={formData.registration_number} onChange={handleChange} disabled className="w-full p-2 border rounded" />
+              <input type="text" name="registration_number" value={formData.registration_number || ''} onChange={handleChange} className="w-full p-2 border rounded" disabled />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Domain</label>
-              <input type="text" value={formData.domain_id} disabled className="w-full p-2 border rounded" />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Country Code</label>
-              <select name="country_code" value={formData.country_code} onChange={handleChange} disabled className="w-full p-2 border rounded">
-                <option value="+91">+91</option>
-              </select>
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Contact Number</label>
-              <input type="tel" name="phone" value={formData.phone} onChange={handleChange} disabled className="w-full p-2 border rounded" />
+              <label className="block text-sm font-medium text-gray-700 mb-1">Phone</label>
+              <div className="flex">
+                <input type="text" name="country_code" value={formData.country_code || ''} onChange={handleChange} className="w-1/4 p-2 border rounded-l" />
+                <input type="tel" name="phone" value={formData.phone || ''} onChange={handleChange} className="w-3/4 p-2 border rounded-r" />
+              </div>
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Gender</label>
-              <select name="gender" value={formData.gender} onChange={handleChange} className="w-full p-2 border rounded">
+              <select name="gender" value={formData.gender || ''} onChange={handleChange} className="w-full p-2 border rounded">
                 <option value="">Select Gender</option>
                 <option value="Male">Male</option>
                 <option value="Female">Female</option>
@@ -229,57 +262,7 @@ const MyProfile = () => {
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Birthday</label>
-              <input type="date" name="birthday" value={formData.birthday} onChange={handleChange} className="w-full p-2 border rounded" />
-            </div>
-            <div className="md:col-span-2">
-              <label className="block text-sm font-medium text-gray-700 mb-1">Qualifications</label>
-              {formData.qualification.map((qual, index) => (
-                <div key={index} className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Qualification</label>
-                    <select
-                      value={qual.qualification_id}
-                      onChange={(e) => handleItemChange('qualification', index, 'qualification_id', e.target.value)}
-                      className="w-full p-2 border rounded"
-                    >
-                      <option value="">Select</option>
-                      <option value="1">B.Tech</option>
-                      <option value="2">M.Tech</option>
-                    </select>
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Year</label>
-                    <input
-                      type="text"
-                      value={qual.year}
-                      onChange={(e) => handleItemChange('qualification', index, 'year', e.target.value)}
-                      className="w-full p-2 border rounded"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Institute</label>
-                    <input
-                      type="text"
-                      value={qual.institute_name}
-                      onChange={(e) => handleItemChange('qualification', index, 'institute_name', e.target.value)}
-                      className="w-full p-2 border rounded"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Percentage</label>
-                    <input
-                      type="text"
-                      value={qual.percentage}
-                      onChange={(e) => handleItemChange('qualification', index, 'percentage', e.target.value)}
-                      className="w-full p-2 border rounded"
-                    />
-                  </div>
-                </div>
-              ))}
-              <button type="button" onClick={() => addItem('qualification')} className="flex items-center gap-1 text-orange-500">
-                <FiEdit className="w-4 h-4" />
-                <span>Add Qualification</span>
-              </button>
+              <input type="date" name="birthday" value={formData.birthday || ''} onChange={handleChange} className="w-full p-2 border rounded" />
             </div>
           </div>
         );
@@ -288,23 +271,19 @@ const MyProfile = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Address</label>
-              <textarea name="address" value={formData.address} onChange={handleChange} className="w-full p-2 border rounded" rows={4} />
+              <textarea name="address" value={formData.address || ''} onChange={handleChange} className="w-full p-2 border rounded" rows={4} />
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">City</label>
-              <input type="text" name="city" value={formData.city} onChange={handleChange} className="w-full p-2 border rounded" />
+              <input type="text" name="city" value={formData.city || ''} onChange={handleChange} className="w-full p-2 border rounded" />
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">State</label>
-              <select name="state_id" value={formData.state_id} onChange={handleChange} className="w-full p-2 border rounded">
-                <option value="">Select State</option>
-                <option value="1">State 1</option>
-                <option value="2">State 2</option>
-              </select>
+              <input type="text" value={formData.state?.name || ''} className="w-full p-2 border rounded" disabled />
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Pincode</label>
-              <input type="text" name="pincode" value={formData.pincode} onChange={handleChange} className="w-full p-2 border rounded" />
+              <input type="text" name="pincode" value={formData.pincode || ''} onChange={handleChange} className="w-full p-2 border rounded" />
             </div>
           </div>
         );
@@ -313,19 +292,25 @@ const MyProfile = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Aadhaar Number</label>
-              <input type="text" name="aadhaar_number" value={formData.aadhaar_number} onChange={handleChange} className="w-full p-2 border rounded" />
+              <input type="text" name="aadhaar_number" value={formData.aadhaar_number || ''} onChange={handleChange} className="w-full p-2 border rounded" />
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">LinkedIn Profile</label>
-              <input type="url" name="linkedin_profile" value={formData.linkedin_profile} onChange={handleChange} className="w-full p-2 border rounded" />
+              <input type="url" name="linkedin_profile" value={formData.linkedin_profile || ''} onChange={handleChange} className="w-full p-2 border rounded" />
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Resume</label>
               <input type="file" name="upload_resume" onChange={handleFileChange} className="w-full p-2" />
+              {formData.upload_resume && typeof formData.upload_resume === 'string' && (
+                <a href={formData.upload_resume} target="_blank" rel="noopener noreferrer" className="text-orange-500">View Current Resume</a>
+              )}
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Aadhaar Document</label>
               <input type="file" name="upload_aadhar" onChange={handleFileChange} className="w-full p-2" />
+              {formData.upload_aadhar && typeof formData.upload_aadhar === 'string' && (
+                <a href={formData.upload_aadhar} target="_blank" rel="noopener noreferrer" className="text-orange-500">View Current Aadhaar</a>
+              )}
             </div>
           </div>
         );
@@ -334,37 +319,66 @@ const MyProfile = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Parent Name</label>
-              <input type="text" name="parent_name" value={formData.parent_name} onChange={handleChange} className="w-full p-2 border rounded" />
+              <input type="text" name="parent_name" value={formData.parent_name || ''} onChange={handleChange} className="w-full p-2 border rounded" />
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Parent Email</label>
-              <input type="email" name="parent_email" value={formData.parent_email} onChange={handleChange} className="w-full p-2 border rounded" />
+              <input type="email" name="parent_email" value={formData.parent_email || ''} onChange={handleChange} className="w-full p-2 border rounded" />
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Parent Aadhaar</label>
-              <input type="text" name="parent_aadhar" value={formData.parent_aadhar} onChange={handleChange} className="w-full p-2 border rounded" />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Parent Occupation</label>
-              <input type="text" name="parent_occupation" value={formData.parent_occupation} onChange={handleChange} className="w-full p-2 border rounded" />
-            </div>
-            <div className="md:col-span-2">
-              <label className="block text-sm font-medium text-gray-700 mb-1">Residential Address</label>
-              <textarea name="residential_address" value={formData.residential_address} onChange={handleChange} className="w-full p-2 border rounded" rows={4} />
+              <input type="text" name="parent_aadhar" value={formData.parent_aadhar || ''} onChange={handleChange} className="w-full p-2 border rounded" />
             </div>
           </div>
         );
-      case 'notification':
+      case 'qualification':
         return (
-          <div className="grid grid-cols-1 gap-4">
-            <div className="flex items-center">
-              <input type="checkbox" name="receive_email_notification" checked={formData.receive_email_notification} onChange={handleChange} className="mr-2" />
-              <label className="text-sm font-medium text-gray-700">Receive Email Notification</label>
-            </div>
-            <div className="flex items-center">
-              <input type="checkbox" name="receive_sms_notification" checked={formData.receive_sms_notification} onChange={handleChange} className="mr-2" />
-              <label className="text-sm font-medium text-gray-700">Receive SMS Notification</label>
-            </div>
+          <div className="md:col-span-2">
+            <label className="block text-sm font-medium text-gray-700 mb-1">Qualifications</label>
+            {formData.qualification.length > 0 ? (
+              formData.qualification.map((qual, index) => (
+                <div key={index} className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Year</label>
+                    <input
+                      type="text"
+                      value={qual.year ?? ''}
+                      onChange={(e) => handleQualificationChange(index, 'year', e.target.value)}
+                      className="w-full p-2 border rounded"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Institute</label>
+                    <input
+                      type="text"
+                      value={qual.institute_name ?? ''}
+                      onChange={(e) => handleQualificationChange(index, 'institute_name', e.target.value)}
+                      className="w-full p-2 border rounded"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Percentage</label>
+                    <input
+                      type="text"
+                      value={qual.percentage ?? ''}
+                      onChange={(e) => handleQualificationChange(index, 'percentage', e.target.value)}
+                      className="w-full p-2 border rounded"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Qualification</label>
+                    <input
+                      type="text"
+                      value={qual.qualification_name ?? ''}
+                      onChange={(e) => handleQualificationChange(index, 'qualification_name', e.target.value)}
+                      className="w-full p-2 border rounded"
+                    />
+                  </div>
+                </div>
+              ))
+            ) : (
+              <p>No qualifications available</p>
+            )}
           </div>
         );
       default:
@@ -373,156 +387,72 @@ const MyProfile = () => {
   };
 
   const renderMainTabContent = (menuId) => {
+    if (loading) return <p>Loading...</p>;
+    if (error) return <p className="text-red-500">{error}</p>;
+    if (success) return <p className="text-green-500">{success}</p>;
+
     switch (menuId) {
       case 'personal':
         return (
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {mainMenu.find((menu) => menu.id === 'personal').subMenu.map((subTab) => (
-              <div
-                key={subTab.id}
-                className={`flex items-center justify-between p-4 bg-white rounded-lg shadow cursor-pointer hover:shadow-md transition-shadow ${
-                  activeSubTab === subTab.id ? 'slow-blink' : 'border-transparent'
-                }`}
-                onClick={() => toggleSubTab(subTab.id)}
-              >
-                <div className="flex items-center gap-2">
-                  <span className="text-orange-500">{subTab.icon}</span>
-                  <span>{subTab.label}</span>
+          <form onSubmit={handleSubmit}>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              {mainMenu.find((menu) => menu.id === 'personal').subMenu.map((subTab) => (
+                <div
+                  key={subTab.id}
+                  className={`flex items-center justify-between p-4 bg-white rounded-lg shadow cursor-pointer hover:shadow-md transition-shadow ${
+                    activeSubTab === subTab.id ? 'slow-blink' : 'border-transparent'
+                  }`}
+                  onClick={() => toggleSubTab(subTab.id)}
+                >
+                  <div className="flex items-center gap-2">
+                    <span className="text-orange-500">{subTab.icon}</span>
+                    <span>{subTab.label}</span>
+                  </div>
+                  {activeSubTab === subTab.id ? <FaChevronUp className="w-4 h-4" /> : <FaChevronDown className="w-4 h-4" />}
                 </div>
-                {activeSubTab === subTab.id ? <FaChevronUp className="w-4 h-4" /> : <FaChevronDown className="w-4 h-4" />}
+              ))}
+            </div>
+            {activeSubTab && activeMenu === 'personal' && (
+              <div className="mt-4">
+                {renderSubTabContent()}
+                <button
+                  type="submit"
+                  className="mt-4 bg-orange-500 text-white px-4 py-2 rounded hover:bg-orange-600 disabled:bg-gray-400"
+                  disabled={loading}
+                >
+                  {loading ? 'Saving...' : 'Save Changes'}
+                </button>
               </div>
-            ))}
-          </div>
+            )}
+          </form>
         );
       case 'work':
-        return (
-          <div>
-            {formData.work_experience.map((work, index) => (
-              <div key={index} className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Company</label>
-                  <input type="text" value={work.company || ''} onChange={(e) => handleItemChange('work_experience', index, 'company', e.target.value)} className="w-full p-2 border rounded" />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Role</label>
-                  <input type="text" value={work.role || ''} onChange={(e) => handleItemChange('work_experience', index, 'role', e.target.value)} className="w-full p-2 border rounded" />
-                </div>
-              </div>
-            ))}
-            <button type="button" onClick={() => addItem('work_experience')} className="flex items-center gap-1 text-orange-500">
-              <FiEdit className="w-4 h-4" />
-              <span>Add Work Experience</span>
-            </button>
-          </div>
-        );
+        return <div className="grid grid-cols-1 gap-4"><p>No work experience data available in API</p></div>;
       case 'education':
-        return (
-          <div>
-            {formData.education.map((edu, index) => (
-              <div key={index} className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Degree</label>
-                  <input type="text" value={edu.degree || ''} onChange={(e) => handleItemChange('education', index, 'degree', e.target.value)} className="w-full p-2 border rounded" />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Institute</label>
-                  <input type="text" value={edu.institute || ''} onChange={(e) => handleItemChange('education', index, 'institute', e.target.value)} className="w-full p-2 border rounded" />
-                </div>
-              </div>
-            ))}
-            <button type="button" onClick={() => addItem('education')} className="flex items-center gap-1 text-orange-500">
-              <FiEdit className="w-4 h-4" />
-              <span>Add Education</span>
-            </button>
-          </div>
-        );
+        return <div className="grid grid-cols-1 gap-4"><p>No education data available in API</p></div>;
       case 'projects':
-        return (
-          <div>
-            {formData.projects.map((project, index) => (
-              <div key={index} className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Project Name</label>
-                  <input type="text" value={project.name || ''} onChange={(e) => handleItemChange('projects', index, 'name', e.target.value)} className="w-full p-2 border rounded" />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
-                  <input type="text" value={project.description || ''} onChange={(e) => handleItemChange('projects', index, 'description', e.target.value)} className="w-full p-2 border rounded" />
-                </div>
-              </div>
-            ))}
-            <button type="button" onClick={() => addItem('projects')} className="flex items-center gap-1 text-orange-500">
-              <FiEdit className="w-4 h-4" />
-              <span>Add Project</span>
-            </button>
-          </div>
-        );
+        return <div className="grid grid-cols-1 gap-4"><p>No projects data available in API</p></div>;
       case 'certifications':
-        return (
-          <div>
-            {formData.certifications.map((cert, index) => (
-              <div key={index} className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Certification Name</label>
-                  <input type="text" value={cert.name || ''} onChange={(e) => handleItemChange('certifications', index, 'name', e.target.value)} className="w-full p-2 border rounded" />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Issuer</label>
-                  <input type="text" value={cert.issuer || ''} onChange={(e) => handleItemChange('certifications', index, 'issuer', e.target.value)} className="w-full p-2 border rounded" />
-                </div>
-              </div>
-            ))}
-            <button type="button" onClick={() => addItem('certifications')} className="flex items-center gap-1 text-orange-500">
-              <FiEdit className="w-4 h-4" />
-              <span>Add Certification</span>
-            </button>
-          </div>
-        );
+        return <div className="grid grid-cols-1 gap-4"><p>No certifications data available in API</p></div>;
       case 'achievements':
-        return (
-          <div>
-            {formData.achievements.map((ach, index) => (
-              <div key={index} className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Achievement Title</label>
-                  <input type="text" value={ach.title || ''} onChange={(e) => handleItemChange('achievements', index, 'title', e.target.value)} className="w-full p-2 border rounded" />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
-                  <input type="text" value={ach.description || ''} onChange={(e) => handleItemChange('achievements', index, 'description', e.target.value)} className="w-full p-2 border rounded" />
-                </div>
-              </div>
-            ))}
-            <button type="button" onClick={() => addItem('achievements')} className="flex items-center gap-1 text-orange-500">
-              <FiEdit className="w-4 h-4" />
-              <span>Add Achievement</span>
-            </button>
-          </div>
-        );
+        return <div className="grid grid-cols-1 gap-4"><p>No achievements data available in API</p></div>;
       case 'social':
         return (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">LinkedIn</label>
-              <input
-                type="url"
-                name="linkedin"
-                value={formData.social_links.linkedin || ''}
-                onChange={(e) => setFormData((prev) => ({ ...prev, social_links: { ...prev.social_links, linkedin: e.target.value } }))}
-                className="w-full p-2 border rounded"
-              />
+          <form onSubmit={handleSubmit}>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">LinkedIn</label>
+                <input type="url" name="linkedin_profile" value={formData.linkedin_profile || ''} onChange={handleChange} className="w-full p-2 border rounded" />
+              </div>
             </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">GitHub</label>
-              <input
-                type="url"
-                name="github"
-                value={formData.social_links.github || ''}
-                onChange={(e) => setFormData((prev) => ({ ...prev, social_links: { ...prev.social_links, github: e.target.value } }))}
-                className="w-full p-2 border rounded"
-              />
-            </div>
-          </div>
+            <button
+              type="submit"
+              className="mt-4 bg-orange-500 text-white px-4 py-2 rounded hover:bg-orange-600 disabled:bg-gray-400"
+              disabled={loading}
+            >
+              {loading ? 'Saving...' : 'Save Changes'}
+            </button>
+          </form>
         );
       default:
         return null;
@@ -532,12 +462,7 @@ const MyProfile = () => {
   return (
     <div className="w-full min-h-screen bg-gray-100">
       <style>{styles}</style>
-      <div
-        className="relative w-full h-32 bg-cover bg-center"
-        style={{
-          backgroundImage: `url('https://images.unsplash.com/photo-1444703686981-a3abbc4d4fe3?ixlib=rb-4.0.3&auto=format&fit=crop&w=2070&q=80')`,
-        }}
-      >
+      <div className="relative w-full h-32 bg-cover bg-center" style={{ backgroundImage: `url('https://images.unsplash.com/photo-1444703686981-a3abbc4d4fe3')` }}>
         <button className="absolute top-4 right-4 bg-white p-2 rounded-full shadow">
           <FiEdit className="text-gray-600 w-4 h-4" />
         </button>
@@ -546,20 +471,19 @@ const MyProfile = () => {
         <div className="flex flex-col md:flex-row items-center md:items-start">
           <div className="absolute -top-12 left-1/2 md:left-6 transform -translate-x-1/2 md:translate-x-0">
             <img
-              src={photoPreview || 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?ixlib=rb-4.0.3&auto=format&fit=crop&w=1974&q=80'}
+              src={photoPreview || formData.avatar_url || 'https://images.unsplash.com/photo-1494790108377-be9c29b29330'}
               alt="Profile"
               className="w-24 h-24 rounded-full border-4 border-white shadow-md"
             />
           </div>
           <div className="md:ml-32 mt-12 md:mt-0 text-center md:text-left">
-            <h2 className="text-2xl font-bold">User Name</h2>
+            <h2 className="text-2xl font-bold">{formData.name || 'Loading...'}</h2>
             <div className="mt-2">
-              <input type="file" name="photo" onChange={handleFileChange} className="mt-2" />
+              <input type="file" name="avatar_url" onChange={handleFileChange} className="mt-2" />
             </div>
           </div>
         </div>
       </div>
-      {/* Main Menu */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-6 mx-4 md:mx-auto md:max-w-4xl">
         {mainMenu.map((menu) => (
           <div
@@ -577,7 +501,6 @@ const MyProfile = () => {
           </div>
         ))}
       </div>
-      {/* Main Menu Content */}
       {activeMenu && (
         <div className="mt-4 p-6 mx-4 md:mx-auto md:max-w-4xl bg-white rounded-lg shadow">
           <div className="flex justify-between items-center mb-4">
@@ -586,26 +509,7 @@ const MyProfile = () => {
               {mainMenu.find((m) => m.id === activeMenu)?.label}
             </h3>
           </div>
-          {activeMenu === 'personal' && renderMainTabContent(activeMenu)}
-          {activeMenu !== 'personal' && (
-            <form onSubmit={handleSubmit}>
-              {renderMainTabContent(activeMenu)}
-              <button type="submit" className="mt-4 bg-orange-500 text-white px-4 py-2 rounded hover:bg-orange-600">
-                Save
-              </button>
-            </form>
-          )}
-          {/* SubTab Content */}
-          {activeSubTab && activeMenu === 'personal' && (
-            <div className="mt-4">
-              <form onSubmit={handleSubmit}>
-                {renderSubTabContent(activeSubTab)}
-                <button type="submit" className="mt-4 bg-orange-500 text-white px-4 py-2 rounded hover:bg-orange-600">
-                  Save
-                </button>
-              </form>
-            </div>
-          )}
+          {renderMainTabContent(activeMenu)}
         </div>
       )}
     </div>
