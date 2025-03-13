@@ -136,6 +136,12 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
 
     Route::post('education',[StudentEducationController::class,'store']);
     Route::get('get/education',[StudentEducationController::class,"Get_education"]);
+    Route::put('update/education',[StudentEducationController::class,'Update']);
+    Route::delete('delete/education',[StudentEducationController::class,'delete']);
+
+    //Api for student dashboard 
+        // api for exam chart
+        Route::get('/exam-chart', [ExamController::class, 'getChartData']);
 
     Route::post('/leaves/apply', [LeaveController::class, 'applyLeave']);
     Route::get('/leaves/list',[LeaveController::class,'index']);

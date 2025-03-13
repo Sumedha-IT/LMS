@@ -49,5 +49,36 @@ class StudentEducationController extends Controller
         return StudentEducationResource::collection($education);
         
     }
+    public function Update(Request $request){
+        $user=$request->user();
+        $id=$request->input('id');
+        $education=StudentEducation::where('id',$id)->first();
+        if (!$education) {
+            return response()->json(['message' => 'Education record not found'], 404);
+        }
+        $request->validate([
+            'degree_type_id'=>'required|exists:degree_types,id',
+            'specialization_id'=>'required|exists:specializations,id',
+            'other_specialization'=>'nullable|string',
+            'percentage_cgpa'=>'required|numeric',
+            'institute_name'=>'required|string',
+            'location'=>'required|string',
+            'duration_from'=>'required|date',
+            'duration_to'=>'required|date|after:duration_from'
 
+        ]);
+        $education->update($request->all());
+        return new StudentEducationResource($education);
+    }
+
+    public function Delete(Request $request){
+        $user=$request->user();
+        $id=$request->input('id');
+        $education=StudentEducation::where('id',$id)->first();
+        if (!$education) {
+            return response()->json(['message' => 'Education record not found'], 404);
+        }
+        $education->delete();
+        return response()->json(['message' => 'Education record deleted successfully']);
+    }
 }
