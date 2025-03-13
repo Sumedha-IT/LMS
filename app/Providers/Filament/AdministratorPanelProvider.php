@@ -3,6 +3,7 @@
 namespace App\Providers\Filament;
 
 use App\Filament\Pages\Dashboard;
+use App\Filament\Pages\MyProfilePage; // Added for React integration
 use App\Http\Middleware\ApplyTenantScopes;
 use App\Livewire\MyCustomPersonalInfo;
 use Filament\Http\Middleware\Authenticate;
@@ -22,15 +23,12 @@ use Illuminate\Session\Middleware\AuthenticateSession;
 use Illuminate\Session\Middleware\StartSession;
 use Illuminate\View\Middleware\ShareErrorsFromSession;
 use Filament\Support\Enums\MaxWidth;
-//use App\Filament\Pages\Auth\EditProfile;
 use App\Filament\Pages\Auth\Tenancy\EditTeamProfile;
 use App\Livewire\CustomPersonalInfo;
-// use App\Filament\Pages\Tenancy\RegisterTeam;
 use App\Models\Team;
 use Filament\Navigation\MenuItem;
 use Jeffgreco13\FilamentBreezy\BreezyCore;
 use Saade\FilamentFullCalendar\FilamentFullCalendarPlugin;
-//use Tapp\FilamentAuthenticationLog\FilamentAuthenticationLogPlugin;
 
 class AdministratorPanelProvider extends PanelProvider
 {
@@ -46,40 +44,32 @@ class AdministratorPanelProvider extends PanelProvider
             ->sidebarCollapsibleOnDesktop()
             ->databaseNotifications()
             ->font('Poppins')
-            //->profile(EditTeamProfile::class)
-            //->profile(isSimple: false)
             ->plugins([
                 FilamentFullCalendarPlugin::make(),
                 TableLayoutTogglePlugin::make()
                     ->setDefaultLayout('grid')
-                    ->persistLayoutInLocalStorage(true) // allow user to keep his layout preference in his local storage
-                    ->shareLayoutBetweenPages(false) // allow all tables to share the layout option (requires persistLayoutInLocalStorage to be true)
-                    ->displayToggleAction() // used to display the toogle button automatically, on the desired filament hook (defaults to table bar)
+                    ->persistLayoutInLocalStorage(true)
+                    ->shareLayoutBetweenPages(false)
+                    ->displayToggleAction()
                     ->listLayoutButtonIcon('heroicon-o-list-bullet')
                     ->gridLayoutButtonIcon('heroicon-o-squares-2x2'),
-				\BezhanSalleh\FilamentShield\FilamentShieldPlugin::make(),
+                \BezhanSalleh\FilamentShield\FilamentShieldPlugin::make(),
                 BreezyCore::make()
-                ->myProfile(
-                    shouldRegisterUserMenu: true, // Sets the 'account' link in the panel User Menu (default = true)
-                    shouldRegisterNavigation: true, // Adds a main navigation item for the My Profile page (default = false)
-                    navigationGroup: 'Settings', // Sets the navigation group for the My Profile page (default = null)
-                    hasAvatars: true, // Enables the avatar upload form component (default = false)
-                    slug: 'my-profile' // Sets the slug for the profile page (default = 'my-profile')
-                )
+                    ->myProfile(
+                        shouldRegisterUserMenu: true,
+                        shouldRegisterNavigation: false, // Set to false since we'll use a custom page
+                        navigationGroup: 'Settings',
+                        hasAvatars: true,
+                        slug: 'my-profile-breezy' // Changed to avoid conflict with custom page
+                    )
                     ->avatarUploadComponent(fn($fileUpload) => $fileUpload->disableLabel())
-                    ->myProfileComponents([CustomPersonalInfo::class])
-
                     ->myProfileComponents([
-                    // 'personal_info' => CustomPersonalInfo::class,
-                   'personal_info' => MyCustomPersonalInfo::class, // replaces UpdatePassword component with your own.
-                    // 'two_factor_authentication' => ,
-                    // 'sanctum_tokens' =>
-                ])
-                ->enableTwoFactorAuthentication(
-                    force: false, // force the user to enable 2FA before they can use the application (default = false)
-                    //action: CustomTwoFactorPage::class // optionally, use a custom 2FA page
-                )
-			])
+                        'personal_info' => MyCustomPersonalInfo::class,
+                    ])
+                    ->enableTwoFactorAuthentication(
+                        force: false,
+                    )
+            ])
             ->colors([
                 'primary' => Color::Orange,
                 'secondary' => Color::Blue,
@@ -90,6 +80,7 @@ class AdministratorPanelProvider extends PanelProvider
             ->discoverPages(in: app_path('Filament/Pages'), for: 'App\\Filament\\Pages')
             ->pages([
                 Dashboard::class,
+                MyProfilePage::class, // Added for React-based My Profile
             ])
             ->discoverClusters(in: app_path('Filament/Clusters'), for: 'App\\Filament\\Clusters')
             ->discoverWidgets(in: app_path('Filament/Widgets'), for: 'App\\Filament\\Widgets')
@@ -112,16 +103,6 @@ class AdministratorPanelProvider extends PanelProvider
             ->authMiddleware([
                 Authenticate::class,
             ])
-            ->tenant(Team::class)
-            /*->tenantMiddleware([
-                ApplyTenantScopes::class,
-            ], isPersistent: true)*/
-            //->tenantRegistration(RegisterTeam::class)
-            //->tenantProfile(EditTeamProfile::class)
-            // ->tenantMenuItems([
-            //     'profile' => MenuItem::make()->label('Edit team profile'),
-            //     // ...
-            // ])
-            ;
+            ->tenant(Team::class);
     }
 }

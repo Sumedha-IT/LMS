@@ -7,11 +7,10 @@ import { BrowserRouter } from 'react-router-dom';
 import { Provider } from 'react-redux';
 import { store } from './store/store';
 
-
 const root = ReactDOM.createRoot(document.getElementById('hello-react'));
 root.render(
   <React.StrictMode>
-    <BrowserRouter>
+    <BrowserRouter basename="/administrator">
       <Provider store={store}>
         <App />
       </Provider>
