@@ -44,7 +44,8 @@ class OnLoginEventListener
         $cookieValue = ([
             'ip_address' => $ipAddress,
             'user_agent' => $userAgent,
-            'token' =>  'Bearer '.$token->plainTextToken
+            'token' =>  'Bearer '.$token->plainTextToken,
+            'token_id'=>$token->plainTextToken
         ]);
 
         // Create a cookie with the combined IP and User-Agent data
