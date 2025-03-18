@@ -2,20 +2,26 @@
 
 namespace App\Providers\Filament;
 
+use App\Filament\Pages\Dashboard;
+use App\Http\Middleware\ApplyTenantScopes;
+use App\Livewire\MyCustomPersonalInfo;
+use Filament\Http\Middleware\Authenticate;
+use Filament\Http\Middleware\DisableBladeIconComponents;
+use Filament\Http\Middleware\DispatchServingFilamentEvent;
 use Filament\Pages;
 use Filament\Panel;
 use App\Models\Team;
 use Filament\Widgets;
 use Filament\PanelProvider;
-use App\Filament\Pages\Dashboard;
+// use App\Filament\Pages\Dashboard;
 use Filament\Navigation\MenuItem;
 use Filament\Support\Colors\Color;
 use App\Livewire\CustomPersonalInfo;
 use Filament\Support\Enums\MaxWidth;
 use App\Filament\Pages\Auth\loginForm;
-use App\Livewire\MyCustomPersonalInfo;
-use App\Http\Middleware\ApplyTenantScopes;
-use Filament\Http\Middleware\Authenticate;
+// use App\Livewire\MyCustomPersonalInfo;
+// use App\Http\Middleware\ApplyTenantScopes;
+// use Filament\Http\Middleware\Authenticate;
 use Jeffgreco13\FilamentBreezy\BreezyCore;
 use Illuminate\Session\Middleware\StartSession;
 use Illuminate\Cookie\Middleware\EncryptCookies;
@@ -24,12 +30,16 @@ use Hydrat\TableLayoutToggle\TableLayoutTogglePlugin;
 use Illuminate\Routing\Middleware\SubstituteBindings;
 use Illuminate\Session\Middleware\AuthenticateSession;
 use Illuminate\View\Middleware\ShareErrorsFromSession;
-use Filament\Http\Middleware\DisableBladeIconComponents;
-use Filament\Http\Middleware\DispatchServingFilamentEvent;
-use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
+// use Filament\Support\Enums\MaxWidth;
+//use App\Filament\Pages\Auth\EditProfile;
+// use App\Filament\Pages\Auth\Tenancy\EditTeamProfile;
+// use App\Livewire\CustomPersonalInfo;
+// use App\Filament\Pages\Tenancy\RegisterTeam;
+// use App\Models\Team;
+// use Filament\Navigation\MenuItem;
+// use Jeffgreco13\FilamentBreezy\BreezyCore;
 use Saade\FilamentFullCalendar\FilamentFullCalendarPlugin;
-use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
-use App\Filament\Pages\MyProfilePage; // Added for React integration
+//use Tapp\FilamentAuthenticationLog\FilamentAuthenticationLogPlugin;
 
 class AdministratorPanelProvider extends PanelProvider
 {
