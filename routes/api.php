@@ -33,6 +33,7 @@ use App\Http\Controllers\api\UserProfileController;
 use App\Http\Controllers\TeachingMaterialController;
 use App\Http\Controllers\api\QuestionOptionController;
 use App\Http\Controllers\QuestionBankChapterController;
+use App\Http\Controllers\api\StudentEducationController;
 use App\Http\Controllers\api\QuestionAttempLogController;
 
 /*
@@ -129,7 +130,18 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
     Route::get('/profile',[UserProfileController::class,'Index']);
     Route::put('/profile',[UserProfileController::class,'Update']);
 
+    //Api for education section 
+    Route::get('get/degrees',[StudentEducationController::class,'GetDegreeTypes']);
+    Route::get('get/specialization/{id}',[StudentEducationController::class,'GetSpecializations']);
 
+    Route::post('education',[StudentEducationController::class,'store']);
+    Route::get('get/education',[StudentEducationController::class,"Get_education"]);
+    Route::put('update/education',[StudentEducationController::class,'Update']);
+    Route::delete('delete/education',[StudentEducationController::class,'delete']);
+
+    //Api for student dashboard 
+        // api for exam chart
+        Route::get('/exam-chart', [ExamController::class, 'getChartData']);
 
     Route::post('/leaves/apply', [LeaveController::class, 'applyLeave']);
     Route::get('/leaves/list',[LeaveController::class,'index']);

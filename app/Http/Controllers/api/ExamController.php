@@ -356,5 +356,35 @@ class ExamController extends Controller
         })->toArray();
         return response()->json(['data' =>  array_merge($attemptedExamUsers, $notAttemptedExamUser)], 200);
     }
+    public function GetExamChart()
+    {
+        $userId = Auth::id();
+        $fiveDaysAgo = Carbon::now()->subDays(5)->startOfDay();
 
+        $exams = Exam::with(['batch.curriculums'])
+            ->whereHas('examAttempts', function ($query) use ($userId) {
+                $query->where('user_id', $userId);
+            })
+            ->whereDate('exam_date', '>=', $fiveDaysAgo) // Fetch only last 5 days' records
+            ->orderBy('exam_date', 'desc')
+            ->get()
+            ->map(function ($exam) use ($userId) {
+                $latestAttempt = $exam->examAttempts()
+                    ->where('user_id', $userId)
+                    ->latest()
+                    ->first();
+
+                return [
+                    'day' => $exam->exam_date ? Carbon::parse($exam->exam_date)->format('l') : 'N/A',
+                    'curriculum' => $exam->batch->curriculums->pluck('name')->implode(', '),
+                    'max_marks' => $exam->total_marks,
+                    'obtained_marks' => $latestAttempt ? (int) $latestAttempt->score : 0,
+                ];
+            });
+
+        return response()->json([
+            'success' => true,
+            'data' => $exams,
+        ]);
+    }
 }
