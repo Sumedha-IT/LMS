@@ -128,7 +128,7 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
 
     //Api for user profile
     Route::get('/profile',[UserProfileController::class,'Index']);
-    Route::put('/profile',[UserProfileController::class,'Update']);
+    Route::post('/profile',[UserProfileController::class,'Update']);
 
     //Api for education section 
     Route::get('get/degrees',[StudentEducationController::class,'GetDegreeTypes']);
@@ -141,7 +141,7 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
 
     //Api for student dashboard 
         // api for exam chart
-        Route::get('/exam-chart', [ExamController::class, 'getChartData']);
+        Route::get('/exam-chart', [ExamController::class, 'GetExamChart']);
 
     Route::post('/leaves/apply', [LeaveController::class, 'applyLeave']);
     Route::get('/leaves/list',[LeaveController::class,'index']);
