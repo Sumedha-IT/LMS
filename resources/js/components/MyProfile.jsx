@@ -25,7 +25,7 @@ const mainMenu = [
       { id: 'additional', label: 'Additional Details', icon: <MdDescription /> },
       { id: 'docs', label: 'Docs', icon: <MdDescription /> },
       { id: 'parent', label: 'Parent Details', icon: <BsPersonLinesFill /> },
-      { id: 'qualification', label: 'Qualification', icon: <MdDescription /> },
+      { id: 'notification', label: 'Notification', icon: <MdDescription /> },
     ],
   },
   { id: 'work', label: 'Work Experience', icon: <MdWork /> },
@@ -36,7 +36,7 @@ const mainMenu = [
   { id: 'social', label: 'Social Links', icon: <MdLink /> },
 ];
 
-
+// Update styles
 const styles = `
   @keyframes slowBlink {
     0% { border-color: #f97316; }
@@ -71,12 +71,15 @@ function getCookie(name) {
 const MyProfile = () => {
   const { user, id } = useParams();
 
-  
+  // Add error and success states
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(null);
   const [loading, setLoading] = useState(false);
   const [activeMenu, setActiveMenu] = useState(null);
   const [activeSubTab, setActiveSubTab] = useState(null);
+  // Add these two state variables at the top level
+  const [degreeTypes, setDegreeTypes] = useState([]);
+  const [specializations, setSpecializations] = useState([]);
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -87,13 +90,9 @@ const MyProfile = () => {
     birthday: '',
     address: '',
     pincode: '',
-    pincode: '',
     city: '',
     qualification: [],
-    qualification: [],
     state_id: '',
-    country_code: '',
-    state: { id: '', name: '' },
     country_code: '',
     state: { id: '', name: '' },
     aadhaar_number: '',
@@ -115,7 +114,8 @@ const MyProfile = () => {
     social_links: { linkedin: '', github: '' }
   });
   const [photoPreview, setPhotoPreview] = useState(null);
- 
+
+  // Update your useEffect to use loading state
   useEffect(() => {
     setLoading(true);
     const userInfo = getCookie("user_info");
@@ -144,16 +144,8 @@ const MyProfile = () => {
         .then((response) => {
           console.log("Profile response:", response.data);
           
-          // Map qualification data to education format if education is not provided
-          const educationData = response.data.user.education || 
-            (response.data.user.qualification ? 
-              response.data.user.qualification.map(qual => ({
-                degree: qual.qualification_name || '',
-                institute: qual.institute_name || '',
-                start_year: '',
-                end_year: qual.year || '',
-                percentage: qual.percentage || ''
-              })) : []);
+          // Use education data directly if available, otherwise map from qualification
+          const educationData = response.data.user.education || [];
           
           setFormData((prev) => ({
             ...prev,
@@ -192,49 +184,6 @@ const MyProfile = () => {
     }
   }, []);
 
-  
-  useEffect(() => {
-    const fetchDegreeTypes = async () => {
-      try {
-        const userInfo = getCookie("user_info");
-        const userData = userInfo ? JSON.parse(userInfo) : null;
-        const response = await axios.get(`${API_URL}/api/GetDegreeTypes`, {
-          headers: {
-            'Accept': 'application/json',
-            'Authorization': userData?.token,
-          },
-        });
-        setDegreeTypes(response.data.data);
-      } catch (error) {
-        console.error('Error fetching degree types:', error);
-        toast.error('Failed to load degree types');
-      }
-    };
-    
-    
-    if (activeMenu === 'education') {
-      fetchDegreeTypes();
-    }
-  }, [activeMenu]);
-
-  // Move this function to the top level
-  const fetchSpecializations = async (degreeTypeId) => {
-    try {
-      const userInfo = getCookie("user_info");
-      const userData = userInfo ? JSON.parse(userInfo) : null;
-      const response = await axios.get(`${API_URL}/api/GetSpecializations/${degreeTypeId}`, {
-        headers: {
-          'Accept': 'application/json',
-          'Authorization': userData?.token,
-        },
-      });
-      setSpecializations(response.data.data);
-    } catch (error) {
-      console.error('Error fetching specializations:', error);
-      toast.error('Failed to load specializations');
-    }
-  };
-
   const toggleMenu = (id) => {
     setActiveMenu(activeMenu === id ? null : id);
     setActiveSubTab(null);
@@ -242,8 +191,6 @@ const MyProfile = () => {
 
   const toggleSubTab = (id) => {
     setActiveSubTab(activeSubTab === id ? null : id);
-    setSuccess(null);
-    setError(null);
     setSuccess(null);
     setError(null);
   };
@@ -283,15 +230,28 @@ const MyProfile = () => {
     setFormData((prev) => ({
       ...prev,
       [key]:
-        key === 'work_experience'
-          ? [...prev[key], { company: '', role: '', start_date: '', end_date: '', description: '' }]
-          : key === 'projects'
-          ? [...prev[key], { name: '', description: '' }]
-          : key === 'certifications'
-          ? [...prev[key], { name: '', issuer: '' }]
-          : key === 'achievements'
-          ? [...prev[key], { title: '', description: '' }]
-          : prev[key],
+        key === 'education'
+          ? [...prev[key], {
+              degree_type_id: '',
+              specialization_id: '',
+              other_specialization: '',
+              percentage_cgpa: '',
+              institute_name: '',
+              location: '',
+              duration_from: '',
+              duration_to: ''
+            }]
+          : key === 'qualification'
+            ? [...prev[key], { qualification_id: '', year: '', institute_name: '', percentage: '' }]
+            : key === 'work_experience'
+            ? [...prev[key], { company: '', role: '', start_date: '', end_date: '', description: '' }]
+            : key === 'projects'
+            ? [...prev[key], { name: '', description: '' }]
+            : key === 'certifications'
+            ? [...prev[key], { name: '', issuer: '' }]
+            : key === 'achievements'
+            ? [...prev[key], { title: '', description: '' }]
+            : prev[key],
     }));
   };
 
@@ -379,7 +339,6 @@ const MyProfile = () => {
           'Accept': 'application/json',
           'Authorization': `Bearer ${userData.token}`, // Added Bearer prefix
           'Content-Type': 'multipart/form-data',
-          'Accept': 'application/json',
         },
         withCredentials: true,
       });
@@ -408,12 +367,6 @@ const MyProfile = () => {
     }
   };
 
-  const renderSubTabContent = () => {
-    if (loading) return <p>Loading...</p>;
-    if (error) return <p className="text-red-500">{error}</p>;
-    if (success) return <p className="text-green-500">{success}</p>;
-
-    switch (activeSubTab) {
   const renderSubTabContent = () => {
     if (loading) return <p>Loading...</p>;
     if (error) return <p className="text-red-500">{error}</p>;
@@ -463,7 +416,6 @@ const MyProfile = () => {
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Gender</label>
-              <select name="gender" value={formData.gender || ''} onChange={handleChange} className="w-full p-2 border rounded">
               <select name="gender" value={formData.gender || ''} onChange={handleChange} className="w-full p-2 border rounded">
                 <option value="">Select Gender</option>
                 <option value="Male">Male</option>
@@ -533,11 +485,9 @@ const MyProfile = () => {
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Address</label>
               <textarea name="address" value={formData.address || ''} onChange={handleChange} className="w-full p-2 border rounded" rows={4} />
-              <textarea name="address" value={formData.address || ''} onChange={handleChange} className="w-full p-2 border rounded" rows={4} />
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">City</label>
-              <input type="text" name="city" value={formData.city || ''} onChange={handleChange} className="w-full p-2 border rounded" />
               <input type="text" name="city" value={formData.city || ''} onChange={handleChange} className="w-full p-2 border rounded" />
             </div>
             <div>
@@ -551,7 +501,6 @@ const MyProfile = () => {
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Pincode</label>
               <input type="text" name="pincode" value={formData.pincode || ''} onChange={handleChange} className="w-full p-2 border rounded" />
-              <input type="text" name="pincode" value={formData.pincode || ''} onChange={handleChange} className="w-full p-2 border rounded" />
             </div>
           </div>
         );
@@ -561,11 +510,9 @@ const MyProfile = () => {
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Aadhaar Number</label>
               <input type="text" name="aadhaar_number" value={formData.aadhaar_number || ''} onChange={handleChange} className="w-full p-2 border rounded" />
-              <input type="text" name="aadhaar_number" value={formData.aadhaar_number || ''} onChange={handleChange} className="w-full p-2 border rounded" />
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">LinkedIn Profile</label>
-              <input type="url" name="linkedin_profile" value={formData.linkedin_profile || ''} onChange={handleChange} className="w-full p-2 border rounded" />
               <input type="url" name="linkedin_profile" value={formData.linkedin_profile || ''} onChange={handleChange} className="w-full p-2 border rounded" />
             </div>
             <div>
@@ -574,16 +521,10 @@ const MyProfile = () => {
               {formData.upload_resume && typeof formData.upload_resume === 'string' && (
                 <a href={formData.upload_resume} target="_blank" rel="noopener noreferrer" className="text-orange-500">View Current Resume</a>
               )}
-              {formData.upload_resume && typeof formData.upload_resume === 'string' && (
-                <a href={formData.upload_resume} target="_blank" rel="noopener noreferrer" className="text-orange-500">View Current Resume</a>
-              )}
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Aadhaar Document</label>
               <input type="file" name="upload_aadhar" onChange={handleFileChange} className="w-full p-2" />
-              {formData.upload_aadhar && typeof formData.upload_aadhar === 'string' && (
-                <a href={formData.upload_aadhar} target="_blank" rel="noopener noreferrer" className="text-orange-500">View Current Aadhaar</a>
-              )}
               {formData.upload_aadhar && typeof formData.upload_aadhar === 'string' && (
                 <a href={formData.upload_aadhar} target="_blank" rel="noopener noreferrer" className="text-orange-500">View Current Aadhaar</a>
               )}
@@ -596,11 +537,9 @@ const MyProfile = () => {
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Parent Name</label>
               <input type="text" name="parent_name" value={formData.parent_name || ''} onChange={handleChange} className="w-full p-2 border rounded" />
-              <input type="text" name="parent_name" value={formData.parent_name || ''} onChange={handleChange} className="w-full p-2 border rounded" />
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Parent Email</label>
-              <input type="email" name="parent_email" value={formData.parent_email || ''} onChange={handleChange} className="w-full p-2 border rounded" />
               <input type="email" name="parent_email" value={formData.parent_email || ''} onChange={handleChange} className="w-full p-2 border rounded" />
             </div>
             <div>
@@ -617,7 +556,6 @@ const MyProfile = () => {
             </div>
           </div>
         );
-      case 'qualification':
       case 'qualification':
         return (
           <div className="grid grid-cols-1 gap-4">
@@ -637,10 +575,6 @@ const MyProfile = () => {
   };
 
   const renderMainTabContent = (menuId) => {
-    if (loading) return <p>Loading...</p>;
-    if (error) return <p className="text-red-500">{error}</p>;
-    if (success) return <p className="text-green-500">{success}</p>;
-
     if (loading) return <p>Loading...</p>;
     if (error) return <p className="text-red-500">{error}</p>;
     if (success) return <p className="text-green-500">{success}</p>;
@@ -669,60 +603,8 @@ const MyProfile = () => {
       case 'work':
         return <div className="grid grid-cols-1 gap-4"><p>No work experience data available in API</p></div>;
       case 'education':
-        return (
-          <div className="grid grid-cols-1 gap-4">
-            <p>Education section temporarily disabled</p>
-          </div>
-        );
-
-        const [degreeTypes, setDegreeTypes] = useState([]);
-        const [specializations, setSpecializations] = useState([]);
-
-        useEffect(() => {
-          const fetchDegreeTypes = async () => {
-            try {
-              const userInfo = getCookie("user_info");
-              const userData = userInfo ? JSON.parse(userInfo) : null;
-              const response = await axios.get(`${API_URL}/api/GetDegreeTypes`, {
-                headers: {
-                  'Accept': 'application/json',
-                  'Authorization': userData?.token,
-                },
-              });
-              setDegreeTypes(response.data.data);
-            } catch (error) {
-              console.error('Error fetching degree types:', error);
-              toast.error('Failed to load degree types');
-            }
-          };
-          
-          // Only fetch degree types when education tab is active
-          if (activeMenu === 'education') {
-            fetchDegreeTypes();
-          }
-        }, [activeMenu]);
-
-        // Add this useState hook with others at the top
-        const [selectedDegreeType, setSelectedDegreeType] = useState(null);
-
-        // Move this function to the top level
-        const fetchSpecializations = async (degreeTypeId) => {
-          try {
-            const userInfo = getCookie("user_info");
-            const userData = userInfo ? JSON.parse(userInfo) : null;
-            const response = await axios.get(`${API_URL}/api/GetSpecializations/${degreeTypeId}`, {
-              headers: {
-                'Accept': 'application/json',
-                'Authorization': userData?.token,
-              },
-            });
-            setSpecializations(response.data.data);
-          } catch (error) {
-            console.error('Error fetching specializations:', error);
-            toast.error('Failed to load specializations');
-          }
-        };
-
+        console.log('Education section rendered, degree types:', degreeTypes);
+        console.log('Education section rendered, specializations:', specializations);
         return (
           <div>
             {formData.education.map((edu, index) => (
@@ -732,8 +614,8 @@ const MyProfile = () => {
                   <select 
                     value={edu.degree_type_id || ''} 
                     onChange={(e) => {
+                      console.log('Selected degree type:', e.target.value);
                       handleItemChange('education', index, 'degree_type_id', e.target.value);
-                      setSelectedDegreeType(e.target.value); // Use the top-level state setter
                       fetchSpecializations(e.target.value);
                     }} 
                     className="w-full p-2 border rounded"
@@ -744,6 +626,8 @@ const MyProfile = () => {
                     ))}
                   </select>
                 </div>
+                
+                {/* Rest of the education form remains unchanged */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Specialization</label>
                   <select 
@@ -825,12 +709,9 @@ const MyProfile = () => {
         );
       case 'projects':
         return <div className="grid grid-cols-1 gap-4"><p>No projects data available in API</p></div>;
-        return <div className="grid grid-cols-1 gap-4"><p>No projects data available in API</p></div>;
       case 'certifications':
         return <div className="grid grid-cols-1 gap-4"><p>No certifications data available in API</p></div>;
-        return <div className="grid grid-cols-1 gap-4"><p>No certifications data available in API</p></div>;
       case 'achievements':
-        return <div className="grid grid-cols-1 gap-4"><p>No achievements data available in API</p></div>;
         return <div className="grid grid-cols-1 gap-4"><p>No achievements data available in API</p></div>;
       case 'social':
         return (
@@ -840,21 +721,7 @@ const MyProfile = () => {
                 <label className="block text-sm font-medium text-gray-700 mb-1">LinkedIn</label>
                 <input type="url" name="linkedin_profile" value={formData.linkedin_profile || ''} onChange={handleChange} className="w-full p-2 border rounded" />
               </div>
-          <form onSubmit={handleSubmit}>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">LinkedIn</label>
-                <input type="url" name="linkedin_profile" value={formData.linkedin_profile || ''} onChange={handleChange} className="w-full p-2 border rounded" />
-              </div>
             </div>
-            <button
-              type="submit"
-              className="mt-4 bg-orange-500 text-white px-4 py-2 rounded hover:bg-orange-600 disabled:bg-gray-400"
-              disabled={loading}
-            >
-              {loading ? 'Saving...' : 'Save Changes'}
-            </button>
-          </form>
             <button
               type="submit"
               className="mt-4 bg-orange-500 text-white px-4 py-2 rounded hover:bg-orange-600 disabled:bg-gray-400"

@@ -23,7 +23,6 @@ class StudentEducationController extends Controller
             'data' => SpeacializationResource::collection($speacializations),
             'has_other' => true
         ]);
-        
     }
     public function store (Request $request){
         $user=$request->user();
@@ -37,24 +36,15 @@ class StudentEducationController extends Controller
             'location'=>'required|string',
             'duration_from'=>'required|date',
             'duration_to'=>'required|date|after:duration_from'
-
         ]);
         $education=$user->studentEducation()->create($request->all(),['user_id'=>$user->id]);
-        // return response()->json(['message' => 'Education record added successfully', 'data' => $education]);
         return new StudentEducationResource($education);
     }
     public function Get_education(Request $request){
         $user=$request->user();
         $education=StudentEducation::where('user_id',$user->id)->get();
         return StudentEducationResource::collection($education);
-        
     }
-<<<<<<< HEAD
-<<<<<<< HEAD
-
-=======
-=======
->>>>>>> be906942473294af95d0ced12a42e73b9c0f2c82
     public function Update(Request $request){
         $user=$request->user();
         $id=$request->input('id');
@@ -71,7 +61,6 @@ class StudentEducationController extends Controller
             'location'=>'required|string',
             'duration_from'=>'required|date',
             'duration_to'=>'required|date|after:duration_from'
-
         ]);
         $education->update($request->all());
         return new StudentEducationResource($education);
@@ -87,8 +76,4 @@ class StudentEducationController extends Controller
         $education->delete();
         return response()->json(['message' => 'Education record deleted successfully']);
     }
-<<<<<<< HEAD
->>>>>>> be906942473294af95d0ced12a42e73b9c0f2c82
-=======
->>>>>>> be906942473294af95d0ced12a42e73b9c0f2c82
 }

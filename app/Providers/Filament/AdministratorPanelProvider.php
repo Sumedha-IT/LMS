@@ -3,7 +3,8 @@
 namespace App\Providers\Filament;
 
 use App\Filament\Pages\Dashboard;
-use App\Filament\Pages\MyProfilePage; // Add this import
+use App\Filament\Pages\MyProfilePage;
+// use App\Filament\Pages\StudentDashboardPage;
 use App\Http\Middleware\ApplyTenantScopes;
 use App\Livewire\MyCustomPersonalInfo;
 use Filament\Http\Middleware\Authenticate;
@@ -23,18 +24,12 @@ use Illuminate\Session\Middleware\AuthenticateSession;
 use Illuminate\Session\Middleware\StartSession;
 use Illuminate\View\Middleware\ShareErrorsFromSession;
 use Filament\Support\Enums\MaxWidth;
-//use App\Filament\Pages\Auth\EditProfile;
-//use App\Filament\Pages\Auth\EditProfile;
 use App\Filament\Pages\Auth\Tenancy\EditTeamProfile;
 use App\Livewire\CustomPersonalInfo;
-// use App\Filament\Pages\Tenancy\RegisterTeam;
-// use App\Filament\Pages\Tenancy\RegisterTeam;
 use App\Models\Team;
 use Filament\Navigation\MenuItem;
 use Jeffgreco13\FilamentBreezy\BreezyCore;
 use Saade\FilamentFullCalendar\FilamentFullCalendarPlugin;
-//use Tapp\FilamentAuthenticationLog\FilamentAuthenticationLogPlugin;
-//use Tapp\FilamentAuthenticationLog\FilamentAuthenticationLogPlugin;
 
 class AdministratorPanelProvider extends PanelProvider
 {
@@ -50,49 +45,32 @@ class AdministratorPanelProvider extends PanelProvider
             ->sidebarCollapsibleOnDesktop()
             ->databaseNotifications()
             ->font('Poppins')
-            //->profile(EditTeamProfile::class)
-            //->profile(isSimple: false)
-            //->profile(EditTeamProfile::class)
-            //->profile(isSimple: false)
             ->plugins([
                 FilamentFullCalendarPlugin::make(),
                 TableLayoutTogglePlugin::make()
                     ->setDefaultLayout('grid')
-                    ->persistLayoutInLocalStorage(true) // allow user to keep his layout preference in his local storage
-                    ->shareLayoutBetweenPages(false) // allow all tables to share the layout option (requires persistLayoutInLocalStorage to be true)
-                    ->displayToggleAction() // used to display the toogle button automatically, on the desired filament hook (defaults to table bar)
-                    ->persistLayoutInLocalStorage(true) // allow user to keep his layout preference in his local storage
-                    ->shareLayoutBetweenPages(false) // allow all tables to share the layout option (requires persistLayoutInLocalStorage to be true)
-                    ->displayToggleAction() // used to display the toogle button automatically, on the desired filament hook (defaults to table bar)
+                    ->persistLayoutInLocalStorage(true)
+                    ->shareLayoutBetweenPages(false)
+                    ->displayToggleAction()
                     ->listLayoutButtonIcon('heroicon-o-list-bullet')
                     ->gridLayoutButtonIcon('heroicon-o-squares-2x2'),
-				\BezhanSalleh\FilamentShield\FilamentShieldPlugin::make(),
-				\BezhanSalleh\FilamentShield\FilamentShieldPlugin::make(),
+                \BezhanSalleh\FilamentShield\FilamentShieldPlugin::make(),
                 BreezyCore::make()
                     ->myProfile(
-                        shouldRegisterUserMenu: true, // Keep this true for user menu
-                        shouldRegisterNavigation: false, // Change this to false to hide from main navigation
+                        shouldRegisterUserMenu: true,
+                        shouldRegisterNavigation: false,
                         navigationGroup: 'Settings',
                         hasAvatars: true,
-                        slug: 'my-profile-breezy' // Changed slug to avoid conflicts
+                        slug: 'my-profile-breezy'
                     )
                     ->avatarUploadComponent(fn($fileUpload) => $fileUpload->disableLabel())
-                    ->myProfileComponents([CustomPersonalInfo::class])
-
                     ->myProfileComponents([
                         'personal_info' => MyCustomPersonalInfo::class,
                     ])
-                    ->myProfileComponents([
-                    // 'personal_info' => CustomPersonalInfo::class,
-                   'personal_info' => MyCustomPersonalInfo::class, // replaces UpdatePassword component with your own.
-                    // 'two_factor_authentication' => ,
-                    // 'sanctum_tokens' =>
-                ])
-                ->enableTwoFactorAuthentication(
-                    force: false, // force the user to enable 2FA before they can use the application (default = false)
-                    //action: CustomTwoFactorPage::class // optionally, use a custom 2FA page
-                )
-			])
+                    ->enableTwoFactorAuthentication(
+                        force: false,
+                    )
+            ])
             ->colors([
                 'primary' => Color::Orange,
                 'secondary' => Color::Blue,
@@ -102,15 +80,12 @@ class AdministratorPanelProvider extends PanelProvider
             ->discoverResources(in: app_path('Filament/Resources'), for: 'App\\Filament\\Resources')
             ->discoverPages(in: app_path('Filament/Pages'), for: 'App\\Filament\\Pages')
             ->pages([
-                Dashboard::class,
-                MyProfilePage::class, // Add the React-based profile page
+                // StudentDashboardPage::class,
+                MyProfilePage::class,
             ])
             ->discoverClusters(in: app_path('Filament/Clusters'), for: 'App\\Filament\\Clusters')
             ->discoverWidgets(in: app_path('Filament/Widgets'), for: 'App\\Filament\\Widgets')
-            ->widgets([
-                //Widgets\AccountWidget::class,
-                //Widgets\FilamentInfoWidget::class,
-            ])
+            ->widgets([])
             ->middleware([
                 EncryptCookies::class,
                 AddQueuedCookiesToResponse::class,
@@ -126,28 +101,6 @@ class AdministratorPanelProvider extends PanelProvider
             ->authMiddleware([
                 Authenticate::class,
             ])
-            ->tenant(Team::class)
-            /*->tenantMiddleware([
-                ApplyTenantScopes::class,
-            ], isPersistent: true)*/
-            //->tenantRegistration(RegisterTeam::class)
-            //->tenantProfile(EditTeamProfile::class)
-            // ->tenantMenuItems([
-            //     'profile' => MenuItem::make()->label('Edit team profile'),
-            //     // ...
-            // ])
-            ;
-            ->tenant(Team::class)
-            /*->tenantMiddleware([
-                ApplyTenantScopes::class,
-            ], isPersistent: true)*/
-            //->tenantRegistration(RegisterTeam::class)
-            //->tenantProfile(EditTeamProfile::class)
-            // ->tenantMenuItems([
-            //     'profile' => MenuItem::make()->label('Edit team profile'),
-            //     // ...
-            // ])
-            ;
+            ->tenant(Team::class);
     }
 }
-

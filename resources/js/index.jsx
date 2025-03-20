@@ -13,7 +13,6 @@ const root = ReactDOM.createRoot(document.getElementById('hello-react'));
 root.render(
   <React.StrictMode>
     <BrowserRouter>
-    <BrowserRouter>
       <Provider store={store}>
         <App />
       </Provider>
