@@ -1,16 +1,18 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import './index.css';
-import App from './App';
+import App from './App.jsx';
 import reportWebVitals from './reportWebVitals';
 import { BrowserRouter } from 'react-router-dom';
 import { Provider } from 'react-redux';
 import { store } from './store/store';
 
+console.log(App); // Add this line to check what is being imported
+
 const root = ReactDOM.createRoot(document.getElementById('hello-react'));
 root.render(
   <React.StrictMode>
-    <BrowserRouter basename="/administrator">
+    <BrowserRouter>
       <Provider store={store}>
         <App />
       </Provider>

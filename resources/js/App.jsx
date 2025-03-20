@@ -8,42 +8,69 @@ import ManageQuestionsComponent from './components/ManageQuestionsComponent';
 import QuestionBankComponent from './components/QuestionBankComponent';
 import PaymentDetails from './components/PaymentDetails.jsx';
 import AdminDashboard from './pages/AdminDashboard';
-import MyProfile from './components/MyProfile';
+// import App from './App.jsx';
+
+
 import UserDashboard from './pages/UserDashboard';
 import PermissionUserExam from './components/PermissionUserExam';
 import UserExamModuel from './components/UserExamModuel';
 import FeedbackPanel from './components/FeedbackPanel';
+
+
 import ReviewPage from './pages/ReviewPage';
 import ResultComponent from './components/exam/ResultComponent';
+// import PlacementCoordinator from './components/placement/PlacementCoordinator.jsx';
+// import PlacementCoordinator from './components/placement/PlacementCoordinator.jsx';
 import JobBoard from './components/jobBoard/JobBoard.jsx';
 import JobProfile from './components/jobBoard/JobProfile.jsx';
 import CreateJob from './components/jobBoard/CreateJob.jsx';
 import ApplyJob from './components/jobBoard/ApplyJob.jsx';
+import MyProfile from './components/MyProfile.jsx';
 
 function App() {
   return (
     <div className="">
       <ToastContainer />
       <Routes>
-        <Route path="/:id/exams/" element={<AdminDashboard />} />
-        <Route path="/:id/exams/ExamForm" element={<ExamScheduling />} />
-        <Route path="/:id/exams/addquestion" element={<QuestionBankComponent />} />
-        <Route path="/:id/exams/addQuestionBank" element={<AddQuestionBank />} />
-        <Route path="/:id/exams/manageQuestions" element={<ManageQuestionsComponent />} />
-        <Route path="/:id/payment-details" element={<PaymentDetails />} />
-        <Route path="/:id/examinations" element={<UserDashboard />} />
+        <Route path="/administrator/:id/exams/" element={<AdminDashboard />} />
+        <Route path="/administrator/:id/exams/ExamForm" element={<ExamScheduling />} />
+        <Route path="/administrator/:id/exams/addquestion" element={<QuestionBankComponent />} />
+        <Route path="/administrator/:id/exams/addQuestionBank" element={<AddQuestionBank />} />
+        <Route path="/administrator/:id/exams/manageQuestions" element={<ManageQuestionsComponent />} />
+        <Route path="/administrator/:id/payment-details" element={<PaymentDetails />} />
+        <Route path="/administrator/:id/examinations" element={<UserDashboard />} />
+        <Route path="/administrator/:id/exams/" element={<AdminDashboard />} />
+        <Route path="/administrator/:id/exams/ExamForm" element={<ExamScheduling />} />
+        <Route path="/administrator/:id/exams/addquestion" element={<QuestionBankComponent />} />
+        <Route path="/administrator/:id/exams/addQuestionBank" element={<AddQuestionBank />} />
+        <Route path="/administrator/:id/exams/manageQuestions" element={<ManageQuestionsComponent />} />
+        <Route path="/administrator/:id/payment-details" element={<PaymentDetails />} />
+        <Route path="/administrator/:id/examinations" element={<UserDashboard />} />
         <Route path="/user/:userId/exam/:examId" element={<PermissionUserExam />} />
         <Route path="/user/:userId/exam/:examId/assessment/:examAttemptId" element={<UserExamModuel />} />
-        <Route path="/:id/examinations/user/:userId/exam/:examId/review" element={<ReviewPage />} />
+        <Route path="/administrator/:id/examinations/user/:userId/exam/:examId/review" element={<ReviewPage />} />
+        <Route path="/administrator/:id/examinations/user/:userId/exam/:examId/review" element={<ReviewPage />} />
         <Route path="/user/:userId/exam/:examId/result" element={<ResultComponent />} />
-        <Route path="/:id/feedback" element={<FeedbackPanel />} />
-        <Route path="/:id/job-boards" element={<JobBoard />} />
-        <Route path="/:id/my-job-profiles" element={<JobProfile />} />
-        <Route path="/:id/my-jobs" element={<ApplyJob />} />
-        <Route path="/:id/recruter-jobs" element={<CreateJob />} />
-        <Route path="/:user/my-profile" element={<MyProfile />} />
-        <Route path="*" element={<div>404 - Page Not Found</div>} /> {/* Catch-all */}
+
+        {/* <Route path='/administrator/:id/placement' element={<PlacementCoordinator />} /> */}
+        <Route path="/administrator/:id/feedback" element={<FeedbackPanel />} />
+
+
+        <Route path='/administrator/:id/job-boards' element={<JobBoard />} />
+        <Route path='/administrator/:id/my-job-profiles' element={<JobProfile />} />
+        <Route path='/administrator/:id/my-jobs' element={<ApplyJob />} />
+
+        {/* recruiter */}
+        <Route path='/administrator/:id/recruter-jobs' element={<CreateJob />} />
+
+        {/* Myprofile */}
+        <Route path="/administrator/:id/my-profile" element={<MyProfile />} />
+        {/* <Route path="/:user/my-profile" element={<MyProfile />} /> */}
+
+
       </Routes>
+
+
     </div>
   );
 }

@@ -33,6 +33,7 @@ use App\Http\Controllers\api\UserProfileController;
 use App\Http\Controllers\TeachingMaterialController;
 use App\Http\Controllers\api\QuestionOptionController;
 use App\Http\Controllers\QuestionBankChapterController;
+use App\Http\Controllers\api\StudentEducationController;
 use App\Http\Controllers\api\QuestionAttempLogController;
 
 /*
@@ -127,7 +128,7 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
 
     //Api for user profile
     Route::get('/profile',[UserProfileController::class,'Index']);
-    Route::put('/profile',[UserProfileController::class,'Update']);
+    Route::post('/profile',[UserProfileController::class,'Update']);
 
 
 

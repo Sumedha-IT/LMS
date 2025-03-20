@@ -18,6 +18,9 @@ export default defineConfig(({ command, mode }) => {
         refresh: true,
       }),
     ],
+    resolve: {
+      extensions: ['.js', '.jsx'], // Add .jsx here
+    },
     define: {
       'import.meta.env.REACT_APP_API_URL': JSON.stringify(env.REACT_APP_API_URL),
     },

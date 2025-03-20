@@ -9,19 +9,20 @@ use Illuminate\Database\Eloquent\Model;
 class Exam extends Model
 {
     use HasFactory;
+    protected $guarded = ['id'];
 
-    protected $fillable = [
-        'title',
-        'instructions',
-        'starts_at',
-        'ends_at',
-        'immediate_result',
-        'max_attempts',
-        'batch_id',
-        'invigilators',
-        'exam_date',
-        'curriculums'
-    ];
+    // protected $fillable = [
+    //     'title',
+    //     'instructions',
+    //     'starts_at',
+    //     'ends_at',
+    //     'immediate_result',
+    //     'max_attempts',
+    //     'batch_id',
+    //     'invigilators',
+    //     'exam_date',
+    //     'curriculums'
+    // ];
 
     protected $casts = [
         'invigilators' => 'array',

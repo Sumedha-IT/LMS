@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\UserResource;
 use App\Http\Resources\UserProfileResource;
+use Illuminate\Support\Facades\Log;
 
 class UserProfileController extends Controller
 {
@@ -50,7 +51,7 @@ class UserProfileController extends Controller
         
     }
     public function Index(Request $request){
-        $user=$request->user();
-        return response()->json(['user'=>new UserProfileResource($user)],200);
+        $user = $request->user();
+        return response()->json(['user' => new UserProfileResource($user)], 200);
     }
 }
