@@ -3,6 +3,7 @@
 namespace App\Providers\Filament;
 
 use App\Filament\Pages\Dashboard;
+use App\Filament\Pages\MyProfilePage; // Add this import
 use App\Http\Middleware\ApplyTenantScopes;
 use App\Livewire\MyCustomPersonalInfo;
 use Filament\Http\Middleware\Authenticate;
@@ -59,16 +60,17 @@ class AdministratorPanelProvider extends PanelProvider
                     ->gridLayoutButtonIcon('heroicon-o-squares-2x2'),
 				\BezhanSalleh\FilamentShield\FilamentShieldPlugin::make(),
                 BreezyCore::make()
-                ->myProfile(
-                    shouldRegisterUserMenu: true, // Sets the 'account' link in the panel User Menu (default = true)
-                    shouldRegisterNavigation: true, // Adds a main navigation item for the My Profile page (default = false)
-                    navigationGroup: 'Settings', // Sets the navigation group for the My Profile page (default = null)
-                    hasAvatars: true, // Enables the avatar upload form component (default = false)
-                    slug: 'my-profile' // Sets the slug for the profile page (default = 'my-profile')
-                )
+                    ->myProfile(
+                        shouldRegisterUserMenu: true, // Keep this true for user menu
+                        shouldRegisterNavigation: false, // Change this to false to hide from main navigation
+                        navigationGroup: 'Settings',
+                        hasAvatars: true,
+                        slug: 'my-profile-breezy' // Changed slug to avoid conflicts
+                    )
                     ->avatarUploadComponent(fn($fileUpload) => $fileUpload->disableLabel())
-                    ->myProfileComponents([CustomPersonalInfo::class])
-
+                    ->myProfileComponents([
+                        'personal_info' => MyCustomPersonalInfo::class,
+                    ])
                     ->myProfileComponents([
                     // 'personal_info' => CustomPersonalInfo::class,
                    'personal_info' => MyCustomPersonalInfo::class, // replaces UpdatePassword component with your own.
@@ -90,6 +92,7 @@ class AdministratorPanelProvider extends PanelProvider
             ->discoverPages(in: app_path('Filament/Pages'), for: 'App\\Filament\\Pages')
             ->pages([
                 Dashboard::class,
+                MyProfilePage::class, // Add the React-based profile page
             ])
             ->discoverClusters(in: app_path('Filament/Clusters'), for: 'App\\Filament\\Clusters')
             ->discoverWidgets(in: app_path('Filament/Widgets'), for: 'App\\Filament\\Widgets')

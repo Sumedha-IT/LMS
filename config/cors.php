@@ -1,12 +1,17 @@
 <?php
 
 return [
-    'paths' => ['api/*','sanctum/csrf-cookie'], // Ensure this covers your API routes
-    'allowed_methods' => ['*'],
-    'allowed_origins' => ['http://localhost:8000'], // Exact origin (adjust to match your frontend)
+    'paths' => ['api/*', 'sanctum/csrf-cookie', 'login', 'logout', '*'],
+    'allowed_methods' => ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+    'allowed_origins' => [
+        'http://localhost:8000',
+        'http://localhost:3000',
+        'http://127.0.0.1:8000',
+        'http://127.0.0.1:3000'
+    ],
     'allowed_origins_patterns' => [],
     'allowed_headers' => ['*'],
-    'exposed_headers' => [],
+    'exposed_headers' => ['*'],
     'max_age' => 0,
-    'supports_credentials' => true, // Must be true for withCredentials
+    'supports_credentials' => true,
 ];

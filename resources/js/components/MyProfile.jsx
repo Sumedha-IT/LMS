@@ -11,8 +11,10 @@ import { BsPersonFill, BsBriefcaseFill, BsBookFill, BsAwardFill } from 'react-ic
 import { MdLocationOn, MdEmail, MdPhone } from 'react-icons/md';
 import { FiExternalLink } from 'react-icons/fi';
 
-const API_URL = 'http://localhost:8000/api';
+// Update API_URL constant
+const API_URL = 'http://localhost:8000';
 
+// Update mainMenu array
 const mainMenu = [
   {
     id: 'personal',
@@ -23,7 +25,7 @@ const mainMenu = [
       { id: 'additional', label: 'Additional Details', icon: <MdDescription /> },
       { id: 'docs', label: 'Docs', icon: <MdDescription /> },
       { id: 'parent', label: 'Parent Details', icon: <BsPersonLinesFill /> },
-      { id: 'qualification', label: 'Qualification', icon: <MdDescription /> },
+      { id: 'notification', label: 'Notification', icon: <MdDescription /> },
     ],
   },
   { id: 'work', label: 'Work Experience', icon: <MdWork /> },
@@ -34,24 +36,17 @@ const mainMenu = [
   { id: 'social', label: 'Social Links', icon: <MdLink /> },
 ];
 
+
 const styles = `
   @keyframes slowBlink {
     0% { border-color: #f97316; }
     50% { border-color: transparent; }
     100% { border-color: #f97316; }
   }
-  @keyframes textBlink {
-    0% { color: #f97316; opacity: 1; }
-    50% { color: #f97316; opacity: 0.4; }
-    100% { color: #f97316; opacity: 1; }
-  }
   .slow-blink {
     animation: slowBlink 2s infinite;
     border-width: 2px;
     border-style: solid;
-  }
-  .text-blink {
-    animation: textBlink 1.5s infinite;
   }
   .active-menu {
     background-color: #f97316;
@@ -59,10 +54,6 @@ const styles = `
   }
   .active-menu .text-orange-500 {
     color: white;
-  }
-  .sub-menu-active {
-    border-color: #f97316;
-    background-color: #fff7ed;
   }
 `;
 
@@ -80,6 +71,10 @@ function getCookie(name) {
 const MyProfile = () => {
   const { user, id } = useParams();
 
+  
+  const [error, setError] = useState(null);
+  const [success, setSuccess] = useState(null);
+  const [loading, setLoading] = useState(false);
   const [activeMenu, setActiveMenu] = useState(null);
   const [activeSubTab, setActiveSubTab] = useState(null);
   const [formData, setFormData] = useState({
@@ -116,22 +111,24 @@ const MyProfile = () => {
     social_links: { linkedin: '', github: '' }
   });
   const [photoPreview, setPhotoPreview] = useState(null);
-
+ 
   useEffect(() => {
+    setLoading(true);
     const userInfo = getCookie("user_info");
     let userData;
-  
+
     try {
       userData = userInfo ? JSON.parse(userInfo) : null;
       console.log("Parsed user data:", userData);
     } catch (error) {
       console.error("Error parsing user info cookie:", error);
+      setLoading(false);
       return;
     }
-  
+
     if (userData && userData.token) {
       const token = userData.token;
-  
+
       axios.get(`${API_URL}/api/profile`, {
         headers: {
           'Accept': 'application/json',
@@ -184,9 +181,55 @@ const MyProfile = () => {
             response: error.response?.data,
             status: error.response?.status
           });
+        })
+        .finally(() => {
+          setLoading(false);
         });
     }
   }, []);
+
+  
+  useEffect(() => {
+    const fetchDegreeTypes = async () => {
+      try {
+        const userInfo = getCookie("user_info");
+        const userData = userInfo ? JSON.parse(userInfo) : null;
+        const response = await axios.get(`${API_URL}/api/GetDegreeTypes`, {
+          headers: {
+            'Accept': 'application/json',
+            'Authorization': userData?.token,
+          },
+        });
+        setDegreeTypes(response.data.data);
+      } catch (error) {
+        console.error('Error fetching degree types:', error);
+        toast.error('Failed to load degree types');
+      }
+    };
+    
+    
+    if (activeMenu === 'education') {
+      fetchDegreeTypes();
+    }
+  }, [activeMenu]);
+
+  // Move this function to the top level
+  const fetchSpecializations = async (degreeTypeId) => {
+    try {
+      const userInfo = getCookie("user_info");
+      const userData = userInfo ? JSON.parse(userInfo) : null;
+      const response = await axios.get(`${API_URL}/api/GetSpecializations/${degreeTypeId}`, {
+        headers: {
+          'Accept': 'application/json',
+          'Authorization': userData?.token,
+        },
+      });
+      setSpecializations(response.data.data);
+    } catch (error) {
+      console.error('Error fetching specializations:', error);
+      toast.error('Failed to load specializations');
+    }
+  };
 
   const toggleMenu = (id) => {
     setActiveMenu(activeMenu === id ? null : id);
@@ -234,12 +277,8 @@ const MyProfile = () => {
     setFormData((prev) => ({
       ...prev,
       [key]:
-        key === 'qualification'
-          ? [...prev[key], { qualification_id: '', year: '', institute_name: '', percentage: '' }]
-          : key === 'work_experience'
+        key === 'work_experience'
           ? [...prev[key], { company: '', role: '', start_date: '', end_date: '', description: '' }]
-          : key === 'education'
-          ? [...prev[key], { degree: '', institute: '', start_year: '', end_year: '', percentage: '' }]
           : key === 'projects'
           ? [...prev[key], { name: '', description: '' }]
           : key === 'certifications'
@@ -251,123 +290,105 @@ const MyProfile = () => {
   };
 
   const handleItemChange = (key, index, field, value) => {
-    const updatedItems = [...formData[key]];
-    updatedItems[index][field] = value;
-    setFormData((prev) => ({ ...prev, [key]: updatedItems }));
+    try {
+      if (!formData[key] || !Array.isArray(formData[key])) {
+        console.error(`Invalid key or array: ${key}`);
+        return;
+      }
+      
+      const updatedItems = [...formData[key]];
+      if (!updatedItems[index]) {
+        console.error(`Invalid index: ${index}`);
+        return;
+      }
+      
+      updatedItems[index][field] = value;
+      setFormData((prev) => ({ ...prev, [key]: updatedItems }));
+    } catch (error) {
+      console.error('Error updating item:', error);
+      toast.error('Failed to update field');
+    }
   };
 
    
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const userInfo = getCookie("user_info");
-    let userData;
-  
+    setLoading(true);
+    
     try {
-      userData = userInfo ? JSON.parse(userInfo) : null;
-      if (!userData || !userData.token) {
+      const userInfo = getCookie("user_info");
+      const userData = userInfo ? JSON.parse(userInfo) : null;
+      
+      if (!userData?.token) {
         toast.error('User authentication required');
         return;
       }
   
-      // Create a complete data object for sending
-      const dataToSend = {
-        name: formData.name,
-        email: formData.email,
-        gender: formData.gender,
-        birthday: formData.birthday,
-        address: formData.address,
-        city: formData.city,
-        state_id: formData.state_id,
-        pincode: formData.pincode,
-        aadhaar_number: formData.aadhaar_number,
-        linkedin_profile: formData.linkedin_profile,
-        parent_name: formData.parent_name,
-        parent_email: formData.parent_email,
-        parent_aadhar: formData.parent_aadhar,
-        parent_occupation: formData.parent_occupation,
-        residential_address: formData.residential_address,
-        receive_email_notification: formData.receive_email_notification,
-        receive_sms_notification: formData.receive_sms_notification,
-        qualification: formData.qualification,
-        work_experience: formData.work_experience,
-        education: formData.education,
-        projects: formData.projects,
-        certifications: formData.certifications,
-        achievements: formData.achievements,
-        social_links: formData.social_links
-      };
-  
-      console.log('Complete data being sent to backend:', dataToSend);
-  
-      // Verify the FormData is structured correctly
+      // Create FormData object
       const formDataToSend = new FormData();
+      
+      // Handle file uploads first with proper error handling
+      const fileFields = ['avatar_url', 'upload_resume', 'upload_aadhar'];
+      fileFields.forEach(field => {
+        if (formData[field] instanceof File) {
+          formDataToSend.append(field, formData[field]);
+        }
+      });
+  
+      // Clean and validate data before sending
       const jsonData = {
-        // Convert empty strings to null for numeric fields
-        state_id: dataToSend.state_id || null,
-        pincode: dataToSend.pincode || null,
-        aadhaar_number: dataToSend.aadhaar_number || null,
-        // Keep other fields as-is
-        ...dataToSend
+        name: formData.name?.trim(),
+        email: formData.email?.trim().toLowerCase(),
+        gender: formData.gender || null,
+        birthday: formData.birthday || null,
+        address: formData.address?.trim() || null,
+        city: formData.city?.trim() || null,
+        state_id: formData.state_id || null,
+        pincode: formData.pincode?.trim() || null,
+        aadhaar_number: formData.aadhaar_number?.trim() || null,
+        linkedin_profile: formData.linkedin_profile?.trim() || null,
+        parent_name: formData.parent_name?.trim() || null,
+        parent_email: formData.parent_email?.trim()?.toLowerCase() || null,
+        parent_aadhar: formData.parent_aadhar?.trim() || null,
+        parent_occupation: formData.parent_occupation?.trim() || null,
+        residential_address: formData.residential_address?.trim() || null,
+        receive_email_notification: Boolean(formData.receive_email_notification),
+        receive_sms_notification: Boolean(formData.receive_sms_notification),
+        qualification: Array.isArray(formData.qualification) ? formData.qualification : [],
+        work_experience: Array.isArray(formData.work_experience) ? formData.work_experience : [],
+        education: Array.isArray(formData.education) ? formData.education : [],
+        projects: Array.isArray(formData.projects) ? formData.projects : [],
+        certifications: Array.isArray(formData.certifications) ? formData.certifications : [],
+        achievements: Array.isArray(formData.achievements) ? formData.achievements : []
       };
+  
+      // Log data before sending
+      console.log('Sending data:', { jsonData, files: Object.fromEntries(formDataToSend.entries()) });
   
       formDataToSend.append('data', JSON.stringify(jsonData));
-      // File append calls should use same field names backend expects
-      if (formData.avatar_url instanceof File) {
-        formDataToSend.append('avatar_url', formData.avatar_url); // Must match backend's hasFile('avatar_url')
-      }
-      if (formData.upload_resume instanceof File) {
-        formDataToSend.append('upload_resume', formData.upload_resume);
-      }
-      if (formData.upload_aadhar instanceof File) {
-        formDataToSend.append('upload_aadhar', formData.upload_aadhar);
-      }
   
-      // Before sending request
-      console.log('FormData entries:');
-      for (let [key, value] of formDataToSend.entries()) {
-        console.log(key, value);
-      }
       const response = await axios.post(`${API_URL}/api/profile`, formDataToSend, {
         headers: {
-          Accept: 'application/json',
-          Authorization: userData.token,
-          'Content-Type': 'multipart/form-data',
           'Accept': 'application/json',
+          'Authorization': `Bearer ${userData.token}`, // Added Bearer prefix
+          'Content-Type': 'multipart/form-data',
         },
         withCredentials: true,
       });
   
-      console.log('Backend response:', response.data);
-  
-      if (response.data.message === 'Profile Updated SuccessFully') {
-        // Verify the data was actually updated
-        const verifyResponse = await axios.get(`${API_URL}/api/profile`, {
-          headers: {
-            'Accept': 'application/json',
-            'Authorization': userData.token,
-          },
-          withCredentials: true,
-        });
-  
-        console.log('Verification response:', verifyResponse.data);
-  
-        if (verifyResponse.data.user.name !== dataToSend.name) {
-          console.error('Data mismatch after save:', {
-            sent: dataToSend.name,
-            received: verifyResponse.data.user.name
-          });
-          toast.warning('Data may not have been saved correctly');
-        } else {
-          toast.success('Profile updated successfully!');
+      if (response.data.success) {
+        toast.success('Profile updated successfully!');
+        if (response.data.user) {
+          setFormData(prev => ({
+            ...prev,
+            ...response.data.user
+          }));
         }
-  
-        // Update local state with verified data
-        setFormData(prev => ({
-          ...prev,
-          ...verifyResponse.data.user
-        }));
+      } else {
+        throw new Error(response.data.message || 'Update failed');
       }
+  
     } catch (error) {
       console.error('Profile update error:', {
         message: error.message,
@@ -375,6 +396,8 @@ const MyProfile = () => {
         status: error.response?.status
       });
       toast.error(error.response?.data?.message || 'Failed to update profile');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -427,7 +450,6 @@ const MyProfile = () => {
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Gender</label>
-              <select name="gender" value={formData.gender || ''} onChange={handleChange} className="w-full p-2 border rounded">
               <select name="gender" value={formData.gender || ''} onChange={handleChange} className="w-full p-2 border rounded">
                 <option value="">Select Gender</option>
                 <option value="Male">Male</option>
@@ -497,11 +519,9 @@ const MyProfile = () => {
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Address</label>
               <textarea name="address" value={formData.address || ''} onChange={handleChange} className="w-full p-2 border rounded" rows={4} />
-              <textarea name="address" value={formData.address || ''} onChange={handleChange} className="w-full p-2 border rounded" rows={4} />
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">City</label>
-              <input type="text" name="city" value={formData.city || ''} onChange={handleChange} className="w-full p-2 border rounded" />
               <input type="text" name="city" value={formData.city || ''} onChange={handleChange} className="w-full p-2 border rounded" />
             </div>
             <div>
@@ -515,7 +535,6 @@ const MyProfile = () => {
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Pincode</label>
               <input type="text" name="pincode" value={formData.pincode || ''} onChange={handleChange} className="w-full p-2 border rounded" />
-              <input type="text" name="pincode" value={formData.pincode || ''} onChange={handleChange} className="w-full p-2 border rounded" />
             </div>
           </div>
         );
@@ -525,11 +544,9 @@ const MyProfile = () => {
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Aadhaar Number</label>
               <input type="text" name="aadhaar_number" value={formData.aadhaar_number || ''} onChange={handleChange} className="w-full p-2 border rounded" />
-              <input type="text" name="aadhaar_number" value={formData.aadhaar_number || ''} onChange={handleChange} className="w-full p-2 border rounded" />
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">LinkedIn Profile</label>
-              <input type="url" name="linkedin_profile" value={formData.linkedin_profile || ''} onChange={handleChange} className="w-full p-2 border rounded" />
               <input type="url" name="linkedin_profile" value={formData.linkedin_profile || ''} onChange={handleChange} className="w-full p-2 border rounded" />
             </div>
             <div>
@@ -554,11 +571,9 @@ const MyProfile = () => {
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Parent Name</label>
               <input type="text" name="parent_name" value={formData.parent_name || ''} onChange={handleChange} className="w-full p-2 border rounded" />
-              <input type="text" name="parent_name" value={formData.parent_name || ''} onChange={handleChange} className="w-full p-2 border rounded" />
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Parent Email</label>
-              <input type="email" name="parent_email" value={formData.parent_email || ''} onChange={handleChange} className="w-full p-2 border rounded" />
               <input type="email" name="parent_email" value={formData.parent_email || ''} onChange={handleChange} className="w-full p-2 border rounded" />
             </div>
             <div>
@@ -623,28 +638,150 @@ const MyProfile = () => {
         return <div className="grid grid-cols-1 gap-4"><p>No work experience data available in API</p></div>;
       case 'education':
         return (
+          <div className="grid grid-cols-1 gap-4">
+            <p>Education section temporarily disabled</p>
+          </div>
+        );
+
+        const [degreeTypes, setDegreeTypes] = useState([]);
+        const [specializations, setSpecializations] = useState([]);
+
+        useEffect(() => {
+          const fetchDegreeTypes = async () => {
+            try {
+              const userInfo = getCookie("user_info");
+              const userData = userInfo ? JSON.parse(userInfo) : null;
+              const response = await axios.get(`${API_URL}/api/GetDegreeTypes`, {
+                headers: {
+                  'Accept': 'application/json',
+                  'Authorization': userData?.token,
+                },
+              });
+              setDegreeTypes(response.data.data);
+            } catch (error) {
+              console.error('Error fetching degree types:', error);
+              toast.error('Failed to load degree types');
+            }
+          };
+          
+          // Only fetch degree types when education tab is active
+          if (activeMenu === 'education') {
+            fetchDegreeTypes();
+          }
+        }, [activeMenu]);
+
+        // Add this useState hook with others at the top
+        const [selectedDegreeType, setSelectedDegreeType] = useState(null);
+
+        // Move this function to the top level
+        const fetchSpecializations = async (degreeTypeId) => {
+          try {
+            const userInfo = getCookie("user_info");
+            const userData = userInfo ? JSON.parse(userInfo) : null;
+            const response = await axios.get(`${API_URL}/api/GetSpecializations/${degreeTypeId}`, {
+              headers: {
+                'Accept': 'application/json',
+                'Authorization': userData?.token,
+              },
+            });
+            setSpecializations(response.data.data);
+          } catch (error) {
+            console.error('Error fetching specializations:', error);
+            toast.error('Failed to load specializations');
+          }
+        };
+
+        return (
           <div>
             {formData.education.map((edu, index) => (
               <div key={index} className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Degree/Qualification</label>
-                  <input type="text" value={edu.degree || ''} onChange={(e) => handleItemChange('education', index, 'degree', e.target.value)} className="w-full p-2 border rounded" />
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Degree Type</label>
+                  <select 
+                    value={edu.degree_type_id || ''} 
+                    onChange={(e) => {
+                      handleItemChange('education', index, 'degree_type_id', e.target.value);
+                      setSelectedDegreeType(e.target.value); // Use the top-level state setter
+                      fetchSpecializations(e.target.value);
+                    }} 
+                    className="w-full p-2 border rounded"
+                  >
+                    <option value="">Select Degree Type</option>
+                    {degreeTypes.map(type => (
+                      <option key={type.id} value={type.id}>{type.name}</option>
+                    ))}
+                  </select>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Institute</label>
-                  <input type="text" value={edu.institute || ''} onChange={(e) => handleItemChange('education', index, 'institute', e.target.value)} className="w-full p-2 border rounded" />
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Specialization</label>
+                  <select 
+                    value={edu.specialization_id || ''} 
+                    onChange={(e) => handleItemChange('education', index, 'specialization_id', e.target.value)} 
+                    className="w-full p-2 border rounded"
+                    disabled={!edu.degree_type_id}
+                  >
+                    <option value="">Select Specialization</option>
+                    {specializations.map(spec => (
+                      <option key={spec.id} value={spec.id}>{spec.name}</option>
+                    ))}
+                  </select>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Start Year</label>
-                  <input type="text" value={edu.start_year || ''} onChange={(e) => handleItemChange('education', index, 'start_year', e.target.value)} className="w-full p-2 border rounded" />
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Other Specialization</label>
+                  <input 
+                    type="text" 
+                    value={edu.other_specialization || ''} 
+                    onChange={(e) => handleItemChange('education', index, 'other_specialization', e.target.value)} 
+                    className="w-full p-2 border rounded" 
+                  />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">End Year/Year of Completion</label>
-                  <input type="text" value={edu.end_year || ''} onChange={(e) => handleItemChange('education', index, 'end_year', e.target.value)} className="w-full p-2 border rounded" />
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Institute Name</label>
+                  <input 
+                    type="text" 
+                    value={edu.institute_name || ''} 
+                    onChange={(e) => handleItemChange('education', index, 'institute_name', e.target.value)} 
+                    className="w-full p-2 border rounded" 
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Location</label>
+                  <input 
+                    type="text" 
+                    value={edu.location || ''} 
+                    onChange={(e) => handleItemChange('education', index, 'location', e.target.value)} 
+                    className="w-full p-2 border rounded" 
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Duration From</label>
+                  <input 
+                    type="date" 
+                    value={edu.duration_from || ''} 
+                    onChange={(e) => handleItemChange('education', index, 'duration_from', e.target.value)} 
+                    className="w-full p-2 border rounded" 
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Duration To</label>
+                  <input 
+                    type="date" 
+                    value={edu.duration_to || ''} 
+                    onChange={(e) => handleItemChange('education', index, 'duration_to', e.target.value)} 
+                    className="w-full p-2 border rounded" 
+                  />
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Percentage/CGPA</label>
-                  <input type="text" value={edu.percentage || ''} onChange={(e) => handleItemChange('education', index, 'percentage', e.target.value)} className="w-full p-2 border rounded" />
+                  <input 
+                    type="number" 
+                    step="0.01" 
+                    min="0" 
+                    max="100" 
+                    value={edu.percentage_cgpa || ''} 
+                    onChange={(e) => handleItemChange('education', index, 'percentage_cgpa', e.target.value)} 
+                    className="w-full p-2 border rounded" 
+                  />
                 </div>
               </div>
             ))}
