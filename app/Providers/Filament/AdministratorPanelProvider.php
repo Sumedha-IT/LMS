@@ -24,13 +24,16 @@ use Illuminate\Session\Middleware\StartSession;
 use Illuminate\View\Middleware\ShareErrorsFromSession;
 use Filament\Support\Enums\MaxWidth;
 //use App\Filament\Pages\Auth\EditProfile;
+//use App\Filament\Pages\Auth\EditProfile;
 use App\Filament\Pages\Auth\Tenancy\EditTeamProfile;
 use App\Livewire\CustomPersonalInfo;
+// use App\Filament\Pages\Tenancy\RegisterTeam;
 // use App\Filament\Pages\Tenancy\RegisterTeam;
 use App\Models\Team;
 use Filament\Navigation\MenuItem;
 use Jeffgreco13\FilamentBreezy\BreezyCore;
 use Saade\FilamentFullCalendar\FilamentFullCalendarPlugin;
+//use Tapp\FilamentAuthenticationLog\FilamentAuthenticationLogPlugin;
 //use Tapp\FilamentAuthenticationLog\FilamentAuthenticationLogPlugin;
 
 class AdministratorPanelProvider extends PanelProvider
@@ -49,6 +52,8 @@ class AdministratorPanelProvider extends PanelProvider
             ->font('Poppins')
             //->profile(EditTeamProfile::class)
             //->profile(isSimple: false)
+            //->profile(EditTeamProfile::class)
+            //->profile(isSimple: false)
             ->plugins([
                 FilamentFullCalendarPlugin::make(),
                 TableLayoutTogglePlugin::make()
@@ -56,8 +61,12 @@ class AdministratorPanelProvider extends PanelProvider
                     ->persistLayoutInLocalStorage(true) // allow user to keep his layout preference in his local storage
                     ->shareLayoutBetweenPages(false) // allow all tables to share the layout option (requires persistLayoutInLocalStorage to be true)
                     ->displayToggleAction() // used to display the toogle button automatically, on the desired filament hook (defaults to table bar)
+                    ->persistLayoutInLocalStorage(true) // allow user to keep his layout preference in his local storage
+                    ->shareLayoutBetweenPages(false) // allow all tables to share the layout option (requires persistLayoutInLocalStorage to be true)
+                    ->displayToggleAction() // used to display the toogle button automatically, on the desired filament hook (defaults to table bar)
                     ->listLayoutButtonIcon('heroicon-o-list-bullet')
                     ->gridLayoutButtonIcon('heroicon-o-squares-2x2'),
+				\BezhanSalleh\FilamentShield\FilamentShieldPlugin::make(),
 				\BezhanSalleh\FilamentShield\FilamentShieldPlugin::make(),
                 BreezyCore::make()
                     ->myProfile(
@@ -68,6 +77,8 @@ class AdministratorPanelProvider extends PanelProvider
                         slug: 'my-profile-breezy' // Changed slug to avoid conflicts
                     )
                     ->avatarUploadComponent(fn($fileUpload) => $fileUpload->disableLabel())
+                    ->myProfileComponents([CustomPersonalInfo::class])
+
                     ->myProfileComponents([
                         'personal_info' => MyCustomPersonalInfo::class,
                     ])
@@ -126,5 +137,17 @@ class AdministratorPanelProvider extends PanelProvider
             //     // ...
             // ])
             ;
+            ->tenant(Team::class)
+            /*->tenantMiddleware([
+                ApplyTenantScopes::class,
+            ], isPersistent: true)*/
+            //->tenantRegistration(RegisterTeam::class)
+            //->tenantProfile(EditTeamProfile::class)
+            // ->tenantMenuItems([
+            //     'profile' => MenuItem::make()->label('Edit team profile'),
+            //     // ...
+            // ])
+            ;
     }
 }
+

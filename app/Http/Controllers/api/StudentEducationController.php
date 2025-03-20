@@ -50,8 +50,11 @@ class StudentEducationController extends Controller
         
     }
 <<<<<<< HEAD
+<<<<<<< HEAD
 
 =======
+=======
+>>>>>>> be906942473294af95d0ced12a42e73b9c0f2c82
     public function Update(Request $request){
         $user=$request->user();
         $id=$request->input('id');
@@ -84,5 +87,8 @@ class StudentEducationController extends Controller
         $education->delete();
         return response()->json(['message' => 'Education record deleted successfully']);
     }
+<<<<<<< HEAD
+>>>>>>> be906942473294af95d0ced12a42e73b9c0f2c82
+=======
 >>>>>>> be906942473294af95d0ced12a42e73b9c0f2c82
 }

@@ -25,7 +25,7 @@ const mainMenu = [
       { id: 'additional', label: 'Additional Details', icon: <MdDescription /> },
       { id: 'docs', label: 'Docs', icon: <MdDescription /> },
       { id: 'parent', label: 'Parent Details', icon: <BsPersonLinesFill /> },
-      { id: 'notification', label: 'Notification', icon: <MdDescription /> },
+      { id: 'qualification', label: 'Qualification', icon: <MdDescription /> },
     ],
   },
   { id: 'work', label: 'Work Experience', icon: <MdWork /> },
@@ -87,9 +87,13 @@ const MyProfile = () => {
     birthday: '',
     address: '',
     pincode: '',
+    pincode: '',
     city: '',
     qualification: [],
+    qualification: [],
     state_id: '',
+    country_code: '',
+    state: { id: '', name: '' },
     country_code: '',
     state: { id: '', name: '' },
     aadhaar_number: '',
@@ -240,6 +244,8 @@ const MyProfile = () => {
     setActiveSubTab(activeSubTab === id ? null : id);
     setSuccess(null);
     setError(null);
+    setSuccess(null);
+    setError(null);
   };
 
   const handleChange = (e) => {
@@ -373,6 +379,7 @@ const MyProfile = () => {
           'Accept': 'application/json',
           'Authorization': `Bearer ${userData.token}`, // Added Bearer prefix
           'Content-Type': 'multipart/form-data',
+          'Accept': 'application/json',
         },
         withCredentials: true,
       });
@@ -401,6 +408,12 @@ const MyProfile = () => {
     }
   };
 
+  const renderSubTabContent = () => {
+    if (loading) return <p>Loading...</p>;
+    if (error) return <p className="text-red-500">{error}</p>;
+    if (success) return <p className="text-green-500">{success}</p>;
+
+    switch (activeSubTab) {
   const renderSubTabContent = () => {
     if (loading) return <p>Loading...</p>;
     if (error) return <p className="text-red-500">{error}</p>;
@@ -450,6 +463,7 @@ const MyProfile = () => {
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Gender</label>
+              <select name="gender" value={formData.gender || ''} onChange={handleChange} className="w-full p-2 border rounded">
               <select name="gender" value={formData.gender || ''} onChange={handleChange} className="w-full p-2 border rounded">
                 <option value="">Select Gender</option>
                 <option value="Male">Male</option>
@@ -519,9 +533,11 @@ const MyProfile = () => {
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Address</label>
               <textarea name="address" value={formData.address || ''} onChange={handleChange} className="w-full p-2 border rounded" rows={4} />
+              <textarea name="address" value={formData.address || ''} onChange={handleChange} className="w-full p-2 border rounded" rows={4} />
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">City</label>
+              <input type="text" name="city" value={formData.city || ''} onChange={handleChange} className="w-full p-2 border rounded" />
               <input type="text" name="city" value={formData.city || ''} onChange={handleChange} className="w-full p-2 border rounded" />
             </div>
             <div>
@@ -535,6 +551,7 @@ const MyProfile = () => {
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Pincode</label>
               <input type="text" name="pincode" value={formData.pincode || ''} onChange={handleChange} className="w-full p-2 border rounded" />
+              <input type="text" name="pincode" value={formData.pincode || ''} onChange={handleChange} className="w-full p-2 border rounded" />
             </div>
           </div>
         );
@@ -544,9 +561,11 @@ const MyProfile = () => {
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Aadhaar Number</label>
               <input type="text" name="aadhaar_number" value={formData.aadhaar_number || ''} onChange={handleChange} className="w-full p-2 border rounded" />
+              <input type="text" name="aadhaar_number" value={formData.aadhaar_number || ''} onChange={handleChange} className="w-full p-2 border rounded" />
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">LinkedIn Profile</label>
+              <input type="url" name="linkedin_profile" value={formData.linkedin_profile || ''} onChange={handleChange} className="w-full p-2 border rounded" />
               <input type="url" name="linkedin_profile" value={formData.linkedin_profile || ''} onChange={handleChange} className="w-full p-2 border rounded" />
             </div>
             <div>
@@ -555,10 +574,16 @@ const MyProfile = () => {
               {formData.upload_resume && typeof formData.upload_resume === 'string' && (
                 <a href={formData.upload_resume} target="_blank" rel="noopener noreferrer" className="text-orange-500">View Current Resume</a>
               )}
+              {formData.upload_resume && typeof formData.upload_resume === 'string' && (
+                <a href={formData.upload_resume} target="_blank" rel="noopener noreferrer" className="text-orange-500">View Current Resume</a>
+              )}
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Aadhaar Document</label>
               <input type="file" name="upload_aadhar" onChange={handleFileChange} className="w-full p-2" />
+              {formData.upload_aadhar && typeof formData.upload_aadhar === 'string' && (
+                <a href={formData.upload_aadhar} target="_blank" rel="noopener noreferrer" className="text-orange-500">View Current Aadhaar</a>
+              )}
               {formData.upload_aadhar && typeof formData.upload_aadhar === 'string' && (
                 <a href={formData.upload_aadhar} target="_blank" rel="noopener noreferrer" className="text-orange-500">View Current Aadhaar</a>
               )}
@@ -571,9 +596,11 @@ const MyProfile = () => {
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Parent Name</label>
               <input type="text" name="parent_name" value={formData.parent_name || ''} onChange={handleChange} className="w-full p-2 border rounded" />
+              <input type="text" name="parent_name" value={formData.parent_name || ''} onChange={handleChange} className="w-full p-2 border rounded" />
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Parent Email</label>
+              <input type="email" name="parent_email" value={formData.parent_email || ''} onChange={handleChange} className="w-full p-2 border rounded" />
               <input type="email" name="parent_email" value={formData.parent_email || ''} onChange={handleChange} className="w-full p-2 border rounded" />
             </div>
             <div>
@@ -590,6 +617,7 @@ const MyProfile = () => {
             </div>
           </div>
         );
+      case 'qualification':
       case 'qualification':
         return (
           <div className="grid grid-cols-1 gap-4">
@@ -609,6 +637,10 @@ const MyProfile = () => {
   };
 
   const renderMainTabContent = (menuId) => {
+    if (loading) return <p>Loading...</p>;
+    if (error) return <p className="text-red-500">{error}</p>;
+    if (success) return <p className="text-green-500">{success}</p>;
+
     if (loading) return <p>Loading...</p>;
     if (error) return <p className="text-red-500">{error}</p>;
     if (success) return <p className="text-green-500">{success}</p>;
@@ -793,9 +825,12 @@ const MyProfile = () => {
         );
       case 'projects':
         return <div className="grid grid-cols-1 gap-4"><p>No projects data available in API</p></div>;
+        return <div className="grid grid-cols-1 gap-4"><p>No projects data available in API</p></div>;
       case 'certifications':
         return <div className="grid grid-cols-1 gap-4"><p>No certifications data available in API</p></div>;
+        return <div className="grid grid-cols-1 gap-4"><p>No certifications data available in API</p></div>;
       case 'achievements':
+        return <div className="grid grid-cols-1 gap-4"><p>No achievements data available in API</p></div>;
         return <div className="grid grid-cols-1 gap-4"><p>No achievements data available in API</p></div>;
       case 'social':
         return (
@@ -805,7 +840,21 @@ const MyProfile = () => {
                 <label className="block text-sm font-medium text-gray-700 mb-1">LinkedIn</label>
                 <input type="url" name="linkedin_profile" value={formData.linkedin_profile || ''} onChange={handleChange} className="w-full p-2 border rounded" />
               </div>
+          <form onSubmit={handleSubmit}>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">LinkedIn</label>
+                <input type="url" name="linkedin_profile" value={formData.linkedin_profile || ''} onChange={handleChange} className="w-full p-2 border rounded" />
+              </div>
             </div>
+            <button
+              type="submit"
+              className="mt-4 bg-orange-500 text-white px-4 py-2 rounded hover:bg-orange-600 disabled:bg-gray-400"
+              disabled={loading}
+            >
+              {loading ? 'Saving...' : 'Save Changes'}
+            </button>
+          </form>
             <button
               type="submit"
               className="mt-4 bg-orange-500 text-white px-4 py-2 rounded hover:bg-orange-600 disabled:bg-gray-400"
