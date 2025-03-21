@@ -26,6 +26,7 @@ import JobProfile from './components/jobBoard/JobProfile.jsx';
 import CreateJob from './components/jobBoard/CreateJob.jsx';
 import ApplyJob from './components/jobBoard/ApplyJob.jsx';
 import MyProfile from './components/MyProfile.jsx';
+import NewDashBoard from './pages/NewDashBoard.jsx';
 
 function App() {
   return (
@@ -67,7 +68,8 @@ function App() {
         <Route path="/administrator/:id/my-profile" element={<MyProfile />} />
         {/* <Route path="/:user/my-profile" element={<MyProfile />} /> */}
 
-
+{/* Custome Dashboard */}
+        <Route path="/administrator/:id/Student-Dashboard-Page" element={<NewDashBoard />} />
       </Routes>
 
 
