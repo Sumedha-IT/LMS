@@ -2,12 +2,13 @@
 
 namespace App\Models;
 
+use App\Models\Topic;
 use Filament\Facades\Filament;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\MorphToMany;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 class Curriculum extends Model
 {
@@ -28,7 +29,12 @@ class Curriculum extends Model
 
         return $this->belongsToMany(Batch::class, 'batch_curriculum',
             'curriculum_id', 'batch_id')
-            ->wherePivot('branch_id', $tenant->id);
+            ->wherePivot('branch_id', $tenant->id)
+            ->withPivot('tutor_id', 'topic_id', 'is_topic_completed');
+    }
+    public function topics()
+    {
+        return $this->hasMany(Topic::class);
     }
 
     /** @return MorphToMany<Course> */

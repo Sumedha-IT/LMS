@@ -2,11 +2,12 @@
 
 namespace App\Models;
 
+use App\Models\Topic;
 use Filament\Facades\Filament;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Model;
 use App\Models\BatchTeachingMaterial;
 use App\Models\TeachingMaterialStatus;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 class TeachingMaterial extends Model
 {
@@ -53,5 +54,10 @@ class TeachingMaterial extends Model
     public function teachingMaterialStatuses()
     {
         return $this->hasMany(TeachingMaterialStatus::class);
+    }
+
+    public function topic()
+    {
+        return $this->belongsTo(Topic::class);
     }
 }

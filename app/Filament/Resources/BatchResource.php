@@ -25,8 +25,7 @@ use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 
-class BatchResource extends Resource
-    implements HasShieldPermissions
+class BatchResource extends Resource implements HasShieldPermissions
 {
     protected static ?string $model = Batch::class;
 
@@ -40,18 +39,18 @@ class BatchResource extends Resource
         return auth()->user()->is_student ? false : true;
     }
 
-   public static function getPermissionPrefixes(): array
-   {
-       return [
-           'view',
-           'view_any',
-           'create',
-           'update',
-           'delete',
-           'delete_any',
-           'publish'
-       ];
-   }
+    public static function getPermissionPrefixes(): array
+    {
+        return [
+            'view',
+            'view_any',
+            'create',
+            'update',
+            'delete',
+            'delete_any',
+            'publish'
+        ];
+    }
 
     public static function form(Form $form): Form
     {
@@ -72,12 +71,6 @@ class BatchResource extends Resource
                                             ->reactive(),
                                         Forms\Components\Select::make('course_package_id')
                                             ->relationship('course_package', 'name')
-                                            /*->options(function (callable $get) {
-                                                $branch = Branch::with('courses')->find($get('branch_id'));
-                                                if ($branch) {
-                                                    return $branch->courses->pluck('name', 'id');
-                                                }
-                                            })*/
                                             ->searchable()
                                             ->preload()
                                             ->required(),
@@ -86,45 +79,91 @@ class BatchResource extends Resource
                                             ->required()
                                             ->maxLength(255),
 
-
                                         TableRepeater::make('curriculums')
                                             ->relationship()
                                             ->headers([
-                                                Header::make('curriculum_id')->label('Subject'),
-                                                Header::make('user_id')->label('Tutor'),
+                                                Header::make('curriculum_id')->label('Subject')->width('20%'),
+                                                Header::make('tutor_id')->label('Tutor')->width('20%'),
+                                                Header::make('topics')->label('Topics')->width('60%'),
                                             ])
                                             ->schema([
                                                 Select::make('curriculum_id')
                                                     ->options(\App\Models\Curriculum::all()->pluck('name', 'id'))
-                                                    //->relationship('curriculums', 'name')
                                                     ->label('Subject')
                                                     ->required()
-                                                    ->disableOptionsWhenSelectedInSiblingRepeaterItems(),
+                                                    ->disableOptionsWhenSelectedInSiblingRepeaterItems()
+                                                    ->columnSpan(1),
                                                 Select::make('tutor_id')
                                                     ->options(\App\Models\User::where('role_id', 7)->pluck('name', 'id'))
                                                     ->required()
-                                                    ->label('Branch'),
+                                                    ->label('Tutor')
+                                                    ->columnSpan(1),
+                                                Forms\Components\Repeater::make('topics')
+                                                    ->relationship()
+                                                    ->schema([
+                                                        Forms\Components\Grid::make(1)
+                                                            ->schema([
+                                                                Select::make('topic_id')
+                                                                    ->options(function (callable $get) {
+                                                                        $curriculumId = $get('../../curriculum_id');
+                                                                        if ($curriculumId) {
+                                                                            return \App\Models\Topic::where('curriculum_id', $curriculumId)
+                                                                                ->pluck('name', 'id');
+                                                                        }
+                                                                        return [];
+                                                                    })
+                                                                    ->label('Topic')
+                                                                    ->required()
+                                                                    ->disableOptionsWhenSelectedInSiblingRepeaterItems()
+                                                                    ->extraAttributes(['class' => 'mb-4']),
+                                                                Forms\Components\Grid::make(2)
+                                                                    ->schema([
+                                                                        Forms\Components\Toggle::make('is_topic_completed')
+                                                                            ->label('Completed')
+                                                                            ->default(false)
+                                                                            ->live()
+                                                                            ->afterStateUpdated(function ($state, callable $set) {
+                                                                                if ($state) {
+                                                                                    $set('completed_at', now()->toDateTimeString());
+                                                                                } else {
+                                                                                    $set('completed_at', null);
+                                                                                }
+                                                                            })
+                                                                            ->extraAttributes(['class' => 'mt-2']),
+                                                                        Forms\Components\DatePicker::make('completed_at')
+                                                                            ->label('Completed At')
+                                                                            ->displayFormat('d/m/Y H:i')
+                                                                            ->disabled()
+                                                                            ->dehydrated(false)
+                                                                            ->extraAttributes(['class' => 'mt-2']),
+                                                                    ]),
+                                                            ]),
+                                                    ])
+                                                    ->columns(1)
+                                                    ->defaultItems(1)
+                                                    ->addActionLabel('Add to topics')
+                                                    ->itemLabel(fn (array $state): ?string => $state['topic_id'] ? \App\Models\Topic::find($state['topic_id'])?->name : null)
+                                                    ->collapsible()
+                                                    // ->cloneable()
+                                                    ->extraAttributes(['class' => 'mt-4']),
                                             ])
                                             ->columnSpanFull()
-                                            ->defaultItems(3),
-//                                        Forms\Components\Select::make('courses')
-//                                            ->relationship('courses', 'name')
-//                                            ->preload()
-//                                            ->required()
-//                                            ->multiple(),
-
+                                            ->defaultItems(3)
+                                            ->addActionLabel('Add curriculum')
+                                            ->collapsible(),
+                                            // ->cloneable(),
                                         Forms\Components\Select::make('manager_id')
                                             ->label('Branch Manager')
                                             ->options(function () {
                                                 return User::where('role_id', 7)->pluck('name', 'id');
                                             })
-                                            //->relationship('user', 'name')
                                             ->preload()
                                             ->required(),
                                         Forms\Components\DatePicker::make('start_date')
                                             ->displayFormat('d/m/Y')
                                             ->required(),
                                         Forms\Components\DatePicker::make('end_date')
+                                            ->label('End Date')
                                             ->displayFormat('d/m/Y')
                                             ->required(),
                                     ])->columns(2),
@@ -137,7 +176,6 @@ class BatchResource extends Resource
                                             ->label('Allow teacher to edit Class Time')
                                             ->columnSpanFull()
                                             ->required(),
-
                                         Forms\Components\Toggle::make('allow_edit_class_date')
                                             ->label('Allow teacher to edit Class Date')
                                             ->columnSpanFull()
@@ -166,19 +204,9 @@ class BatchResource extends Resource
                     ->limitList(2)
                     ->expandableLimitedList()
                     ->searchable(),
-
-                // Tables\Columns\TextColumn::make('branch.name')
-                //     ->numeric()
-                //     ->searchable(),
-                // Tables\Columns\TextColumn::make('user.name')
-                //     ->label('Branch Manager')
-                //     ->searchable(),
                 Tables\Columns\TextColumn::make('start_end_date')
                     ->label('Start/End')
                     ->html(),
-                // Tables\Columns\TextColumn::make('end_date')
-                //     ->date()
-                //     ->sortable(),
                 Tables\Columns\TextColumn::make('created_at')
                     ->dateTime()
                     ->sortable()
@@ -189,10 +217,6 @@ class BatchResource extends Resource
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
             ->filters([
-//                SelectFilter::make('course')
-//                    ->relationship('course', 'name')
-//                    ->searchable()
-//                    ->preload(),
                 Filter::make('start_date')
                     ->form([
                         Grid::make()
@@ -218,7 +242,6 @@ class BatchResource extends Resource
                     ->relationship('user', 'name')
                     ->searchable()
                     ->preload(),
-
             ], FiltersLayout::AboveContent)
             ->actions([
                 Tables\Actions\ViewAction::make()
@@ -232,35 +255,18 @@ class BatchResource extends Resource
             ]);
     }
 
-//     public static function getEloquentQuery(): Builder
-//     {
-//         return parent::getEloquentQuery()
-// //            ->when(auth()->check() && auth()->user()->is_tutor, function ($query) {
-// //                $query->select('batches.*', 'batches.id as batchid')
-// //                    ->join('batch_curriculum', 'batches.id', '=', 'batch_curriculum.batch_id')
-// //                    ->where('batch_curriculum.tutor_id', auth()->user()->id);
-// //            })
-//             /*
-//             ->whereHas('user', function ($query) {
-//                 $query->where('role', 'tutor');
-//             })
-//             ->with(['user', 'curriculums'])*/ ;
-//     }
-
     public static function getPages(): array
     {
         $pages =  [
             'index' => Pages\ListBatches::route('/'),
             'students' => Pages\ManageStundents::route('/{record}/students'),
             'syllabi' => Pages\ManageSyllabi::route('/{record}/syllabi'),
-            //'create' => Pages\CreateBatch::route('/create'),            
             'edit' => Pages\EditBatch::route('/{record}/edit'),
             'view' => Pages\ViewBatch::route('/{record}'),
         ];
 
         if(auth()->check() && !auth()->user()->is_admin)
         {
-            //unset($pages['view']);
             unset($pages['edit']);
         }
 
