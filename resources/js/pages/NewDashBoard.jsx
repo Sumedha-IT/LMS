@@ -1,567 +1,191 @@
-// "use client"
-
+import { useEffect, useState } from "react";
+import Cookies from "js-cookie";
+import { useNavigate } from "react-router-dom"; // Import useNavigate for redirection
 import CircularProgress from "../components/DashBoard/CircularProgress";
+import PerformanceChart from "../components/DashBoard/PerformanceChart";
+import { toast, ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
+import UpcomingAnnouncements from "../components/DashBoard/UpcomingAnnouncements";
+import StudentPlacedCard from "../components/DashBoard/StudentPlacementslider";
+import StudentJourney from "../components/DashBoard/StudentJourney";
+import AttendanceTracker from "../components/DashBoard/AttendanceTracker";
+import MyAssignment from "../components/DashBoard/MyAssignment";
 
-// import { useState } from "react"
-// import {
-//   Box,
-//   Card,
-//   CardContent,
-//   Typography,
-//   Grid,
-//   TextField,
-//   Button,
-//   MenuItem,
-//   Tab,
-//   Tabs,
-//   LinearProgress,
-//   CircularProgress,
-// } from "@mui/material"
-// import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns"
-// import { LocalizationProvider, DatePicker } from "@mui/x-date-pickers"
-// import { BarChart } from "@mui/x-charts/BarChart"
-// import { Person } from "@mui/icons-material"
-
-// // Mock data for the charts
-// const subjects = [
-//   "Physics",
-//   "Maths",
-//   "Chemistry",
-//   "Physics",
-//   "Maths",
-//   "Chemistry",
-//   "Physics",
-//   "Physics",
-//   "Physics",
-//   "Physics",
-//   "Physics",
-//   "Physics",
-// ]
-// const minimumMarks = [60, 60, 60, 60, 60, 60, 60, 60, 60, 60, 60, 60]
-// const obtainedMarks = [20, 40, 35, 22, 25, 50, 35, 20, 40, 25, 40, 55]
-
-// const courses = ["Physics", "Mathematics", "Chemistry", "Biology"]
-// const batches = ["Morning", "Afternoon", "Evening", "Weekend"]
-
-// const NewDashBoard = () => {
-//   const [course, setCourse] = useState("")
-//   const [batch, setBatch] = useState("")
-//   const [startDate, setStartDate] = useState(null)
-//   const [endDate, setEndDate] = useState(null)
-//   const [tabValue, setTabValue] = useState(0)
-
-//   const handleTabChange = (event, newValue) => {
-//     setTabValue(newValue)
-//   }
-
-//   return (
-//     <Box className="p-4 bg-gray-50">
-//       <Card
-//         className="mb-4"
-//         sx={{
-//           backgroundColor: "#404040",
-//           color: "white",
-//           borderRadius: "8px",
-//           position: "relative",
-//           overflow: "visible",
-//         }}
-//       >
-//         <CardContent className="flex justify-between items-center">
-//           <Box className="flex space-x-8">
-//             {/* Progress Indicators */}
-//             <Box className="text-center">
-//               <Box className="relative inline-block" sx={{ width: 80, height: 80 }}>
-//                 <CircularProgress
-//                   variant="determinate"
-//                   value={100}
-//                   size={80}
-//                   thickness={4}
-//                   sx={{ color: "rgba(255,255,255,0.2)" }}
-//                 />
-//                 <CircularProgress
-//                   variant="determinate"
-//                   value={50}
-//                   size={80}
-//                   thickness={4}
-//                   sx={{
-//                     color: "#ff4d4d",
-//                     position: "absolute",
-//                     left: 0,
-//                     top: 0,
-//                   }}
-//                 />
-//                 <Box
-//                   sx={{
-//                     position: "absolute",
-//                     top: 0,
-//                     left: 0,
-//                     bottom: 0,
-//                     right: 0,
-//                     display: "flex",
-//                     alignItems: "center",
-//                     justifyContent: "center",
-//                   }}
-//                 >
-//                   <Typography variant="h6" component="div" sx={{ fontWeight: "bold" }}>
-//                     50%
-//                   </Typography>
-//                 </Box>
-//               </Box>
-//               <Typography variant="caption" className="mt-1 block">
-//                 ATTENDANCE
-//               </Typography>
-//             </Box>
-
-//             <Box className="text-center">
-//               <Box className="relative inline-block" sx={{ width: 80, height: 80 }}>
-//                 <CircularProgress
-//                   variant="determinate"
-//                   value={100}
-//                   size={80}
-//                   thickness={4}
-//                   sx={{ color: "rgba(255,255,255,0.2)" }}
-//                 />
-//                 <CircularProgress
-//                   variant="determinate"
-//                   value={80}
-//                   size={80}
-//                   thickness={4}
-//                   sx={{
-//                     color: "#ff4d4d",
-//                     position: "absolute",
-//                     left: 0,
-//                     top: 0,
-//                   }}
-//                 />
-//                 <Box
-//                   sx={{
-//                     position: "absolute",
-//                     top: 0,
-//                     left: 0,
-//                     bottom: 0,
-//                     right: 0,
-//                     display: "flex",
-//                     alignItems: "center",
-//                     justifyContent: "center",
-//                   }}
-//                 >
-//                   <Typography variant="h6" component="div" sx={{ fontWeight: "bold" }}>
-//                     80%
-//                   </Typography>
-//                 </Box>
-//               </Box>
-//               <Typography variant="caption" className="mt-1 block">
-//                 TASKS COMPLETED
-//               </Typography>
-//             </Box>
-
-//             <Box className="text-center">
-//               <Box className="relative inline-block" sx={{ width: 80, height: 80 }}>
-//                 <CircularProgress
-//                   variant="determinate"
-//                   value={100}
-//                   size={80}
-//                   thickness={4}
-//                   sx={{ color: "rgba(255,255,255,0.2)" }}
-//                 />
-//                 <CircularProgress
-//                   variant="determinate"
-//                   value={40}
-//                   size={80}
-//                   thickness={4}
-//                   sx={{
-//                     color: "#ff4d4d",
-//                     position: "absolute",
-//                     left: 0,
-//                     top: 0,
-//                   }}
-//                 />
-//                 <Box
-//                   sx={{
-//                     position: "absolute",
-//                     top: 0,
-//                     left: 0,
-//                     bottom: 0,
-//                     right: 0,
-//                     display: "flex",
-//                     alignItems: "center",
-//                     justifyContent: "center",
-//                   }}
-//                 >
-//                   <Typography variant="h6" component="div" sx={{ fontWeight: "bold" }}>
-//                     4/10
-//                   </Typography>
-//                 </Box>
-//               </Box>
-//               <Typography variant="caption" className="mt-1 block">
-//                 ONLINE ASSIGNMENTS
-//               </Typography>
-//             </Box>
-
-//             <Box className="text-center">
-//               <Box className="relative inline-block" sx={{ width: 80, height: 80 }}>
-//                 <CircularProgress
-//                   variant="determinate"
-//                   value={100}
-//                   size={80}
-//                   thickness={4}
-//                   sx={{ color: "rgba(255,255,255,0.2)" }}
-//                 />
-//                 <CircularProgress
-//                   variant="determinate"
-//                   value={40}
-//                   size={80}
-//                   thickness={4}
-//                   sx={{
-//                     color: "#ff4d4d",
-//                     position: "absolute",
-//                     left: 0,
-//                     top: 0,
-//                   }}
-//                 />
-//                 <Box
-//                   sx={{
-//                     position: "absolute",
-//                     top: 0,
-//                     left: 0,
-//                     bottom: 0,
-//                     right: 0,
-//                     display: "flex",
-//                     alignItems: "center",
-//                     justifyContent: "center",
-//                   }}
-//                 >
-//                   <Typography variant="h6" component="div" sx={{ fontWeight: "bold" }}>
-//                     4/10
-//                   </Typography>
-//                 </Box>
-//               </Box>
-//               <Typography variant="caption" className="mt-1 block">
-//                 OFFLINE ASSIGNMENTS
-//               </Typography>
-//             </Box>
-//           </Box>
-
-//           {/* Student Avatar */}
-//           <Box sx={{ position: "absolute", right: 20, top: -30 }}>
-//             <img
-//               src=""
-//               alt="Student avatar"
-//               className="h-32"
-//               style={{ objectFit: "contain", objectPosition: "right top" }}
-//             />
-//           </Box>
-//         </CardContent>
-//       </Card>
-
-//       {/* Filters */}
-//       {/* <Card className="mb-4">
-//         <CardContent>
-//           <Grid container spacing={2} alignItems="center">
-//             <Grid item xs={12} sm={2.5}>
-//               <TextField
-//                 select
-//                 fullWidth
-//                 label="Course"
-//                 value={course}
-//                 onChange={(e) => setCourse(e.target.value)}
-//                 size="small"
-//               >
-//                 {courses.map((option) => (
-//                   <MenuItem key={option} value={option}>
-//                     {option}
-//                   </MenuItem>
-//                 ))}
-//               </TextField>
-//             </Grid>
-//             <Grid item xs={12} sm={2.5}>
-//               <TextField
-//                 select
-//                 fullWidth
-//                 label="Batch"
-//                 value={batch}
-//                 onChange={(e) => setBatch(e.target.value)}
-//                 size="small"
-//               >
-//                 {batches.map((option) => (
-//                   <MenuItem key={option} value={option}>
-//                     {option}
-//                   </MenuItem>
-//                 ))}
-//               </TextField>
-//             </Grid>
-//             <Grid item xs={12} sm={2.5}>
-//               <LocalizationProvider dateAdapter={AdapterDateFns}>
-//                 <DatePicker
-//                   label="Start Date"
-//                   value={startDate}
-//                   onChange={(newValue) => setStartDate(newValue)}
-//                   slotProps={{ textField: { size: "small", fullWidth: true } }}
-//                 />
-//               </LocalizationProvider>
-//             </Grid>
-//             <Grid item xs={12} sm={2.5}>
-//               <LocalizationProvider dateAdapter={AdapterDateFns}>
-//                 <DatePicker
-//                   label="End Date"
-//                   value={endDate}
-//                   onChange={(newValue) => setEndDate(newValue)}
-//                   slotProps={{ textField: { size: "small", fullWidth: true } }}
-//                 />
-//               </LocalizationProvider>
-//             </Grid>
-//             <Grid item xs={12} sm={2}>
-//               <Button
-//                 variant="contained"
-//                 fullWidth
-//                 sx={{
-//                   backgroundColor: "#ff4d4d",
-//                   "&:hover": { backgroundColor: "#ff3333" },
-//                   borderRadius: "20px",
-//                 }}
-//               >
-//                 Filter
-//               </Button>
-//             </Grid>
-//           </Grid>
-//         </CardContent>
-//       </Card> */}
-
-//       {/* Assignments Performance */}
-//       {/* <Card className="mb-4">
-//         <CardContent>
-//           <Typography variant="h6" className="mb-4">
-//             Assignments Performance
-//           </Typography>
-//           <Box sx={{ height: 300 }}>
-//             <BarChart
-//               series={[
-//                 { data: minimumMarks, label: "Minimum Marks", color: "#ffcccc" },
-//                 { data: obtainedMarks, label: "Obtained Marks", color: "#ff4d4d" },
-//               ]}
-//               xAxis={[{ data: subjects, scaleType: "band" }]}
-//               height={280}
-//             />
-//           </Box>
-//         </CardContent>
-//       </Card> */}
-
-//       {/* Attendance and Announcements */}
-//       {/* <Grid container spacing={3} className="mb-4">
-//         <Grid item xs={12} md={4}>
-//           <Card sx={{ height: "100%" }}>
-//             <CardContent>
-//               <Box className="flex justify-between items-center mb-4">
-//                 <Typography variant="h6">My Attendance</Typography>
-//                 <Typography variant="caption" sx={{ color: "#ff4d4d" }}>
-//                   View More
-//                 </Typography>
-//               </Box>
-//               <Box className="flex justify-center">
-//                 <Box className="relative" sx={{ width: 150, height: 150 }}>
-//                   <CircularProgress
-//                     variant="determinate"
-//                     value={100}
-//                     size={150}
-//                     thickness={8}
-//                     sx={{ color: "rgba(0,0,0,0.1)" }}
-//                   />
-//                   <CircularProgress
-//                     variant="determinate"
-//                     value={48}
-//                     size={150}
-//                     thickness={8}
-//                     sx={{
-//                       color: "#ff4d4d",
-//                       position: "absolute",
-//                       left: 0,
-//                       top: 0,
-//                     }}
-//                   />
-//                   <Box
-//                     sx={{
-//                       position: "absolute",
-//                       top: 0,
-//                       left: 0,
-//                       bottom: 0,
-//                       right: 0,
-//                       display: "flex",
-//                       flexDirection: "column",
-//                       alignItems: "center",
-//                       justifyContent: "center",
-//                     }}
-//                   >
-//                     <Person sx={{ color: "#ff4d4d", fontSize: 24 }} />
-//                     <Typography variant="h4" component="div" sx={{ fontWeight: "bold" }}>
-//                       120/250
-//                     </Typography>
-//                     <Typography variant="caption">Attendance</Typography>
-//                   </Box>
-//                 </Box>
-//               </Box>
-//             </CardContent>
-//           </Card>
-//         </Grid>
-//         <Grid item xs={12} md={8}>
-//           <Card sx={{ height: "100%" }}>
-//             <CardContent>
-//               <Typography variant="h6" className="mb-4">
-//                 Upcoming Announcements
-//               </Typography>
-//               <Box className="overflow-x-auto">
-//                 <Box sx={{ minWidth: 600 }}>
-//                   <Box className="flex border-b">
-//                     <Box className="w-16 p-2 text-center">
-//                       <Typography variant="body2" color="textSecondary"></Typography>
-//                     </Box>
-//                     {["09:00", "10:00", "11:00", "12:00", "13:00", "14:00", "15:00", "16:00", "17:00"].map((time) => (
-//                       <Box key={time} className="flex-1 p-2 text-center border-l">
-//                         <Typography variant="body2" color="textSecondary">
-//                           {time}
-//                         </Typography>
-//                       </Box>
-//                     ))}
-//                   </Box>
-
-//                   {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((day, index) => (
-//                     <Box key={day} className="flex border-b">
-//                       <Box className="w-16 p-2 text-center">
-//                         <Typography variant="body2">{day}</Typography>
-//                       </Box>
-//                       {["09:00", "10:00", "11:00", "12:00", "13:00", "14:00", "15:00", "16:00", "17:00"].map(
-//                         (time, timeIndex) => (
-//                           <Box key={`${day}-${time}`} className="flex-1 p-2 text-center border-l relative">
-//                             {index === 2 && timeIndex === 2 && (
-//                               <Box
-//                                 sx={{
-//                                   position: "absolute",
-//                                   left: "10%",
-//                                   right: "10%",
-//                                   top: "50%",
-//                                   transform: "translateY(-50%)",
-//                                   backgroundColor: "#ff4d4d",
-//                                   color: "white",
-//                                   borderRadius: "20px",
-//                                   padding: "4px 8px",
-//                                 }}
-//                               >
-//                                 <Typography variant="caption">Meeting</Typography>
-//                               </Box>
-//                             )}
-//                             {index === 3 && timeIndex === 5 && (
-//                               <Box
-//                                 sx={{
-//                                   position: "absolute",
-//                                   left: "10%",
-//                                   right: "10%",
-//                                   top: "50%",
-//                                   transform: "translateY(-50%)",
-//                                   backgroundColor: "#3399ff",
-//                                   color: "white",
-//                                   borderRadius: "20px",
-//                                   padding: "4px 8px",
-//                                 }}
-//                               >
-//                                 <Typography variant="caption">Webinar</Typography>
-//                               </Box>
-//                             )}
-//                           </Box>
-//                         ),
-//                       )}
-//                     </Box>
-//                   ))}
-//                 </Box>
-//               </Box>
-//             </CardContent>
-//           </Card>
-//         </Grid>
-//       </Grid> */}
-
-//       {/* Student Journey */}
-//       {/* <Card>
-//         <CardContent>
-//           <Typography variant="h6" className="mb-4">
-//             Student Journey
-//           </Typography>
-//           <Tabs
-//             value={tabValue}
-//             onChange={handleTabChange}
-//             className="mb-4"
-//             TabIndicatorProps={{ style: { display: "none" } }}
-//           >
-//             <Tab
-//               label="Ongoing Assignments"
-//               sx={{
-//                 borderRadius: "20px",
-//                 border: "1px solid #ddd",
-//                 marginRight: "8px",
-//                 "&.Mui-selected": {
-//                   backgroundColor: "#ff4d4d",
-//                   color: "white",
-//                   border: "1px solid #ff4d4d",
-//                 },
-//               }}
-//             />
-//             <Tab
-//               label="Upcoming Assignments"
-//               sx={{
-//                 borderRadius: "20px",
-//                 border: "1px solid #ddd",
-//                 "&.Mui-selected": {
-//                   backgroundColor: "#ff4d4d",
-//                   color: "white",
-//                   border: "1px solid #ff4d4d",
-//                 },
-//               }}
-//             />
-//           </Tabs>
-
-//           <Box sx={{ mt: 4 }}>
-//             <LinearProgress
-//               variant="determinate"
-//               value={60}
-//               sx={{
-//                 height: 10,
-//                 borderRadius: 5,
-//                 backgroundColor: "#ffcccc",
-//                 "& .MuiLinearProgress-bar": {
-//                   backgroundColor: "#ff4d4d",
-//                 },
-//               }}
-//             />
-//             <Box className="flex justify-end mt-2">
-//               <Typography variant="body2">Total 8</Typography>
-//             </Box>
-//           </Box>
-//         </CardContent>
-//       </Card> */}
-//     </Box>
-//   )
-// }
-
-// export default NewDashBoard
-
-
-
-
+// Function to decode and parse the cookie
+const getDecodedCookie = (cookieName) => {
+  try {
+    const cookieValue = Cookies.get(cookieName);
+    if (!cookieValue) return null;
+    const decodedValue = decodeURIComponent(cookieValue);
+    return JSON.parse(decodedValue);
+  } catch (error) {
+    console.error('Error decoding cookie:', error);
+    return null;
+  }
+};
 
 const NewDashBoard = () => {
-    return (
-       <section className=" min-h-screen w-full p-2">
-<div className="  min-h-[15.75rem] bg-[#404040] rounded-2xl flex  items-center px-10  w-full">
-<div className=" flex justify-evenly w-[70%]">
-    <CircularProgress value={4} max={10} label="Total Assignments" size={157} strokeWidth={12} showPercentage={true} />
-    <CircularProgress value={4} max={10} label="Total Assignments" size={157} strokeWidth={12} showPercentage={true} />
-    <CircularProgress value={4} max={10} label="Total Assignments" size={157} strokeWidth={12} showPercentage={false} />
-    <CircularProgress value={4} max={10} label="Total Assignments" size={157} strokeWidth={12} showPercentage={false}/>
-</div>
-<div>
-    <img src="./public/images/image 67.png" alt="Image"/>
-</div>
-</div>
+  const baseUrl = import.meta.env.VITE_APP_API_URL;
+  const endpoint = "exam-chart";
+  const url = `${baseUrl}${endpoint}`;
 
-       </section>
-    );
-}
+  const cookieData = getDecodedCookie('user_info');
+  const token = cookieData?.token;
+
+
+  // State to store the fetched exam chart data
+  const [examChartData, setExamChartData] = useState(null);
+  const [UserData, setUserData] = useState([]);
+  // Hook for navigation
+  const navigate = useNavigate();
+
+  // Function to fetch exam-chart data
+  async function fetchExamChartData() {
+    try {
+      if (!token) {
+        throw new Error("No token found in cookie");
+      }
+
+      const response = await fetch(url, {
+        method: "GET",
+        headers: {
+          Accept: "application/vnd.api+json",
+          "Content-Type": "application/vnd.api+json",
+          Authorization: token,
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! Status: ${response.status}`);
+      }
+
+      const data = await response.json();
+      return data;
+    } catch (error) {
+      console.error("Error fetching exam-chart data:", error);
+      throw error;
+    }
+  }
+
+  // Function to fetch profile data
+  async function fetchProfileData() {
+    try {
+      if (!token) {
+        throw new Error("No token found in cookie");
+      }
+
+      const profileUrl = `${baseUrl}profile`; // Endpoint for profile data
+      const response = await fetch(profileUrl, {
+        method: "GET",
+        headers: {
+          Accept: "application/vnd.api+json",
+          "Content-Type": "application/vnd.api+json",
+          Authorization: token,
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! Status: ${response.status}`);
+      }
+
+      const data = await response.json();
+      return data;
+    } catch (error) {
+      console.error("Error fetching profile data:", error);
+      throw error;
+    }
+  }
+
+  useEffect(() => {
+    // Fetch profile data and check role_id
+    fetchProfileData()
+      .then((profileData) => {
+        // console.log("Profile data received:", profileData.user.role_id);
+        setUserData(profileData);
+        // Check if role_id is not 6
+        if (profileData.user.role_id !== 6) {
+          // Redirect to the home route
+          navigate("/administrator/1");
+        }
+      })
+      .catch((error) => {
+        console.error("Failed to fetch profile data:", error);
+        toast.error("Failed to fetch profile data");
+      });
+
+    // Fetch exam-chart data
+    fetchExamChartData()
+      .then((data) => {
+        // console.log("Exam chart data received:", data);
+        setExamChartData(data); // Store the fetched data in state
+      })
+      .catch((error) => {
+        console.error("Failed to fetch exam-chart data:", error);
+        toast.error("Failed to fetch exam-chart data");
+      });
+  }, [token, navigate]);
+
+  return (
+    <>
+      <section className="w-full p-2 mb-10 hidden">
+        <div className="relative min-h-[15.75rem]  rounded-2xl flex items-center px-10 w-full">
+          <div className="flex justify-evenly bg-[#404040] w-[70%]">
+            <CircularProgress value={4} max={10} label="Total Assignments" size={157} strokeWidth={12} showPercentage={true} />
+            <CircularProgress value={4} max={10} label="Total Assignments" size={157} strokeWidth={12} showPercentage={true} />
+            <CircularProgress value={4} max={10} label="Total Assignments" size={157} strokeWidth={12} showPercentage={false} />
+            {/* <CircularProgress value={4} max={10} label="Total Assignments" size={157} strokeWidth={12} showPercentage={false} /> */}
+            <div>
+
+            </div>
+          </div>
+          <div className=" w-[30%]">
+            <StudentPlacedCard />
+          </div>
+
+        </div>
+
+      </section>
+
+      <section className=" w-full p-2 mb-10 flex gap-2">
+        <div className=" relative  min-h-[15.75rem] bg-[#404040]  rounded-2xl flex items-center px-10 w-3/4">
+          <div className=" flex gap-2">
+            <CircularProgress value={4} max={10} label="Total Assignments" size={157} strokeWidth={12} showPercentage={true} />
+            <CircularProgress value={4} max={10} label="Total Assignments" size={157} strokeWidth={12} showPercentage={true} />
+            <CircularProgress value={4} max={10} label="Total Assignments" size={157} strokeWidth={12} showPercentage={false} />
+          </div>
+          <div>
+            <img className=" absolute -top-16  w-[20rem] right-5"
+              src="/storage/image.png"
+              alt="Image"
+              onError={(e) => {
+                e.target.src = "/storage/image.png";
+              }}
+            />
+          </div>
+        </div>
+        <div className=" w-1/4">
+          <StudentPlacedCard />
+        </div>
+
+      </section>
+
+      {/* Pass the fetched data to PerformanceChart */}
+      {/* <PerformanceChart UserData={UserData} examChartData={examChartData} /> */}
+      <UpcomingAnnouncements />
+      <StudentJourney/>
+     <div className=" flex justify-between w-full px-1 my-10">
+      <div className="  w-2/5">
+      <AttendanceTracker/>
+      </div>
+      <div className=" w-3/5">
+      <MyAssignment/>
+      </div>
+   
+  
+     </div>
+      <ToastContainer />
+    </>
+  );
+};
 
 export default NewDashBoard;

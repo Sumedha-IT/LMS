@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { motion } from "framer-motion";
 
 export default function CircularProgress({
   value = 4,
@@ -8,7 +9,7 @@ export default function CircularProgress({
   label = "Total Assignments",
   size = 200,
   strokeWidth = 12,
-  showPercentage = false, // New prop to toggle between percentage and min/max
+  showPercentage = false,
 }) {
   const [progress, setProgress] = useState(0);
 
@@ -33,7 +34,13 @@ export default function CircularProgress({
   }, [percentage]);
 
   return (
-    <div className="relative inline-flex items-center justify-center" style={{ width: size, height: size }}>
+    <motion.div
+      className="relative inline-flex items-center justify-center"
+      style={{ width: size, height: size }}
+      initial={{ opacity: 0, scale: 0.8 }}
+      animate={{ opacity: 1, scale: 1 }}
+      transition={{ duration: 0.5 }}
+    >
       <svg width={size} height={size} className="transform -rotate-90">
         {/* Background circle */}
         <circle
@@ -41,35 +48,47 @@ export default function CircularProgress({
           cy={center}
           r={radius}
           fill="transparent"
-          stroke="#ffffff"
-          strokeOpacity="0.2"
+          stroke="#FFFFFF"
+          // strokeOpacity="0.2"
           strokeWidth={strokeWidth}
         />
 
-        {/* Progress circle */}
-        <circle
+        {/* Progress circle with animation */}
+        <motion.circle
           cx={center}
           cy={center}
           r={radius}
           fill="transparent"
-          stroke="#ff3e1d"
+          stroke="#E53510"
           strokeWidth={strokeWidth}
           strokeDasharray={circumference}
           strokeDashoffset={strokeDashoffset}
           strokeLinecap="round"
-          style={{
-            transition: "stroke-dashoffset 0.5s ease-in-out",
-          }}
+          initial={{ strokeDashoffset: circumference }}
+          animate={{ strokeDashoffset: strokeDashoffset }}
+          transition={{ duration: 1, ease: "easeInOut" }}
         />
       </svg>
 
       {/* Text in the center */}
       <div className="absolute flex flex-col items-center justify-center text-white">
-        <span className="text-3xl font-bold">
+        <motion.span
+          className="text-3xl font-bold"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.3, duration: 0.5 }}
+        >
           {showPercentage ? `${Math.round(progress)}%` : `${value}/${max}`}
-        </span>
-        <span className="text-sm mt-1">{label}</span>
+        </motion.span>
+        <motion.span
+          className="text-sm mt-1"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.5, duration: 0.5 }}
+        >
+          {label}
+        </motion.span>
       </div>
-    </div>
+    </motion.div>
   );
 }

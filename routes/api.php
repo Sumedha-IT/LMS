@@ -312,7 +312,7 @@ Route::group(['middleware' => [
      
      Route::post('/{user}/documents', [JobProfileController::class,'addCertificate']);
      Route::delete('/{user}/documents/{certificate}', [JobProfileController::class,'deleteCertificate']);
-     Route::get('/{user}/documents', [JobProfileController::class,'getDocuments'])->name('api.certificate');
+    //  Route::get('/{user}/documents', [JobProfileController::class,'getDocuments'])->name('api.certificate');
      Route::get('/{user}/documents/{certificate}', [JobProfileController::class,'previewCertificate'])->name('api.certificate');
  
  
