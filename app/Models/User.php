@@ -25,6 +25,7 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Jeffgreco13\FilamentBreezy\Traits\TwoFactorAuthenticatable;
 use Rappasoft\LaravelAuthenticationLog\Traits\AuthenticationLoggable;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class User extends Authenticatable implements HasTenants, FilamentUser, HasAvatar
 {
@@ -38,11 +39,30 @@ class User extends Authenticatable implements HasTenants, FilamentUser, HasAvata
      *
      * @var array<int, string>
      */
-    /*protected $fillable = [
+    protected $fillable = [
         'name',
         'email',
         'password',
-    ];*/
+        'phone',
+        'gender',
+        'birthday',
+        'address',
+        'city',
+        'state_id',
+        'pincode',
+        'aadhaar_number',
+        'linkedin_profile',
+        'passport_photo_path',
+        'upload_resume',
+        'upload_aadhar',
+        'parent_name',
+        'parent_email',
+        'parent_aadhar',
+        'parent_occupation',
+        'residential_address',
+        'receive_email_notification',
+        'receive_sms_notification'
+    ];
 
     /**
      * The attributes that should be hidden for serialization.
@@ -62,7 +82,8 @@ class User extends Authenticatable implements HasTenants, FilamentUser, HasAvata
     protected $casts = [
         'email_verified_at' => 'datetime',
         'password' => 'hashed',
-        'qualification' => 'array'
+        'receive_email_notification' => 'boolean',
+        'receive_sms_notification' => 'boolean'
     ];
 
 
@@ -226,6 +247,10 @@ class User extends Authenticatable implements HasTenants, FilamentUser, HasAvata
         return Storage::url($this->avatar_url);
     }
 
+    public function getPassportPhotoUrlAttribute()
+    {
+        return $this->passport_photo_path ? Storage::url($this->passport_photo_path) : null;
+    }
 
     public function getAdditionalDetailsAttribute()
     {
@@ -290,7 +315,7 @@ class User extends Authenticatable implements HasTenants, FilamentUser, HasAvata
         return $this->hasMany(Job::class, 'recruiter_id');
     }
 
-    public function projects()
+    public function projects(): HasMany
     {
         return $this->hasMany(Project::class);
     }
@@ -303,5 +328,10 @@ class User extends Authenticatable implements HasTenants, FilamentUser, HasAvata
     public function isRecruitor()
     {
         return $this->role && in_array($this->role->id, [4]) ? true : false;
+    }
+
+    public function certifications()
+    {
+        return $this->hasMany(Certification::class);
     }
 }

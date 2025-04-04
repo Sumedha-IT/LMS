@@ -35,6 +35,8 @@ use App\Http\Controllers\api\QuestionOptionController;
 use App\Http\Controllers\QuestionBankChapterController;
 use App\Http\Controllers\api\StudentEducationController;
 use App\Http\Controllers\api\QuestionAttempLogController;
+use App\Http\Controllers\CertificationController;
+use App\Http\Controllers\ProjectController;
 
 /*
 |--------------------------------------------------------------------------
@@ -94,6 +96,12 @@ Route::post('/forgot-password', function (Request $request) {
 Route::group(['middleware' => ['auth:sanctum']], function () {
     // Place protected routes here
     Route::post('logout', [AuthController::class, 'logout']);
+
+    // Certification routes
+    Route::get('/certifications', [CertificationController::class, 'index']);
+    Route::post('/certifications', [CertificationController::class, 'store']);
+    Route::put('/certifications/{certification}', [CertificationController::class, 'update']);
+    Route::delete('/certifications/{certification}', [CertificationController::class, 'destroy']);
 
     //api for notifications
     Route::get('/notifications',[\App\Http\Controllers\NotificationController::class,'index']);
@@ -340,3 +348,11 @@ Route::middleware(['zohoAuth'])->group(function () {
 Route::get('/test', [TestingController::class,'testMail']);
 
 Route::get("/teams", [UserController::class, "getTeams"]);
+
+// Project routes
+Route::middleware('auth:sanctum')->group(function () {
+    Route::get('/projects', [ProjectController::class, 'index']);
+    Route::post('/projects', [ProjectController::class, 'store']);
+    Route::put('/projects/{project}', [ProjectController::class, 'update']);
+    Route::delete('/projects/{project}', [ProjectController::class, 'destroy']);
+});

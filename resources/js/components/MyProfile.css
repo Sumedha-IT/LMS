@@ -200,6 +200,14 @@
   color: #3b82f6;
 }
 
+.contact-icon-container-linkedin {
+  @apply bg-blue-100 rounded-full p-2 flex items-center justify-center;
+}
+
+.contact-icon-linkedin {
+  @apply text-blue-500 w-4 h-4;
+}
+
 /* Sub-menu Styles */
 .sub-menu-item {
   display: flex;
