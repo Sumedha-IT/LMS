@@ -96,34 +96,34 @@ const NewDashBoard = () => {
     }
   }
 
-  useEffect(() => {
-    // Fetch profile data and check role_id
-    fetchProfileData()
-      .then((profileData) => {
-        // console.log("Profile data received:", profileData.user.role_id);
-        setUserData(profileData);
-        // Check if role_id is not 6
-        if (profileData.user.role_id !== 6) {
-          // Redirect to the home route
-          navigate("/administrator/1");
-        }
-      })
-      .catch((error) => {
-        console.error("Failed to fetch profile data:", error);
-        toast.error("Failed to fetch profile data");
-      });
+  // useEffect(() => {
+  //   // Fetch profile data and check role_id
+  //   fetchProfileData()
+  //     .then((profileData) => {
+  //       // console.log("Profile data received:", profileData.user.role_id);
+  //       setUserData(profileData);
+  //       // Check if role_id is not 6
+  //       if (profileData.user.role_id !== 6) {
+  //         // Redirect to the home route
+  //         navigate("/administrator/1");
+  //       }
+  //     })
+  //     .catch((error) => {
+  //       console.error("Failed to fetch profile data:", error);
+  //       toast.error("Failed to fetch profile data");
+  //     });
 
-    // Fetch exam-chart data
-    fetchExamChartData()
-      .then((data) => {
-        // console.log("Exam chart data received:", data);
-        setExamChartData(data); // Store the fetched data in state
-      })
-      .catch((error) => {
-        console.error("Failed to fetch exam-chart data:", error);
-        toast.error("Failed to fetch exam-chart data");
-      });
-  }, [token, navigate]);
+  //   // Fetch exam-chart data
+  //   fetchExamChartData()
+  //     .then((data) => {
+  //       // console.log("Exam chart data received:", data);
+  //       setExamChartData(data); // Store the fetched data in state
+  //     })
+  //     .catch((error) => {
+  //       console.error("Failed to fetch exam-chart data:", error);
+  //       toast.error("Failed to fetch exam-chart data");
+  //     });
+  // }, [token, navigate]);
 
   return (
     <>
