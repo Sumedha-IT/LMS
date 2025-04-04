@@ -83,12 +83,18 @@ class Batch extends Model
 
     public function curriculums(): HasMany
     {
-        return $this->hasMany(BatchCurriculum::class, 'batch_id','id')
+        return $this->hasMany(BatchCurriculum::class, 'batch_id', 'id')
+            ->with(['curriculum', 'tutor', 'topics.topic']) // Eager load related models
 //            ->when(auth()->check() && auth()->user()->is_tutor, function ($query) {
 //                $query->where('batch_curriculum.tutor_id', auth()->user()->id);
 //            })
             ;
     }
+    // public function curriculums()
+    // {
+    //     return $this->belongsToMany(Curriculum::class, 'batch_curriculum', 'batch_id', 'curriculum_id')
+    //         ->withPivot('tutor_id', 'topic_id', 'is_topic_completed');
+    // }
 
     public function teaching_materials_curriculums(): HasManyThrough
     {
