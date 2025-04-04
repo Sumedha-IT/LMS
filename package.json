@@ -42,11 +42,8 @@
         "@mui/material": "^6.1.0",
         "@mui/x-charts": "^7.28.0",
         "@mui/x-date-pickers": "^7.17.0",
-<<<<<<< HEAD
         "@react-pdf/renderer": "^4.3.0",
-=======
         "@radix-ui/themes": "^3.2.1",
->>>>>>> 3b07646992c7a39d8bd8602a9af2f7bccb6571b8
         "@reduxjs/toolkit": "^2.2.7",
         "@testing-library/jest-dom": "^5.17.0",
         "@testing-library/react": "^13.4.0",
