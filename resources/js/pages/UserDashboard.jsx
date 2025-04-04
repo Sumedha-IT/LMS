@@ -1,13 +1,12 @@
-import { Box, Paper, Tab, Tabs, Typography } from '@mui/material';
+import { Box, Button, Tab, Tabs, Typography } from '@mui/material';
 import React, { useEffect, useState } from 'react';
 import TabPanel, { a11yProps } from '../common/TabPanel';
 import UserExamTable from '../components/UserExamTable';
 import userId, { useGetStudentDataQuery } from '../store/service/user/UserService';
 
 const UserDashboard = () => {
-    const [mainTab, setMainTab] = useState(0); // For Exams and Attempted Exams tabs
+    const [mainTab, setMainTab] = useState(0);
     const { data } = useGetStudentDataQuery({ userId: userId });
-
 
     useEffect(() => {
         if (data) {
@@ -15,70 +14,52 @@ const UserDashboard = () => {
         }
     }, [data]);
 
-
     const handleMainTabChange = (event, newValue) => {
         setMainTab(newValue);
     }
 
-
     return (
-        <Box sx={{ width: '100%', backgroundColor: '#f4f5f7', p: 2, borderRadius: 1 }}>
-            {/* Heading */}
-            <Typography
-                variant="h4"
-                sx={{
-                    color: '#f97316', // Orange color for the heading
-                    fontWeight: 'bold',
-                    mb: 3,
-                    fontSize: { xs: '18px', sm: '20px', md: '23px', xl: '27px' }
-                }}
-            >
-                <Box component="span" sx={{ color: '#032246' }}>  My </Box>Exams
-            </Typography>
-
-
-            {/* Main Tabs */}
-            <Paper square>
+        <Box sx={{ width: '100%', p: 3, backgroundColor: '#f8f9fa' }}>
+            <Box sx={{ mb: 4 }}>
                 <Tabs
                     value={mainTab}
                     onChange={handleMainTabChange}
-                    aria-label="Main Tabs"
+                    aria-label="exam tabs"
                     sx={{
-                        backgroundColor: '#f4f5f7',
-                        '& .MuiTabs-indicator': {
-                            backgroundColor: '#f97316', // Orange color for active tab indicator
-                        },
-                        '& .css-19wsa2m-MuiButtonBase-root-MuiTab-root.Mui-selected': {
-                            color: "#f97316"
-                        },
-                        '& .Mui-selected': {
-                            backgroundColor: 'white',
-                            color: '#f97316',
-                            borderRadius: '5px 5px 0 0',
-                        },
+                        '& .MuiTabs-indicator': { display: 'none' },
                         '& .MuiTab-root': {
+                            color: '#666',
+                            backgroundColor: '#e9ecef',
+                            borderRadius: '8px',
+                            mx: 1,
                             textTransform: 'none',
-                            color: '#032246', // Orange color for inactive tabs
-                            fontWeight: 'bold',
-                            borderRadius: '5px 5px 0 0',
+                            fontSize: '16px',
+                            fontWeight: 500,
+                            '&.Mui-selected': {
+                                color: '#fff',
+                                backgroundColor: '#f4511e',
+                            },
                         },
                     }}
                 >
-
-                    <Tab label="Upcoming Exams" {...a11yProps(0)} sx={{ fontSize: { xs: '11px', sm: '12px', md: '14px', xl: '15px' } }} />
-                    <Tab label="Attempted Exams" {...a11yProps(1)} sx={{ fontSize: { xs: '11px', sm: '12px', md: '14px', xl: '15px' } }} />
+                    <Tab 
+                        label="Upcoming Exams" 
+                        {...a11yProps(0)}
+                        sx={{ minWidth: '180px' }}
+                    />
+                    <Tab 
+                        label="Attempted Exams" 
+                        {...a11yProps(1)}
+                        sx={{ minWidth: '180px' }}
+                    />
                 </Tabs>
-            </Paper>
+            </Box>
 
-            {/* TabPanel switching based on mainTab value */}
             <TabPanel value={mainTab} index={0}>
-                <UserExamTable Value={mainTab} userId={userId}/> {/* The UserExamTable will handle the exam table data */}
+                <UserExamTable Value={mainTab} userId={userId} />
             </TabPanel>
 
             <TabPanel value={mainTab} index={1}>
-                {/* <Typography variant="body1">
-                    This is the Past Exams section.
-                </Typography> */}
                 <UserExamTable Value={mainTab} userId={userId} />
             </TabPanel>
         </Box>
