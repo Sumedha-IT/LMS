@@ -113,7 +113,9 @@ INSERT INTO `specializations` (`id`, `name`, `degree_type_id`, `created_at`, `up
 (71, 'Mining Engineering', 5, '2025-03-05 06:53:47', '2025-03-05 06:53:47'),
 (72, 'Instrumentation Engineering', 5, '2025-03-05 06:53:47', '2025-03-05 06:53:47'),
 (73, 'Structural and Construction Management', 5, '2025-03-05 06:53:47', '2025-03-05 06:53:47'),
-(74, 'Cyber-Physical Systems', 5, '2025-03-05 06:53:47', '2025-03-05 06:53:47');
+(74, 'Cyber-Physical Systems', 5, '2025-03-05 06:53:47', '2025-03-05 06:53:47'),
+(75, 'Other', 3, '2025-03-05 06:53:34', '2025-03-05 06:53:34'),
+(76, 'Other', 5, '2025-03-05 06:53:34', '2025-03-05 06:53:34');
 
 --
 -- Indexes for dumped tables
@@ -133,7 +135,7 @@ ALTER TABLE `specializations`
 -- AUTO_INCREMENT for table `specializations`
 --
 ALTER TABLE `specializations`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=75;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=77;
 COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
