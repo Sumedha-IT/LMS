@@ -27,7 +27,8 @@ class UserProfileController extends Controller
                 'data' => 'required|json',
                 'avatar_url' => 'nullable|file|mimes:jpeg,jpg,png',
                 'upload_resume' => 'nullable|file|mimes:pdf,doc,docx',
-                'upload_aadhar' => 'nullable|file|mimes:pdf,jpg,jpeg,png'
+                'upload_aadhar' => 'nullable|file|mimes:pdf,jpg,jpeg,png',
+                'passport_photo' => 'nullable|file|mimes:jpeg,jpg,png|max:20480' // 20MB max
             ]);
 
             $user = $request->user();
@@ -56,6 +57,15 @@ class UserProfileController extends Controller
                 }
                 $path = $request->file('upload_aadhar')->store('documents', 'public');
                 $user->upload_aadhar = $path;
+            }
+            
+            // Handle passport photo upload
+            if ($request->hasFile('passport_photo')) {
+                if ($user->passport_photo_path) {
+                    Storage::disk('public')->delete($user->passport_photo_path);
+                }
+                $path = $request->file('passport_photo')->store('passport_photos', 'public');
+                $user->passport_photo_path = $path;
             }
 
             // Update user data

@@ -127,24 +127,7 @@ const NewDashBoard = () => {
 
   return (
     <>
-      <section className="w-full p-2 mb-10 hidden">
-        <div className="relative min-h-[15.75rem]  rounded-2xl flex items-center px-10 w-full">
-          <div className="flex justify-evenly bg-[#404040] w-[70%]">
-            <CircularProgress value={4} max={10} label="Total Assignments" size={157} strokeWidth={12} showPercentage={true} />
-            <CircularProgress value={4} max={10} label="Total Assignments" size={157} strokeWidth={12} showPercentage={true} />
-            <CircularProgress value={4} max={10} label="Total Assignments" size={157} strokeWidth={12} showPercentage={false} />
-            {/* <CircularProgress value={4} max={10} label="Total Assignments" size={157} strokeWidth={12} showPercentage={false} /> */}
-            <div>
-
-            </div>
-          </div>
-          <div className=" w-[30%]">
-            <StudentPlacedCard />
-          </div>
-
-        </div>
-
-      </section>
+     
 
       <section className=" w-full p-2 mb-10 flex gap-2">
         <div className=" relative  min-h-[15.75rem] bg-[#404040]  rounded-2xl flex items-center px-10 w-3/4">
@@ -154,13 +137,17 @@ const NewDashBoard = () => {
             <CircularProgress value={4} max={10} label="Total Assignments" size={157} strokeWidth={12} showPercentage={false} />
           </div>
           <div>
-            <img className=" absolute -top-16  w-[20rem] right-5"
-              src="/storage/image.png"
-              alt="Image"
-              onError={(e) => {
-                e.target.src = "/storage/image.png";
-              }}
-            />
+          <img 
+  className="absolute -top-16 w-[20rem] right-5"
+  src="/storage/image.png" 
+  alt="Decorative illustration"
+  loading="lazy"
+  onError={(e) => {
+    e.target.onerror = null; // Prevent infinite loop if fallback also fails
+    e.target.src = "/storage/fallback-image.png"; // Different fallback path
+    e.target.alt = "Fallback decorative illustration";
+  }}
+/>
           </div>
         </div>
         <div className=" w-1/4">
