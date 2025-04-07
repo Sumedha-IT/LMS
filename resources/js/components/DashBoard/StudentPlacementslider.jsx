@@ -248,8 +248,8 @@ export default function StudentPlacedCard() {
 
                   {/* Profile image */}
                   <MotionAvatar
-                    src={currentStudent.image}
-                    alt={currentStudent.name}
+                    // src={currentStudent?.image}
+                    alt={currentStudent?.name}
                     sx={{
                       width: 96,
                       height: 96,
