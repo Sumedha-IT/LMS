@@ -3011,11 +3011,11 @@ const MyProfile = () => {
         </div>
       </div>
 
-      {/* Rest of your profile content remains unchanged */}
+      {/* Rest of your profile content remains unchanged */} 
       <div className="max-w-4xl mx-auto px-4">
         <div className="relative -mt-24">
           {/* Profile Image and Basic Info */}
-          <div className="flex justify-between items-start w-full">
+          <div className="flex justify-between items-start w-full">{/* Profile Image}
             <div className="flex flex-col items-start gap-4">
               <div className="relative">
                 {photoPreview ? (
