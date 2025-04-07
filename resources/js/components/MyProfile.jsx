@@ -571,7 +571,7 @@ const MyProfile = () => {
             ...prev,
             [name]: type === 'checkbox' ? checked : value,
         };
-        console.log('Updated formData:', newData);
+        console.log('Updated tempFormData:', newData);
         return newData;
     });
 };
@@ -809,6 +809,7 @@ const MyProfile = () => {
         return;
       }
 
+
       // Create FormData object
       const formDataToSend = new FormData();
       
@@ -819,6 +820,7 @@ const MyProfile = () => {
           formDataToSend.append(field, formData[field]);
         }
       });
+
 
       // Clean and validate data before sending
       const jsonData = {
@@ -3011,7 +3013,7 @@ const MyProfile = () => {
         </div>
       </div>
 
-      {/* Rest of your profile content remains unchanged */}
+      {/* Rest of your profile content remains unchanged */} 
       <div className="max-w-4xl mx-auto px-4">
         <div className="relative -mt-24">
           {/* Profile Image and Basic Info */}
