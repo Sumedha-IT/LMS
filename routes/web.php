@@ -30,6 +30,9 @@ Route::get('clear-cache', function () {
 
     return "Cache cleared successfully";
 });
+Route::get('/linkstorage', function () {
+    Artisan::call('storage:link');
+});
 
 Route::get('user/{userId}/exam/{examId}', function ($userId, $examId) {
     return view('exam');  // This should point to the Blade file that loads the React component.

@@ -15,7 +15,8 @@ import { FiPlus, FiTrash2, FiEdit2 } from 'react-icons/fi';
 import { Document, Page, Text, View, StyleSheet, PDFDownloadLink } from '@react-pdf/renderer';
 import { AiOutlineFilePdf } from 'react-icons/ai';
 
-const API_URL = import.meta.env.VITE_API_URL;
+// const API_URL = import.meta.env.VITE_API_URL;
+const API_URL = import.meta.env.REACT_APP_API_URL
 
 // Update mainMenu array
 const mainMenu = [
