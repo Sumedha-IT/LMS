@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\Password;
 use App\Http\Controllers\BatchController;
 use App\Http\Controllers\LeaveController;
 use App\Http\Controllers\CourseController;
+use App\Http\Controllers\ProjectController;
 use App\Http\Controllers\SectionController;
 use App\Http\Controllers\SubjectController;
 use App\Http\Controllers\TestingController;
@@ -26,8 +27,10 @@ use App\Http\Controllers\api\StudentsController;
 use App\Http\Controllers\ExamQuestionController;
 use App\Http\Controllers\QuestionBankController;
 use Illuminate\Http\Resources\Json\JsonResource;
+use App\Http\Controllers\CertificationController;
 use App\Http\Controllers\PasswordResetController;
 use App\Http\Controllers\api\JobProfileController;
+use App\Http\Controllers\StudentJourneyController;
 use App\Http\Controllers\api\ExamAttemptController;
 use App\Http\Controllers\api\UserProfileController;
 use App\Http\Controllers\TeachingMaterialController;
@@ -35,8 +38,6 @@ use App\Http\Controllers\api\QuestionOptionController;
 use App\Http\Controllers\QuestionBankChapterController;
 use App\Http\Controllers\api\StudentEducationController;
 use App\Http\Controllers\api\QuestionAttempLogController;
-use App\Http\Controllers\CertificationController;
-use App\Http\Controllers\ProjectController;
 
 /*
 |--------------------------------------------------------------------------
@@ -170,6 +171,8 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
     Route::get('/announcements', [\App\Http\Controllers\AnnouncementController::class, 'index']);
     
     Route::get('/tutors', [\App\Http\Controllers\UserController::class, 'tutors']);
+
+    Route::get('/student/journey', [StudentJourneyController::class, 'journey']);
 
     //api for listing for sections
     

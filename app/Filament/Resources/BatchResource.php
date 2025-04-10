@@ -29,7 +29,6 @@ class BatchResource extends Resource implements HasShieldPermissions
 {
     protected static ?string $model = Batch::class;
 
-    //protected static ?string $navigationIcon = 'heroicon-o-academic-cap';
     protected static ?string $navigationIcon = 'icon-batches';
 
     protected static ?string $navigationGroup = 'Batches';
@@ -124,17 +123,17 @@ class BatchResource extends Resource implements HasShieldPermissions
                                                                             ->live()
                                                                             ->afterStateUpdated(function ($state, callable $set) {
                                                                                 if ($state) {
-                                                                                    $set('completed_at', now()->toDateTimeString());
+                                                                                    $set('topic_completed_at', now()->toDateTimeString());
                                                                                 } else {
-                                                                                    $set('completed_at', null);
+                                                                                    $set('topic_completed_at', null);
                                                                                 }
                                                                             })
                                                                             ->extraAttributes(['class' => 'mt-2']),
-                                                                        Forms\Components\DatePicker::make('completed_at')
+                                                                        Forms\Components\DatePicker::make('topic_completed_at')
                                                                             ->label('Completed At')
                                                                             ->displayFormat('d/m/Y H:i')
-                                                                            ->disabled()
-                                                                            ->dehydrated(false)
+                                                                            // Removed disabled() and dehydrated(false)
+                                                                            ->dehydrated() // Ensure the value is included in the form submission
                                                                             ->extraAttributes(['class' => 'mt-2']),
                                                                     ]),
                                                             ]),
@@ -144,14 +143,12 @@ class BatchResource extends Resource implements HasShieldPermissions
                                                     ->addActionLabel('Add to topics')
                                                     ->itemLabel(fn (array $state): ?string => $state['topic_id'] ? \App\Models\Topic::find($state['topic_id'])?->name : null)
                                                     ->collapsible()
-                                                    // ->cloneable()
                                                     ->extraAttributes(['class' => 'mt-4']),
                                             ])
                                             ->columnSpanFull()
                                             ->defaultItems(3)
                                             ->addActionLabel('Add curriculum')
                                             ->collapsible(),
-                                            // ->cloneable(),
                                         Forms\Components\Select::make('manager_id')
                                             ->label('Branch Manager')
                                             ->options(function () {
