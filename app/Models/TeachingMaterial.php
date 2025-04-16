@@ -60,4 +60,10 @@ class TeachingMaterial extends Model
     {
         return $this->belongsTo(Topic::class);
     }
+
+    // Optional: Scoped method to check if submitted by a specific user
+    public function isSubmittedByUser($userId)
+    {
+        return $this->statuses()->where('user_id', $userId)->exists();
+    }
 }
