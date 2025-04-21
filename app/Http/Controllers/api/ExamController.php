@@ -396,4 +396,45 @@ class ExamController extends Controller
             'data' => $exams,
         ]);
     }
+
+    public function ExamLeaderBoard(Request $request){
+
+        $user=$request->user();
+        $batch_id=$user->batchesstudents->pluck('id')->first();
+        $exams_id=Exam::where('batch_id',$batch_id)->latest('exam_date')->first()->id;
+        $examAttempts=ExamAttempt::with('student','getExams')->where('exam_id',$exams_id)->orderByDesc('score')->take(5)->get();
+        $leaderboard=[];
+        foreach($examAttempts as $examAttempt){
+            $leaderboard[]=[
+                'StudentName'=>$examAttempt->student->name,
+                'Exam_name'=>$examAttempt->getExams->title,
+                'Score'=>$examAttempt->score,
+                'StudentId'=>$examAttempt->student->id,
+            ];
+           
+        }
+        return response()->json([
+           $leaderboard
+
+        ]);
+        // foreach($exams_id as $exam_id){
+        //     $examAttempt=ExamAttempt::where('exam_id',$exam_id)->get()->pluck('student_id','score')->toArray();
+        //     $examAttempt=collect($examAttempt)->sortByDesc('score')->take(5)->map(function($attempt) use ($exam_id) {
+        //         return [
+        //             'student_id' => $attempt['student_id'],
+        //             'score' => $attempt['score'],
+        //             'exam_id' => $exam_id,
+        //         ];
+        //     })->values()->all();
+
+        // }
+        
+        // return response()->json([
+        //     'success' => true,
+        //     'exams'=> $exams_id,
+        //     'batch_id' => $batch_id,
+
+        //     'examAttempt' => $examAttempt,
+        // ]);
+    }
 }

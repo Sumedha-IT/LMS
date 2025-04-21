@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Models\Topic;
 use App\Models\BatchCurriculum;
+use App\Models\TeachingMaterial;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 
@@ -24,6 +25,10 @@ class BatchCurriculumTopic extends Model
     public function topic()
     {
         return $this->belongsTo(Topic::class, 'topic_id');
+    }
+    public function assignments()
+    {
+        return $this->hasMany(TeachingMaterial::class, 'topic_id', 'topic_id')->where('doc_type',2);
     }
 
 }

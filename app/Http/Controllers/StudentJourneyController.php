@@ -5,7 +5,6 @@ namespace App\Http\Controllers;
 use App\Models\Batch;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
-use App\Models\BatchCurriculumTopic;
 
 class StudentJourneyController extends Controller
 {
@@ -17,16 +16,24 @@ class StudentJourneyController extends Controller
         //     return response()->json(['message' => 'Unauthorized'], 401);
         // }
 
-        // Get the batch_id from the batch_user table
+        // Get the batch_id from the batch_user pivot table
         $batchUser = $user->batches()->first();
         if (!$batchUser) {
             return response()->json(['message' => 'No batch assigned to user'], 404);
         }
-        $batchId = $batchUser->id;
 
-        // Fetch batch details with eager-loaded curriculums
-        $batch = Batch::with('curriculums.curriculum', 'curriculums.tutor', 'curriculums.topics.topic','course_package')
-            ->findOrFail($batchId);
+        // Fetch batch with eager-loaded relationships
+        $batch = Batch::with([
+            'curriculums.curriculum',
+            'curriculums.tutor',
+            'curriculums.topics.topic',
+            'curriculums.topics.assignments' => function ($query) use ($user) {
+                $query->with(['teachingMaterialStatuses' => function ($statusQuery) use ($user) {
+                    $statusQuery->where('user_id', $user->id);
+                }]);
+            },
+            'course_package'
+        ])->findOrFail($batchUser->id);
 
         // Prepare the response
         $journey = [
@@ -43,7 +50,7 @@ class StudentJourneyController extends Controller
             'curriculums' => [],
         ];
 
-        // Fetch curriculum and tutor details from batch_curriculum
+        // Build curriculum data
         foreach ($batch->curriculums as $curriculum) {
             $curriculumData = [
                 'id' => $curriculum->id,
@@ -58,15 +65,26 @@ class StudentJourneyController extends Controller
                 'topics' => [],
             ];
 
-            // Topics are already eager-loaded, so use them directly
+            // Build topic data
             foreach ($curriculum->topics as $topic) {
-                $curriculumData['topics'][] = [
+                $topicData = [
                     'id' => $topic->id,
                     'topic_id' => $topic->topic_id,
                     'topic_name' => $topic->topic->name,
                     'is_topic_completed' => $topic->is_topic_completed,
                     'topic_completed_at' => $topic->topic_completed_at,
+                    'teaching_materials' => $topic->assignments->map(function ($material) use ($user) {
+                        return [
+                            'id' => $material->id,
+                            'name' => $material->name,
+                            'description' => $material->description,
+                            'file' => asset('storage/' . $material->file),
+                            'is_submitted' => $material->teachingMaterialStatuses->isNotEmpty(),
+                        ];
+                    })->all(),
                 ];
+
+                $curriculumData['topics'][] = $topicData;
             }
 
             $journey['curriculums'][] = $curriculumData;

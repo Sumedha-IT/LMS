@@ -34,6 +34,10 @@ class ExamAttempt extends Model
         return $this->belongsTo(ExamQuestion::class, 'exam_id');
     }
 
+    public function getExams()
+    {
+        return $this->belongsTo(Exam::class, 'exam_id', 'id');
+    }
     
     
   
