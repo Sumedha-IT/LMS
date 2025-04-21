@@ -1,9 +1,9 @@
-
-
 import { Box, Button, Grid, LinearProgress, Paper, Typography } from "@mui/material"
 import { styled } from "@mui/material/styles"
 import { FileText } from "lucide-react"
 import Circularprogress from "./Ui/Circularprogress";
+import { useEffect,useState } from "react";
+import { apiRequest } from "../../utils/api";
 
 // Custom styled components
 const StyledLinearProgress = styled(LinearProgress)(({ theme }) => ({
@@ -26,6 +26,60 @@ const ModuleCard = styled(Paper)(({ theme }) => ({
 }))
 
 export default function StudentJourney() {
+  const [journey, setJourney] = useState({
+    batch: { course: { name: "" } },
+    curriculums: []
+  });
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    const fetchJourneyData = async () => {
+      try {
+        setLoading(true);
+        const data = await apiRequest("student/journey");
+        setJourney(data);
+      } catch (err) {
+        console.error('Error fetching journey data:', err);
+        setError(err.message || 'Failed to load journey data');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchJourneyData();
+  }, []);
+
+  // Calculate overall completion percentage
+  const calculateOverallCompletion = () => {
+    if (!journey.curriculums || journey.curriculums.length === 0) return 0;
+    
+    let totalTopics = 0;
+    let completedTopics = 0;
+    
+    journey.curriculums.forEach(curriculum => {
+      if (curriculum.topics && curriculum.topics.length > 0) {
+        totalTopics += curriculum.topics.length;
+        completedTopics += curriculum.topics.filter(topic => topic.is_topic_completed).length;
+      }
+    });
+    
+    return totalTopics > 0 ? Math.round((completedTopics / totalTopics) * 100) : 0;
+  };
+
+  // Calculate completion percentage for a specific curriculum
+  const calculateCurriculumCompletion = (topics) => {
+    if (!topics || topics.length === 0) return 0;
+    
+    const completedTopics = topics.filter(topic => topic.is_topic_completed).length;
+    return Math.round((completedTopics / topics.length) * 100);
+  };
+
+  if (loading) return <div>Loading...</div>;
+  if (error) return <div>Error: {error}</div>;
+
+  const overallCompletion = calculateOverallCompletion();
+
   return (
     <Box sx={{ p: 3, position: "relative", bgcolor: "white", borderRadius: 2, boxShadow: 1, marginTop: 5 }}>
       {/* Header */}
@@ -50,15 +104,15 @@ export default function StudentJourney() {
         </Button>
       </Box>
 
-      <div className=" flex justify-between w-full">
+      <div className="flex justify-between w-full">
         {/* Physical Design Section */}
-      <Typography variant="h6" sx={{ fontWeight: 500, color: "#424242", mb: 1 }}>
-        Physical Design
-      </Typography>
+        <Typography variant="h6" sx={{ fontWeight: 500, color: "#424242", mb: 1 }}>
+          {journey?.batch?.course?.name}
+        </Typography>
 
-      <Typography variant="h6" sx={{ fontWeight: 500, color: "#424242", mb: 1 }}>
-      Total Modules 5
-      </Typography>
+        <Typography variant="h6" sx={{ fontWeight: 500, color: "#424242", mb: 1 }}>
+          Total Modules {journey.curriculums.length}
+        </Typography>
       </div>
 
       {/* Progress Section */}
@@ -68,8 +122,8 @@ export default function StudentJourney() {
           elevation={1}
           sx={{
             position: "absolute",
-            top: 55, // Move up above the progress bar
-            left: "60%",
+            top: 55,
+            left: `${overallCompletion}%`,
             transform: "translateX(-50%)",
             p: 1.5,
             textAlign: "center",
@@ -85,105 +139,38 @@ export default function StudentJourney() {
             Completed
           </Typography>
           <Typography variant="h6" sx={{ color: "#E53510", fontWeight: 500 }}>
-            <div className=" rounded-md mt-1 bg-[#E53510] bg-opacity-10 w-full"> 60%</div>
+            <div className="rounded-md mt-1 bg-[#E53510] bg-opacity-10 w-full">
+              {overallCompletion}%
+            </div>
           </Typography>
         </Paper>
 
         {/* Progress Bar - Now below the Module Completed card */}
-        <StyledLinearProgress variant="determinate" value={60} sx={{ mt: 2 }} />
-
-        {/* Total Modules */}
-       
+        <StyledLinearProgress variant="determinate" value={overallCompletion} sx={{ mt: 2 }} />
       </Box>
 
       {/* Module Cards */}
-      {/* <Grid container spacing={2} sx={{ mt: 2 }}>
-        <Grid item xs={12} md={6}>
-          <ModuleCard>
-            <Box sx={{ display: "flex", alignItems: "center" }}>
-              <Documenticon color="#FF5722" />
-              <Typography variant="body1" sx={{ ml: 2, fontWeight: 500, color: "#424242" }}>
-                CMOS Fundamentals (CF)
-              </Typography>
-            </Box>
-            <Circularprogress value={90} />
-          </ModuleCard>
-        </Grid>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 px-5">
+        {journey.curriculums.map((curriculum, index) => {
+          const completionPercentage = calculateCurriculumCompletion(curriculum.topics);
+          return (
+            <div key={index} className="flex bg-[#F5F5F5] rounded-lg shadow-sm w-full relative p-3">
+              {/* Icon Section - Positioned to touch left edge */}
+              <div className="absolute -left-3 top-1/2 transform -translate-y-1/2 bg-white border-[#E53510] border-l-2 rounded-full w-12 h-12 flex items-center justify-center">
+                <FileText color="black" size={20} />
+              </div>
 
-        <Grid item xs={12} md={6}>
-          <ModuleCard>
-            <Box sx={{ display: "flex", alignItems: "center" }}>
-              <Documenticon color="#FF5722" />
-              <Typography variant="body1" sx={{ ml: 2, fontWeight: 500, color: "#424242" }}>
-                Scripting Language (SL)
-              </Typography>
-            </Box>
-            <Circularprogress value={90} />
-          </ModuleCard>
-        </Grid>
-
-        <Grid item xs={12} md={6}>
-          <ModuleCard>
-            <Box sx={{ display: "flex", alignItems: "center" }}>
-              <Documenticon color="#FF5722" />
-              <Typography variant="body1" sx={{ ml: 2, fontWeight: 500, color: "#424242" }}>
-                Digital Design Flow (DDF)
-              </Typography>
-            </Box>
-            <Circularprogress value={90} />
-          </ModuleCard>
-        </Grid>
-
-        <Grid item xs={12} md={6}>
-          <ModuleCard>
-            <Box sx={{ display: "flex", alignItems: "center" }}>
-              <Documenticon color="#FF5722" />
-              <Typography variant="body1" sx={{ ml: 2, fontWeight: 500, color: "#424242" }}>
-                SSTA
-              </Typography>
-            </Box>
-            <Circularprogress value={0} />
-          </ModuleCard>
-        </Grid>
-
-        <Grid item xs={12} md={6}>
-          <ModuleCard>
-            <Box sx={{ display: "flex", alignItems: "center" }}>
-              <Documenticon color="#FF5722" />
-              <Typography variant="body1" sx={{ ml: 2, fontWeight: 500, color: "#424242" }}>
-                PNR
-              </Typography>
-            </Box>
-            <Circularprogress value={0} />
-          </ModuleCard>
-        </Grid>
-      </Grid> */}
-
-
-
-<div className="grid grid-cols-1 md:grid-cols-3 gap-4 px-5">
-      {[
-        { title: "CMOS Fundamentals (CF)", progress: 90 },
-        { title: "Scripting Language (SL)", progress: 90 },
-        { title: "Digital Design Flow (DDF)", progress: 90 },
-        { title: "SSTA", progress: 0 },
-        { title: "PNR", progress: 0 },
-      ].map((module, index) => (
-        <div key={index} className="flex bg-[#F5F5F5] rounded-lg shadow-sm w-full relative p-3">
-          {/* Icon Section - Positioned to touch left edge */}
-          <div className="absolute -left-3 top-1/2 transform -translate-y-1/2 bg-white border-[#E53510] border-l-2 rounded-full w-12 h-12 flex items-center justify-center">
-            <FileText color="black" size={20} />
-          </div>
-
-          {/* Content Section */}
-          <div className="flex flex-1 pl-12 justify-between items-center">
-            <span className="text-gray-800 font-medium">{module.title}</span>
-            <Circularprogress value={module.progress} />
-          </div>
-        </div>
-      ))}
-    </div>
+              {/* Content Section */}
+              <div className="flex flex-1 pl-12 justify-between items-center">
+                <span className="text-gray-800 font-medium">
+                  {curriculum.curriculum.name}
+                </span>
+                <Circularprogress value={completionPercentage}  color={completionPercentage === 100 ? "#E53510" : "#E53510"}/>
+              </div>
+            </div>
+          );
+        })}
+      </div>
     </Box>
-  )
+  );
 }
-

@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
-import Cookies from "js-cookie";
-import { useNavigate } from "react-router-dom"; // Import useNavigate for redirection
+import { useNavigate } from "react-router-dom";
+import { apiRequest } from "../utils/api"; // Import the utility function
 import CircularProgress from "../components/DashBoard/CircularProgress";
 import PerformanceChart from "../components/DashBoard/PerformanceChart";
 import { toast, ToastContainer } from 'react-toastify';
@@ -10,144 +10,59 @@ import StudentPlacedCard from "../components/DashBoard/StudentPlacementslider";
 import StudentJourney from "../components/DashBoard/StudentJourney";
 import AttendanceTracker from "../components/DashBoard/AttendanceTracker";
 import MyAssignment from "../components/DashBoard/MyAssignment";
-
-// Function to decode and parse the cookie
-const getDecodedCookie = (cookieName) => {
-  try {
-    const cookieValue = Cookies.get(cookieName);
-    if (!cookieValue) return null;
-    const decodedValue = decodeURIComponent(cookieValue);
-    return JSON.parse(decodedValue);
-  } catch (error) {
-    console.error('Error decoding cookie:', error);
-    return null;
-  }
-};
+import LearningJourney from "../components/DashBoard/LearningJourney";
 
 const NewDashBoard = () => {
-  const baseUrl = import.meta.env.VITE_APP_API_URL;
-  const endpoint = "exam-chart";
-  const url = `${baseUrl}${endpoint}`;
-
-  const cookieData = getDecodedCookie('user_info');
-  const token = cookieData?.token;
-
-
-  // State to store the fetched exam chart data
   const [examChartData, setExamChartData] = useState(null);
   const [UserData, setUserData] = useState([]);
-  // Hook for navigation
   const navigate = useNavigate();
-
-  // Function to fetch exam-chart data
-  async function fetchExamChartData() {
-    try {
-      if (!token) {
-        throw new Error("No token found in cookie");
-      }
-
-      const response = await fetch(url, {
-        method: "GET",
-        headers: {
-          Accept: "application/vnd.api+json",
-          "Content-Type": "application/vnd.api+json",
-          Authorization: token,
-        },
-      });
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! Status: ${response.status}`);
-      }
-
-      const data = await response.json();
-      return data;
-    } catch (error) {
-      console.error("Error fetching exam-chart data:", error);
-      throw error;
-    }
-  }
-
-  // Function to fetch profile data
-  async function fetchProfileData() {
-    try {
-      if (!token) {
-        throw new Error("No token found in cookie");
-      }
-
-      const profileUrl = `${baseUrl}profile`; // Endpoint for profile data
-      const response = await fetch(profileUrl, {
-        method: "GET",
-        headers: {
-          Accept: "application/vnd.api+json",
-          "Content-Type": "application/vnd.api+json",
-          Authorization: token,
-        },
-      });
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! Status: ${response.status}`);
-      }
-
-      const data = await response.json();
-      return data;
-    } catch (error) {
-      console.error("Error fetching profile data:", error);
-      throw error;
-    }
-  }
 
   useEffect(() => {
     // Fetch profile data and check role_id
-    // fetchProfileData()
-    //   .then((profileData) => {
-    //     // console.log("Profile data received:", profileData.user.role_id);
-    //     setUserData(profileData);
-    //     // Check if role_id is not 6
-    //     if (profileData.user.role_id !== 6) {
-    //       // Redirect to the home route
-    //       navigate("/administrator/1");
-    //     }
-    //   })
-    //   .catch((error) => {
-    //     console.error("Failed to fetch profile data:", error);
-    //     toast.error("Failed to fetch profile data");
-    //   });
+    const fetchData = async () => {
+      try {
+        // Example using the utility function
+        const profileData = await apiRequest("profile");
+        setUserData(profileData);
 
-    // // Fetch exam-chart data
-    // fetchExamChartData()
-    //   .then((data) => {
-    //     // console.log("Exam chart data received:", data);
-    //     setExamChartData(data); // Store the fetched data in state
-    //   })
-    //   .catch((error) => {
-    //     console.error("Failed to fetch exam-chart data:", error);
-    //     toast.error("Failed to fetch exam-chart data");
-    //   });
-  }, [token, navigate]);
+        // if (profileData.user.role_id !== 6) {
+        //   navigate("/administrator/1");
+        // }
+
+        const examData = await apiRequest("exam-chart");
+        setExamChartData(examData);
+      } catch (error) {
+        console.error("Failed to fetch data:", error);
+        toast.error("Failed to fetch data");
+      }
+    };
+
+    fetchData();
+  }, [navigate]);
 
   return (
     <>
-     
 
-      <section className=" w-full p-2 mb-10 flex gap-2">
+
+      <section className="  w-full p-2 mb-10 flex gap-2">
         <div className=" relative  min-h-[15.75rem] bg-[#404040]  rounded-2xl flex items-center px-10 w-3/4">
-          <div className=" flex gap-2">
-            <CircularProgress value={4} max={10} label="Total Assignments" size={157} strokeWidth={12} showPercentage={true} />
-            <CircularProgress value={4} max={10} label="Total Assignments" size={157} strokeWidth={12} showPercentage={true} />
-            <CircularProgress value={4} max={10} label="Total Assignments" size={157} strokeWidth={12} showPercentage={false} />
+          <div className=" flex gap-2 w-3/4 justify-evenly">
+            <CircularProgress value={4} max={10} label="Total Assignments" size={150} strokeWidth={12} showPercentage={true} />
+            <CircularProgress value={4} max={10} label="Total Assignments" size={150} strokeWidth={12} showPercentage={true} />
+            <CircularProgress value={4} max={10} label="Total Assignments" size={150} strokeWidth={12} showPercentage={false} />
           </div>
-          <div>
-          <img 
-  className="absolute -top-16 w-[20rem] right-5"
-  src="/storage/image.png" 
-  alt="Decorative illustration"
-  loading="lazy"
-  onError={(e) => {
-    e.target.onerror = null; // Prevent infinite loop if fallback also fails
-    e.target.src = "/storage/fallback-image.png"; // Different fallback path
-    e.target.alt = "Fallback decorative illustration";
-  }}
-/>
+          <div className="">
+            <img
+              className="absolute  -top-16 w-[17rem] right-0"
+              src="/storage/image.png"
+              alt="Decorative illustration"
+              loading="lazy"
+              onError={(e) => {
+                e.target.onerror = null; // Prevent infinite loop if fallback also fails
+                e.target.src = "/storage/fallback-image.png"; // Different fallback path
+                e.target.alt = "Fallback decorative illustration";
+              }}
+            />
           </div>
         </div>
         <div className=" w-1/4">
@@ -159,18 +74,19 @@ const NewDashBoard = () => {
       {/* Pass the fetched data to PerformanceChart */}
       {/* <PerformanceChart UserData={UserData} examChartData={examChartData} /> */}
       <UpcomingAnnouncements />
-      <StudentJourney/>
-     <div className=" flex justify-between w-full px-1 my-10">
-      <div className="  w-2/5">
-      <AttendanceTracker/>
+      <StudentJourney />
+      <div className=" flex justify-between w-full px-1 my-10">
+        <div className="  w-2/5">
+          <AttendanceTracker />
+        </div>
+        <div className=" w-3/5">
+          <MyAssignment />
+        </div>
+
+
       </div>
-      <div className=" w-3/5">
-      <MyAssignment/>
-      </div>
-   
-  
-     </div>
       <ToastContainer />
+      {/* <LearningJourney/> */}
     </>
   );
 };
