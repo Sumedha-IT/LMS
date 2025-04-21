@@ -272,9 +272,23 @@ const UserExamTable = ({ Value, userId }) => {
         const [isAboutToStart, setIsAboutToStart] = useState(false);
         const [examStarted, setExamStarted] = useState(false);
 
+        useEffect(() => {
+            // Check if exam has already started based on start time
+            const now = new Date();
+            const [hours, minutes] = exam.starts_at.split(':').map(Number);
+            const examDate = new Date();
+            examDate.setHours(hours, minutes, 0, 0);
+            
+            if (now >= examDate) {
+                setExamStarted(true);
+            }
+        }, [exam.starts_at]);
+
         const handleTimeUpdate = (totalSeconds) => {
             setIsAboutToStart(totalSeconds <= 60 && totalSeconds > 0);
-            setExamStarted(totalSeconds <= 0);
+            if (totalSeconds <= 0) {
+                setExamStarted(true);
+            }
         };
 
         return (
@@ -282,199 +296,171 @@ const UserExamTable = ({ Value, userId }) => {
                 sx={{ 
                     borderRadius: '24px',
                     overflow: 'hidden',
-                    boxShadow: isAboutToStart ? 'none' : '0 4px 20px rgba(0,0,0,0.08)',
+                    boxShadow: '0 4px 20px rgba(0,0,0,0.05)',
                     display: 'flex',
                     flexDirection: 'column',
                     position: 'relative',
-                    border: isAboutToStart ? '1px solid rgba(238, 74, 14, 0.1)' : 'none',
+                    border: '1px solid #E2E8F0',
                     width: '100%',
-                    maxWidth: '600px',
-                    margin: '0 auto',
-                    animation: isAboutToStart ? `${blinkAnimation} 1s ease-in-out infinite` : 'none',
-                    transition: 'all 0.3s ease-in-out'
+                    bgcolor: '#FFFFFF',
+                    mb: 2
                 }}
             >
-                {/* Colored Header Section */}
+                {/* Pink Header Section */}
                 <Box
                     sx={{
-                        backgroundColor: isUpcoming ? '#FFF5F3' : '#FFF8F0',
+                        bgcolor: '#FFF5F3',
                         p: 3,
-                        position: 'relative',
-                        overflow: 'hidden',
-                        transition: 'all 0.3s ease-in-out',
-                        ...(isAboutToStart && {
-                            backgroundColor: '#FFF1EE',
-                        })
-                    }}
-                >
-                    <Box sx={{ 
-                        position: 'relative', 
-                        zIndex: 1,
                         display: 'flex',
                         justifyContent: 'space-between',
-                        alignItems: 'flex-start'
-                    }}>
-                        <Box>
-                            <Typography 
-                                variant="h5" 
-                                sx={{ 
-                                    fontWeight: 700, 
-                                    fontSize: '24px',
-                                    color: isAboutToStart ? '#EE4A0E' : '#1A202C',
-                                    mb: 1,
-                                    lineHeight: 1.2
-                                }}
-                            >
-                                {exam.title}
-                            </Typography>
-                            <Typography 
-                                variant="body1" 
-                                sx={{
-                                    color: '#718096',
-                                    fontSize: '14px'
-                                }}
-                            >
-                                {exam.subjectName || "Mid term Chapter 1 | MCQ"}
-                            </Typography>
-                            {isUpcoming && exam.starts_at && (
-                                <Timer startTime={exam.starts_at} onTimeUpdate={handleTimeUpdate} />
-                            )}
-                        </Box>
-                        <Box 
-                            component="img" 
-                            src={isUpcoming ? '/images/physics-icon.png' : '/images/chemistry-icon.png'} 
-                            alt={isUpcoming ? "Physics Icon" : "Chemistry Icon"}
+                        alignItems: 'flex-start',
+                        borderBottom: '1px solid #FFE4E0'
+                    }}
+                >
+                    <Box>
+                        <Typography 
+                            variant="h4" 
                             sx={{ 
-                                width: '100px',
-                                height: '100px',
-                                objectFit: 'contain',
-                                ml: 2
+                                fontWeight: 700,
+                                color: '#1A202C',
+                                fontSize: '28px',
+                                mb: 1
                             }}
-                        />
+                        >
+                            {exam.title}
+                        </Typography>
+                        <Typography 
+                            variant="body1" 
+                            sx={{
+                                color: '#718096',
+                                fontSize: '16px'
+                            }}
+                        >
+                            {exam.subjectName || "Mid term Chapter 1 | MCQ"}
+                        </Typography>
                     </Box>
+                    <Box 
+                        component="img" 
+                        src="/images/physics-icon.png"
+                        alt="Physics Icon"
+                        sx={{ 
+                            width: '140px',
+                            height: 'auto',
+                            objectFit: 'contain'
+                        }}
+                    />
                 </Box>
 
                 {/* White Content Section */}
-                <Box sx={{ 
-                    bgcolor: '#FFFFFF', 
-                    p: 3,
-                    transition: 'all 0.3s ease-in-out',
-                    ...(isAboutToStart && {
-                        bgcolor: '#FFFFFF',
-                    })
-                }}>
+                <Box sx={{ p: 3, bgcolor: '#FFFFFF' }}>
                     {/* Info Cards Grid */}
                     <Grid container spacing={2}>
                         <Grid item xs={3}>
-                            <Paper elevation={0} sx={{ 
+                            <Box sx={{ 
                                 p: 2,
+                                bgcolor: '#FFFFFF',
                                 border: '1px solid #E2E8F0',
                                 borderRadius: '12px',
-                                display: 'flex',
-                                flexDirection: 'column',
-                                alignItems: 'center',
-                                gap: 1
+                                textAlign: 'left'
                             }}>
-                                <CalendarTodayOutlinedIcon sx={{ fontSize: 20, color: '#4A5568' }} />
-                                <Box sx={{ textAlign: 'center' }}>
-                                    <Typography variant="caption" sx={{ color: '#718096', display: 'block', mb: 0.5 }}>Date</Typography>
-                                    <Typography variant="body2" sx={{ fontWeight: 600, color: '#2D3748' }}>{exam.examDate}</Typography>
+                                <Box sx={{ mb: 1 }}>
+                                    <CalendarTodayOutlinedIcon sx={{ fontSize: 24, color: '#4A5568' }} />
                                 </Box>
-                            </Paper>
+                                <Typography sx={{ color: '#718096', fontSize: '14px', mb: 0.5 }}>Date</Typography>
+                                <Typography sx={{ fontWeight: 600, color: '#2D3748', fontSize: '16px' }}>
+                                    {exam.examDate}
+                                </Typography>
+                            </Box>
                         </Grid>
                         <Grid item xs={3}>
-                            <Paper elevation={0} sx={{ 
+                            <Box sx={{ 
                                 p: 2,
+                                bgcolor: '#FFFFFF',
                                 border: '1px solid #E2E8F0',
                                 borderRadius: '12px',
-                                display: 'flex',
-                                flexDirection: 'column',
-                                alignItems: 'center',
-                                gap: 1
+                                textAlign: 'left'
                             }}>
-                                <AccessTimeOutlinedIcon sx={{ fontSize: 20, color: '#4A5568' }} />
-                                <Box sx={{ textAlign: 'center' }}>
-                                    <Typography variant="caption" sx={{ color: '#718096', display: 'block', mb: 0.5 }}>Duration</Typography>
-                                    <Typography variant="body2" sx={{ fontWeight: 600, color: '#2D3748' }}>{exam.duration}</Typography>
+                                <Box sx={{ mb: 1 }}>
+                                    <AccessTimeOutlinedIcon sx={{ fontSize: 24, color: '#4A5568' }} />
                                 </Box>
-                            </Paper>
+                                <Typography sx={{ color: '#718096', fontSize: '14px', mb: 0.5 }}>Duration</Typography>
+                                <Typography sx={{ fontWeight: 600, color: '#2D3748', fontSize: '16px' }}>
+                                    {exam.duration}
+                                </Typography>
+                            </Box>
                         </Grid>
                         <Grid item xs={3}>
-                            <Paper elevation={0} sx={{ 
+                            <Box sx={{ 
                                 p: 2,
+                                bgcolor: '#FFFFFF',
                                 border: '1px solid #E2E8F0',
                                 borderRadius: '12px',
-                                display: 'flex',
-                                flexDirection: 'column',
-                                alignItems: 'center',
-                                gap: 1
+                                textAlign: 'left'
                             }}>
-                                <AssignmentOutlinedIcon sx={{ fontSize: 20, color: '#4A5568' }} />
-                                <Box sx={{ textAlign: 'center' }}>
-                                    <Typography variant="caption" sx={{ color: '#718096', display: 'block', mb: 0.5 }}>Marks</Typography>
-                                    <Typography variant="body2" sx={{ fontWeight: 600, color: '#2D3748' }}>{exam.totalMarks}</Typography>
+                                <Box sx={{ mb: 1 }}>
+                                    <AssignmentOutlinedIcon sx={{ fontSize: 24, color: '#4A5568' }} />
                                 </Box>
-                            </Paper>
+                                <Typography sx={{ color: '#718096', fontSize: '14px', mb: 0.5 }}>Marks</Typography>
+                                <Typography sx={{ fontWeight: 600, color: '#2D3748', fontSize: '16px' }}>
+                                    {exam.totalMarks}
+                                </Typography>
+                            </Box>
                         </Grid>
                         <Grid item xs={3}>
-                            <Paper elevation={0} sx={{ 
+                            <Box sx={{ 
                                 p: 2,
+                                bgcolor: '#FFFFFF',
                                 border: '1px solid #E2E8F0',
                                 borderRadius: '12px',
-                                display: 'flex',
-                                flexDirection: 'column',
-                                alignItems: 'center',
-                                gap: 1
+                                textAlign: 'left'
                             }}>
-                                <HelpOutlineOutlinedIcon sx={{ fontSize: 20, color: '#4A5568' }} />
-                                <Box sx={{ textAlign: 'center' }}>
-                                    <Typography variant="caption" sx={{ color: '#718096', display: 'block', mb: 0.5 }}>Questions</Typography>
-                                    <Typography variant="body2" sx={{ fontWeight: 600, color: '#2D3748' }}>{exam.totalQuestions}</Typography>
+                                <Box sx={{ mb: 1 }}>
+                                    <HelpOutlineOutlinedIcon sx={{ fontSize: 24, color: '#4A5568' }} />
                                 </Box>
-                            </Paper>
+                                <Typography sx={{ color: '#718096', fontSize: '14px', mb: 0.5 }}>Questions</Typography>
+                                <Typography sx={{ fontWeight: 600, color: '#2D3748', fontSize: '16px' }}>
+                                    {exam.totalQuestions}
+                                </Typography>
+                            </Box>
                         </Grid>
                     </Grid>
 
                     {/* Footer Section */}
                     <Box sx={{ 
-                        display: 'flex', 
-                        justifyContent: 'space-between', 
+                        display: 'flex',
+                        justifyContent: 'space-between',
                         alignItems: 'center',
                         mt: 3
                     }}>
                         <Box>
-                            <Typography variant="caption" sx={{ color: '#718096', display: 'block', mb: 0.5 }}>Check-in Time</Typography>
-                            <Typography variant="body2" sx={{ fontWeight: 600, color: '#2D3748' }}>{exam.starts_at}</Typography>
+                            <Typography sx={{ color: '#718096', fontSize: '14px', mb: 0.5 }}>Check-in Time</Typography>
+                            <Typography sx={{ fontWeight: 600, color: '#2D3748', fontSize: '16px' }}>
+                                {exam.starts_at}
+                            </Typography>
                         </Box>
-                        {(examStarted || !isUpcoming) && (
-                            <Button
-                                variant="contained"
-                                href={isUpcoming ? `/user/${userId}/exam/${exam.id}` : '#'}
-                                target={isUpcoming ? "_blank" : undefined}
-                                sx={{
-                                    backgroundColor: '#EE4A0E',
-                                    color: '#fff',
-                                    borderRadius: '30px',
-                                    px: 4,
-                                    py: 1,
-                                    fontSize: '15px',
-                                    fontWeight: 600,
-                                    textTransform: 'none',
-                                    boxShadow: '0 4px 6px rgba(238, 74, 14, 0.2)',
-                                    '&:hover': {
-                                        backgroundColor: '#D43D0A',
-                                        boxShadow: '0 6px 8px rgba(238, 74, 14, 0.3)',
-                                    },
-                                    '&.Mui-disabled': {
-                                        backgroundColor: '#E2E8F0',
-                                        color: '#A0AEC0'
-                                    }
-                                }}
-                                disabled={!isUpcoming && exam.status === 'Expired'}
-                            >
-                                {isUpcoming ? 'Start' : 'Review'}
-                            </Button>
-                        )}
+                        <Button
+                            variant="contained"
+                            href={isUpcoming && examStarted ? `/user/${userId}/exam/${exam.id}` : '#'}
+                            target={isUpcoming && examStarted ? "_blank" : undefined}
+                            sx={{
+                                backgroundColor: examStarted ? '#EE4A0E' : '#E2E8F0',
+                                color: examStarted ? '#fff' : '#A0AEC0',
+                                borderRadius: '50px',
+                                px: 6,
+                                py: 1.5,
+                                fontSize: '18px',
+                                fontWeight: 600,
+                                textTransform: 'none',
+                                boxShadow: 'none',
+                                '&:hover': {
+                                    backgroundColor: examStarted ? '#D43D0A' : '#E2E8F0',
+                                    boxShadow: examStarted ? '0 4px 10px rgba(238, 74, 14, 0.2)' : 'none'
+                                }
+                            }}
+                            disabled={!examStarted}
+                        >
+                            Start
+                        </Button>
                     </Box>
                 </Box>
             </Card>

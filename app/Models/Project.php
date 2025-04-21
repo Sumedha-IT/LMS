@@ -10,28 +10,19 @@ class Project extends Model
 {
     use HasFactory;
     protected $fillable = [
-        'user_id',
         'title',
         'description',
-        'role',
         'technologies',
         'project_url',
-        'github_url',
         'start_date',
         'end_date',
-        'is_ongoing',
-        'team_size',
         'key_achievements',
         'project_type',
-        'client_name',
-        'organization'
+        'organization',
+        'user_id'
     ];
 
-    protected $casts = [
-        'start_date' => 'date',
-        'end_date' => 'date',
-        'is_ongoing' => 'boolean',
-    ];
+    protected $casts = [];
 
     public function user(): BelongsTo
     {

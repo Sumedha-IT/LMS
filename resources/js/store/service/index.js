@@ -1,19 +1,20 @@
 import { fetchBaseQuery } from "@reduxjs/toolkit/query/react";
+import Cookies from 'js-cookie';
 
-const apiUrl = import.meta.env.REACT_APP_API_URL || 'http://localhost:8000';
+const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000/api';
 
 const baseQuery = fetchBaseQuery({
-    baseUrl: `${apiUrl}`, // Use the defined apiUrl variable
+    baseUrl: apiUrl,
     prepareHeaders: (headers) => {
-        // Uncomment and adjust if you need token-based auth
-        // const data = JSON.parse(String(localStorage.getItem("token")));
-        // const data = "31|uyUHQUw8TGBcj0xlU2jmsgMJvWEoQ9Iuk3lxMCwb5f1437ba";
-        // if (data) {
-        //     headers.set("authorization", `Bearer ${data}`);
-        // }
+        const token = Cookies.get('bearer_token');
+        if (token) {
+            headers.set('Authorization', `Bearer ${token}`);
+        }
+        headers.set('Accept', 'application/json');
+        headers.set('Content-Type', 'application/json');
         return headers;
     },
-    credentials: 'include', 
+    credentials: 'include',
 });
 
 export const baseQueryWithReauth = async (args, api, extraOptions) => {
@@ -21,13 +22,26 @@ export const baseQueryWithReauth = async (args, api, extraOptions) => {
 
     if (result.error && result.error.status === 401) {
         try {
-            const response = await fetch(`${apiUrl}`); // Use apiUrl here too
-            // Clear localStorage and refresh the page if needed
-            // localStorage.clear();
-            // window.location.reload();
-            result = await baseQuery(args, api, extraOptions);
+            // Try to refresh the token
+            const refreshResponse = await fetch(`${apiUrl}/refresh-token`, {
+                method: 'POST',
+                credentials: 'include',
+                headers: {
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json',
+                }
+            });
+            
+            if (refreshResponse.ok) {
+                // Retry the original request
+                result = await baseQuery(args, api, extraOptions);
+            } else {
+                // If refresh fails, redirect to login
+                window.location.href = '/login';
+            }
         } catch (error) {
             console.error("Error refreshing access token:", error);
+            window.location.href = '/login';
         }
     }
 

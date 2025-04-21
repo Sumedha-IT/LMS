@@ -1,6 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\Api\MyCourseController;
 
 /*
 |--------------------------------------------------------------------------
@@ -50,3 +51,16 @@ Route::get('/administrator/{adminId}/examinations/user/{userId}/exam/{examId}/re
 Route::get('/user', function () {
     return redirect('/administrator');
 });
+
+// MyCourses React UI routes
+Route::middleware(['auth'])->group(function () {
+    // React UI route
+    Route::get('/my-courses', function () {
+        return view('my-courses');
+    })->name('my-courses');
+});
+
+// Fallback route for React router
+Route::get('/administrator/{path}', function () {
+    return view('my-courses');
+})->where('path', '.*');

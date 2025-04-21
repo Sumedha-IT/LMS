@@ -83,7 +83,8 @@ class User extends Authenticatable implements HasTenants, FilamentUser, HasAvata
         'email_verified_at' => 'datetime',
         'password' => 'hashed',
         'receive_email_notification' => 'boolean',
-        'receive_sms_notification' => 'boolean'
+        'receive_sms_notification' => 'boolean',
+        'qualification' => 'array'
     ];
 
 

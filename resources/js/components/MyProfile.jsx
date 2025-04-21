@@ -37,6 +37,92 @@ const mainMenu = [
   { id: 'resume', label: 'Export as Resume', icon: <AiOutlineFilePdf /> },
 ];
 
+// Add this after the mainMenu constant
+const calculateCompletionPercentage = (formData, menuId, projects) => {
+  switch (menuId) {
+    case 'personal':
+      const basicFields = ['name', 'email', 'gender', 'birthday'];
+      const additionalFields = ['address', 'city', 'state_id', 'pincode'];
+      const docsFields = ['aadhaar_number', 'upload_aadhar', 'linkedin_profile', 'passport_photo', 'upload_resume'];
+      const parentFields = ['parent_name', 'parent_email', 'parent_aadhar', 'parent_occupation', 'residential_address'];
+      
+      const basicComplete = basicFields.filter(field => formData[field]).length;
+      const additionalComplete = additionalFields.filter(field => formData[field]).length;
+      const docsComplete = docsFields.filter(field => formData[field]).length;
+      const parentComplete = parentFields.filter(field => formData[field]).length;
+      
+      const totalFields = basicFields.length + additionalFields.length + docsFields.length + parentFields.length;
+      const completedFields = basicComplete + additionalComplete + docsComplete + parentComplete;
+      
+      return Math.round((completedFields / totalFields) * 100);
+    
+    case 'education':
+      if (!formData.education || formData.education.length === 0) return 0;
+      
+      const requiredEduFields = ['degree_type_id', 'institute_name', 'duration_from', 'duration_to', 'percentage_cgpa', 'location'];
+      let totalEduFields = 0;
+      let completedEduFields = 0;
+      
+      formData.education.forEach(edu => {
+        totalEduFields += requiredEduFields.length;
+        completedEduFields += requiredEduFields.filter(field => edu[field]).length;
+      });
+      
+      return Math.round((completedEduFields / totalEduFields) * 100);
+    
+    case 'projects':
+      // Get projects from the projects state instead of formData
+      if (!projects || projects.length === 0) return 0;
+      
+      const requiredProjFields = ['title', 'description', 'start_date', 'technologies', 'project_type'];
+      let totalProjFields = 0;
+      let completedProjFields = 0;
+      
+      formData.projects.forEach(proj => {
+        totalProjFields += requiredProjFields.length;
+        completedProjFields += requiredProjFields.filter(field => proj[field]).length;
+      });
+      
+      return Math.round((completedProjFields / totalProjFields) * 100);
+    
+    case 'certifications':
+      if (!formData.certifications || formData.certifications.length === 0) return 0;
+      
+      const requiredCertFields = ['certification_name', 'authority', 'certification_date', 'certificate_number'];
+      let totalCertFields = 0;
+      let completedCertFields = 0;
+      
+      formData.certifications.forEach(cert => {
+        totalCertFields += requiredCertFields.length;
+        completedCertFields += requiredCertFields.filter(field => cert[field]).length;
+      });
+      
+      return Math.round((completedCertFields / totalCertFields) * 100);
+    
+    default:
+      return 0;
+  }
+};
+
+// Add this function after calculateCompletionPercentage
+const calculateOverallProgress = (formData, projects) => {
+  const sections = ['personal', 'education', 'projects', 'certifications'];
+  const weights = {
+    personal: 0.4,    // 40% weight for personal details
+    education: 0.25,  // 25% weight for education
+    projects: 0.2,    // 20% weight for projects
+    certifications: 0.15  // 15% weight for certifications
+  };
+
+  let weightedSum = 0;
+  sections.forEach(section => {
+    const sectionPercentage = calculateCompletionPercentage(formData, section, projects);
+    weightedSum += (sectionPercentage * weights[section]);
+  });
+
+  return Math.round(weightedSum);
+};
+
 function getCookie(name) {
   let cookies = document.cookie.split("; ");
   for (let cookie of cookies) {
@@ -104,25 +190,78 @@ const MyProfile = () => {
   const [projectForm, setProjectForm] = useState({
     title: '',
     description: '',
-    role: '',
     technologies: '',
     project_url: '',
-    github_url: '',
     start_date: '',
     end_date: '',
     is_ongoing: false,
-    team_size: '',
     key_achievements: '',
     project_type: '',
     client_name: '',
-    organization: ''
+    organization: '',
+    project_files: []  // Add new field for project files
   });
   const [showProjectForm, setShowProjectForm] = useState(false);
   const [showResumeModal, setShowResumeModal] = useState(false);
   const [selectedTemplate, setSelectedTemplate] = useState('modern');
 
   useEffect(() => {
-    const fetchData = async () => {
+    // Fetch basic profile data on component mount
+    const fetchBasicProfileData = async () => {
+      setLoading(true);
+      const userInfo = getCookie("user_info");
+      let userData;
+
+      try {
+        userData = userInfo ? JSON.parse(userInfo) : null;
+        if (!userData?.token) {
+          toast.error('Authentication required');
+          setLoading(false);
+          return;
+        }
+
+        // Fetch basic profile data and projects in parallel
+        const [profileResponse, projectsResponse] = await Promise.all([
+          axios.get(`${API_URL}/api/profile`, {
+            headers: {
+              'Accept': 'application/json',
+              'Authorization': `Bearer ${userData.token}`,
+            },
+            withCredentials: true,
+          }),
+          axios.get(`${API_URL}/api/projects`, {
+            headers: {
+              'Accept': 'application/json',
+              'Authorization': `Bearer ${userData.token}`,
+            }
+          })
+        ]);
+
+        setFormData(prev => ({
+          ...prev,
+          ...profileResponse.data.user,
+        }));
+
+        if (projectsResponse.data.success) {
+          setProjects(projectsResponse.data.projects);
+          setFormData(prev => ({
+            ...prev,
+            projects: projectsResponse.data.projects
+          }));
+        }
+      } catch (error) {
+        console.error('Error fetching data:', error);
+        toast.error('Failed to load profile data');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchBasicProfileData();
+  }, []); // Empty dependency array means this runs once on mount
+
+  useEffect(() => {
+    const fetchMenuData = async () => {
       if (!activeMenu) return; // Don't fetch if no active menu
       
       setLoading(true);
@@ -136,20 +275,6 @@ const MyProfile = () => {
           setLoading(false);
           return;
         }
-
-        // Always fetch basic profile data first
-        const profileResponse = await axios.get(`${API_URL}/api/profile`, {
-          headers: {
-            'Accept': 'application/json',
-            'Authorization': `Bearer ${userData.token}`,
-          },
-          withCredentials: true,
-        });
-
-        setFormData(prev => ({
-          ...prev,
-          ...profileResponse.data.user,
-        }));
 
         // Fetch tab-specific data
         if (activeMenu === 'certifications') {
@@ -241,17 +366,16 @@ const MyProfile = () => {
             education: educationData,
           }));
         }
-
       } catch (error) {
         console.error('Error fetching data:', error);
-        toast.error(error.response?.data?.message || 'Failed to load data');
+        toast.error('Failed to load data');
       } finally {
         setLoading(false);
       }
     };
 
-    fetchData();
-  }, [activeMenu]);
+    fetchMenuData();
+  }, [activeMenu]); // This effect runs when activeMenu changes
 
   useEffect(() => {
     if (formData.avatar_url) {
@@ -1775,11 +1899,7 @@ const MyProfile = () => {
             {showErrorMessage}
             
             <div className="bg-white rounded-lg p-6">
-              <div className="flex justify-between items-center mb-6">
-                <h2 className="text-xl font-semibold flex items-center gap-2">
-                  <MdBuild className="text-orange-500" />
-                  Projects
-                </h2>
+              <div className="flex justify-end mb-6">
                 {!showProjectForm && (
                   <button
                     onClick={() => setShowProjectForm(true)}
@@ -1790,6 +1910,91 @@ const MyProfile = () => {
                   </button>
                 )}
               </div>
+
+              {/* Project List */}
+              {!showProjectForm && projects.length > 0 && (
+                <div className="space-y-6">
+                  {projects.map((project, index) => (
+                    <div key={project.id} className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+                      <div className="flex justify-between items-start mb-4">
+                        <h3 className="text-lg font-semibold">{project.title}</h3>
+                        <div className="flex space-x-2">
+                          <button
+                            onClick={() => {
+                              setEditingProject(project);
+                              setProjectForm({
+                                title: project.title,
+                                description: project.description,
+                                technologies: project.technologies,
+                                project_url: project.project_url,
+                                start_date: project.start_date,
+                                end_date: project.end_date,
+                                is_ongoing: project.is_ongoing,
+                                key_achievements: project.key_achievements,
+                                project_type: project.project_type,
+                                client_name: project.client_name,
+                                organization: project.organization,
+                                project_files: []
+                              });
+                              setShowProjectForm(true);
+                            }}
+                            className="p-2 text-gray-600 hover:text-orange-500"
+                          >
+                            <FiEdit2 className="w-5 h-5" />
+                          </button>
+                          <button
+                            onClick={() => handleDeleteProject(project.id)}
+                            className="p-2 text-gray-600 hover:text-red-500"
+                          >
+                            <FiTrash2 className="w-5 h-5" />
+                          </button>
+                        </div>
+                      </div>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                          <p className="text-sm text-gray-600">Description</p>
+                          <p className="mt-1">{project.description}</p>
+                        </div>
+                        <div>
+                          <p className="text-sm text-gray-600">Technologies</p>
+                          <p className="mt-1">{project.technologies}</p>
+                        </div>
+                        <div>
+                          <p className="text-sm text-gray-600">Project Type</p>
+                          <p className="mt-1">{project.project_type}</p>
+                        </div>
+                        <div>
+                          <p className="text-sm text-gray-600">Duration</p>
+                          <p className="mt-1">
+                            {new Date(project.start_date).toLocaleDateString()} - 
+                            {project.is_ongoing ? ' Present' : ` ${new Date(project.end_date).toLocaleDateString()}`}
+                          </p>
+                        </div>
+                        {project.organization && (
+                          <div>
+                            <p className="text-sm text-gray-600">Organization</p>
+                            <p className="mt-1">{project.organization}</p>
+                          </div>
+                        )}
+                        {project.project_url && (
+                          <div>
+                            <p className="text-sm text-gray-600">Project URL</p>
+                            <a 
+                              href={project.project_url} 
+                              target="_blank" 
+                              rel="noopener noreferrer"
+                              className="mt-1 text-orange-500 hover:underline flex items-center gap-1"
+                            >
+                              {project.project_url}
+                              <FiExternalLink className="w-4 h-4" />
+                            </a>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
 
               {/* Project Form */}
               {showProjectForm && (
@@ -1814,21 +2019,7 @@ const MyProfile = () => {
 
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Role<span className="text-red-500">*</span>
-                      </label>
-                      <input
-                        type="text"
-                        value={projectForm.role}
-                        onChange={(e) => setProjectForm({...projectForm, role: e.target.value})}
-                        className="w-full p-2 border rounded-lg focus:ring-orange-500 focus:border-orange-500"
-                        placeholder="Your role in the project"
-                        required
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Technologies<span className="text-red-500">*</span>
+                        Technologies
                       </label>
                       <input
                         type="text"
@@ -1836,19 +2027,17 @@ const MyProfile = () => {
                         onChange={(e) => setProjectForm({...projectForm, technologies: e.target.value})}
                         className="w-full p-2 border rounded-lg focus:ring-orange-500 focus:border-orange-500"
                         placeholder="e.g., React, Node.js, MongoDB"
-                        required
                       />
                     </div>
 
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Project Type<span className="text-red-500">*</span>
+                        Project Type
                       </label>
                       <select
                         value={projectForm.project_type}
                         onChange={(e) => setProjectForm({...projectForm, project_type: e.target.value})}
                         className="w-full p-2 border rounded-lg focus:ring-orange-500 focus:border-orange-500"
-                        required
                       >
                         <option value="">Select Type</option>
                         <option value="Academic">Academic</option>
@@ -1896,20 +2085,6 @@ const MyProfile = () => {
 
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Team Size
-                      </label>
-                      <input
-                        type="number"
-                        value={projectForm.team_size}
-                        onChange={(e) => setProjectForm({...projectForm, team_size: e.target.value})}
-                        className="w-full p-2 border rounded-lg focus:ring-orange-500 focus:border-orange-500"
-                        placeholder="Number of team members"
-                        min="1"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
                         Organization
                       </label>
                       <input
@@ -1918,6 +2093,19 @@ const MyProfile = () => {
                         onChange={(e) => setProjectForm({...projectForm, organization: e.target.value})}
                         className="w-full p-2 border rounded-lg focus:ring-orange-500 focus:border-orange-500"
                         placeholder="Organization name"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Project URL
+                      </label>
+                      <input
+                        type="url"
+                        value={projectForm.project_url}
+                        onChange={(e) => setProjectForm({...projectForm, project_url: e.target.value})}
+                        className="w-full p-2 border rounded-lg focus:ring-orange-500 focus:border-orange-500"
+                        placeholder="https://"
                       />
                     </div>
 
@@ -1948,40 +2136,58 @@ const MyProfile = () => {
                       />
                     </div>
 
-                    <div>
+                    <div className="md:col-span-2">
                       <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Project URL
+                        Project Files
                       </label>
-                      <input
-                        type="url"
-                        value={projectForm.project_url}
-                        onChange={(e) => setProjectForm({...projectForm, project_url: e.target.value})}
-                        className="w-full p-2 border rounded-lg focus:ring-orange-500 focus:border-orange-500"
-                        placeholder="https://"
-                      />
-                    </div>
+                      <div className="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-lg">
+                        <div className="space-y-1 text-center">
+                          <svg className="mx-auto h-12 w-12 text-gray-400" stroke="currentColor" fill="none" viewBox="0 0 48 48" aria-hidden="true">
+                            <path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                          </svg>
+                          <div className="flex text-sm text-gray-600">
+                            <label className="relative cursor-pointer bg-white rounded-md font-medium text-orange-600 hover:text-orange-500 focus-within:outline-none focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-orange-500">
+                              <span>Upload files</span>
+                              <input
+                                type="file"
+                                multiple
+                                onChange={handleProjectFileChange}
+                                className="sr-only"
+                              />
+                            </label>
+                            <p className="pl-1">or drag and drop</p>
+                          </div>
+                          <p className="text-xs text-gray-500">Any file up to 10MB</p>
+                        </div>
+                      </div>
 
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        GitHub URL
-                      </label>
-                      <input
-                        type="url"
-                        value={projectForm.github_url}
-                        onChange={(e) => setProjectForm({...projectForm, github_url: e.target.value})}
-                        className="w-full p-2 border rounded-lg focus:ring-orange-500 focus:border-orange-500"
-                        placeholder="https://github.com/"
-                      />
+                      {/* Display uploaded files */}
+                      {projectForm.project_files.length > 0 && (
+                        <div className="mt-4">
+                          <h4 className="text-sm font-medium text-gray-700">Uploaded Files:</h4>
+                          <ul className="mt-2 divide-y divide-gray-200">
+                            {projectForm.project_files.map((file, index) => (
+                              <li key={index} className="py-2 flex justify-between items-center">
+                                <span className="text-sm text-gray-500">{file.name}</span>
+                                <button
+                                  type="button"
+                                  onClick={() => removeProjectFile(index)}
+                                  className="text-red-500 hover:text-red-700"
+                                >
+                                  Remove
+                                </button>
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
                     </div>
                   </div>
 
                   <div className="flex justify-end space-x-4 mt-6">
                     <button
                       type="button"
-                      onClick={() => {
-                        setShowProjectForm(false);
-                        resetProjectForm();
-                      }}
+                      onClick={resetProjectForm}
                       className="px-4 py-2 text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
                     >
                       Cancel
@@ -1996,130 +2202,6 @@ const MyProfile = () => {
                   </div>
                 </div>
               )}
-
-              {/* List of Projects */}
-              <div className="space-y-6">
-                {projects.map((project) => (
-                  <div key={project.id} className="bg-gray-50 rounded-lg p-6 shadow-sm border border-gray-200">
-                    <div className="space-y-4">
-                      <div className="flex justify-between items-start">
-                        <h3 className="text-lg font-semibold text-gray-900">{project.title}</h3>
-                        <div className="flex items-center gap-2">
-                          {deleteConfirmations[project.id] ? (
-                            <div className="flex items-center gap-2">
-                              <span className="text-sm text-gray-600">Delete this project?</span>
-                              <button
-                                onClick={() => {
-                                  handleDeleteProject(project.id);
-                                  hideDeleteConfirmation(project.id);
-                                }}
-                                className="px-3 py-1 text-white bg-red-500 rounded hover:bg-red-600 text-sm"
-                              >
-                                Yes
-                              </button>
-                              <button
-                                onClick={() => hideDeleteConfirmation(project.id)}
-                                className="px-3 py-1 text-gray-600 bg-gray-100 rounded hover:bg-gray-200 text-sm"
-                              >
-                                No
-                              </button>
-                            </div>
-                          ) : (
-                            <>
-                              <button
-                                onClick={() => {
-                                  setEditingProject(project);
-                                  setProjectForm(project);
-                                  setShowProjectForm(true);
-                                }}
-                                className="p-1.5 text-blue-500 hover:text-blue-600 hover:bg-blue-50 rounded-full transition-colors"
-                                title="Edit Project"
-                              >
-                                <FiEdit2 size={18} />
-                              </button>
-                              <button
-                                onClick={() => showDeleteConfirmation(project.id)}
-                                className="p-1.5 text-red-500 hover:text-red-600 hover:bg-red-50 rounded-full transition-colors"
-                                title="Delete Project"
-                              >
-                                <FiTrash2 size={18} />
-                              </button>
-                            </>
-                          )}
-                        </div>
-                      </div>
-
-                      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                        <div>
-                          <p className="text-sm font-medium text-gray-500">Role</p>
-                          <p className="text-gray-900">{project.role}</p>
-                        </div>
-                        <div>
-                          <p className="text-sm font-medium text-gray-500">Project Type</p>
-                          <p className="text-gray-900">{project.project_type}</p>
-                        </div>
-                        <div>
-                          <p className="text-sm font-medium text-gray-500">Technologies</p>
-                          <p className="text-gray-900">{project.technologies}</p>
-                        </div>
-                        <div>
-                          <p className="text-sm font-medium text-gray-500">Team Size</p>
-                          <p className="text-gray-900">{project.team_size || 'Not specified'}</p>
-                        </div>
-                      </div>
-
-                      <div>
-                        <p className="text-sm font-medium text-gray-500">Duration</p>
-                        <p className="text-gray-900">
-                          {project.start_date} - {project.is_ongoing ? 'Present' : project.end_date}
-                        </p>
-                      </div>
-
-                      {project.organization && (
-                        <div>
-                          <p className="text-sm font-medium text-gray-500">Organization</p>
-                          <p className="text-gray-900">{project.organization}</p>
-                        </div>
-                      )}
-
-                      <div>
-                        <p className="text-sm font-medium text-gray-500">Description</p>
-                        <p className="text-gray-900 whitespace-pre-wrap">{project.description}</p>
-                      </div>
-
-                      {project.key_achievements && (
-                        <div>
-                          <p className="text-sm font-medium text-gray-500">Key Achievements</p>
-                          <p className="text-gray-900 whitespace-pre-wrap">{project.key_achievements}</p>
-                        </div>
-                      )}
-
-                      <div className="flex gap-4">
-                        {project.project_url && (
-                          <a
-                            href={project.project_url}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="text-orange-500 hover:text-orange-600 flex items-center gap-1"
-                          >
-                            <FiExternalLink /> Project Link
-                          </a>
-                        )}
-                        {project.github_url && (
-                          <a
-                            href={project.github_url}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="text-orange-500 hover:text-orange-600 flex items-center gap-1"
-                          >
-                            <FiExternalLink /> GitHub
-                          </a>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
             </div>
           </div>
         );
@@ -2562,7 +2644,13 @@ const MyProfile = () => {
         }
       });
       if (response.data.success) {
+        console.log('Fetched projects:', response.data.projects);
         setProjects(response.data.projects);
+        // Also update formData with the projects
+        setFormData(prev => ({
+          ...prev,
+          projects: response.data.projects
+        }));
       }
     } catch (error) {
       console.error('Error fetching projects:', error);
@@ -2572,7 +2660,6 @@ const MyProfile = () => {
 
   const handleProjectSubmit = async () => {
     try {
-      // Get user data from cookie first
       const userInfo = getCookie("user_info");
       const userData = userInfo ? JSON.parse(userInfo) : null;
       
@@ -2582,46 +2669,114 @@ const MyProfile = () => {
       }
 
       // Validate required fields
-      if (!projectForm.title || !projectForm.role || !projectForm.description || !projectForm.technologies || !projectForm.project_type || !projectForm.start_date) {
+      if (!projectForm.title || !projectForm.description || !projectForm.start_date) {
         toast.error('Please fill in all required fields');
         return;
       }
 
-      const url = editingProject 
-        ? `${API_URL}/api/projects/${editingProject.id}`
-        : `${API_URL}/api/projects`;
+      // Prepare the data in the format expected by the server
+      const projectData = {
+        title: projectForm.title,
+        description: projectForm.description,
+        technologies: projectForm.technologies || '',
+        project_url: projectForm.project_url || '',
+        start_date: projectForm.start_date ? formatDateForServer(projectForm.start_date) : '',
+        end_date: projectForm.is_ongoing ? null : (projectForm.end_date ? formatDateForServer(projectForm.end_date) : ''),
+        is_ongoing: projectForm.is_ongoing ? 1 : 0,
+        key_achievements: projectForm.key_achievements || '',
+        project_type: projectForm.project_type || '',
+        client_name: projectForm.client_name || '',
+        organization: projectForm.organization || ''
+      };
+
+      let url = `${API_URL}/api/projects`;
+      let method = 'post';
+      let requestData = projectData;
+
+      if (editingProject) {
+        url = `${API_URL}/api/projects/${editingProject.id}`;
+        method = 'post'; // Using POST instead of PUT
+        requestData = {
+          ...projectData,
+          _method: 'PUT' // Add this for Laravel to treat it as PUT request
+        };
+      }
+
+      // Create form data
+      const formData = new FormData();
       
-      const method = editingProject ? 'put' : 'post';
-      
+      // Append all project data
+      Object.entries(requestData).forEach(([key, value]) => {
+        if (value !== null && value !== undefined) {
+          formData.append(key, value);
+        }
+      });
+
+      // Append project files if any
+      if (projectForm.project_files && projectForm.project_files.length > 0) {
+        projectForm.project_files.forEach(file => {
+          formData.append('project_files[]', file);
+        });
+      }
+
+      console.log('Submitting project data:', Object.fromEntries(formData));
+
       const response = await axios({
         method: method,
         url: url,
-        data: projectForm,
+        data: formData,
         headers: {
           'Accept': 'application/json',
           'Authorization': `Bearer ${userData.token}`,
-          'Content-Type': 'application/json'
+          'Content-Type': 'multipart/form-data'
         }
       });
 
       if (response.data.success) {
         toast.success(editingProject ? 'Project updated successfully' : 'Project added successfully');
         setEditingProject(null);
+        setShowProjectForm(false);
         resetProjectForm();
         // Fetch updated projects list
-        const projectsResponse = await axios.get(`${API_URL}/api/projects`, {
-          headers: {
-            'Authorization': `Bearer ${userData.token}`
-          }
-        });
-        if (projectsResponse.data.success) {
-          setProjects(projectsResponse.data.projects);
-        }
+        await fetchProjects();
       }
     } catch (error) {
       console.error('Error saving project:', error);
-      toast.error(error.response?.data?.message || 'Failed to save project');
+      if (error.response) {
+        if (error.response.status === 422) {
+          // Validation errors
+          const errors = error.response.data.errors;
+          if (errors) {
+            Object.entries(errors).forEach(([field, messages]) => {
+              messages.forEach(message => {
+                toast.error(`${field}: ${message}`);
+              });
+            });
+          } else {
+            toast.error('Validation error occurred. Please check your input.');
+          }
+        } else {
+          toast.error(error.response.data.message || 'Failed to save project');
+        }
+      } else {
+        toast.error('Failed to save project. Please try again.');
+      }
     }
+  };
+
+  const handleProjectFileChange = (e) => {
+    const files = Array.from(e.target.files);
+    setProjectForm(prev => ({
+      ...prev,
+      project_files: [...prev.project_files, ...files]
+    }));
+  };
+
+  const removeProjectFile = (index) => {
+    setProjectForm(prev => ({
+      ...prev,
+      project_files: prev.project_files.filter((_, i) => i !== index)
+    }));
   };
 
   const handleDeleteProject = async (projectId) => {
@@ -2658,19 +2813,18 @@ const MyProfile = () => {
     setProjectForm({
       title: '',
       description: '',
-      role: '',
       technologies: '',
       project_url: '',
-      github_url: '',
       start_date: '',
       end_date: '',
       is_ongoing: false,
-      team_size: '',
       key_achievements: '',
       project_type: '',
       client_name: '',
-      organization: ''
+      organization: '',
+      project_files: []
     });
+    setShowProjectForm(false);
   };
 
   const handleAddProject = () => {
@@ -2678,18 +2832,16 @@ const MyProfile = () => {
     setProjectForm({
       title: '',
       description: '',
-      role: '',
       technologies: '',
       project_url: '',
-      github_url: '',
       start_date: '',
       end_date: '',
       is_ongoing: false,
-      team_size: '',
       key_achievements: '',
       project_type: '',
       client_name: '',
-      organization: ''
+      organization: '',
+      project_files: []
     });
     setShowProjectModal(true);
   };
@@ -3097,6 +3249,56 @@ const MyProfile = () => {
             </div>
           </div>
 
+          {/* Add Overall Progress Bar */}
+          <div className="mt-8 bg-white rounded-lg p-6 shadow-sm progress-container">
+            <div className="flex items-center justify-between mb-2">
+              <h3 className="text-lg font-semibold text-gray-800">Profile Completion</h3>
+              <span className="text-2xl font-bold text-orange-500">
+                {calculateOverallProgress(formData, projects)}%
+              </span>
+            </div>
+            <div className="relative group">
+              <div className="w-full bg-gray-200 rounded-full h-2.5 cursor-pointer">
+                <div
+                  className="bg-orange-500 h-2.5 rounded-full transition-all duration-300"
+                  style={{ width: `${calculateOverallProgress(formData, projects)}%` }}
+                />
+              </div>
+              {/* Tooltip */}
+              <div className="opacity-0 group-hover:opacity-100 progress-tooltip progress-tooltip-transition absolute -top-28 left-1/2 transform -translate-x-1/2 bg-gray-900 text-white p-3 rounded-lg shadow-lg z-50">
+                <div className="text-sm font-medium mb-2 border-b border-gray-700 pb-1">Section Contributions</div>
+                <div className="space-y-1.5">
+                  {mainMenu.filter(menu => menu.id !== 'resume').map((menu) => {
+                    const percentage = calculateCompletionPercentage(formData, menu.id, projects);
+                    return (
+                      <div key={menu.id} className="flex items-center justify-between gap-4">
+                        <div className="flex items-center gap-2 min-w-[150px]">
+                          <span className="text-orange-500">{menu.icon}</span>
+                          <span className="whitespace-nowrap">{menu.label}</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <div className="w-24 bg-gray-700 rounded-full h-1.5">
+                            <div
+                              className="bg-orange-500 h-1.5 rounded-full"
+                              style={{ width: `${percentage}%` }}
+                            />
+                          </div>
+                          <span className="font-medium min-w-[40px] text-right">
+                            {percentage}%
+                          </span>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+                {/* Arrow */}
+                <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 translate-y-full">
+                  <div className="border-8 border-transparent border-t-gray-900"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+
           {/* Add ResumeModal */}
           <ResumeModal
             show={showResumeModal}
@@ -3105,15 +3307,13 @@ const MyProfile = () => {
             selectedTemplate={selectedTemplate}
           />
 
-          
-          
-          
+          {/* Existing menu grid */}
           <div className="mt-12 grid grid-cols-2 md:grid-cols-4 gap-4">
             {mainMenu.filter(menu => menu.id !== 'resume').map((menu) => (
               <button
                 key={menu.id}
                 onClick={() => toggleMenu(menu.id)}
-                className={`main-menu-item ${
+                className={`main-menu-item relative ${
                   activeMenu === menu.id 
                     ? 'main-menu-item-active' 
                     : 'main-menu-item-inactive'
@@ -3125,7 +3325,9 @@ const MyProfile = () => {
                   }`}>
                     {menu.icon}
                   </span>
-                  <span className="font-medium text-gray-700">{menu.label}</span>
+                  <div className="flex flex-col items-start">
+                    <span className="font-medium text-gray-700">{menu.label}</span>
+                  </div>
                 </div>
                 <span className={`main-menu-arrow ${
                   activeMenu === menu.id ? 'opacity-100' : ''

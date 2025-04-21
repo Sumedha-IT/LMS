@@ -38,6 +38,10 @@ use App\Http\Controllers\api\QuestionOptionController;
 use App\Http\Controllers\QuestionBankChapterController;
 use App\Http\Controllers\api\StudentEducationController;
 use App\Http\Controllers\api\QuestionAttempLogController;
+use App\Http\Controllers\Api\MyCourseController;
+use App\Http\Controllers\Api\BatchController as ApiBatchController;
+use App\Http\Controllers\Api\CurriculumController as ApiCurriculumController;
+use App\Http\Controllers\Api\TopicController;
 
 /*
 |--------------------------------------------------------------------------
@@ -358,4 +362,43 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/projects', [ProjectController::class, 'store']);
     Route::put('/projects/{project}', [ProjectController::class, 'update']);
     Route::delete('/projects/{project}', [ProjectController::class, 'destroy']);
+});
+
+// My Courses API route
+Route::middleware(['auth:sanctum', 'addHeader'])->group(function () {
+    // Course Management Routes
+    Route::prefix('courses')->group(function () {
+        // My courses
+        Route::get('/my/{id}', [MyCourseController::class, 'index']);
+        
+        // Batch related routes
+        Route::prefix('batches')->group(function () {
+            Route::get('/', [ApiBatchController::class, 'index']);
+            Route::get('/{id}', [ApiBatchController::class, 'show']);
+            Route::get('/{id}/curriculums', [ApiBatchController::class, 'getCurriculums']);
+        });
+
+        // Curriculum related routes
+        Route::prefix('curriculums')->group(function () {
+            Route::get('/', [ApiCurriculumController::class, 'index']);
+            Route::get('/{id}', [ApiCurriculumController::class, 'show']);
+            Route::get('/{id}/topics', [ApiCurriculumController::class, 'getTopics']);
+        });
+
+        // Topic related routes
+        Route::prefix('topics')->group(function () {
+            Route::get('/', [TopicController::class, 'index']);
+            Route::get('/{id}', [TopicController::class, 'show']);
+            Route::post('/{id}/complete', [TopicController::class, 'markAsCompleted']);
+        });
+    });
+});
+
+Route::middleware(['auth:sanctum'])->group(function () {
+    // ... other routes ...
+    
+    Route::get('/courses/my/{id}', [MyCourseController::class, 'index']);
+    Route::get('/topics', [MyCourseController::class, 'getTopics']);
+    Route::get('/teaching-materials', [TeachingMaterialController::class, 'index']);
+    Route::get('/teaching-materials/{topic_id}', [TeachingMaterialController::class, 'getByTopic']);
 });

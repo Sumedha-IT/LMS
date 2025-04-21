@@ -258,4 +258,29 @@
 
 .form-submit-button:disabled {
   background-color: #9ca3af;
+}
+
+/* Progress bar tooltip styles */
+.progress-tooltip {
+  max-width: calc(100vw - 2rem);
+  width: max-content;
+}
+
+@media (max-width: 640px) {
+  .progress-tooltip {
+    left: 50%;
+    transform: translateX(-50%);
+    width: calc(100vw - 2rem);
+  }
+}
+
+/* Ensure tooltip doesn't get cut off at screen edges */
+.progress-container {
+  position: relative;
+  overflow: visible;
+}
+
+/* Add smooth transition for tooltip */
+.progress-tooltip-transition {
+  transition: opacity 0.2s ease-in-out, transform 0.2s ease-in-out;
 } 

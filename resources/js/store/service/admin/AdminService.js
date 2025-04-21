@@ -20,7 +20,15 @@ export const adminApi = createApi({
             query: () => `allBatches`,
         }),
         getExamData: builder.query({
-            query: ({ page, rowsPerPage, filterBatch, dateCriteria }) => `exams?page=${page}&size=${rowsPerPage}&dateCriteria=${dateCriteria}&batchId=${filterBatch}`,
+            query: ({ page, rowsPerPage, filterBatch, dateCriteria }) => ({
+                url: `exams`,
+                params: {
+                    page: page || 1,
+                    size: rowsPerPage || 10,
+                    dateCriteria: dateCriteria || '',
+                    batchId: filterBatch || ''
+                }
+            }),
         }),
         getInvigilators: builder.query({
             query: () => 'invigilators',
@@ -38,7 +46,7 @@ export const adminApi = createApi({
             query: (id) => `questions?questionBankId=${id}`,
         }),
         getRandomQuestionIds: builder.mutation({
-            query: ({ bankId, partId, examId }) => (console.log(bankId, partId, examId), {
+            query: ({ bankId, partId, examId }) => ({
                 url: `${examId}/examQuestions?questionBankId=${bankId}&partId=${partId}`,
                 method: 'GET',
             })

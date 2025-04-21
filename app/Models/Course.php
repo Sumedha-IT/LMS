@@ -10,6 +10,7 @@ use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Relations\MorphToMany;
 use Laravel\Sanctum\HasApiTokens;
 use Spatie\Permission\Traits\HasRoles;
+use Illuminate\Support\Facades\Log;
 
 class Course extends Model
 {
@@ -17,30 +18,48 @@ class Course extends Model
 
     protected $guarded = ['id'];
 
-    protected static function booted(): void
+    protected static function boot()
     {
+        parent::boot();
+        
+        // Clear any existing global scopes
+        static::$globalScopes = [];
+        
         static::addGlobalScope('limited', function (Builder $query) {
             if (auth()->check() && auth()->user()->is_student) {
-                //$query->whereHas('students');
+                $query->select('courses.*')
+                    ->leftJoin('batches', function($join) {
+                        $join->on('courses.id', '=', 'batches.course_package_id')
+                            ->orOn('courses.id', '=', 'batches.course_id');
+                    })
+                    ->leftJoin('batch_user', 'batches.id', '=', 'batch_user.batch_id')
+                    ->where('batch_user.user_id', auth()->user()->id)
+                    ->distinct();
             }
 
             if (auth()->check() && auth()->user()->is_tutor) 
             {
                 $query->select('courses.*')
-                ->join('batches', 'courses.id','=','batches.course_package_id')
-                ->join('batch_curriculum', 'batches.id', '=', 'batch_curriculum.batch_id')                
-                ->where('batch_curriculum.tutor_id', auth()->user()->id);
+                    ->leftJoin('batches', function($join) {
+                        $join->on('courses.id', '=', 'batches.course_package_id')
+                            ->orOn('courses.id', '=', 'batches.course_id');
+                    })
+                    ->join('batch_curriculum', 'batches.id', '=', 'batch_curriculum.batch_id')                
+                    ->where('batch_curriculum.tutor_id', auth()->user()->id)
+                    ->distinct();
             }
         });
     }
 
+    public static function withoutStudentScope()
+    {
+        return static::withoutGlobalScope('limited');
+    }
 
     public function batches()
     {
-        return $this->belongsToMany(Batch::class, 'batch_courses',
-            'course_id','batch_id');
+        return $this->belongsToMany(Batch::class, 'batch_courses', 'course_id', 'batch_id');
     }
-
 
     public function role()
     {
@@ -82,21 +101,17 @@ class Course extends Model
         );
     }
 
-
     /** @return MorphToMany<Curriculum> */
     public function curriculums(): MorphToMany
     {
         return $this->morphToMany(Curriculum::class, 'curricula', 'curricula');
     }
 
-
     /** @return MorphToMany<Curriculum> */
     /*public function branches(): MorphToMany
     {
         return $this->morphToMany(Branch::class, 'branchable', 'branchable');
     }*/
-
-
 
     /** @return MorphToMany<Curriculum> */
     /*public function team(): MorphToMany
@@ -119,6 +134,5 @@ class Course extends Model
     {
         return $this->allow_couse_complete == true ? "Yes" : "False";
     }
-
 }
 

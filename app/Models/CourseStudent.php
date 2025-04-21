@@ -24,29 +24,18 @@ class CourseStudent extends Model
                 $user = auth()->user();
 
                 if ($user) {
-                    // Retrieve the batches assigned to the user
-                    $batches = $user->batches;
-
-                    $courses = [];
-                    foreach ($batches as $batch)
-                    {
-                        if($batch->course)
-                            $courses[] = $batch->course->id;
-                    }
-
-                    $query->whereIn('courses.id', $courses);
-
-                    // Filter courses based on the batches assigned to the user
-                    /*$query->whereHas('batch', function ($query) use ($batches) {
-                        $query->whereIn('batches.id', $batches);
-                    });*/
+                    $query->select('courses.*')
+                        ->leftJoin('batches', function($join) {
+                            $join->on('courses.id', '=', 'batches.course_package_id')
+                                ->orOn('courses.id', '=', 'batches.course_id');
+                        })
+                        ->leftJoin('batch_user', 'batches.id', '=', 'batch_user.batch_id')
+                        ->where('batch_user.user_id', $user->id)
+                        ->distinct();
                 } else {
                     // If user is not authenticated, don't return any courses
                     $query->where('id', '=', null);
                 }
-
-                //dd(auth()->user()->batches());
-                //$query->whereHas('students');
             }
         });
     }

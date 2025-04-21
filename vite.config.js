@@ -22,8 +22,7 @@ export default defineConfig(({ command, mode }) => {
       extensions: ['.js', '.jsx'], // Add .jsx here
     },
     define: {
-      'import.meta.env.REACT_APP_API_URL': JSON.stringify(env.REACT_APP_API_URL),
-      'import.meta.env.VITE_APP_API_URL': JSON.stringify(env.VITE_APP_API_URL),
+      'import.meta.env.VITE_API_URL': JSON.stringify(env.VITE_API_URL || 'http://localhost:8000/api'),
     },
   };
 });
