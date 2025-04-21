@@ -22,14 +22,14 @@ const NewDashBoard = () => {
     const fetchData = async () => {
       try {
         // Example using the utility function
-        const profileData = await apiRequest("profile");
+        const profileData = await apiRequest("/profile");
         setUserData(profileData);
 
         // if (profileData.user.role_id !== 6) {
         //   navigate("/administrator/1");
         // }
 
-        const examData = await apiRequest("exam-chart");
+        const examData = await apiRequest("/exam-chart");
         setExamChartData(examData);
       } catch (error) {
         console.error("Failed to fetch data:", error);

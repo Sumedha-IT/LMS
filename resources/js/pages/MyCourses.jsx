@@ -6,7 +6,7 @@ import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import NoCourses from '../components/NoCourses';
 
-const API_URL = import.meta.env.VITE_APP_API_URL;
+const API_URL = import.meta.env.REACT_APP_API_URL;
 
 function getCookie(name) {
   let cookies = document.cookie.split("; ");

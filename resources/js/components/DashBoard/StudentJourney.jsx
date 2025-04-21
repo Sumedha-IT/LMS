@@ -37,7 +37,7 @@ export default function StudentJourney() {
     const fetchJourneyData = async () => {
       try {
         setLoading(true);
-        const data = await apiRequest("student/journey");
+        const data = await apiRequest("/student/journey");
         setJourney(data);
       } catch (err) {
         console.error('Error fetching journey data:', err);

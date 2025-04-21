@@ -28,4 +28,14 @@ class TeachingMaterial extends Model
         'start_submission' => 'datetime:Y-m-d H:i:s',
         'stop_submission' => 'datetime:Y-m-d H:i:s'
     ];
+
+    public function teachingMaterialStatuses()
+    {
+        return $this->hasMany(TeachingMaterialStatus::class, 'teaching_material_id', 'id');
+    }
+
+    public function topic()
+    {
+        return $this->belongsTo(Topic::class, 'topic_id', 'id');
+    }
 }
