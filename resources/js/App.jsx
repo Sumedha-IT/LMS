@@ -76,8 +76,8 @@ function App() {
         {/* My Courses */}
         <Route path="/administrator/:id/my-courses" element={<MyCourses />} />
 
-        {/* Topics */}
-        <Route path="/administrator/:id/topics/:curriculumId" element={<Topics />} />
+        {/* Remove Topics route as functionality is now in MyCourses */}
+        {/* <Route path="/administrator/:id/topics/:curriculumId" element={<Topics />} /> */}
       </Routes>
 
 
