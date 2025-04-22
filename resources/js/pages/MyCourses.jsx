@@ -7,7 +7,7 @@ import 'react-toastify/dist/ReactToastify.css';
 import NoCourses from '../components/NoCourses';
 import { FaFilePdf, FaFileImage, FaYoutube, FaFileWord, FaFileExcel, FaFilePowerpoint, FaFile, FaLink } from 'react-icons/fa';
 
-const API_URL = import.meta.env.VITE_APP_API_URL;
+const API_URL = import.meta.env.REACT_APP_API_URL;
 
 // CircularProgress Component
 const CircularProgress = ({ percentage, size = 40, strokeWidth = 4, white = false }) => {

@@ -1,8 +1,8 @@
 import { Box, CircularProgress, Typography } from "@mui/material"
 
 export default function CircularProgressWithLabel(props) {
-  const { value } = props
-  const color = value > 0 ? "#E53510" : "#9e9e9e"
+  const { value , color } = props
+
 
   return (
     <Box sx={{ position: "relative", display: "inline-flex" }}>

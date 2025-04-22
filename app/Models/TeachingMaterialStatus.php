@@ -59,4 +59,8 @@ class TeachingMaterialStatus extends Model
     {
         return $this->obtained_marks;
     }
+    public function teachingMaterial()
+    {
+        return $this->belongsTo(TeachingMaterial::class, 'teaching_material_id', 'id');
+    }
 }

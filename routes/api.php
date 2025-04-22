@@ -38,10 +38,10 @@ use App\Http\Controllers\api\QuestionOptionController;
 use App\Http\Controllers\QuestionBankChapterController;
 use App\Http\Controllers\api\StudentEducationController;
 use App\Http\Controllers\api\QuestionAttempLogController;
-use App\Http\Controllers\Api\MyCourseController;
-use App\Http\Controllers\Api\BatchController as ApiBatchController;
-use App\Http\Controllers\Api\CurriculumController as ApiCurriculumController;
-use App\Http\Controllers\Api\TopicController;
+use App\Http\Controllers\api\MyCourseController;
+use App\Http\Controllers\api\BatchController as ApiBatchController;
+use App\Http\Controllers\api\CurriculumController as ApiCurriculumController;
+use App\Http\Controllers\api\TopicController;
 
 /*
 |--------------------------------------------------------------------------

@@ -86,7 +86,7 @@ export default function CircularProgress({
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.5, duration: 0.5 }}
         >
-          {label}
+          <span className=" text-sm">{label}</span>
         </motion.span>
       </div>
     </motion.div>
