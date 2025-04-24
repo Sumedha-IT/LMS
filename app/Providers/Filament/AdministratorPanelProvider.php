@@ -5,6 +5,7 @@ namespace App\Providers\Filament;
 use App\Filament\Pages\Dashboard;
 use App\Filament\Pages\MyProfilePage;
 use App\Filament\Pages\MyCoursesPage;
+use App\Filament\Pages\AnnouncementsPage;
 // use App\Filament\Pages\StudentDashboardPage;
 use App\Http\Middleware\ApplyTenantScopes;
 use App\Livewire\MyCustomPersonalInfo;
@@ -84,6 +85,7 @@ class AdministratorPanelProvider extends PanelProvider
                 // StudentDashboardPage::class,
                 MyProfilePage::class,
                 MyCoursesPage::class,
+                AnnouncementsPage::class,
             ])
             ->discoverClusters(in: app_path('Filament/Clusters'), for: 'App\\Filament\\Clusters')
             ->discoverWidgets(in: app_path('Filament/Widgets'), for: 'App\\Filament\\Widgets')

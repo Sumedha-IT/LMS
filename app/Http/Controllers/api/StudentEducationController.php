@@ -27,16 +27,37 @@ class StudentEducationController extends Controller
     public function store (Request $request){
         $user=$request->user();
 
-        $request->validate([
-            'degree_type_id'=>'required|exists:degree_types,id',
-            'specialization_id'=>'required|exists:specializations,id',
-            'other_specialization'=>'nullable|string',
-            'percentage_cgpa'=>'required|numeric',
-            'institute_name'=>'required|string',
-            'location'=>'required|string',
-            'duration_from'=>'required|date',
-            'duration_to'=>'required|date|after:duration_from'
-        ]);
+        // Get the degree type to check if it's bachelor's or master's
+        $degreeType = DegreeType::find($request->degree_type_id);
+        
+        // Base validation rules
+        $rules = [
+            'degree_type_id' => 'required|exists:degree_types,id',
+            'percentage_cgpa' => 'required|numeric',
+            'institute_name' => 'required|string',
+            'location' => 'required|string',
+            'duration_from' => 'required|date',
+            'duration_to' => 'required|date|after:duration_from'
+        ];
+
+        // Add specialization validation only for bachelor's and master's degrees
+        if ($degreeType && in_array($degreeType->name, ['Bachelors', 'Masters'])) {
+            // If specialization_id is 0 (Others), require other_specialization
+            if ($request->specialization_id === '0') {
+                $rules['other_specialization'] = 'required|string';
+                // Set specialization_id to null since we're using other_specialization
+                $request->merge(['specialization_id' => null]);
+            } else {
+                $rules['specialization_id'] = 'required|exists:specializations,id';
+            }
+        } else {
+            // For other degree types, make specialization optional
+            $rules['specialization_id'] = 'nullable|exists:specializations,id';
+            $rules['other_specialization'] = 'nullable|string';
+        }
+
+        $request->validate($rules);
+
         $education=$user->studentEducation()->create($request->all(),['user_id'=>$user->id]);
         return new StudentEducationResource($education);
     }
@@ -52,16 +73,38 @@ class StudentEducationController extends Controller
         if (!$education) {
             return response()->json(['message' => 'Education record not found'], 404);
         }
-        $request->validate([
-            'degree_type_id'=>'required|exists:degree_types,id',
-            'specialization_id'=>'required|exists:specializations,id',
-            'other_specialization'=>'nullable|string',
-            'percentage_cgpa'=>'required|numeric',
-            'institute_name'=>'required|string',
-            'location'=>'required|string',
-            'duration_from'=>'required|date',
-            'duration_to'=>'required|date|after:duration_from'
-        ]);
+
+        // Get the degree type to check if it's bachelor's or master's
+        $degreeType = DegreeType::find($request->degree_type_id);
+        
+        // Base validation rules
+        $rules = [
+            'degree_type_id' => 'required|exists:degree_types,id',
+            'percentage_cgpa' => 'required|numeric',
+            'institute_name' => 'required|string',
+            'location' => 'required|string',
+            'duration_from' => 'required|date',
+            'duration_to' => 'required|date|after:duration_from'
+        ];
+
+        // Add specialization validation only for bachelor's and master's degrees
+        if ($degreeType && in_array($degreeType->name, ['Bachelors', 'Masters'])) {
+            // If specialization_id is 0 (Others), require other_specialization
+            if ($request->specialization_id === '0') {
+                $rules['other_specialization'] = 'required|string';
+                // Set specialization_id to null since we're using other_specialization
+                $request->merge(['specialization_id' => null]);
+            } else {
+                $rules['specialization_id'] = 'required|exists:specializations,id';
+            }
+        } else {
+            // For other degree types, make specialization optional
+            $rules['specialization_id'] = 'nullable|exists:specializations,id';
+            $rules['other_specialization'] = 'nullable|string';
+        }
+
+        $request->validate($rules);
+        
         $education->update($request->all());
         return new StudentEducationResource($education);
     }

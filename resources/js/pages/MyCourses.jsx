@@ -806,12 +806,12 @@ const MyCourses = () => {
                 {/* Left Side - Curriculums and Topics */}
                 <div className={`${selectedTopic ? 'w-1/3' : 'w-full'} transition-all duration-300`}>
                     <div className="space-y-4">
-                {courses.flatMap(course => 
+                        {courses.flatMap(course => 
                             course.curriculums.map(curriculum => (
                                 <div key={curriculum.id} className="bg-white rounded-lg shadow-lg overflow-hidden">
                                     {/* Curriculum Header */}
                                     <div 
-                                onClick={() => handleCurriculumClick(curriculum)}
+                                        onClick={() => handleCurriculumClick(curriculum)}
                                         className="p-4 bg-orange-600 text-white flex justify-between items-center cursor-pointer hover:bg-orange-700 transition-colors duration-200"
                                     >
                                         <div className="flex items-center space-x-4">
@@ -857,16 +857,10 @@ const MyCourses = () => {
                                             ) : topics.length === 0 ? (
                                                 <div className="p-4 text-center text-gray-500">
                                                     No topics available
-                                </div>
+                                                </div>
                                             ) : (
                                                 topics.map((topic) => {
                                                     const topicStatus = getTopicStatus(topics, topic);
-                                                    const statusColors = {
-                                                        Done: 'bg-green-100 text-green-800',
-                                                        'In Progress': 'bg-blue-100 text-blue-800',
-                                                        'Not Started': 'bg-amber-100 text-amber-800'
-                                                    };
-
                                                     return (
                                                         <div 
                                                             key={topic.id}
@@ -876,7 +870,7 @@ const MyCourses = () => {
                                                                 'cursor-not-allowed opacity-60' : 
                                                                 'cursor-pointer hover:bg-gray-50'
                                                             } ${
-                                                                selectedTopic?.id === topic.id ? 'bg-gray-100' : ''
+                                                                selectedTopic?.id === topic.id ? 'bg-orange-50' : ''
                                                             }`}
                                                         >
                                                             <div className="flex items-center justify-between">
@@ -910,13 +904,13 @@ const MyCourses = () => {
                                                                                 </svg>
                                                                             </div>
                                                                         )}
-                                        </div>
-                                        <div>
+                                                                    </div>
+                                                                    <div>
                                                                         <h3 className="text-lg font-medium text-gray-800">{topic.name}</h3>
                                                                     </div>
                                                                 </div>
                                                                 <div className="flex items-center space-x-3">
-                                                                    <span className={`px-3 py-1 rounded-full text-sm font-medium ${statusColors[topicStatus.status]}`}>
+                                                                    <span className={`px-3 py-1 rounded-full text-sm font-medium ${topicStatus.status === 'Done' ? 'bg-green-100 text-green-800' : topicStatus.status === 'In Progress' ? 'bg-blue-100 text-blue-800' : 'bg-amber-100 text-amber-800'}`}>
                                                                         {topicStatus.status}
                                                                     </span>
                                                                     {!topicStatus.accessible && (
@@ -951,434 +945,438 @@ const MyCourses = () => {
                 {/* Right Side - Content Display */}
                 {selectedTopic && (
                     <div className="flex-1">
-                        <div className="bg-white rounded-lg shadow-lg">
-                            {/* Headers */}
+                        <div className="bg-white rounded-lg shadow-lg overflow-hidden max-w-4xl mx-auto">
+                            {/* Selected Curriculum Header */}
                             <div className="border-b border-gray-200">
-                                {/* Curriculum Name */}
-                                <div className="p-4">
+                                <div className="px-6 py-4">
                                     <h2 className="text-2xl font-semibold text-gray-800">
                                         {selectedCurriculum?.name}
                                     </h2>
-                                    <p className="text-sm text-gray-600 mt-1">Topics</p>
-                                </div>
-
-                                {/* Navigation Tabs */}
-                                <div className="bg-pink-50 p-6">
-                                    <div className="flex items-center justify-center">
-                                        <div className="flex items-center space-x-4">
-                                            <span className="font-medium text-gray-700">{selectedTopic.name}</span>
-                                            <div className="flex space-x-4">
-                                                <button
-                                                    onClick={() => setActiveTab('materials')}
-                                                    className={`px-6 py-2.5 rounded-lg font-medium transition-colors duration-200 ${
-                                                        activeTab === 'materials' 
-                                                        ? 'bg-orange-600 text-white' 
-                                                        : 'bg-orange-100 text-orange-600 hover:bg-orange-200'
-                                                    }`}
-                                                >
-                                                    Teaching Material
-                                                </button>
-                                                <button
-                                                    onClick={() => setActiveTab('assignments')}
-                                                    className={`px-6 py-2.5 rounded-lg font-medium transition-colors duration-200 ${
-                                                        activeTab === 'assignments' 
-                                                        ? 'bg-orange-600 text-white' 
-                                                        : 'bg-orange-100 text-orange-600 hover:bg-orange-200'
-                                                    }`}
-                                                >
-                                                    Assignments
-                                                </button>
-                                                {selectedAssignment && (
-                                                    <button
-                                                        onClick={() => setActiveTab('submit')}
-                                                        className={`px-6 py-2.5 rounded-lg font-medium transition-colors duration-200 ${
-                                                            activeTab === 'submit' 
-                                                            ? 'bg-orange-600 text-white' 
-                                                            : 'bg-orange-100 text-orange-600 hover:bg-orange-200'
-                                                        }`}
-                                                    >
-                                                        Submit Assignment
-                                                    </button>
-                                                )}
-                                            </div>
-                                        </div>
-                                    </div>
                                 </div>
                             </div>
 
-                            {/* Content Area with adjusted spacing and styling */}
-                            <div className="p-10 bg-gray-100 mt-6">
-                                {activeTab === 'materials' ? (
-                                    // Teaching Materials Content
-                                    <>
-                                        {selectedMaterial ? (
-                                            <div className="bg-white rounded-lg shadow-md p-6" style={{ minHeight: '75vh' }}>
-                                                {selectedMaterial.material_source === 'file' && selectedMaterial.file?.toLowerCase().endsWith('.pdf') ? (
-                                                    <div className="relative w-full h-full">
-                                                        <iframe
-                                                            src={`${selectedMaterial.file}#toolbar=0&navpanes=0&scrollbar=0`}
-                                                            className="w-full h-full border border-gray-200 rounded"
-                                                            style={{ height: 'calc(75vh - 2rem)' }}
-                                                            title={selectedMaterial.material_name}
-                                                        />
-                                                    </div>
-                                                ) : (
-                                                    <div className="w-full h-full">
-                                                        {renderMaterialContent(selectedMaterial)}
-                                                    </div>
-                                                )}
-                                            </div>
-                                        ) : (
-                                            <div className="flex flex-col items-center justify-center h-64 bg-white rounded-lg border-2 border-dashed border-gray-300">
-                                                <div className="bg-gray-100 rounded-full p-4 mb-4">
-                                                    <svg 
-                                                        className="w-12 h-12 text-gray-400" 
-                                                        fill="none" 
-                                                        stroke="currentColor" 
-                                                        viewBox="0 0 24 24"
-                                                    >
-                                                        <path 
-                                                            strokeLinecap="round" 
-                                                            strokeLinejoin="round" 
-                                                            strokeWidth={1.5} 
-                                                            d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" 
-                                                        />
-                                                    </svg>
-                                                </div>
-                                                <h3 className="text-xl font-semibold text-gray-700 mb-2">No Materials Available</h3>
-                                                <p className="text-gray-500 text-center max-w-md">
-                                                    There are currently no learning materials available for this topic.
-                                                </p>
-                                            </div>
-                                        )}
+                            {/* Selected Topic Header */}
+                            <div className="bg-orange-50 px-6 py-4 border-b border-orange-100">
+                                <h3 className="text-lg font-medium text-gray-800">
+                                    {selectedTopic.name}
+                                </h3>
+                            </div>
 
-                                        {/* Navigation Buttons with consistent styling */}
-                                        {materials.length > 1 && (
-                                            <div className="mt-4 flex justify-between">
-                                                <button
-                                                    onClick={() => {
-                                                        if (currentMaterialIndex > 0) {
-                                                            setCurrentMaterialIndex(prev => prev - 1);
-                                                            setSelectedMaterial(materials[currentMaterialIndex - 1]);
-                                                        }
-                                                    }}
-                                                    disabled={currentMaterialIndex === 0}
-                                                    className={`px-4 py-2 rounded ${
-                                                        currentMaterialIndex === 0 
-                                                        ? 'bg-gray-200 text-gray-500 cursor-not-allowed' 
-                                                        : 'bg-orange-600 text-white hover:bg-orange-700'
-                                                    }`}
-                                                >
-                                                    Previous
-                                                </button>
-                                                <button
-                                                    onClick={() => {
-                                                        if (currentMaterialIndex < materials.length - 1) {
-                                                            setCurrentMaterialIndex(prev => prev + 1);
-                                                            setSelectedMaterial(materials[currentMaterialIndex + 1]);
-                                                        }
-                                                    }}
-                                                    disabled={currentMaterialIndex === materials.length - 1}
-                                                    className={`px-4 py-2 rounded ${
-                                                        currentMaterialIndex === materials.length - 1
-                                                        ? 'bg-gray-200 text-gray-500 cursor-not-allowed' 
-                                                        : 'bg-orange-600 text-white hover:bg-orange-700'
-                                                    }`}
-                                                >
-                                                    Next
-                                                </button>
-                                            </div>
+                            {/* Content Container */}
+                            <div className="p-6">
+                                {/* Navigation Box */}
+                                <div className="bg-white rounded-lg border border-gray-200 overflow-hidden mb-6">
+                                    {/* Navigation Tabs */}
+                                    <div className="flex border-b border-gray-200">
+                                        <button
+                                            onClick={() => setActiveTab('materials')}
+                                            className={`flex-1 px-6 py-3 text-center font-medium transition-colors duration-200 ${
+                                                activeTab === 'materials' 
+                                                ? 'bg-orange-600 text-white' 
+                                                : 'bg-white text-gray-600 hover:bg-gray-50'
+                                            }`}
+                                        >
+                                            Teaching Material
+                                        </button>
+                                        <button
+                                            onClick={() => setActiveTab('assignments')}
+                                            className={`flex-1 px-6 py-3 text-center font-medium transition-colors duration-200 ${
+                                                activeTab === 'assignments' 
+                                                ? 'bg-orange-600 text-white' 
+                                                : 'bg-white text-gray-600 hover:bg-gray-50'
+                                            }`}
+                                        >
+                                            Assignments
+                                        </button>
+                                        {selectedAssignment && (
+                                            <button
+                                                onClick={() => setActiveTab('submit')}
+                                                className={`flex-1 px-6 py-3 text-center font-medium transition-colors duration-200 ${
+                                                    activeTab === 'submit' 
+                                                    ? 'bg-orange-600 text-white' 
+                                                    : 'bg-white text-gray-600 hover:bg-gray-50'
+                                                }`}
+                                            >
+                                                Submit Assignment
+                                            </button>
                                         )}
-                                    </>
-                                ) : activeTab === 'assignments' ? (
-                                    // Assignments Content with consistent styling
-                                    <div className="bg-white rounded-lg shadow-md p-6">
-                                        {loadingAssignments ? (
-                                            <div className="flex justify-center items-center h-64">
-                                                <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-orange-600"></div>
-                                            </div>
-                                        ) : assignments.length === 0 ? (
-                                            <div className="flex flex-col items-center justify-center h-64 bg-gray-50 rounded-lg border-2 border-dashed border-gray-300 p-8">
-                                                <div className="bg-gray-100 rounded-full p-4 mb-4">
-                                                    <svg 
-                                                        className="w-12 h-12 text-gray-400" 
-                                                        fill="none" 
-                                                        stroke="currentColor" 
-                                                        viewBox="0 0 24 24"
-                                                    >
-                                                        <path 
-                                                            strokeLinecap="round" 
-                                                            strokeLinejoin="round" 
-                                                            strokeWidth={1.5} 
-                                                            d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" 
-                                                        />
-                                                    </svg>
-                                                </div>
-                                                <h3 className="text-xl font-semibold text-gray-700 mb-2">No Assignments Available</h3>
-                                                <p className="text-gray-500 text-center max-w-md">
-                                                    There are currently no assignments for this topic.
-                                                </p>
-                                            </div>
-                                        ) : (
-                                            <>
-                                                <div className="space-y-4 p-6">
-                                                    {assignments.map((assignment) => {
-                                                        const isOverdue = isAssignmentOverdue(assignment.stop_submission);
-                                                        const isWindowOpen = isSubmissionWindowOpen(assignment.start_submission, assignment.stop_submission);
-                                                        const startDate = formatDate(assignment.start_submission);
-                                                        const dueDate = formatDate(assignment.stop_submission);
-                                                        
-                                                        return (
-                                                            <div 
-                                                                key={assignment.id}
-                                                                className="bg-white rounded-lg border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-200 cursor-pointer"
-                                                                onClick={() => setSelectedAssignment(assignment)}
-                                                            >
-                                                                <div className="p-6">
-                                                                    <div className="flex items-start justify-between">
-                                                                        <div className="flex-grow">
-                                                                            <div className="flex items-center justify-between mb-2">
-                                                                                <h3 className="text-lg font-semibold text-gray-800">
-                                                                                    {assignment.material_name}
-                                                                                </h3>
-                                                                                <div className="flex items-center space-x-2">
-                                                                                    {submissions[assignment.id] && (
-                                                                                        <span className="px-3 py-1 bg-green-100 text-green-800 rounded-full text-sm">
-                                                                                            Submitted
-                                                                                        </span>
-                                                                                    )}
-                                                                                    {isOverdue && !submissions[assignment.id] && (
-                                                                                        <span className="px-3 py-1 bg-red-100 text-red-800 rounded-full text-sm">
-                                                                                            Overdue
-                                                                                        </span>
-                                                                                    )}
-                                                                                    {!isWindowOpen && !isOverdue && (
-                                                                                        <span className="px-3 py-1 bg-yellow-100 text-yellow-800 rounded-full text-sm">
-                                                                                            Not Open Yet
-                                                                                        </span>
-                                                                                    )}
-                                                                                </div>
-                                                                            </div>
-                                                                            <p className="text-gray-600 mb-4">
-                                                                                {assignment.description || 'No description available'}
-                                                                            </p>
-                                                                            <div className="flex flex-col space-y-2">
-                                                                                <p className={`text-sm ${startDate === 'No date set' ? 'text-yellow-600' : 'text-gray-500'}`}>
-                                                                                    <span className="font-medium">Start Date:</span> {startDate}
-                                                                                </p>
-                                                                                <p className={`text-sm ${dueDate === 'No date set' ? 'text-yellow-600' : 'text-gray-500'}`}>
-                                                                                    <span className="font-medium">Due Date:</span> {dueDate}
-                                                                                </p>
-                                                                                {submissions[assignment.id] && (
-                                                                                    <p className="text-sm text-green-600">
-                                                                                        Submitted: {formatDate(submissions[assignment.id].created_at)}
-                                                                                    </p>
-                                                                                )}
-                                                                            </div>
-                                                                        </div>
-                                                                        <div className="flex items-center ml-4">
-                                                                            {getMaterialIcon(assignment)}
-                                                                        </div>
                                     </div>
                                 </div>
-                            </div>
-                        );
-                                                    })}
-                                                </div>
 
-                                                {/* Assignment Content Display */}
-                                                {selectedAssignment && (
-                                                    <div className="border-t border-gray-200 p-6 bg-white">
-                                                        <div className="mb-6">
-                                                            <h3 className="text-lg font-semibold text-gray-800 mb-4">Assignment Content</h3>
-                                                            {renderAssignmentContent(selectedAssignment)}
-                                                        </div>
-                                                    </div>
-                                                )}
-                                            </>
-                                        )}
-                                    </div>
-                                ) : activeTab === 'submit' && selectedAssignment && (
-                                    // Submit Assignment Tab Content with consistent styling
-                                    <div className="bg-white rounded-lg shadow-md p-6">
-                                        <div className="max-w-4xl mx-auto p-8">
-                                            <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-                                                {/* Header */}
-                                                <div className="bg-gradient-to-r from-orange-500 to-orange-600 p-6">
-                                                    <h2 className="text-2xl font-bold text-white">Submit Assignment</h2>
-                                                    <p className="text-orange-100 mt-2">{selectedAssignment.material_name}</p>
-                                                </div>
-
-                                                <div className="p-6">
-                                                    {/* Assignment Status */}
-                                                    <div className="mb-8">
-                                                        <div className="flex items-center justify-between mb-4">
-                                                            <h3 className="text-lg font-semibold text-gray-800">Assignment Status</h3>
-                                                            {submissions[selectedAssignment.id] ? (
-                                                                <span className="px-4 py-2 bg-green-100 text-green-800 rounded-full text-sm font-medium">
-                                                                    Submitted
-                                                                </span>
-                                                            ) : isSubmissionWindowOpen(selectedAssignment.start_submission, selectedAssignment.stop_submission) ? (
-                                                                <span className="px-4 py-2 bg-blue-100 text-blue-800 rounded-full text-sm font-medium">
-                                                                    Open for Submission
-                                                                </span>
-                                                            ) : isAssignmentOverdue(selectedAssignment.stop_submission) ? (
-                                                                <span className="px-4 py-2 bg-red-100 text-red-800 rounded-full text-sm font-medium">
-                                                                    Deadline Passed
-                                                                </span>
-                                                            ) : (
-                                                                <span className="px-4 py-2 bg-yellow-100 text-yellow-800 rounded-full text-sm font-medium">
-                                                                    Not Open Yet
-                                                                </span>
-                                                            )}
-                                                        </div>
-                                                        
-                                                        <div className="bg-gray-50 rounded-lg p-4 grid grid-cols-2 gap-4">
-                                                            <div>
-                                                                <p className="text-sm text-gray-600">Start Date</p>
-                                                                <p className="text-base font-medium text-gray-900">
-                                                                    {formatDate(selectedAssignment.start_submission)}
-                                                                </p>
-                                                            </div>
-                                                            <div>
-                                                                <p className="text-sm text-gray-600">Due Date</p>
-                                                                <p className="text-base font-medium text-gray-900">
-                                                                    {formatDate(selectedAssignment.stop_submission)}
-                                                                </p>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-
-                                                    {submissions[selectedAssignment.id] ? (
-                                                        // Submission Details
-                                                        <div className="space-y-6">
-                                                            <div className="bg-green-50 border border-green-200 rounded-lg p-6">
-                                                                <div className="flex items-center mb-4">
-                                                                    <svg className="w-8 h-8 text-green-500 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                                                    </svg>
-                                                                    <div>
-                                                                        <h4 className="text-lg font-semibold text-green-900">Assignment Submitted</h4>
-                                                                        <p className="text-green-700">
-                                                                            Submitted on {formatDate(submissions[selectedAssignment.id].created_at)}
-                                                                        </p>
-                                                                    </div>
-                                                                </div>
-                                                                <button
-                                                                    onClick={() => {
-                                                                        // Add functionality to view submission details
-                                                                        console.log('View submission:', submissions[selectedAssignment.id]);
-                                                                    }}
-                                                                    className="w-full mt-4 px-4 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors duration-200 flex items-center justify-center"
-                                                                >
-                                                                    <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                                                                    </svg>
-                                                                    View Submission Details
-                                                                </button>
-                                                            </div>
-                                                        </div>
-                                                    ) : isSubmissionWindowOpen(selectedAssignment.start_submission, selectedAssignment.stop_submission) ? (
-                                                        // Submit Form
-                                                        <div className="space-y-6">
-                                                            <div className="bg-blue-50 border border-blue-200 rounded-lg p-6">
-                                                                <h4 className="text-lg font-semibold text-blue-900 mb-4">Upload Your Assignment</h4>
-                                                                <div className="space-y-4">
-                                                                    <div className="border-2 border-dashed border-blue-200 rounded-lg p-6 text-center hover:border-blue-400 transition-colors duration-200">
-                                                                        <input
-                                                                            type="file"
-                                                                            onChange={handleFileChange}
-                                                                            className="hidden"
-                                                                            id="file-upload"
-                                                                        />
-                                                                        <label
-                                                                            htmlFor="file-upload"
-                                                                            className="cursor-pointer flex flex-col items-center justify-center"
-                                                                        >
-                                                                            <svg className="w-12 h-12 text-blue-500 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
-                                                                            </svg>
-                                                                            <span className="text-blue-900 font-medium">
-                                                                                {submissionFile ? 'Change file' : 'Choose a file'}
-                                                                            </span>
-                                                                            <span className="text-blue-600 text-sm mt-1">
-                                                                                or drag and drop
-                                                                            </span>
-                                                                        </label>
-                                                                    </div>
-                                                                    {submissionFile && (
-                                                                        <div className="bg-white rounded-lg border border-blue-200 p-4 flex items-center justify-between">
-                                                                            <div className="flex items-center">
-                                                                                <svg className="w-8 h-8 text-blue-500 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                                                                                </svg>
-                                                                                <div>
-                                                                                    <p className="text-sm font-medium text-gray-900">{submissionFile.name}</p>
-                                                                                    <p className="text-sm text-gray-500">
-                                                                                        {(submissionFile.size / 1024 / 1024).toFixed(2)} MB
-                                                                                    </p>
-                                                                                </div>
-                                                                            </div>
-                                                                            <button
-                                                                                onClick={() => setSubmissionFile(null)}
-                                                                                className="text-gray-400 hover:text-gray-500"
-                                                                            >
-                                                                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                                                                                </svg>
-                                                                            </button>
-                                                                        </div>
-                                                                    )}
-                                                                </div>
-                                                            </div>
-                                                            <button
-                                                                onClick={handleSubmitAssignment}
-                                                                disabled={!submissionFile || isSubmitting}
-                                                                className={`w-full px-6 py-3 rounded-lg font-medium text-lg flex items-center justify-center ${
-                                                                    !submissionFile || isSubmitting
-                                                                        ? 'bg-gray-200 text-gray-500 cursor-not-allowed'
-                                                                        : 'bg-orange-600 text-white hover:bg-orange-700'
-                                                                }`}
-                                                            >
-                                                                {isSubmitting ? (
-                                                                    <>
-                                                                        <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" fill="none" viewBox="0 0 24 24">
-                                                                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                                                                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                                                                        </svg>
-                                                                        Submitting...
-                                                                    </>
-                                                                ) : 'Submit Assignment'}
-                                                            </button>
+                                {/* Content Area */}
+                                <div className="bg-white rounded-lg border border-gray-200 p-6">
+                                    {activeTab === 'materials' ? (
+                                        // Teaching Materials Content
+                                        <>
+                                            {selectedMaterial ? (
+                                                <div className="bg-white rounded-lg shadow-md p-6" style={{ minHeight: '75vh' }}>
+                                                    {selectedMaterial.material_source === 'file' && selectedMaterial.file?.toLowerCase().endsWith('.pdf') ? (
+                                                        <div className="relative w-full h-full">
+                                                            <iframe
+                                                                src={`${selectedMaterial.file}#toolbar=0&navpanes=0&scrollbar=0`}
+                                                                className="w-full h-full border border-gray-200 rounded"
+                                                                style={{ height: 'calc(75vh - 2rem)' }}
+                                                                title={selectedMaterial.material_name}
+                                                            />
                                                         </div>
                                                     ) : (
-                                                        // Submission Window Closed/Not Open
-                                                        <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-6">
-                                                            <div className="flex items-center mb-4">
-                                                                <svg className="w-8 h-8 text-yellow-400 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                                                </svg>
+                                                        <div className="w-full h-full">
+                                                            {renderMaterialContent(selectedMaterial)}
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            ) : (
+                                                <div className="flex flex-col items-center justify-center h-64 bg-white rounded-lg border-2 border-dashed border-gray-300">
+                                                    <div className="bg-gray-100 rounded-full p-4 mb-4">
+                                                        <svg 
+                                                            className="w-12 h-12 text-gray-400" 
+                                                            fill="none" 
+                                                            stroke="currentColor" 
+                                                            viewBox="0 0 24 24"
+                                                        >
+                                                            <path 
+                                                                strokeLinecap="round" 
+                                                                strokeLinejoin="round" 
+                                                                strokeWidth={1.5} 
+                                                                d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" 
+                                                            />
+                                                        </svg>
+                                                    </div>
+                                                    <h3 className="text-xl font-semibold text-gray-700 mb-2">No Materials Available</h3>
+                                                    <p className="text-gray-500 text-center max-w-md">
+                                                        There are currently no learning materials available for this topic.
+                                                    </p>
+                                                </div>
+                                            )}
+
+                                            {/* Navigation Buttons with consistent styling */}
+                                            {materials.length > 1 && (
+                                                <div className="mt-4 flex justify-between">
+                                                    <button
+                                                        onClick={() => {
+                                                            if (currentMaterialIndex > 0) {
+                                                                setCurrentMaterialIndex(prev => prev - 1);
+                                                                setSelectedMaterial(materials[currentMaterialIndex - 1]);
+                                                            }
+                                                        }}
+                                                        disabled={currentMaterialIndex === 0}
+                                                        className={`px-4 py-2 rounded ${
+                                                            currentMaterialIndex === 0 
+                                                            ? 'bg-gray-200 text-gray-500 cursor-not-allowed' 
+                                                            : 'bg-orange-600 text-white hover:bg-orange-700'
+                                                        }`}
+                                                    >
+                                                        Previous
+                                                    </button>
+                                                    <button
+                                                        onClick={() => {
+                                                            if (currentMaterialIndex < materials.length - 1) {
+                                                                setCurrentMaterialIndex(prev => prev + 1);
+                                                                setSelectedMaterial(materials[currentMaterialIndex + 1]);
+                                                            }
+                                                        }}
+                                                        disabled={currentMaterialIndex === materials.length - 1}
+                                                        className={`px-4 py-2 rounded ${
+                                                            currentMaterialIndex === materials.length - 1
+                                                            ? 'bg-gray-200 text-gray-500 cursor-not-allowed' 
+                                                            : 'bg-orange-600 text-white hover:bg-orange-700'
+                                                        }`}
+                                                    >
+                                                        Next
+                                                    </button>
+                                                </div>
+                                            )}
+                                        </>
+                                    ) : activeTab === 'assignments' ? (
+                                        // Assignments Content with consistent styling
+                                        <div className="bg-white rounded-lg shadow-md p-6">
+                                            {loadingAssignments ? (
+                                                <div className="flex justify-center items-center h-64">
+                                                    <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-orange-600"></div>
+                                                </div>
+                                            ) : assignments.length === 0 ? (
+                                                <div className="flex flex-col items-center justify-center h-64 bg-gray-50 rounded-lg border-2 border-dashed border-gray-300 p-8">
+                                                    <div className="bg-gray-100 rounded-full p-4 mb-4">
+                                                        <svg 
+                                                            className="w-12 h-12 text-gray-400" 
+                                                            fill="none" 
+                                                            stroke="currentColor" 
+                                                            viewBox="0 0 24 24"
+                                                        >
+                                                            <path 
+                                                                strokeLinecap="round" 
+                                                                strokeLinejoin="round" 
+                                                                strokeWidth={1.5} 
+                                                                d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" 
+                                                            />
+                                                        </svg>
+                                                    </div>
+                                                    <h3 className="text-xl font-semibold text-gray-700 mb-2">No Assignments Available</h3>
+                                                    <p className="text-gray-500 text-center max-w-md">
+                                                        There are currently no assignments for this topic.
+                                                    </p>
+                                                </div>
+                                            ) : (
+                                                <>
+                                                    <div className="space-y-4 p-6">
+                                                        {assignments.map((assignment) => {
+                                                            const isOverdue = isAssignmentOverdue(assignment.stop_submission);
+                                                            const isWindowOpen = isSubmissionWindowOpen(assignment.start_submission, assignment.stop_submission);
+                                                            const startDate = formatDate(assignment.start_submission);
+                                                            const dueDate = formatDate(assignment.stop_submission);
+                                                            
+                                                            return (
+                                                                <div 
+                                                                    key={assignment.id}
+                                                                    className="bg-white rounded-lg border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-200 cursor-pointer"
+                                                                    onClick={() => setSelectedAssignment(assignment)}
+                                                                >
+                                                                    <div className="p-6">
+                                                                        <div className="flex items-start justify-between">
+                                                                            <div className="flex-grow">
+                                                                                <div className="flex items-center justify-between mb-2">
+                                                                                    <h3 className="text-lg font-semibold text-gray-800">
+                                                                                        {assignment.material_name}
+                                                                                    </h3>
+                                                                                    <div className="flex items-center space-x-2">
+                                                                                        {submissions[assignment.id] && (
+                                                                                            <span className="px-3 py-1 bg-green-100 text-green-800 rounded-full text-sm">
+                                                                                                Submitted
+                                                                                            </span>
+                                                                                        )}
+                                                                                        {isOverdue && !submissions[assignment.id] && (
+                                                                                            <span className="px-3 py-1 bg-red-100 text-red-800 rounded-full text-sm">
+                                                                                                Overdue
+                                                                                            </span>
+                                                                                        )}
+                                                                                        {!isWindowOpen && !isOverdue && (
+                                                                                            <span className="px-3 py-1 bg-yellow-100 text-yellow-800 rounded-full text-sm">
+                                                                                                Not Open Yet
+                                                                                            </span>
+                                                                                        )}
+                                                                                    </div>
+                                                                                </div>
+                                                                                <p className="text-gray-600 mb-4">
+                                                                                    {assignment.description || 'No description available'}
+                                                                                </p>
+                                                                                <div className="flex flex-col space-y-2">
+                                                                                    <p className={`text-sm ${startDate === 'No date set' ? 'text-yellow-600' : 'text-gray-500'}`}>
+                                                                                        <span className="font-medium">Start Date:</span> {startDate}
+                                                                                    </p>
+                                                                                    <p className={`text-sm ${dueDate === 'No date set' ? 'text-yellow-600' : 'text-gray-500'}`}>
+                                                                                        <span className="font-medium">Due Date:</span> {dueDate}
+                                                                                    </p>
+                                                                                    {submissions[assignment.id] && (
+                                                                                        <p className="text-sm text-green-600">
+                                                                                            Submitted: {formatDate(submissions[assignment.id].created_at)}
+                                                                                        </p>
+                                                                                    )}
+                                                                                </div>
+                                                                            </div>
+                                                                            <div className="flex items-center ml-4">
+                                                                                {getMaterialIcon(assignment)}
+                                                                            </div>
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                            );
+                                                        })}
+                                                    </div>
+
+                                                    {/* Assignment Content Display */}
+                                                    {selectedAssignment && (
+                                                        <div className="border-t border-gray-200 p-6 bg-white">
+                                                            <div className="mb-6">
+                                                                <h3 className="text-lg font-semibold text-gray-800 mb-4">Assignment Content</h3>
+                                                                {renderAssignmentContent(selectedAssignment)}
+                                                            </div>
+                                                        </div>
+                                                    )}
+                                                </>
+                                            )}
+                                        </div>
+                                    ) : activeTab === 'submit' && selectedAssignment && (
+                                        // Submit Assignment Tab Content with consistent styling
+                                        <div className="bg-white rounded-lg shadow-md p-6">
+                                            <div className="max-w-4xl mx-auto p-8">
+                                                <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+                                                    {/* Header */}
+                                                    <div className="bg-gradient-to-r from-orange-500 to-orange-600 p-6">
+                                                        <h2 className="text-2xl font-bold text-white">Submit Assignment</h2>
+                                                        <p className="text-orange-100 mt-2">{selectedAssignment.material_name}</p>
+                                                    </div>
+
+                                                    <div className="p-6">
+                                                        {/* Assignment Status */}
+                                                        <div className="mb-8">
+                                                            <div className="flex items-center justify-between mb-4">
+                                                                <h3 className="text-lg font-semibold text-gray-800">Assignment Status</h3>
+                                                                {submissions[selectedAssignment.id] ? (
+                                                                    <span className="px-4 py-2 bg-green-100 text-green-800 rounded-full text-sm font-medium">
+                                                                        Submitted
+                                                                    </span>
+                                                                ) : isSubmissionWindowOpen(selectedAssignment.start_submission, selectedAssignment.stop_submission) ? (
+                                                                    <span className="px-4 py-2 bg-blue-100 text-blue-800 rounded-full text-sm font-medium">
+                                                                        Open for Submission
+                                                                    </span>
+                                                                ) : isAssignmentOverdue(selectedAssignment.stop_submission) ? (
+                                                                    <span className="px-4 py-2 bg-red-100 text-red-800 rounded-full text-sm font-medium">
+                                                                        Deadline Passed
+                                                                    </span>
+                                                                ) : (
+                                                                    <span className="px-4 py-2 bg-yellow-100 text-yellow-800 rounded-full text-sm font-medium">
+                                                                        Not Open Yet
+                                                                    </span>
+                                                                )}
+                                                            </div>
+                                                            
+                                                            <div className="bg-gray-50 rounded-lg p-4 grid grid-cols-2 gap-4">
                                                                 <div>
-                                                                    <h4 className="text-lg font-semibold text-yellow-900">
-                                                                        {isAssignmentOverdue(selectedAssignment.stop_submission)
-                                                                            ? 'Submission Deadline Passed'
-                                                                            : 'Submission Window Not Open'}
-                                                                    </h4>
-                                                                    <p className="text-yellow-700">
-                                                                        {isAssignmentOverdue(selectedAssignment.stop_submission)
-                                                                            ? `The deadline was ${formatDate(selectedAssignment.stop_submission)}`
-                                                                            : `Submissions will open on ${formatDate(selectedAssignment.start_submission)}`}
+                                                                    <p className="text-sm text-gray-600">Start Date</p>
+                                                                    <p className="text-base font-medium text-gray-900">
+                                                                        {formatDate(selectedAssignment.start_submission)}
+                                                                    </p>
+                                                                </div>
+                                                                <div>
+                                                                    <p className="text-sm text-gray-600">Due Date</p>
+                                                                    <p className="text-base font-medium text-gray-900">
+                                                                        {formatDate(selectedAssignment.stop_submission)}
                                                                     </p>
                                                                 </div>
                                                             </div>
                                                         </div>
-                                                    )}
+
+                                                        {submissions[selectedAssignment.id] ? (
+                                                            // Submission Details
+                                                            <div className="space-y-6">
+                                                                <div className="bg-green-50 border border-green-200 rounded-lg p-6">
+                                                                    <div className="flex items-center mb-4">
+                                                                        <svg className="w-8 h-8 text-green-500 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                                                        </svg>
+                                                                        <div>
+                                                                            <h4 className="text-lg font-semibold text-green-900">Assignment Submitted</h4>
+                                                                            <p className="text-green-700">
+                                                                                Submitted on {formatDate(submissions[selectedAssignment.id].created_at)}
+                                                                            </p>
+                                                                        </div>
+                                                                    </div>
+                                                                    <button
+                                                                        onClick={() => {
+                                                                            // Add functionality to view submission details
+                                                                            console.log('View submission:', submissions[selectedAssignment.id]);
+                                                                        }}
+                                                                        className="w-full mt-4 px-4 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors duration-200 flex items-center justify-center"
+                                                                    >
+                                                                        <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                                                                        </svg>
+                                                                        View Submission Details
+                                                                    </button>
+                                                                </div>
+                                                            </div>
+                                                        ) : isSubmissionWindowOpen(selectedAssignment.start_submission, selectedAssignment.stop_submission) ? (
+                                                            // Submit Form
+                                                            <div className="space-y-6">
+                                                                <div className="bg-blue-50 border border-blue-200 rounded-lg p-6">
+                                                                    <h4 className="text-lg font-semibold text-blue-900 mb-4">Upload Your Assignment</h4>
+                                                                    <div className="space-y-4">
+                                                                        <div className="border-2 border-dashed border-blue-200 rounded-lg p-6 text-center hover:border-blue-400 transition-colors duration-200">
+                                                                            <input
+                                                                                type="file"
+                                                                                onChange={handleFileChange}
+                                                                                className="hidden"
+                                                                                id="file-upload"
+                                                                            />
+                                                                            <label
+                                                                                htmlFor="file-upload"
+                                                                                className="cursor-pointer flex flex-col items-center justify-center"
+                                                                            >
+                                                                                <svg className="w-12 h-12 text-blue-500 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                                                                                </svg>
+                                                                                <span className="text-blue-900 font-medium">
+                                                                                    {submissionFile ? 'Change file' : 'Choose a file'}
+                                                                                </span>
+                                                                                <span className="text-blue-600 text-sm mt-1">
+                                                                                    or drag and drop
+                                                                                </span>
+                                                                            </label>
+                                                                        </div>
+                                                                        {submissionFile && (
+                                                                            <div className="bg-white rounded-lg border border-blue-200 p-4 flex items-center justify-between">
+                                                                                <div className="flex items-center">
+                                                                                    <svg className="w-8 h-8 text-blue-500 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                                                                    </svg>
+                                                                                    <div>
+                                                                                        <p className="text-sm font-medium text-gray-900">{submissionFile.name}</p>
+                                                                                        <p className="text-sm text-gray-500">
+                                                                                            {(submissionFile.size / 1024 / 1024).toFixed(2)} MB
+                                                                                        </p>
+                                                                                    </div>
+                                                                                </div>
+                                                                                <button
+                                                                                    onClick={() => setSubmissionFile(null)}
+                                                                                    className="text-gray-400 hover:text-gray-500"
+                                                                                >
+                                                                                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                                                                    </svg>
+                                                                                </button>
+                                                                            </div>
+                                                                        )}
+                                                                    </div>
+                                                                </div>
+                                                                <button
+                                                                    onClick={handleSubmitAssignment}
+                                                                    disabled={!submissionFile || isSubmitting}
+                                                                    className={`w-full px-6 py-3 rounded-lg font-medium text-lg flex items-center justify-center ${
+                                                                        !submissionFile || isSubmitting
+                                                                            ? 'bg-gray-200 text-gray-500 cursor-not-allowed'
+                                                                            : 'bg-orange-600 text-white hover:bg-orange-700'
+                                                                    }`}
+                                                                >
+                                                                    {isSubmitting ? (
+                                                                        <>
+                                                                            <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" fill="none" viewBox="0 0 24 24">
+                                                                                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                                                                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                                                            </svg>
+                                                                            Submitting...
+                                                                        </>
+                                                                    ) : 'Submit Assignment'}
+                                                                </button>
+                                                            </div>
+                                                        ) : (
+                                                            // Submission Window Closed/Not Open
+                                                            <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-6">
+                                                                <div className="flex items-center mb-4">
+                                                                    <svg className="w-8 h-8 text-yellow-400 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                                                    </svg>
+                                                                    <div>
+                                                                        <h4 className="text-lg font-semibold text-yellow-900">
+                                                                            {isAssignmentOverdue(selectedAssignment.stop_submission)
+                                                                                ? 'Submission Deadline Passed'
+                                                                                : 'Submission Window Not Open'}
+                                                                        </h4>
+                                                                        <p className="text-yellow-700">
+                                                                            {isAssignmentOverdue(selectedAssignment.stop_submission)
+                                                                                ? `The deadline was ${formatDate(selectedAssignment.stop_submission)}`
+                                                                                : `Submissions will open on ${formatDate(selectedAssignment.start_submission)}`}
+                                                                        </p>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        )}
+                                                    </div>
                                                 </div>
                                             </div>
                                         </div>
-                                    </div>
-                                )}
+                                    )}
+                                </div>
                             </div>
                         </div>
                     </div>
