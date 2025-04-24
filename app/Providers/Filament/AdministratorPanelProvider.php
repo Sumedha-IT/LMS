@@ -41,6 +41,7 @@ class AdministratorPanelProvider extends PanelProvider
             ->viteTheme('resources/css/filament/administrator/theme.css')
             ->id('administrator')
             ->path('administrator')
+            ->darkMode(false)
             ->login()
             ->passwordReset()
             ->sidebarCollapsibleOnDesktop()
