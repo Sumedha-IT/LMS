@@ -22,18 +22,35 @@ class ProjectController extends Controller
         try {
             $validatedData = $request->validate([
                 'title' => 'required|string|max:255',
-                'description' => 'required|string',
-                'start_date' => 'required|date',
-                'end_date' => 'required|date|after_or_equal:start_date',
-                'technologies' => 'required|string',
-                'project_type' => 'required|string',
+                'description' => 'nullable|string',
+                'start_date' => 'nullable|date',
+                'end_date' => 'nullable|date|after_or_equal:start_date',
+                'technologies' => 'nullable|string',
+                'project_type' => 'nullable|string',
                 'project_url' => 'nullable|url',
-                'key_achievements' => 'required|string',
-                'organization' => 'required|string'
+                'key_achievements' => 'nullable|string',
+                'organization' => 'nullable|string',
+                'project_files' => 'nullable|array',
+                'project_files.*' => 'nullable|file|max:10240' // 10MB max per file
             ]);
 
             // Ensure user_id is set
             $validatedData['user_id'] = auth()->id();
+            
+            // Handle file uploads
+            $uploadedFiles = [];
+            if ($request->hasFile('project_files')) {
+                foreach ($request->file('project_files') as $file) {
+                    $path = $file->store('project-files/' . auth()->id(), 'public');
+                    $uploadedFiles[] = [
+                        'name' => $file->getClientOriginalName(),
+                        'path' => $path,
+                        'mime_type' => $file->getMimeType(),
+                        'size' => $file->getSize()
+                    ];
+                }
+            }
+            $validatedData['project_files'] = json_encode($uploadedFiles);
             
             // Create project
             $project = Project::create($validatedData);
@@ -66,15 +83,34 @@ class ProjectController extends Controller
         try {
             $validatedData = $request->validate([
                 'title' => 'required|string|max:255',
-                'description' => 'required|string',
-                'start_date' => 'required|date',
-                'end_date' => 'required|date|after_or_equal:start_date',
-                'technologies' => 'required|string',
-                'project_type' => 'required|string',
+                'description' => 'nullable|string',
+                'start_date' => 'nullable|date',
+                'end_date' => 'nullable|date|after_or_equal:start_date',
+                'technologies' => 'nullable|string',
+                'project_type' => 'nullable|string',
                 'project_url' => 'nullable|url',
-                'key_achievements' => 'required|string',
-                'organization' => 'required|string'
+                'key_achievements' => 'nullable|string',
+                'organization' => 'nullable|string',
+                'project_files' => 'nullable|array',
+                'project_files.*' => 'nullable|file|max:10240' // 10MB max per file
             ]);
+
+            // Handle file uploads
+            $existingFiles = json_decode($project->project_files ?? '[]', true);
+            $uploadedFiles = $existingFiles;
+
+            if ($request->hasFile('project_files')) {
+                foreach ($request->file('project_files') as $file) {
+                    $path = $file->store('project-files/' . auth()->id(), 'public');
+                    $uploadedFiles[] = [
+                        'name' => $file->getClientOriginalName(),
+                        'path' => $path,
+                        'mime_type' => $file->getMimeType(),
+                        'size' => $file->getSize()
+                    ];
+                }
+            }
+            $validatedData['project_files'] = json_encode($uploadedFiles);
 
             // Update project
             $project->update($validatedData);

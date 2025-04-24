@@ -29,6 +29,7 @@ import MyProfile from './components/MyProfile.jsx';
 import NewDashBoard from './pages/NewDashBoard.jsx';
 import MyCourses from './pages/MyCourses';
 import Topics from './pages/Topics';
+import Announcements from './pages/Announcements';
 
 function App() {
   return (
@@ -72,12 +73,15 @@ function App() {
 
 {/* Custome Dashboard */}
         <Route path="/administrator/:id/Student-Dashboard-Page" element={<NewDashBoard />} />
-        
+
         {/* My Courses */}
         <Route path="/administrator/:id/my-courses" element={<MyCourses />} />
 
-        {/* Topics */}
-        <Route path="/administrator/:id/topics/:curriculumId" element={<Topics />} />
+        {/* Announcements */}
+        <Route path="/administrator/:id/student-announcements" element={<Announcements />} />
+
+        {/* Remove Topics route as functionality is now in MyCourses */}
+        {/* <Route path="/administrator/:id/topics/:curriculumId" element={<Topics />} /> */}
       </Routes>
 
 

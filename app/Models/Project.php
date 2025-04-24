@@ -19,7 +19,8 @@ class Project extends Model
         'key_achievements',
         'project_type',
         'organization',
-        'user_id'
+        'user_id',
+        'project_files'
     ];
 
     protected $casts = [];

@@ -29,6 +29,12 @@ class AnnouncementResource extends Resource
 
     protected static bool $isScopedToTenant = false;
 
+    public static function shouldRegisterNavigation(): bool
+    {
+        // Only show in navigation for admin users
+        return auth()->check() && auth()->user()->is_admin;
+    }
+
 
     public static function form(Form $form): Form
     {

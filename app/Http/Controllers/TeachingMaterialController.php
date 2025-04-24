@@ -205,7 +205,13 @@ class TeachingMaterialController extends Controller
                     'start_submission',
                     'stop_submission'
                 ])
-                ->get();
+                ->get()
+                ->map(function ($material) {
+                    // Format dates properly
+                    $material->start_submission = $material->start_submission ? date('Y-m-d H:i:s', strtotime($material->start_submission)) : null;
+                    $material->stop_submission = $material->stop_submission ? date('Y-m-d H:i:s', strtotime($material->stop_submission)) : null;
+                    return $material;
+                });
 
             // Debug log
             \Log::info('Teaching materials for topic ' . $topicId, [

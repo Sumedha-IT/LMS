@@ -1728,20 +1728,30 @@ const MyProfile = () => {
                           <select 
                             value={edu.specialization_id || (edu.specialization && edu.specialization.id) || ''} 
                             onChange={(e) => {
-                              handleItemChange('education', index, 'specialization_id', e.target.value);
-                              setShowOtherSpecialization(e.target.value === '75' || e.target.value === '76');
+                              const value = e.target.value;
+                              handleItemChange('education', index, 'specialization_id', value);
+                              // Show other specialization input only when "Others" is selected
+                              handleItemChange('education', index, 'other_specialization', ''); // Clear previous value
+                              setShowOtherSpecialization(value === '0');
                             }} 
                             className="w-full p-2 border rounded-lg focus:ring-orange-500 focus:border-orange-500"
                             required={!isSchoolEducation}
                           >
                             <option value="">Select Specialization</option>
-                            {specializations.map(spec => (
-                              <option key={spec.id} value={spec.id}>{spec.name}</option>
-                            ))}
+                            {/* Filter out any existing "Other" options from the API */}
+                            {specializations
+                              .filter(spec => !spec.name.toLowerCase().includes('other'))
+                              .map(spec => (
+                                <option key={spec.id} value={spec.id}>{spec.name}</option>
+                              ))
+                            }
+                            {/* Add single Others option at the end */}
+                            <option value="0">Others</option>
                           </select>
                         </div>
 
-                        {showOtherSpecialization && (
+                        {/* Show other specialization input only when Others (0) is selected */}
+                        {edu.specialization_id === '0' && (
                           <div>
                             <label className="block text-sm font-medium text-gray-700 mb-2">
                               Other Specialization<span className="text-red-500">*</span>
@@ -1752,7 +1762,7 @@ const MyProfile = () => {
                               onChange={(e) => handleItemChange('education', index, 'other_specialization', e.target.value)} 
                               className="w-full p-2 border rounded-lg focus:ring-orange-500 focus:border-orange-500"
                               placeholder="Enter your specialization"
-                              required={showOtherSpecialization}
+                              required={true}
                             />
                           </div>
                         )}
@@ -2668,20 +2678,20 @@ const MyProfile = () => {
         return;
       }
 
-      // Validate required fields
-      if (!projectForm.title || !projectForm.description || !projectForm.start_date) {
-        toast.error('Please fill in all required fields');
+      // Validate only title as required
+      if (!projectForm.title) {
+        toast.error('Project title is required');
         return;
       }
 
       // Prepare the data in the format expected by the server
       const projectData = {
         title: projectForm.title,
-        description: projectForm.description,
+        description: projectForm.description || '',
         technologies: projectForm.technologies || '',
         project_url: projectForm.project_url || '',
-        start_date: projectForm.start_date ? formatDateForServer(projectForm.start_date) : '',
-        end_date: projectForm.is_ongoing ? null : (projectForm.end_date ? formatDateForServer(projectForm.end_date) : ''),
+        start_date: projectForm.start_date ? formatDateForServer(projectForm.start_date) : null,
+        end_date: projectForm.is_ongoing ? null : (projectForm.end_date ? formatDateForServer(projectForm.end_date) : null),
         is_ongoing: projectForm.is_ongoing ? 1 : 0,
         key_achievements: projectForm.key_achievements || '',
         project_type: projectForm.project_type || '',
@@ -2718,8 +2728,6 @@ const MyProfile = () => {
           formData.append('project_files[]', file);
         });
       }
-
-      console.log('Submitting project data:', Object.fromEntries(formData));
 
       const response = await axios({
         method: method,

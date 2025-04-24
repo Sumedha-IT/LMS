@@ -25,7 +25,7 @@ Route::get('/', function () {
 Route::get('clear-cache', function () {
     //Artisan::call('storage:link');
     Artisan::call('optimize');
-	Artisan::call('cache:clear');   
+	Artisan::call('cache:clear');
     Artisan::call('config:cache');
     Artisan::call('route:clear');
 
@@ -52,12 +52,23 @@ Route::get('/user', function () {
     return redirect('/administrator');
 });
 
-// MyCourses React UI routes
+// MyCourses and Announcements React UI routes
 Route::middleware(['auth'])->group(function () {
-    // React UI route
+    // React UI routes
     Route::get('/my-courses', function () {
         return view('my-courses');
     })->name('my-courses');
+
+    // Student announcements page route
+    Route::get('/administrator/{id}/student-announcements', function ($id) {
+        // Only allow students to access this page
+        if (auth()->user() && !auth()->user()->is_admin) {
+            return view('announcements');
+        }
+
+        // Redirect admins to the Filament admin panel
+        return redirect('/administrator/' . $id);
+    })->name('student.announcements');
 });
 
 // Fallback route for React router
