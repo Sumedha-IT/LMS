@@ -4,6 +4,7 @@ import { FileText } from "lucide-react"
 import Circularprogress from "./Ui/Circularprogress";
 import { useEffect,useState } from "react";
 import { apiRequest } from "../../utils/api";
+import { useLocation } from "react-router-dom";
 
 // Custom styled components
 const StyledLinearProgress = styled(LinearProgress)(({ theme }) => ({
@@ -25,13 +26,19 @@ const ModuleCard = styled(Paper)(({ theme }) => ({
   borderRadius: 8,
 }))
 
-export default function StudentJourney() {
+export default function StudentJourney({onStartLearning}) {
   const [journey, setJourney] = useState({
     batch: { course: { name: "" } },
     curriculums: []
   });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const location = useLocation();
+  const trimmedPath = location.pathname
+  .split('/')
+  .slice(0, -1)
+  .join('/') + '/';
+
 
   useEffect(() => {
     const fetchJourneyData = async () => {
@@ -88,6 +95,7 @@ export default function StudentJourney() {
           Student Journey
         </Typography>
         <Button
+        onClick={onStartLearning}
           variant="outlined"
           sx={{
             borderColor: "#E53510",
@@ -161,12 +169,12 @@ export default function StudentJourney() {
               </div>
 
               {/* Content Section */}
-              <div className="flex flex-1 pl-12 justify-between items-center">
+              <a href={`${trimmedPath}my-courses`} className="flex flex-1 pl-12 justify-between items-center">
                 <span className="text-gray-800 font-medium">
                   {curriculum.curriculum.name}
                 </span>
                 <Circularprogress value={completionPercentage}  color={completionPercentage === 100 ? "#E53510" : "#E53510"}/>
-              </div>
+              </a>
             </div>
           );
         })}

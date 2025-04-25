@@ -1,31 +1,103 @@
+import { useEffect, useState, useMemo } from "react";
+import { apiRequest } from "../../utils/api";
+import { useLocation } from "react-router-dom";
 export default function UpcomingAnnouncements() {
-    // Time slots from 9:00 to 16:00
-    const timeSlots = ["09:00", "10:00", "11:00", "12:00", "13:00", "14:00", "15:00", "16:00"];
-  
-    // Days of the week
-    const days = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
-  
-    // Events data
-    const events = [
-      { id: 1, day: "Mon", startTime: "10:00", title: "Webinar", color: "bg-red-500" },
-      { id: 2, day: "Wed", startTime: "11:00", title: "Events", color: "bg-cyan-500" },
-    ];
-  
-    // Function to get the column index for a time slot
-    const getTimeSlotIndex = (time) => {
-      return timeSlots.findIndex((slot) => slot === time);
+  const timeSlots = ["09:00", "10:00", "11:00", "12:00", "13:00", "14:00", "15:00", "16:00"];
+  const days = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+  const colors = ["bg-red-500", "bg-blue-500", "bg-green-500", "bg-yellow-500", "bg-purple-500", "bg-pink-500", "bg-cyan-500"];
+
+  const [announcements, setAnnouncements] = useState([]);
+  const [weekOffset, setWeekOffset] = useState(0);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    const fetchAnnouncements = async () => {
+      try {
+        setLoading(true);
+        const data = await apiRequest("/announcements");
+        setAnnouncements(data.data);
+      } catch (err) {
+        console.error("Error fetching announcements:", err);
+        setError(err.message || "Failed to load announcements");
+      } finally {
+        setLoading(false);
+      }
     };
+
+    fetchAnnouncements();
+  }, []);
+
+    const location = useLocation();
+    const trimmedPath = location.pathname
+    .split('/')
+    .slice(0, -1)
+    .join('/') + '/';
   
-    // Function to get the row index for a day
-    const getDayIndex = (day) => {
-      return days.findIndex((d) => d === day);
-    };
-  
-    return (
-      <div className="bg-gray-50 p-1 flex justify-center items-center min-h-[400px]">
-        <div className="bg-white rounded-xl shadow-sm border border-gray-100  p-6 w-full">
-          <h1 className="text-2xl font-medium text-gray-800 mb-6">Upcoming Announcements</h1>
-  
+  // Get current week range based on weekOffset
+  const getWeekRange = () => {
+    const now = new Date();
+    const start = new Date(now.setDate(now.getDate() - now.getDay() + weekOffset * 7));
+    start.setHours(0, 0, 0, 0);
+    const end = new Date(start);
+    end.setDate(start.getDate() + 6);
+    end.setHours(23, 59, 59, 999);
+    return { start, end };
+  };
+
+  // Convert API data into event format for the grid
+  const events = useMemo(() => {
+    const { start, end } = getWeekRange();
+    return announcements
+      .filter((item) => {
+        const dateObj = new Date(item.Schedule_at);
+        return dateObj >= start && dateObj <= end;
+      })
+      .map((item) => {
+        const dateObj = new Date(item.Schedule_at);
+        const hours = dateObj.getHours();
+        const minutes = dateObj.getMinutes();
+        const day = days[dateObj.getDay()];
+        const closestTimeSlot = [...timeSlots]
+          .reverse()
+          .find((slot) => {
+            const [slotH, slotM] = slot.split(":").map(Number);
+            return hours > slotH || (hours === slotH && minutes >= slotM);
+          });
+
+        return {
+          id: item.Id,
+          day,
+          startTime: closestTimeSlot || "09:00",
+          title: item.Title,
+          color: colors[Math.floor(Math.random() * colors.length)]
+        };
+      });
+  }, [announcements, weekOffset]);
+
+  return (
+    <div className="bg-gray-50 p-1 flex justify-center items-center min-h-[400px]">
+      <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 w-full">
+        <div className="flex justify-between items-center mb-4">
+          <h1 className="text-2xl font-medium text-gray-800">Upcoming Announcements</h1>
+          <div className="flex  gap-2">
+            <button onClick={() => setWeekOffset(weekOffset - 1)} className="text-sm px-3 py-1 rounded bg-gray-200 hover:bg-gray-300">
+              Previous Week
+            </button>
+            <button onClick={() => setWeekOffset(weekOffset + 1)} className="text-sm px-3 py-1 rounded bg-gray-200 hover:bg-gray-300">
+              Next Week
+            </button>
+          </div>
+          <a href={`${trimmedPath}announcements`} className="text-sm px-3 py-1 rounded bg-gray-200 hover:bg-gray-300">
+              More Announcements
+            </a>
+        </div>
+
+        {loading ? (
+          <p className="text-center text-gray-500">Loading announcements...</p>
+        ) : error ? (
+          <p className="text-center text-red-500">{error}</p>
+        ) : (
           <div className="relative">
             {/* Time slots header */}
             <div className="grid grid-cols-[80px_repeat(8,1fr)] mb-4">
@@ -36,27 +108,24 @@ export default function UpcomingAnnouncements() {
                 </div>
               ))}
             </div>
-  
-            {/* Grid with days and time slots */}
+
+            {/* Grid */}
             <div className="relative">
-              {/* Vertical grid lines */}
               <div className="absolute inset-0 grid grid-cols-[80px_repeat(8,1fr)] pointer-events-none">
                 {timeSlots.map((_, index) => (
                   <div key={index} className="col-span-1 border-l border-gray-200 h-full ml-auto"></div>
                 ))}
               </div>
-  
-              {/* Days rows */}
+
               <div className="relative">
                 {days.map((day, dayIndex) => (
                   <div key={dayIndex} className="grid grid-cols-[80px_repeat(8,1fr)] h-10 relative">
                     <div className="col-span-1 flex items-center text-gray-500 text-sm font-normal">{day}</div>
                     <div className="col-span-8 relative">
-                      {/* Render events for this day */}
                       {events
                         .filter((event) => event.day === day)
                         .map((event) => {
-                          const colStart = getTimeSlotIndex(event.startTime) + 1;
+                          const colStart = timeSlots.indexOf(event.startTime) + 1;
                           return (
                             <div
                               key={event.id}
@@ -65,15 +134,10 @@ export default function UpcomingAnnouncements() {
                                 left: `${(colStart - 0.5) * (100 / 8)}%`,
                               }}
                             >
-                              {/* Dot indicator */}
                               <div
-                                className={`absolute -left-9 top-1/2 -translate-y-1/2 w-2.5 h-2.5 rounded-full ${event.color}`}
+                                className={`absolute -left-14 top-1/2 -translate-y-1/2  w-3 h-3 rounded-full ${event.color}`}
                               ></div>
-  
-                              {/* Event pill */}
-                              <div
-                                className={` ${event.color} text-white px-4 py-1 rounded-full text-sm font-medium`}
-                              >
+                              <div className={`${event.color} text-white px-4 py-1 rounded-full text-sm font-medium`}>
                                 {event.title}
                               </div>
                             </div>
@@ -85,7 +149,8 @@ export default function UpcomingAnnouncements() {
               </div>
             </div>
           </div>
-        </div>
+        )}
       </div>
-    );
-  }
+    </div>
+  );
+}
