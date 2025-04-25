@@ -15,6 +15,7 @@ class TopicPolicy
      */
     public function viewAny(User $user): bool
     {
+        return $user->is_admin;
         return $user->can('view_any_topic');
     }
 
@@ -23,6 +24,7 @@ class TopicPolicy
      */
     public function view(User $user, Topic $topic): bool
     {
+        return $user->is_admin;
         return $user->can('view_topic');
     }
 
@@ -31,6 +33,7 @@ class TopicPolicy
      */
     public function create(User $user): bool
     {
+        return $user->is_admin;
         return $user->can('create_topic');
     }
 

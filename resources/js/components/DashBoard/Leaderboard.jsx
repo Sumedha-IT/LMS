@@ -28,7 +28,7 @@ export default function Leaderboard() {
     }, []);
 
 
-    // console.log(currentStudentId)
+    // console.log(currentStudentId)n
 
     return (
         <div className="w-full h-full max-w-xs mx-auto bg-white rounded-xl shadow-md overflow-hidden">

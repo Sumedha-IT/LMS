@@ -4,7 +4,8 @@ import TabPanel, { a11yProps } from '../common/TabPanel';
 import UserExamTable from '../components/UserExamTable';
 import userId, { useGetStudentDataQuery } from '../store/service/user/UserService';
 import PerformanceChart from '../components/DashBoard/PerformanceChart';
-import Leaderboard from '../components/DashBoard/LeaderBoard';
+
+import Leaderboard from '../components/DashBoard/Leaderboard';
 import AssignmentsReport from '../components/DashBoard/AssignmentsReport';
 
 const UserDashboard = () => {
