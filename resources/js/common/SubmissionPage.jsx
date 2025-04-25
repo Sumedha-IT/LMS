@@ -54,6 +54,12 @@ const SubmissionPage = ({
     const handleGoBack = () => {
         navigate('/user'); // Navigate back to the user page
     };
+
+    const handleClose = () => {
+        // Remove any event listeners that might show confirmation
+        window.onbeforeunload = null;
+        window.close(); // Close the window
+    };
 //style={"display:flex; justify-content:center; align-items: center;"}
     return (
         <>
@@ -64,17 +70,17 @@ const SubmissionPage = ({
                     <Typography variant="h6" sx={{ color: '#f97316', mb: 2 }}>
                         {errorMessage}
                     </Typography>
-                    <Button variant="contained" onClick={handleGoBack} sx={{ bgcolor: '#f97316' }}>
-                        Go Back
+                    <Button variant="contained" onClick={handleClose} sx={{ bgcolor: '#f97316' }}>
+                        Close
                     </Button>
                 </Box>
             ) : examStatisticData ? (
-                <Box sx={{ 
-                    display: 'flex', 
-                    flexDirection: 'column', 
-                    alignItems: 'center', 
-                    justifyContent: 'center', 
-                    width: '100%', 
+                <Box sx={{
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    width: '100%',
                     height: '100vh',
                  // Full viewport height for centering
                 }}  >

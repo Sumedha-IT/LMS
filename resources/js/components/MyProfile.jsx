@@ -45,60 +45,60 @@ const calculateCompletionPercentage = (formData, menuId, projects) => {
       const additionalFields = ['address', 'city', 'state_id', 'pincode'];
       const docsFields = ['aadhaar_number', 'upload_aadhar', 'linkedin_profile', 'passport_photo', 'upload_resume'];
       const parentFields = ['parent_name', 'parent_email', 'parent_aadhar', 'parent_occupation', 'residential_address'];
-      
+
       const basicComplete = basicFields.filter(field => formData[field]).length;
       const additionalComplete = additionalFields.filter(field => formData[field]).length;
       const docsComplete = docsFields.filter(field => formData[field]).length;
       const parentComplete = parentFields.filter(field => formData[field]).length;
-      
+
       const totalFields = basicFields.length + additionalFields.length + docsFields.length + parentFields.length;
       const completedFields = basicComplete + additionalComplete + docsComplete + parentComplete;
-      
+
       return Math.round((completedFields / totalFields) * 100);
-    
+
     case 'education':
       if (!formData.education || formData.education.length === 0) return 0;
-      
+
       const requiredEduFields = ['degree_type_id', 'institute_name', 'duration_from', 'duration_to', 'percentage_cgpa', 'location'];
       let totalEduFields = 0;
       let completedEduFields = 0;
-      
+
       formData.education.forEach(edu => {
         totalEduFields += requiredEduFields.length;
         completedEduFields += requiredEduFields.filter(field => edu[field]).length;
       });
-      
+
       return Math.round((completedEduFields / totalEduFields) * 100);
-    
+
     case 'projects':
       // Get projects from the projects state instead of formData
       if (!projects || projects.length === 0) return 0;
-      
+
       const requiredProjFields = ['title', 'description', 'start_date', 'technologies', 'project_type'];
       let totalProjFields = 0;
       let completedProjFields = 0;
-      
+
       formData.projects.forEach(proj => {
         totalProjFields += requiredProjFields.length;
         completedProjFields += requiredProjFields.filter(field => proj[field]).length;
       });
-      
+
       return Math.round((completedProjFields / totalProjFields) * 100);
-    
+
     case 'certifications':
       if (!formData.certifications || formData.certifications.length === 0) return 0;
-      
+
       const requiredCertFields = ['certification_name', 'authority', 'certification_date', 'certificate_number'];
       let totalCertFields = 0;
       let completedCertFields = 0;
-      
+
       formData.certifications.forEach(cert => {
         totalCertFields += requiredCertFields.length;
         completedCertFields += requiredCertFields.filter(field => cert[field]).length;
       });
-      
+
       return Math.round((completedCertFields / totalCertFields) * 100);
-    
+
     default:
       return 0;
   }
@@ -250,7 +250,6 @@ const MyProfile = () => {
           }));
         }
       } catch (error) {
-        console.error('Error fetching data:', error);
         toast.error('Failed to load profile data');
       } finally {
         setLoading(false);
@@ -263,7 +262,7 @@ const MyProfile = () => {
   useEffect(() => {
     const fetchMenuData = async () => {
       if (!activeMenu) return; // Don't fetch if no active menu
-      
+
       setLoading(true);
       const userInfo = getCookie("user_info");
       let userData;
@@ -329,7 +328,7 @@ const MyProfile = () => {
           });
 
           const educationData = educationResponse.data.data || [];
-          
+
           // Get unique degree type IDs that need specializations
           const uniqueDegreeTypeIds = [...new Set(
             educationData
@@ -348,7 +347,7 @@ const MyProfile = () => {
           );
 
           const specializationResponses = await Promise.all(specializationPromises);
-          
+
           // Combine all specializations
           const allSpecializations = specializationResponses.reduce((acc, response) => {
             const newSpecs = response.data.data || [];
@@ -367,7 +366,6 @@ const MyProfile = () => {
           }));
         }
       } catch (error) {
-        console.error('Error fetching data:', error);
         toast.error('Failed to load data');
       } finally {
         setLoading(false);
@@ -386,17 +384,16 @@ const MyProfile = () => {
   // Update the fetchSpecializations function to use the same token handling:
   const fetchSpecializations = async (degreeTypeId) => {
     if (!degreeTypeId) return;
-    
+
     try {
       const userInfo = getCookie("user_info");
       const userData = userInfo ? JSON.parse(userInfo) : null;
-      
+
       if (!userData?.token) {
-        console.error('No auth token available');
         toast.error('Authentication required');
         return;
       }
-      
+
       const response = await axios.get(`${API_URL}/api/get/specialization/${degreeTypeId}`, {
         headers: {
           'Accept': 'application/json',
@@ -404,10 +401,9 @@ const MyProfile = () => {
         },
         withCredentials: true,
       });
-      
+
       setSpecializations(response.data.data || []);
     } catch (error) {
-      console.error('Error fetching specializations:', error);
       toast.error('Failed to load specializations');
     }
   };
@@ -418,7 +414,6 @@ const MyProfile = () => {
       const userData = userInfo ? JSON.parse(userInfo) : null;
 
       if (!userData?.token) {
-        console.error('No auth token available');
         toast.error('Authentication required. Please log in again.');
         return;
       }
@@ -431,14 +426,11 @@ const MyProfile = () => {
         withCredentials: true,
       });
 
-      console.log('Fetched education data:', response.data);
-
       setFormData((prev) => ({
         ...prev,
         education: response.data.data || [],
       }));
     } catch (error) {
-      console.error('Error fetching education data:', error);
       toast.error(error.response?.data?.message || 'Failed to load education data');
     }
   };
@@ -458,8 +450,6 @@ const MyProfile = () => {
 
   const handleItemChange = (field, index, key, value) => {
     try {
-      console.log('handleItemChange called with:', { field, index, key, value });
-      
       setFormData(prev => {
         const updatedData = { ...prev };
         if (!updatedData[field]) {
@@ -471,7 +461,7 @@ const MyProfile = () => {
 
         // Validate and transform input based on field type
         let transformedValue = value;
-        
+
         if (field === 'education') {
           switch(key) {
             case 'percentage_cgpa':
@@ -514,18 +504,14 @@ const MyProfile = () => {
         }
 
         updatedData[field][index][key] = transformedValue;
-        console.log('Updated data:', updatedData[field][index]);
         return updatedData;
       });
     } catch (error) {
-      console.error('Error in handleItemChange:', error);
       toast.error('Failed to update field');
     }
   };
 
   const handleSaveEducation = (edu, index) => {
-    console.log('Saving education data:', edu);
-    
     // Check if all required fields are present
     const requiredFields = {
       degree_type_id: edu.degree_type_id || edu.degree_type?.id,
@@ -536,13 +522,10 @@ const MyProfile = () => {
       location: edu.location
     };
 
-    console.log('Checking required fields:', requiredFields);
-
     // Check if all required fields have values
     const hasAllRequired = Object.values(requiredFields).every(val => val !== undefined && val !== null && val !== '');
-    
+
     if (hasAllRequired) {
-      console.log('All required fields present, preparing data');
       const educationData = {
         id: edu.id, // This will be undefined for new records
         degree_type_id: edu.degree_type_id || edu.degree_type?.id,
@@ -554,8 +537,7 @@ const MyProfile = () => {
         duration_from: edu.duration_from,
         duration_to: edu.duration_to
       };
-      
-      console.log('Triggering save with data:', educationData);
+
       if (edu.id) {
         // If we have an ID, it's an update
         updateEducation(educationData);
@@ -567,26 +549,22 @@ const MyProfile = () => {
       const missingFields = Object.entries(requiredFields)
         .filter(([_, value]) => !value)
         .map(([key]) => key);
-      console.log('Missing required fields:', missingFields);
       toast.error(`Please fill in all required fields: ${missingFields.join(', ')}`);
     }
   };
 
   const createEducation = async (educationData) => {
     try {
-      console.log('Creating new education record:', educationData);
-      
       const userInfo = getCookie("user_info");
       const userData = userInfo ? JSON.parse(userInfo) : null;
-      
+
       if (!userData?.token) {
-        console.error('No auth token available');
         toast.error('Authentication required');
         return;
       }
 
       setLoading(true);
-      
+
       const response = await axios({
         method: 'post',
         url: `${API_URL}/api/education`,
@@ -599,18 +577,13 @@ const MyProfile = () => {
         withCredentials: true
       });
 
-      console.log('API Response:', response.data);
-
       if (response.data) {
         toast.success('Education added successfully');
-        
+
         // Fetch fresh data to ensure we have the latest state
-        console.log('Fetching fresh education data...');
         await fetchEducationData();
-        console.log('Fresh education data fetched');
       }
     } catch (error) {
-      console.error('Error creating education:', error);
       const errorMessage = error.response?.data?.message || 'Failed to add education';
       toast.error(errorMessage);
     } finally {
@@ -620,19 +593,16 @@ const MyProfile = () => {
 
   const updateEducation = async (educationData) => {
     try {
-      console.log('Updating education record:', educationData);
-      
       const userInfo = getCookie("user_info");
       const userData = userInfo ? JSON.parse(userInfo) : null;
-      
+
       if (!userData?.token) {
-        console.error('No auth token found');
         toast.error('Authentication required');
         return;
       }
 
       setLoading(true);
-      
+
       const response = await axios({
         method: 'put',
         url: `${API_URL}/api/update/education`,
@@ -645,18 +615,13 @@ const MyProfile = () => {
         withCredentials: true
       });
 
-      console.log('API Response:', response.data);
-
       if (response.data) {
         toast.success('Education updated successfully');
-        
+
         // Fetch fresh data to ensure we have the latest state
-        console.log('Fetching fresh education data...');
         await fetchEducationData();
-        console.log('Fresh education data fetched');
       }
     } catch (error) {
-      console.error('Error updating education:', error);
       const errorMessage = error.response?.data?.message || 'Failed to update education';
       toast.error(errorMessage);
     } finally {
@@ -667,10 +632,10 @@ const MyProfile = () => {
   const toggleMenu = (id) => {
     // Only change the active menu, don't trigger success messages
     setActiveMenu(activeMenu === id ? null : id);
-    
+
     // Don't show success message when switching tabs
     setSuccess(null);
-    
+
     // Set basic as default sub-tab when personal details is clicked
     if (id === 'personal') {
       setActiveSubTab('basic');
@@ -689,23 +654,18 @@ const MyProfile = () => {
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
-    console.log(`Field changed: ${name} = ${value}`);
 
-    setFormData((prev) => {
-        const newData = {
-            ...prev,
-            [name]: type === 'checkbox' ? checked : value,
-        };
-        console.log('Updated tempFormData:', newData);
-        return newData;
-    });
-};
+    setFormData((prev) => ({
+      ...prev,
+      [name]: type === 'checkbox' ? checked : value,
+    }));
+  };
 
   const handleFileChange = (e) => {
     const { name, files } = e.target;
     if (files && files[0]) {
       const file = files[0];
-      
+
       // Add file size validation for passport photo
       if (name === 'passport_photo' && file.size > 20 * 1024 * 1024) { // 20MB limit
         toast.error('Passport photo must be less than 20MB');
@@ -726,7 +686,7 @@ const MyProfile = () => {
             setPhotoPreview(e.target.result);
             // Auto-save avatar when uploaded
             handleAvatarUpload(file);
-          } 
+          }
           // The preview for passport_photo is handled directly in the render function
         };
         reader.readAsDataURL(file);
@@ -737,10 +697,10 @@ const MyProfile = () => {
   const handleAvatarUpload = async (avatarFile) => {
     try {
       setLoading(true);
-      
+
       const userInfo = getCookie("user_info");
       const userData = userInfo ? JSON.parse(userInfo) : null;
-      
+
       if (!userData?.token) {
         toast.error('User authentication required');
         return;
@@ -748,7 +708,7 @@ const MyProfile = () => {
 
       // Create FormData object
       const formDataToSend = new FormData();
-      
+
       // Only send the avatar data
       const jsonData = { avatar_update: true };
       formDataToSend.append('data', JSON.stringify(jsonData));
@@ -797,14 +757,14 @@ const MyProfile = () => {
   const handleAddItem = (field) => {
     setFormData(prev => {
       const newData = { ...prev };
-      
+
       if (field === 'education') {
         // Check if there's already an empty education form
-        const hasEmptyForm = newData.education?.some(edu => 
-          !edu.degree_type_id && 
-          !edu.institute_name && 
-          !edu.duration_from && 
-          !edu.duration_to && 
+        const hasEmptyForm = newData.education?.some(edu =>
+          !edu.degree_type_id &&
+          !edu.institute_name &&
+          !edu.duration_from &&
+          !edu.duration_to &&
           !edu.percentage_cgpa
         );
 
@@ -831,13 +791,13 @@ const MyProfile = () => {
           newData.certifications = [];
         }
         // Check if there's already an empty certification form
-        const hasEmptyForm = newData.certifications.some(cert => 
-          !cert.certification_name && 
-          !cert.authority && 
-          !cert.certification_date && 
+        const hasEmptyForm = newData.certifications.some(cert =>
+          !cert.certification_name &&
+          !cert.authority &&
+          !cert.certification_date &&
           !cert.certificate_number
         );
-        
+
         // Only add a new form if there isn't an empty one
         if (!hasEmptyForm) {
           newData.certifications.push({
@@ -873,7 +833,7 @@ const MyProfile = () => {
           organization: ''
         });
       }
-      
+
       return newData;
     });
   };
@@ -881,7 +841,7 @@ const MyProfile = () => {
   // Add this validation function before handleSubmit
   const validatePersonalDetails = (data) => {
     const errors = [];
-    
+
     // Basic Details
     if (!data.name?.trim()) errors.push('Name is required');
     if (!data.email?.trim()) errors.push('Email is required');
@@ -925,10 +885,10 @@ const MyProfile = () => {
       }
 
       setLoading(true);
-      
+
       const userInfo = getCookie("user_info");
       const userData = userInfo ? JSON.parse(userInfo) : null;
-      
+
       if (!userData?.token) {
         toast.error('User authentication required');
         return;
@@ -937,7 +897,7 @@ const MyProfile = () => {
 
       // Create FormData object
       const formDataToSend = new FormData();
-      
+
       // Handle file uploads first with proper error handling
       const fileFields = ['avatar_url', 'upload_resume', 'upload_aadhar', 'passport_photo'];
       fileFields.forEach(field => {
@@ -973,9 +933,6 @@ const MyProfile = () => {
         certifications: Array.isArray(formData.certifications) ? formData.certifications : [],
         achievements: Array.isArray(formData.achievements) ? formData.achievements : []
       };
-
-      // Log data before sending
-      console.log('Sending data:', { jsonData, files: Object.fromEntries(formDataToSend.entries()) });
 
       formDataToSend.append('data', JSON.stringify(jsonData));
 
@@ -1021,11 +978,6 @@ const MyProfile = () => {
       }
 
     } catch (error) {
-      console.error('Profile update error:', {
-        message: error.message,
-        response: error.response?.data,
-        status: error.response?.status
-      });
       setError(error.response?.data?.message || 'Failed to update profile');
       toast.error(error.response?.data?.message || 'Failed to update profile');
     } finally {
@@ -1036,18 +988,18 @@ const MyProfile = () => {
   // Add a helper function to standardize date format
   const formatDateForServer = (dateString) => {
     if (!dateString) return '';
-    
+
     // If already in YYYY-MM-DD format, return as is
     if (/^\d{4}-\d{2}-\d{2}$/.test(dateString)) {
       return dateString;
     }
-    
+
     // If in DD/MM/YYYY format, convert to YYYY-MM-DD
     if (/^\d{2}\/\d{2}\/\d{4}$/.test(dateString)) {
       const [day, month, year] = dateString.split('/');
       return `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
     }
-    
+
     // Try to create a Date object and format it
     try {
       const dateObj = new Date(dateString);
@@ -1055,7 +1007,7 @@ const MyProfile = () => {
         console.warn('Invalid date:', dateString);
         return ''; // Invalid date
       }
-      
+
       const year = dateObj.getFullYear();
       const month = String(dateObj.getMonth() + 1).padStart(2, '0');
       const day = String(dateObj.getDate()).padStart(2, '0');
@@ -1084,7 +1036,7 @@ const MyProfile = () => {
       setLoading(true);
       const userInfo = getCookie("user_info");
       const userData = userInfo ? JSON.parse(userInfo) : null;
-      
+
       if (!userData?.token) {
         toast.error('Authentication required');
         return;
@@ -1093,50 +1045,27 @@ const MyProfile = () => {
       const formData = new FormData();
       formData.append('certification_name', cert.certification_name);
       formData.append('authority', cert.authority);
-      
+
       // Format the date correctly to YYYY-MM-DD before sending to the server
       const formattedDate = formatDateForServer(cert.certification_date);
-      console.log('Original date:', cert.certification_date);
-      console.log('Formatted date for server:', formattedDate);
-      
       formData.append('certification_date', formattedDate);
-      
+
       formData.append('score', score.toString());
       formData.append('certificate_number', cert.certificate_number);
-      
+
       if (cert.certificate_file) {
         formData.append('certificate_file', cert.certificate_file);
       }
 
-      const url = cert.id 
+      const url = cert.id
         ? `${API_URL}/api/certifications/${cert.id}`
         : `${API_URL}/api/certifications`;
-      
-      const method = cert.id ? 'put' : 'post';
 
-      // Debug: Log all data being sent to the server
-      console.log('=== Certification Save Debug ===');
-      console.log('URL:', url);
-      console.log('Method:', method);
-      console.log('Certification ID:', cert.id);
-      console.log('Data being sent:');
-      console.log('- certification_name:', cert.certification_name);
-      console.log('- authority:', cert.authority);
-      console.log('- certification_date:', formattedDate);
-      console.log('- score:', score.toString());
-      console.log('- certificate_number:', cert.certificate_number);
-      console.log('- has certificate_file:', !!cert.certificate_file);
-      console.log('================================');
+      const method = cert.id ? 'put' : 'post';
 
       // For PUT requests, we need to use the _method parameter for Laravel
       if (method === 'put') {
         formData.append('_method', 'PUT');
-      }
-
-      // Log FormData contents for debugging
-      console.log('Form data entries:');
-      for (let pair of formData.entries()) {
-        console.log(pair[0], pair[1]);
       }
 
       const response = await axios({
@@ -1152,7 +1081,7 @@ const MyProfile = () => {
 
       if (response.data) {
         toast.success(cert.id ? 'Certification updated successfully' : 'Certification added successfully');
-        
+
         // Update the certifications list with the response data
         setFormData(prev => {
           const updatedCertifications = [...prev.certifications];
@@ -1162,22 +1091,22 @@ const MyProfile = () => {
             certifications: updatedCertifications
           };
         });
-        
+
         // Keep the certifications tab open
         // Do not modify activeMenu state
       }
     } catch (error) {
       console.error('Error saving certification:', error);
-      
+
       // Log more detailed error information
       if (error.response) {
         console.error('Server error response:', error.response.data);
         console.error('Status code:', error.response.status);
-        
+
         // Check if there are validation errors
         if (error.response.data && error.response.data.errors) {
           console.error('Validation errors:', error.response.data.errors);
-          
+
           // Display the first validation error message
           const firstError = Object.values(error.response.data.errors)[0];
           toast.error(firstError[0] || 'Failed to save certification');
@@ -1193,9 +1122,6 @@ const MyProfile = () => {
   };
 
   const renderSubTabContent = () => {
-    console.log('Rendering sub tab content for:', activeSubTab);
-    console.log('Current form data:', formData);
-
     if (loading) return <p>Loading...</p>;
     if (error) return <p className="text-red-500">{error}</p>;
     if (success) return <p className="text-green-500">{success}</p>;
@@ -1203,220 +1129,356 @@ const MyProfile = () => {
     switch (activeSubTab) {
       case 'basic':
         return (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Name<span className="text-red-500">*</span>
-              </label>
-              <input 
-                type="text" 
-                name="name" 
-                value={formData.name || ''} 
-                onChange={handleChange} 
-                className="w-full p-2 border rounded-lg focus:ring-orange-500 focus:border-orange-500" 
-                required
-              />
+          <div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Name<span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  name="name"
+                  value={formData.name || ''}
+                  onChange={handleChange}
+                  className="w-full p-2 border rounded-lg focus:ring-orange-500 focus:border-orange-500"
+                  required
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Email<span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="email"
+                  name="email"
+                  value={formData.email || ''}
+                  onChange={handleChange}
+                  className="w-full p-2 border rounded-lg focus:ring-orange-500 focus:border-orange-500"
+                  required
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Registration Number
+                </label>
+                <input
+                  type="text"
+                  name="registration_number"
+                  value={formData.registration_number || ''}
+                  onChange={handleChange}
+                  disabled
+                  className="w-full p-2 border rounded-lg bg-gray-50"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Domain
+                </label>
+                <input
+                  type="text"
+                  value={formData.domain_id || ''}
+                  disabled
+                  className="w-full p-2 border rounded-lg bg-gray-50"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Country Code
+                </label>
+                <select
+                  name="country_code"
+                  value={formData.country_code || ''}
+                  onChange={handleChange}
+                  disabled
+                  className="w-full p-2 border rounded-lg bg-gray-50"
+                >
+                  <option value="+91">+91</option>
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Contact Number
+                </label>
+                <input
+                  type="tel"
+                  name="phone"
+                  value={formData.phone || ''}
+                  onChange={handleChange}
+                  disabled
+                  className="w-full p-2 border rounded-lg bg-gray-50"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Gender<span className="text-red-500">*</span>
+                </label>
+                <select
+                  name="gender"
+                  value={formData.gender || ''}
+                  onChange={handleChange}
+                  className="w-full p-2 border rounded-lg focus:ring-orange-500 focus:border-orange-500"
+                  required
+                >
+                  <option value="">Select Gender</option>
+                  <option value="Male">Male</option>
+                  <option value="Female">Female</option>
+                  <option value="Other">Other</option>
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Birthday<span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="date"
+                  name="birthday"
+                  value={formData.birthday || ''}
+                  onChange={handleChange}
+                  className="w-full p-2 border rounded-lg focus:ring-orange-500 focus:border-orange-500"
+                  required
+                />
+              </div>
             </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Email<span className="text-red-500">*</span>
-              </label>
-              <input 
-                type="email" 
-                name="email" 
-                value={formData.email || ''} 
-                onChange={handleChange} 
-                className="w-full p-2 border rounded-lg focus:ring-orange-500 focus:border-orange-500" 
-                required
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Registration Number
-              </label>
-              <input 
-                type="text" 
-                name="registration_number" 
-                value={formData.registration_number || ''} 
-                onChange={handleChange} 
-                disabled 
-                className="w-full p-2 border rounded-lg bg-gray-50" 
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Domain
-              </label>
-              <input 
-                type="text" 
-                value={formData.domain_id || ''} 
-                disabled 
-                className="w-full p-2 border rounded-lg bg-gray-50" 
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Country Code
-              </label>
-              <select 
-                name="country_code" 
-                value={formData.country_code || ''} 
-                onChange={handleChange} 
-                disabled 
-                className="w-full p-2 border rounded-lg bg-gray-50"
+            <div className="mt-6 flex justify-end space-x-4">
+              <button
+                type="button"
+                onClick={() => toggleSubTab('additional')}
+                className="px-4 py-2 text-white bg-orange-500 rounded-lg hover:bg-orange-600 transition-colors"
               >
-                <option value="+91">+91</option>
-              </select>
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Contact Number
-              </label>
-              <input 
-                type="tel" 
-                name="phone" 
-                value={formData.phone || ''} 
-                onChange={handleChange} 
-                disabled 
-                className="w-full p-2 border rounded-lg bg-gray-50" 
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Gender<span className="text-red-500">*</span>
-              </label>
-              <select 
-                name="gender" 
-                value={formData.gender || ''} 
-                onChange={handleChange} 
-                className="w-full p-2 border rounded-lg focus:ring-orange-500 focus:border-orange-500"
-                required
-              >
-                <option value="">Select Gender</option>
-                <option value="Male">Male</option>
-                <option value="Female">Female</option>
-                <option value="Other">Other</option>
-              </select>
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Birthday<span className="text-red-500">*</span>
-              </label>
-              <input 
-                type="date" 
-                name="birthday" 
-                value={formData.birthday || ''} 
-                onChange={handleChange} 
-                className="w-full p-2 border rounded-lg focus:ring-orange-500 focus:border-orange-500"
-                required
-              />
+                Next
+              </button>
             </div>
           </div>
         );
       case 'additional':
         return (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Address<span className="text-red-500">*</span>
-              </label>
-              <textarea 
-                name="address" 
-                value={formData.address || ''} 
-                onChange={handleChange} 
-                className="w-full p-2 border rounded-lg focus:ring-orange-500 focus:border-orange-500" 
-                rows={4}
-                required 
-              />
+          <div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Address<span className="text-red-500">*</span>
+                </label>
+                <textarea
+                  name="address"
+                  value={formData.address || ''}
+                  onChange={handleChange}
+                  className="w-full p-2 border rounded-lg focus:ring-orange-500 focus:border-orange-500"
+                  rows={4}
+                  required
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  City<span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  name="city"
+                  value={formData.city || ''}
+                  onChange={handleChange}
+                  className="w-full p-2 border rounded-lg focus:ring-orange-500 focus:border-orange-500"
+                  required
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  State<span className="text-red-500">*</span>
+                </label>
+                <select
+                  name="state_id"
+                  value={formData.state_id || ''}
+                  onChange={handleChange}
+                  className="w-full p-2 border rounded-lg focus:ring-orange-500 focus:border-orange-500"
+                  required
+                >
+                  <option value="">Select State</option>
+                  <option value="1">State 1</option>
+                  <option value="2">State 2</option>
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Pincode<span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  name="pincode"
+                  value={formData.pincode || ''}
+                  onChange={handleChange}
+                  className="w-full p-2 border rounded-lg focus:ring-orange-500 focus:border-orange-500"
+                  required
+                />
+              </div>
             </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                City<span className="text-red-500">*</span>
-              </label>
-              <input 
-                type="text" 
-                name="city" 
-                value={formData.city || ''} 
-                onChange={handleChange} 
-                className="w-full p-2 border rounded-lg focus:ring-orange-500 focus:border-orange-500"
-                required 
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                State<span className="text-red-500">*</span>
-              </label>
-              <select 
-                name="state_id" 
-                value={formData.state_id || ''} 
-                onChange={handleChange} 
-                className="w-full p-2 border rounded-lg focus:ring-orange-500 focus:border-orange-500"
-                required
+            <div className="mt-6 flex justify-end space-x-4">
+              <button
+                type="button"
+                onClick={() => toggleSubTab('docs')}
+                className="px-4 py-2 text-white bg-orange-500 rounded-lg hover:bg-orange-600 transition-colors"
               >
-                <option value="">Select State</option>
-                <option value="1">State 1</option>
-                <option value="2">State 2</option>
-              </select>
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Pincode<span className="text-red-500">*</span>
-              </label>
-              <input 
-                type="text" 
-                name="pincode" 
-                value={formData.pincode || ''} 
-                onChange={handleChange} 
-                className="w-full p-2 border rounded-lg focus:ring-orange-500 focus:border-orange-500"
-                required 
-              />
+                Next
+              </button>
             </div>
           </div>
         );
       case 'docs':
         return (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="flex flex-col h-full">
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Aadhaar Number<span className="text-red-500">*</span>
-              </label>
-              <input 
-                type="text" 
-                name="aadhaar_number" 
-                value={formData.aadhaar_number || ''} 
-                onChange={handleChange} 
-                className="w-full p-2 border rounded-lg focus:ring-orange-500 focus:border-orange-500"
-                required 
-              />
-              
-              <div className="mt-3">
+          <div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="flex flex-col h-full">
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Aadhaar Document<span className="text-red-500">*</span>
+                  Aadhaar Number<span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  name="aadhaar_number"
+                  value={formData.aadhaar_number || ''}
+                  onChange={handleChange}
+                  className="w-full p-2 border rounded-lg focus:ring-orange-500 focus:border-orange-500"
+                  required
+                />
+
+                <div className="mt-3">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Aadhaar Document<span className="text-red-500">*</span>
+                  </label>
+                  <div className="flex items-center space-x-4">
+                    <label className="cursor-pointer bg-orange-500 text-white px-4 py-2 rounded-lg hover:bg-orange-600 transition-colors">
+                      <input
+                        type="file"
+                        name="upload_aadhar"
+                        onChange={handleFileChange}
+                        accept=".pdf,.jpg,.jpeg,.png"
+                        className="hidden"
+                        required={!formData.upload_aadhar}
+                      />
+                      Choose Aadhaar
+                    </label>
+                    {(formData.upload_aadhar) && (
+                      <div className="flex items-center gap-2">
+                        <a href={getDocumentUrl(formData.upload_aadhar)}
+                           target="_blank"
+                           rel="noopener noreferrer"
+                           className="text-orange-500 hover:text-orange-600"
+                        >
+                          View Aadhaar
+                        </a>
+                        <button
+                          type="button"
+                          onClick={() => handleRemoveFile('upload_aadhar')}
+                          className="text-red-500 hover:text-red-600"
+                        >
+                          ×
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex flex-col h-full">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  LinkedIn Profile<span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="url"
+                  name="linkedin_profile"
+                  value={formData.linkedin_profile || ''}
+                  onChange={handleChange}
+                  className="w-full p-2 border rounded-lg focus:ring-orange-500 focus:border-orange-500"
+                  placeholder="https://linkedin.com/in/yourprofile"
+                  required
+                />
+                {formData.linkedin_profile && (
+                  <div className="mt-2">
+                    <a
+                      href={formData.linkedin_profile.startsWith('http') ? formData.linkedin_profile : `https://${formData.linkedin_profile}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-orange-500 hover:text-orange-600 flex items-center gap-1"
+                    >
+                      <FiExternalLink className="w-4 h-4" />
+                      <span>View Profile</span>
+                    </a>
+                  </div>
+                )}
+                <p className="mt-1 text-xs text-gray-500">Enter your full LinkedIn profile URL</p>
+              </div>
+
+              <div className="flex flex-col h-full">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Passport Size Photo<span className="text-red-500">*</span>
                 </label>
                 <div className="flex items-center space-x-4">
                   <label className="cursor-pointer bg-orange-500 text-white px-4 py-2 rounded-lg hover:bg-orange-600 transition-colors">
-                    <input 
-                      type="file" 
-                      name="upload_aadhar" 
-                      onChange={handleFileChange} 
-                      accept=".pdf,.jpg,.jpeg,.png"
+                    <input
+                      type="file"
+                      name="passport_photo"
+                      onChange={handleFileChange}
+                      accept="image/*"
                       className="hidden"
-                      required={!formData.upload_aadhar} 
+                      required={!formData.passport_photo && !formData.passport_photo_path}
                     />
-                    Choose Aadhaar
+                    Choose Photo
                   </label>
-                  {(formData.upload_aadhar) && (
-                    <div className="flex items-center gap-2">
-                      <a href={getDocumentUrl(formData.upload_aadhar)} 
-                         target="_blank" 
-                         rel="noopener noreferrer" 
-                         className="text-orange-500 hover:text-orange-600"
+                  {(formData.passport_photo || formData.passport_photo_path) && (
+                    <div className="relative">
+                      <img
+                        src={
+                          formData.passport_photo instanceof File
+                            ? URL.createObjectURL(formData.passport_photo)
+                            : getDocumentUrl(formData.passport_photo_path)
+                        }
+                        alt="Passport Size"
+                        className="h-20 w-16 object-cover rounded"
+                        onError={(e) => {
+                          console.error("Image failed to load:", e);
+                          console.log("Image source:", e.target.src);
+                          console.log("Passport photo path:", formData.passport_photo_path);
+                        }}
+                      />
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveFile('passport_photo')}
+                        className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 text-xs"
                       >
-                        View Aadhaar
+                        ×
+                      </button>
+                    </div>
+                  )}
+                </div>
+                <p className="mt-1 text-xs text-gray-500">Upload a passport size photo (max 20MB)</p>
+              </div>
+
+              <div className="flex flex-col h-full">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Resume<span className="text-red-500">*</span>
+                </label>
+                <div className="flex items-center space-x-4">
+                  <label className="cursor-pointer bg-orange-500 text-white px-4 py-2 rounded-lg hover:bg-orange-600 transition-colors">
+                    <input
+                      type="file"
+                      name="upload_resume"
+                      onChange={handleFileChange}
+                      accept=".pdf,.doc,.docx"
+                      className="hidden"
+                      required={!formData.upload_resume}
+                    />
+                    Choose Resume
+                  </label>
+                  {formData.upload_resume && (
+                    <div className="flex items-center gap-2">
+                      <a
+                        href={getDocumentUrl(formData.upload_resume)}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-orange-500 hover:text-orange-600"
+                      >
+                        View Resume
                       </a>
                       <button
                         type="button"
-                        onClick={() => handleRemoveFile('upload_aadhar')}
+                        onClick={() => handleRemoveFile('upload_resume')}
                         className="text-red-500 hover:text-red-600"
                       >
                         ×
@@ -1426,187 +1488,95 @@ const MyProfile = () => {
                 </div>
               </div>
             </div>
-            
-            <div className="flex flex-col h-full">
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                LinkedIn Profile<span className="text-red-500">*</span>
-              </label>
-              <input 
-                type="url" 
-                name="linkedin_profile" 
-                value={formData.linkedin_profile || ''} 
-                onChange={handleChange} 
-                className="w-full p-2 border rounded-lg focus:ring-orange-500 focus:border-orange-500" 
-                placeholder="https://linkedin.com/in/yourprofile"
-                required 
-              />
-              {formData.linkedin_profile && (
-                <div className="mt-2">
-                  <a 
-                    href={formData.linkedin_profile.startsWith('http') ? formData.linkedin_profile : `https://${formData.linkedin_profile}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-orange-500 hover:text-orange-600 flex items-center gap-1"
-                  >
-                    <FiExternalLink className="w-4 h-4" />
-                    <span>View Profile</span>
-                  </a>
-                </div>
-              )}
-              <p className="mt-1 text-xs text-gray-500">Enter your full LinkedIn profile URL</p>
-            </div>
-            
-            <div className="flex flex-col h-full">
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Passport Size Photo<span className="text-red-500">*</span>
-              </label>
-              <div className="flex items-center space-x-4">
-                <label className="cursor-pointer bg-orange-500 text-white px-4 py-2 rounded-lg hover:bg-orange-600 transition-colors">
-                  <input 
-                    type="file" 
-                    name="passport_photo" 
-                    onChange={handleFileChange} 
-                    accept="image/*"
-                    className="hidden"
-                    required={!formData.passport_photo && !formData.passport_photo_path} 
-                  />
-                  Choose Photo
-                </label>
-                {(formData.passport_photo || formData.passport_photo_path) && (
-                  <div className="relative">
-                    <img 
-                      src={
-                        formData.passport_photo instanceof File
-                          ? URL.createObjectURL(formData.passport_photo)
-                          : getDocumentUrl(formData.passport_photo_path)
-                      }
-                      alt="Passport Size" 
-                      className="h-20 w-16 object-cover rounded"
-                      onError={(e) => {
-                        console.error("Image failed to load:", e);
-                        console.log("Image source:", e.target.src);
-                        console.log("Passport photo path:", formData.passport_photo_path);
-                      }}
-                    />
-                    <button
-                      type="button"
-                      onClick={() => handleRemoveFile('passport_photo')}
-                      className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 text-xs"
-                    >
-                      ×
-                    </button>
-                  </div>
-                )}
-              </div>
-              <p className="mt-1 text-xs text-gray-500">Upload a passport size photo (max 20MB)</p>
-            </div>
-
-            <div className="flex flex-col h-full">
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Resume<span className="text-red-500">*</span>
-              </label>
-              <div className="flex items-center space-x-4">
-                <label className="cursor-pointer bg-orange-500 text-white px-4 py-2 rounded-lg hover:bg-orange-600 transition-colors">
-                  <input 
-                    type="file" 
-                    name="upload_resume" 
-                    onChange={handleFileChange} 
-                    accept=".pdf,.doc,.docx"
-                    className="hidden"
-                    required={!formData.upload_resume} 
-                  />
-                  Choose Resume
-                </label>
-                {formData.upload_resume && (
-                  <div className="flex items-center gap-2">
-                    <a 
-                      href={getDocumentUrl(formData.upload_resume)} 
-                      target="_blank" 
-                      rel="noopener noreferrer" 
-                      className="text-orange-500 hover:text-orange-600"
-                    >
-                      View Resume
-                    </a>
-                    <button
-                      type="button"
-                      onClick={() => handleRemoveFile('upload_resume')}
-                      className="text-red-500 hover:text-red-600"
-                    >
-                      ×
-                    </button>
-                  </div>
-                )}
-              </div>
+            <div className="mt-6 flex justify-end space-x-4">
+              <button
+                type="button"
+                onClick={() => toggleSubTab('parent')}
+                className="px-4 py-2 text-white bg-orange-500 rounded-lg hover:bg-orange-600 transition-colors"
+              >
+                Next
+              </button>
             </div>
           </div>
         );
       case 'parent':
         return (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Parent Name<span className="text-red-500">*</span>
-              </label>
-              <input 
-                type="text" 
-                name="parent_name" 
-                value={formData.parent_name || ''} 
-                onChange={handleChange} 
-                className="w-full p-2 border rounded-lg focus:ring-orange-500 focus:border-orange-500"
-                required 
-              />
+          <div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Parent Name<span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  name="parent_name"
+                  value={formData.parent_name || ''}
+                  onChange={handleChange}
+                  className="w-full p-2 border rounded-lg focus:ring-orange-500 focus:border-orange-500"
+                  required
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Parent Email<span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="email"
+                  name="parent_email"
+                  value={formData.parent_email || ''}
+                  onChange={handleChange}
+                  className="w-full p-2 border rounded-lg focus:ring-orange-500 focus:border-orange-500"
+                  required
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Parent Aadhaar<span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  name="parent_aadhar"
+                  value={formData.parent_aadhar || ''}
+                  onChange={handleChange}
+                  className="w-full p-2 border rounded-lg focus:ring-orange-500 focus:border-orange-500"
+                  required
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Parent Occupation<span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  name="parent_occupation"
+                  value={formData.parent_occupation || ''}
+                  onChange={handleChange}
+                  className="w-full p-2 border rounded-lg focus:ring-orange-500 focus:border-orange-500"
+                  required
+                />
+              </div>
+              <div className="md:col-span-2">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Residential Address<span className="text-red-500">*</span>
+                </label>
+                <textarea
+                  name="residential_address"
+                  value={formData.residential_address || ''}
+                  onChange={handleChange}
+                  className="w-full p-2 border rounded-lg focus:ring-orange-500 focus:border-orange-500"
+                  rows={4}
+                  required
+                />
+              </div>
             </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Parent Email<span className="text-red-500">*</span>
-              </label>
-              <input 
-                type="email" 
-                name="parent_email" 
-                value={formData.parent_email || ''} 
-                onChange={handleChange} 
-                className="w-full p-2 border rounded-lg focus:ring-orange-500 focus:border-orange-500"
-                required 
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Parent Aadhaar<span className="text-red-500">*</span>
-              </label>
-              <input 
-                type="text" 
-                name="parent_aadhar" 
-                value={formData.parent_aadhar || ''} 
-                onChange={handleChange} 
-                className="w-full p-2 border rounded-lg focus:ring-orange-500 focus:border-orange-500"
-                required 
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Parent Occupation<span className="text-red-500">*</span>
-              </label>
-              <input 
-                type="text" 
-                name="parent_occupation" 
-                value={formData.parent_occupation || ''} 
-                onChange={handleChange} 
-                className="w-full p-2 border rounded-lg focus:ring-orange-500 focus:border-orange-500"
-                required 
-              />
-            </div>
-            <div className="md:col-span-2">
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Residential Address<span className="text-red-500">*</span>
-              </label>
-              <textarea 
-                name="residential_address" 
-                value={formData.residential_address || ''} 
-                onChange={handleChange} 
-                className="w-full p-2 border rounded-lg focus:ring-orange-500 focus:border-orange-500"
-                rows={4}
-                required 
-              />
+            <div className="mt-6 flex justify-end">
+              <button
+                type="button"
+                onClick={handleSubmit}
+                className="px-4 py-2 text-white bg-orange-500 rounded-lg hover:bg-orange-600 transition-colors"
+              >
+                Save Changes
+              </button>
             </div>
           </div>
         );
@@ -1617,14 +1587,14 @@ const MyProfile = () => {
 
   const renderMainTabContent = (menuId) => {
     if (loading) return <p>Loading...</p>;
-    
+
     // Show errors/success but continue showing the form instead of returning early
     const showSuccessMessage = success && (
       <div className="mb-4 p-3 bg-green-100 text-green-700 rounded-lg">
         {success}
       </div>
     );
-    
+
     const showErrorMessage = error && (
       <div className="mb-4 p-3 bg-red-100 text-red-700 rounded-lg">
         {error}
@@ -1638,7 +1608,7 @@ const MyProfile = () => {
             {/* Show messages if they exist */}
             {showSuccessMessage}
             {showErrorMessage}
-            
+
             {/* Browser-like tabs */}
             <div className="border-b border-gray-200">
               <nav className="flex -mb-px space-x-8">
@@ -1648,8 +1618,8 @@ const MyProfile = () => {
                     onClick={() => toggleSubTab(subTab.id)}
                     className={`
                       py-4 px-1 border-b-2 font-medium text-sm flex items-center gap-2
-                      ${activeSubTab === subTab.id 
-                        ? 'border-orange-500 text-orange-600' 
+                      ${activeSubTab === subTab.id
+                        ? 'border-orange-500 text-orange-600'
                         : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'}
                     `}
                   >
@@ -1661,19 +1631,10 @@ const MyProfile = () => {
                 ))}
               </nav>
             </div>
-            
+
             {/* Show sub-tab content below the tabs */}
             <div className="mt-6">
               {renderSubTabContent()}
-              <div className="mt-6 flex justify-end">
-                <button 
-                  type="button" 
-                  onClick={handleSubmit}
-                  className="px-4 py-2 text-white bg-orange-500 rounded-lg hover:bg-orange-600 transition-colors"
-                >
-                  Save Changes
-                </button>
-              </div>
             </div>
           </div>
         );
@@ -1684,7 +1645,7 @@ const MyProfile = () => {
               // Check for both string and number types since API might return either
               const degreeTypeId = edu.degree_type_id || (edu.degree_type && edu.degree_type.id);
               const isSchoolEducation = ['1', '2', 1, 2].includes(degreeTypeId);
-              
+
               return (
                 <div key={index} className="bg-white rounded-lg shadow p-6">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -1693,8 +1654,8 @@ const MyProfile = () => {
                       <label className="block text-sm font-medium text-gray-700 mb-2">
                         Degree Type<span className="text-red-500">*</span>
                       </label>
-                      <select 
-                        value={degreeTypeId || ''} 
+                      <select
+                        value={degreeTypeId || ''}
                         onChange={(e) => {
                           handleItemChange('education', index, 'degree_type_id', e.target.value);
                           // Only fetch specializations for higher education
@@ -1707,7 +1668,7 @@ const MyProfile = () => {
                             handleItemChange('education', index, 'specialization_id', '');
                             handleItemChange('education', index, 'other_specialization', '');
                           }
-                        }} 
+                        }}
                         className="w-full p-2 border rounded-lg focus:ring-orange-500 focus:border-orange-500"
                         required
                       >
@@ -1725,15 +1686,15 @@ const MyProfile = () => {
                           <label className="block text-sm font-medium text-gray-700 mb-2">
                             Specialization<span className="text-red-500">*</span>
                           </label>
-                          <select 
-                            value={edu.specialization_id || (edu.specialization && edu.specialization.id) || ''} 
+                          <select
+                            value={edu.specialization_id || (edu.specialization && edu.specialization.id) || ''}
                             onChange={(e) => {
                               const value = e.target.value;
                               handleItemChange('education', index, 'specialization_id', value);
                               // Show other specialization input only when "Others" is selected
                               handleItemChange('education', index, 'other_specialization', ''); // Clear previous value
                               setShowOtherSpecialization(value === '0');
-                            }} 
+                            }}
                             className="w-full p-2 border rounded-lg focus:ring-orange-500 focus:border-orange-500"
                             required={!isSchoolEducation}
                           >
@@ -1756,10 +1717,10 @@ const MyProfile = () => {
                             <label className="block text-sm font-medium text-gray-700 mb-2">
                               Other Specialization<span className="text-red-500">*</span>
                             </label>
-                            <input 
-                              type="text" 
-                              value={edu.other_specialization || ''} 
-                              onChange={(e) => handleItemChange('education', index, 'other_specialization', e.target.value)} 
+                            <input
+                              type="text"
+                              value={edu.other_specialization || ''}
+                              onChange={(e) => handleItemChange('education', index, 'other_specialization', e.target.value)}
                               className="w-full p-2 border rounded-lg focus:ring-orange-500 focus:border-orange-500"
                               placeholder="Enter your specialization"
                               required={true}
@@ -1773,13 +1734,13 @@ const MyProfile = () => {
                       <label className="block text-sm font-medium text-gray-700 mb-2">
                         Institute Name<span className="text-red-500">*</span>
                       </label>
-                      <input 
-                        type="text" 
-                        value={edu.institute_name || ''} 
-                        onChange={(e) => handleItemChange('education', index, 'institute_name', e.target.value)} 
+                      <input
+                        type="text"
+                        value={edu.institute_name || ''}
+                        onChange={(e) => handleItemChange('education', index, 'institute_name', e.target.value)}
                         className="w-full p-2 border rounded-lg focus:ring-orange-500 focus:border-orange-500"
                         placeholder="Enter institute name"
-                        required 
+                        required
                       />
                     </div>
 
@@ -1787,13 +1748,13 @@ const MyProfile = () => {
                       <label className="block text-sm font-medium text-gray-700 mb-2">
                         Location<span className="text-red-500">*</span>
                       </label>
-                      <input 
-                        type="text" 
-                        value={edu.location || ''} 
-                        onChange={(e) => handleItemChange('education', index, 'location', e.target.value)} 
+                      <input
+                        type="text"
+                        value={edu.location || ''}
+                        onChange={(e) => handleItemChange('education', index, 'location', e.target.value)}
                         className="w-full p-2 border rounded-lg focus:ring-orange-500 focus:border-orange-500"
                         placeholder="Enter location"
-                        required 
+                        required
                       />
                     </div>
 
@@ -1801,12 +1762,12 @@ const MyProfile = () => {
                       <label className="block text-sm font-medium text-gray-700 mb-2">
                         Duration From<span className="text-red-500">*</span>
                       </label>
-                      <input 
-                        type="date" 
-                        value={edu.duration_from || ''} 
-                        onChange={(e) => handleItemChange('education', index, 'duration_from', e.target.value)} 
+                      <input
+                        type="date"
+                        value={edu.duration_from || ''}
+                        onChange={(e) => handleItemChange('education', index, 'duration_from', e.target.value)}
                         className="w-full p-2 border rounded-lg focus:ring-orange-500 focus:border-orange-500"
-                        required 
+                        required
                       />
                     </div>
 
@@ -1814,12 +1775,12 @@ const MyProfile = () => {
                       <label className="block text-sm font-medium text-gray-700 mb-2">
                         Duration To<span className="text-red-500">*</span>
                       </label>
-                      <input 
-                        type="date" 
-                        value={edu.duration_to || ''} 
-                        onChange={(e) => handleItemChange('education', index, 'duration_to', e.target.value)} 
+                      <input
+                        type="date"
+                        value={edu.duration_to || ''}
+                        onChange={(e) => handleItemChange('education', index, 'duration_to', e.target.value)}
                         className="w-full p-2 border rounded-lg focus:ring-orange-500 focus:border-orange-500"
-                        required 
+                        required
                       />
                     </div>
 
@@ -1827,16 +1788,16 @@ const MyProfile = () => {
                       <label className="block text-sm font-medium text-gray-700 mb-2">
                         Percentage/CGPA<span className="text-red-500">*</span>
                       </label>
-                      <input 
-                        type="number" 
-                        step="0.01" 
-                        min="0" 
-                        max="100" 
-                        value={edu.percentage_cgpa || ''} 
-                        onChange={(e) => handleItemChange('education', index, 'percentage_cgpa', e.target.value)} 
+                      <input
+                        type="number"
+                        step="0.01"
+                        min="0"
+                        max="100"
+                        value={edu.percentage_cgpa || ''}
+                        onChange={(e) => handleItemChange('education', index, 'percentage_cgpa', e.target.value)}
                         className="w-full p-2 border rounded-lg focus:ring-orange-500 focus:border-orange-500"
                         placeholder="Enter percentage (0-100)"
-                        required 
+                        required
                       />
                     </div>
                   </div>
@@ -1907,7 +1868,7 @@ const MyProfile = () => {
           <div className="space-y-6">
             {showSuccessMessage}
             {showErrorMessage}
-            
+
             <div className="bg-white rounded-lg p-6">
               <div className="flex justify-end mb-6">
                 {!showProjectForm && (
@@ -1976,7 +1937,7 @@ const MyProfile = () => {
                         <div>
                           <p className="text-sm text-gray-600">Duration</p>
                           <p className="mt-1">
-                            {new Date(project.start_date).toLocaleDateString()} - 
+                            {new Date(project.start_date).toLocaleDateString()} -
                             {project.is_ongoing ? ' Present' : ` ${new Date(project.end_date).toLocaleDateString()}`}
                           </p>
                         </div>
@@ -1989,9 +1950,9 @@ const MyProfile = () => {
                         {project.project_url && (
                           <div>
                             <p className="text-sm text-gray-600">Project URL</p>
-                            <a 
-                              href={project.project_url} 
-                              target="_blank" 
+                            <a
+                              href={project.project_url}
+                              target="_blank"
                               rel="noopener noreferrer"
                               className="mt-1 text-orange-500 hover:underline flex items-center gap-1"
                             >
@@ -2317,7 +2278,6 @@ const MyProfile = () => {
                       name="certification_date"
                       value={cert.certification_date ? formatDateForServer(cert.certification_date) : ''}
                       onChange={(e) => {
-                        console.log('Date selected:', e.target.value);
                         // Ensure the date is in YYYY-MM-DD format
                         handleItemChange('certifications', index, 'certification_date', e.target.value);
                       }}
@@ -2348,19 +2308,14 @@ const MyProfile = () => {
                             rel="noopener noreferrer"
                             className="text-orange-500 hover:text-orange-600"
                             onClick={(e) => {
-                              // Add logging to debug certificate URL issues
-                              const url = getDocumentUrl(cert.path);
-                              console.log('Viewing certificate:');
-                              console.log('- Original path:', cert.path);
-                              console.log('- Generated URL:', url);
-                              console.log('- Certificate object:', cert);
+                              // View certificate
                             }}
                           >
                             View Certificate
                           </a>
                           <span className="ml-2 text-xs text-gray-500" title={cert.path}>
-                            {cert.path && typeof cert.path === 'string' && cert.path.length > 20 
-                              ? `${cert.path.slice(0, 20)}...` 
+                            {cert.path && typeof cert.path === 'string' && cert.path.length > 20
+                              ? `${cert.path.slice(0, 20)}...`
                               : cert.path}
                           </span>
                         </>
@@ -2466,7 +2421,6 @@ const MyProfile = () => {
   const handleCertificateUpload = (index, e) => {
     const file = e.target.files[0];
     if (file) {
-      console.log('Certificate file selected:', file);
       setFormData(prev => {
         const updatedCertifications = [...prev.certifications];
         updatedCertifications[index] = {
@@ -2486,19 +2440,19 @@ const MyProfile = () => {
   // Add helper function to get the proper document URL
   const getDocumentUrl = (path) => {
     if (!path) return null;
-    
+
     // For File objects (newly uploaded files)
     if (path instanceof File) {
       return URL.createObjectURL(path);
     }
-    
+
     // For string paths
     if (typeof path === 'string') {
       // For blob URLs (temporary previews)
       if (path.startsWith('blob:')) {
         return path;
       }
-      
+
       // For full URLs that already include the domain
       if (path.startsWith('http')) {
         // Fix double storage issue
@@ -2507,27 +2461,27 @@ const MyProfile = () => {
         }
         return path;
       }
-      
+
       // For relative paths stored in the database
       // If path contains "certificates/" without a leading slash
       if (path.includes('certificates/') && !path.startsWith('/')) {
         return `${API_URL}/storage/${path}`;
       }
-      
+
       // If path starts with "/storage/"
       if (path.startsWith('/storage/')) {
         return `${API_URL}${path}`;
       }
-      
+
       // For paths stored in the database that start with "storage/"
       if (path.startsWith('storage/')) {
         return `${API_URL}/${path}`;
       }
-      
+
       // Default case - assume it's a relative path that needs /storage/ prefix
       return `${API_URL}/storage/${path}`;
     }
-    
+
     return null;
   };
 
@@ -2548,7 +2502,7 @@ const MyProfile = () => {
 
       const userInfo = getCookie("user_info");
       const userData = userInfo ? JSON.parse(userInfo) : null;
-      
+
       if (!userData?.token) {
         toast.error('Authentication required');
         return;
@@ -2562,7 +2516,7 @@ const MyProfile = () => {
       });
 
       toast.success('Certification deleted successfully');
-      
+
       // Remove the certification from the state
       setFormData(prev => {
         const updatedCertifications = prev.certifications.filter((_, i) => i !== index);
@@ -2572,7 +2526,6 @@ const MyProfile = () => {
         };
       });
     } catch (error) {
-      console.error('Error deleting certification:', error);
       toast.error(error.response?.data?.message || 'Failed to delete certification');
     }
   };
@@ -2593,19 +2546,16 @@ const MyProfile = () => {
 
   const deleteEducation = async (educationId) => {
     try {
-      console.log('Deleting education record:', educationId);
-      
       const userInfo = getCookie("user_info");
       const userData = userInfo ? JSON.parse(userInfo) : null;
-      
+
       if (!userData?.token) {
-        console.error('No auth token found');
         toast.error('Authentication required');
         return;
       }
 
       setLoading(true);
-      
+
       const response = await axios({
         method: 'delete',
         url: `${API_URL}/api/delete/education`,
@@ -2618,18 +2568,13 @@ const MyProfile = () => {
         withCredentials: true
       });
 
-      console.log('API Response:', response.data);
-
       if (response.data) {
         toast.success('Education deleted successfully');
-        
+
         // Fetch fresh data to ensure we have the latest state
-        console.log('Fetching fresh education data...');
         await fetchEducationData();
-        console.log('Fresh education data fetched');
       }
     } catch (error) {
-      console.error('Error deleting education:', error);
       const errorMessage = error.response?.data?.message || 'Failed to delete education';
       toast.error(errorMessage);
     } finally {
@@ -2641,7 +2586,7 @@ const MyProfile = () => {
     try {
       const userInfo = getCookie("user_info");
       const userData = userInfo ? JSON.parse(userInfo) : null;
-      
+
       if (!userData?.token) {
         toast.error('Authentication required');
         return;
@@ -2654,7 +2599,6 @@ const MyProfile = () => {
         }
       });
       if (response.data.success) {
-        console.log('Fetched projects:', response.data.projects);
         setProjects(response.data.projects);
         // Also update formData with the projects
         setFormData(prev => ({
@@ -2663,7 +2607,6 @@ const MyProfile = () => {
         }));
       }
     } catch (error) {
-      console.error('Error fetching projects:', error);
       toast.error('Failed to fetch projects');
     }
   };
@@ -2672,7 +2615,7 @@ const MyProfile = () => {
     try {
       const userInfo = getCookie("user_info");
       const userData = userInfo ? JSON.parse(userInfo) : null;
-      
+
       if (!userData?.token) {
         toast.error('Authentication required');
         return;
@@ -2714,7 +2657,7 @@ const MyProfile = () => {
 
       // Create form data
       const formData = new FormData();
-      
+
       // Append all project data
       Object.entries(requestData).forEach(([key, value]) => {
         if (value !== null && value !== undefined) {
@@ -2749,7 +2692,6 @@ const MyProfile = () => {
         await fetchProjects();
       }
     } catch (error) {
-      console.error('Error saving project:', error);
       if (error.response) {
         if (error.response.status === 422) {
           // Validation errors
@@ -2789,11 +2731,11 @@ const MyProfile = () => {
 
   const handleDeleteProject = async (projectId) => {
     if (!confirm('Are you sure you want to delete this project?')) return;
-    
+
     try {
       const userInfo = getCookie("user_info");
       const userData = userInfo ? JSON.parse(userInfo) : null;
-      
+
       if (!userData?.token) {
         toast.error('Authentication required');
         return;
@@ -2812,7 +2754,6 @@ const MyProfile = () => {
         fetchProjects();
       }
     } catch (error) {
-      console.error('Error deleting project:', error);
       toast.error('Failed to delete project');
     }
   };
@@ -3030,7 +2971,7 @@ const MyProfile = () => {
           try {
             const userInfo = getCookie("user_info");
             const userData = userInfo ? JSON.parse(userInfo) : null;
-            
+
             if (!userData?.token) {
               toast.error('Authentication required');
               return;
@@ -3071,7 +3012,6 @@ const MyProfile = () => {
             };
             setPdfData(freshData);
           } catch (error) {
-            console.error('Error fetching PDF data:', error);
             toast.error('Failed to fetch data for PDF');
           } finally {
             setIsLoading(false);
@@ -3174,7 +3114,7 @@ const MyProfile = () => {
         </div>
       </div>
 
-      {/* Rest of your profile content remains unchanged */} 
+      {/* Rest of your profile content remains unchanged */}
       <div className="max-w-4xl mx-auto px-4">
         <div className="relative -mt-24">
           {/* Profile Image and Basic Info */}
@@ -3193,9 +3133,7 @@ const MyProfile = () => {
                     alt="Profile"
                     className="profile-image"
                     onError={(e) => {
-                      console.error("Avatar failed to load:", e);
-                      console.log("Avatar source:", e.target.src);
-                      console.log("Avatar URL:", formData.avatar_url);
+                      e.target.src = '/images/avatar-placeholder.png';
                     }}
                   />
                 ) : (
@@ -3204,10 +3142,10 @@ const MyProfile = () => {
                   </div>
                 )}
                 <label className="profile-image-edit">
-                  <input 
-                    type="file" 
-                    name="avatar_url" 
-                    onChange={handleFileChange} 
+                  <input
+                    type="file"
+                    name="avatar_url"
+                    onChange={handleFileChange}
                     className="hidden"
                     accept="image/*"
                   />
@@ -3245,7 +3183,7 @@ const MyProfile = () => {
                     <div className="contact-icon-container-resume">
                       <AiOutlineFilePdf className="contact-icon-resume" />
                     </div>
-                    <span 
+                    <span
                       className="text-sm cursor-pointer text-orange-500 hover:text-orange-700"
                       onClick={() => setShowResumeModal(true)}
                     >
@@ -3322,8 +3260,8 @@ const MyProfile = () => {
                 key={menu.id}
                 onClick={() => toggleMenu(menu.id)}
                 className={`main-menu-item relative ${
-                  activeMenu === menu.id 
-                    ? 'main-menu-item-active' 
+                  activeMenu === menu.id
+                    ? 'main-menu-item-active'
                     : 'main-menu-item-inactive'
                 }`}
               >
@@ -3348,7 +3286,7 @@ const MyProfile = () => {
         </div>
       </div>
 
-      
+
       {activeMenu && (
         <div className="form-container mx-4 md:mx-auto md:max-w-4xl">
           <div className="flex justify-between items-center mb-4">

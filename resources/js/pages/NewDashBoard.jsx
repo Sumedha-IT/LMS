@@ -54,12 +54,12 @@ const NewDashBoard = () => {
           <div className="">
             <img
               className="absolute  -top-16 w-[17rem] right-0"
-              src="/storage/image.png"
+              src="/images/image 67.png"
               alt="Decorative illustration"
               loading="lazy"
               onError={(e) => {
                 e.target.onerror = null; // Prevent infinite loop if fallback also fails
-                e.target.src = "/storage/fallback-image.png"; // Different fallback path
+                e.target.src = "/images/fallback-image.png"; // Different fallback path
                 e.target.alt = "Fallback decorative illustration";
               }}
             />

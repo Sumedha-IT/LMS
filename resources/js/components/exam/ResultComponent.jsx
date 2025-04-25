@@ -50,6 +50,12 @@ const ResultComponent = ({ userId, examId, examAttemptId, handleReviewQuestion, 
         navigate('/user'); // Navigate back to the user page
     };
 
+    const handleClose = () => {
+        // Remove any event listeners that might show confirmation
+        window.onbeforeunload = null;
+        window.close(); // Close the window
+    };
+
     return (
         <>
             {errorMessage ? (
@@ -59,8 +65,8 @@ const ResultComponent = ({ userId, examId, examAttemptId, handleReviewQuestion, 
                     <Typography variant="h6" sx={{ color: '#f97316', mb: 2 }}>
                         {errorMessage}
                     </Typography>
-                    <Button variant="contained" onClick={handleGoBack} sx={{ bgcolor: '#f97316' }}>
-                        Go Back
+                    <Button variant="contained" onClick={handleClose} sx={{ bgcolor: '#f97316' }}>
+                        Close
                     </Button>
                 </Box>
             ) : examResultData ?

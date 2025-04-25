@@ -150,7 +150,14 @@ const ReviewPage = () => {
                             Time Taken: {examDetails?.duration}
                         </Typography>
                     </Box>
-                    <Button onClick={() => { navigate('/user'); }} sx={{ position: 'absolute', top: 0, right: 0 }}>
+                    <Button
+                        onClick={() => {
+                            // Remove any event listeners that might show confirmation
+                            window.onbeforeunload = null;
+                            window.close();
+                        }}
+                        sx={{ position: 'absolute', top: 0, right: 0 }}
+                    >
                         <CloseIcon sx={{ color: 'white' }} />
                     </Button>
                 </Box>

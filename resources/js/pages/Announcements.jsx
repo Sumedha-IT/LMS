@@ -8,6 +8,18 @@ import axios from 'axios';
 import { toast } from 'react-toastify';
 import { useNavigate } from 'react-router-dom';
 
+// Function to get cookie by name
+function getCookie(name) {
+  let cookies = document.cookie.split("; ");
+  for (let cookie of cookies) {
+    let [key, value] = cookie.split("=");
+    if (key === name) {
+      return decodeURIComponent(value);
+    }
+  }
+  return null;
+}
+
 const Announcements = () => {
   const navigate = useNavigate();
   const [date, setDate] = useState(new Date());
@@ -18,104 +30,83 @@ const Announcements = () => {
   const [page, setPage] = useState(1);
   const announcementsPerPage = 3;
 
-  // Function to get cookie by name
-  function getCookie(name) {
-    let cookies = document.cookie.split("; ");
-    for (let cookie of cookies) {
-      let [key, value] = cookie.split("=");
-      if (key === name) {
-        return decodeURIComponent(value);
-      }
-    }
-    return null;
-  }
-
-  // Fetch announcements from API
-  useEffect(() => {
-    fetchAnnouncements();
-  }, []);
-
   const fetchAnnouncements = async () => {
     try {
-      console.log('Fetching announcements...');
       const userInfo = getCookie("user_info");
-      let userData;
+      const userData = userInfo ? JSON.parse(userInfo) : null;
 
-      try {
-        userData = userInfo ? JSON.parse(userInfo) : null;
-        if (!userData?.token) {
-          toast.error('Authentication required');
-          setLoading(false);
-          return;
-        }
-
-        const userId = getCookie("x_path_id");
-        if (!userId) {
-          toast.error('User ID not found');
-          setLoading(false);
-          return;
-        }
-
-        // Make API request
-        const response = await axios.get('/api/announcements', {
-          headers: {
-            'Accept': 'application/json',
-            'Authorization': userData.token,
-            'Content-Type': 'application/json',
-            'X-Requested-With': 'XMLHttpRequest'
-          },
-          withCredentials: true
-        });
-
-        console.log('API Response:', response.data); // Debug the API response
-
-        // Transform API data to match our component's expected format
-        const formattedAnnouncements = response.data.data.map(announcement => {
-          // Parse the date from the API
-          const scheduleDate = new Date(announcement.Schedule_at);
-          const formattedDate = scheduleDate.toLocaleDateString();
-
-          return {
-            id: announcement.Id,
-            title: announcement.Title,
-            subtitle: announcement.Description,
-            date: formattedDate,
-            // Extract time from the schedule date if available
-            time: scheduleDate ? `${scheduleDate.getHours() % 12 || 12}:${String(scheduleDate.getMinutes()).padStart(2, '0')} ${scheduleDate.getHours() >= 12 ? 'PM' : 'AM'}` : null,
-            // Use venue from API if available, otherwise null
-            venue: announcement.Venue || null,
-            image: announcement.Image || null,
-            // Add a placeholder image URL if the image is null
-            placeholderImage: 'https://via.placeholder.com/180x140?text=Announcement',
-            type: 'announcement', // Default type
-            // Randomly assign weekly or monthly for demo purposes
-            frequency: Math.random() > 0.5 ? 'weekly' : 'monthly'
-          };
-        });
-
-        setAnnouncements(formattedAnnouncements);
+      if (!userData?.token) {
+        toast.error('Authentication required');
         setLoading(false);
-      } catch (error) {
-        console.error('Error fetching data:', error);
-        if (error.response?.status === 403) {
-          toast.error('You do not have permission to access these announcements');
-        } else {
-          toast.error(error.response?.data?.message || 'Failed to load announcements');
-        }
+        return;
       }
-    } catch (err) {
-      console.error('Error fetching announcements:', err);
-      const errorMessage = err.response?.data?.error || err.response?.data?.message || 'Failed to fetch announcements';
-      setError(errorMessage);
-      setLoading(false);
 
-      if (err.message === 'Authentication required' || err.response?.status === 401) {
+      const userId = getCookie("x_path_id");
+      if (!userId) {
+        toast.error('User ID not found');
+        setLoading(false);
+        return;
+      }
+
+      // Make API request
+      const response = await axios.get('/api/announcements', {
+        headers: {
+          'Accept': 'application/json',
+          'Authorization': userData.token,
+          'Content-Type': 'application/json',
+          'X-Requested-With': 'XMLHttpRequest'
+        },
+        withCredentials: true
+      });
+
+      // Transform API data to match our component's expected format
+      const formattedAnnouncements = response.data.data.map(announcement => {
+        // Parse the date from the API
+        const scheduleDate = new Date(announcement.Schedule_at);
+        const formattedDate = scheduleDate.toLocaleDateString();
+
+        return {
+          id: announcement.Id,
+          title: announcement.Title,
+          subtitle: announcement.Description,
+          date: formattedDate,
+          // Extract time from the schedule date if available
+          time: scheduleDate ? `${scheduleDate.getHours() % 12 || 12}:${String(scheduleDate.getMinutes()).padStart(2, '0')} ${scheduleDate.getHours() >= 12 ? 'PM' : 'AM'}` : null,
+          // Use venue from API if available, otherwise null
+          venue: announcement.Venue || null,
+          image: announcement.Image || null,
+          // Add a placeholder image URL if the image is null
+          placeholderImage: 'https://via.placeholder.com/180x140?text=Announcement',
+          type: 'announcement', // Default type
+          // Randomly assign weekly or monthly for demo purposes
+          frequency: Math.random() > 0.5 ? 'weekly' : 'monthly'
+        };
+      });
+
+      setAnnouncements(formattedAnnouncements);
+      setLoading(false);
+    } catch (error) {
+      // Handle permission errors
+      if (error.response?.status === 403) {
+        toast.error('You do not have permission to access these announcements');
+      } else if (error.response?.status === 401) {
+        toast.error('Authentication required');
         navigate('/administrator/login');
+      } else {
+        // Handle other errors
+        const errorMessage = error.response?.data?.error || error.response?.data?.message || 'Failed to fetch announcements';
+        setError(errorMessage);
+        toast.error(errorMessage);
       }
     } finally {
       setLoading(false);
     }
   };
+
+  // Fetch announcements from API
+  useEffect(() => {
+    fetchAnnouncements();
+  }, []);
 
   // Handle page change
   const handlePageChange = (event, value) => {
@@ -229,7 +220,7 @@ const Announcements = () => {
                   </Card>
                 ))}
               </div>
-              
+
               {/* Pagination */}
               <div className="flex justify-center mt-8">
                 <Pagination
