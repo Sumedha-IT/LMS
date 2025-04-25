@@ -370,7 +370,7 @@ class ExamController extends Controller
             ->whereHas('examAttempts', function ($query) use ($userId) {
                 $query->where('student_id', $userId);
             })
-            ->whereDate('exam_date', '>=', $fiveDaysAgo) // Fetch only last 5 days' records
+            // ->whereDate('exam_date', '>=', $fiveDaysAgo) // Fetch only last 5 days' records
             ->orderBy('exam_date', 'desc')
             ->get()
             ->map(function ($exam) use ($userId) {
@@ -382,7 +382,7 @@ class ExamController extends Controller
                 return [
                     'id' => $exam->id,
                     'title' => $exam->title,
-                    'day' => $exam->exam_date ? Carbon::parse($exam->exam_date)->format('l') : 'N/A',
+                    'date' => $exam->exam_date ? Carbon::parse($exam->exam_date) : 'N/A',
                     // 'curriculums' => $exam->batch->curriculums->pluck('name')->implode(','),
                     'curriculums'=>$exam->curriculums,
                     // 'curriculum' => $exam->batch->course_package->name,
@@ -436,5 +436,63 @@ class ExamController extends Controller
 
         //     'examAttempt' => $examAttempt,
         // ]);
+    }
+    public function getUserAssignments(Request $request)
+    {
+        // Ensure the user is authenticated
+        $user = $request->user();
+        if (!$user || !$user->is_student) {
+            return response()->json(['message' => 'Unauthorized'], 401);
+        }
+
+        // Get the batch_id from the batch_user pivot table
+        $batchUser = $user->batches()->first();
+        if (!$batchUser) {
+            return response()->json(['message' => 'No batch assigned to user'], 404);
+        }
+
+        // Fetch batch with eager-loaded relationships
+        $batch = Batch::with([
+            'curriculums.topics.topic',
+            'curriculums.topics.assignments' => function ($query) use ($user) {
+                $query->with(['teachingMaterialStatuses' => function ($statusQuery) use ($user) {
+                    $statusQuery->where('user_id', $user->id); // Global scope already applies this for students
+                }]);
+            }
+        ])->findOrFail($batchUser->id);
+
+        // Prepare the response
+        $assignmentsByTopic = [];
+
+        // Iterate through curriculums and topics
+        foreach ($batch->curriculums as $curriculum) {
+            foreach ($curriculum->topics as $topic) {
+                $topicData = [
+                    'topic_id' => $topic->topic_id,
+                    'topic_name' => $topic->topic->name,
+                    'assignments' => $topic->assignments->map(function ($assignment) use ($user) {
+                        $status = $assignment->teachingMaterialStatuses->first();
+                        return [
+                            'id' => $assignment->id,
+                            'name' => $assignment->name,
+                            'description' => $assignment->description,
+                            'file' => $assignment->file ? asset('storage/' . $assignment->file) : null,
+                            'marks_scored' => $status ? (int) $status->obtained_marks : null,
+                            'total_marks' => $assignment->maximum_marks ? (int) $assignment->maximum_marks : null, // Adjust if total_marks is elsewhere
+                            'is_submitted' => $status !== null,
+                        ];
+                    })->all(),
+                ];
+
+                if (!empty($topicData['assignments'])) {
+                    $assignmentsByTopic[] = $topicData;
+                }
+            }
+        }
+
+        return response()->json([
+            'success' => true,
+            'data' => $assignmentsByTopic,
+        ], 200);
     }
 }

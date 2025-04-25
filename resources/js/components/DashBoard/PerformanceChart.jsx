@@ -2,9 +2,39 @@ import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Card } from "./Ui/Card";
 import { useNavigate } from "react-router-dom"; // Import useNavigate for redirection
-export default function PerformanceChart({ examChartData,UserData }) {
+import { apiRequest } from "../../utils/api";
+export default function PerformanceChart() {
   const [highlightedMonth, setHighlightedMonth] = useState(5); // June (0-indexed)
   const [isVisible, setIsVisible] = useState(false);
+const [examChartData, setExamChartData] = useState([]);
+const [userData, setUserData] = useState([]);
+
+
+
+
+
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const [examResponse, profileResponse] = await Promise.all([
+          apiRequest("/exam-chart"),
+          apiRequest("/profile")
+        ]);
+        
+        setExamChartData(examResponse);
+        setUserData(profileResponse);
+      } catch (error) {
+        console.error("Error fetching data:", error);
+      }
+    };
+
+    fetchData();
+    setIsVisible(true);
+  }, []);
+
+
+
 
     // Hook for navigation
     const navigate = useNavigate();
@@ -79,7 +109,7 @@ export default function PerformanceChart({ examChartData,UserData }) {
 
           <div className="relative mt-10 overflow-x-auto">
             <BarChart
-            User={UserData}
+            User={userData}
               data={performanceData}
               highlightedMonth={highlightedMonth}
               setHighlightedMonth={setHighlightedMonth}
