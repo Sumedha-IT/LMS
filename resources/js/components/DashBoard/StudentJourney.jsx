@@ -1,4 +1,4 @@
-import { Box, Button, Grid, LinearProgress, Paper, Typography } from "@mui/material"
+import { Box, Button, Grid,CircularProgress, LinearProgress, Paper, Typography } from "@mui/material"
 import { styled } from "@mui/material/styles"
 import { FileText } from "lucide-react"
 import Circularprogress from "./Ui/Circularprogress";
@@ -82,8 +82,38 @@ export default function StudentJourney({onStartLearning}) {
     return Math.round((completedTopics / topics.length) * 100);
   };
 
-  if (loading) return <div>Loading...</div>;
-  if (error) return <div>Error: {error}</div>;
+ // Show loading state
+    if (loading) {
+      return (
+        <div className="flex justify-center items-center h-screen">
+          <CircularProgress sx={{ color: '#f97316' }} />
+          <span className="ml-3 text-gray-600">Loading...</span>
+        </div>
+      );
+    }
+  
+    // Show error state
+    if (error) {
+      return (
+        <div className="flex justify-center items-center h-screen">
+          <div className="text-center">
+            <div className="text-red-500 text-xl mb-2">Error</div>
+            <p className="text-gray-600">{error}</p>
+            <Button
+              onClick={() => window.location.reload()}
+              className="mt-4 bg-orange-500 hover:bg-orange-600 text-white"
+              sx={{
+                backgroundColor: '#f97316',
+                '&:hover': { backgroundColor: '#ea580c' },
+                marginTop: '16px'
+              }}
+            >
+              Try Again
+            </Button>
+          </div>
+        </div>
+      );
+    }
 
   const overallCompletion = calculateOverallCompletion();
 
@@ -91,8 +121,10 @@ export default function StudentJourney({onStartLearning}) {
     <Box sx={{ p: 3, position: "relative", bgcolor: "white", borderRadius: 2, boxShadow: 1, marginTop: 5 }}>
       {/* Header */}
       <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 3 }}>
-        <Typography variant="h5" sx={{ fontWeight: 500, color: "#424242" }}>
-          Student Journey
+        <Typography  variant="h5" sx={{ fontWeight: 500, color: "#424242" }}>
+         
+         <a href={`${trimmedPath}my-courses`}> Student Journey</a>
+         
         </Typography>
         <Button
         onClick={onStartLearning}

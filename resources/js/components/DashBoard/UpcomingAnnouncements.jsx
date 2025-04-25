@@ -1,6 +1,7 @@
 import { useEffect, useState, useMemo } from "react";
 import { apiRequest } from "../../utils/api";
 import { useLocation } from "react-router-dom";
+import { Card, CardContent, CircularProgress, Button, Pagination, Select, MenuItem } from '@mui/material';
 export default function UpcomingAnnouncements() {
   const timeSlots = ["09:00", "10:00", "11:00", "12:00", "13:00", "14:00", "15:00", "16:00"];
   const days = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
@@ -75,12 +76,27 @@ export default function UpcomingAnnouncements() {
       });
   }, [announcements, weekOffset]);
 
+
+  const formatDate = (date) => {
+    const day = date.getDate();
+    const month = date.toLocaleString('default', { month: 'short' });
+    const year = date.getFullYear();
+    return `${day}-${month}-${year}`;
+  };
+
+  // Get current week dates
+  const { start, end } = getWeekRange();
   return (
     <div className="bg-gray-50 p-1 flex justify-center items-center min-h-[400px]">
       <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 w-full">
-        <div className="flex justify-between items-center mb-4">
-          <h1 className="text-2xl font-medium text-gray-800">Upcoming Announcements</h1>
-          <div className="flex  gap-2">
+      <div className="grid grid-cols-[auto_1fr_auto] items-center mb-4 gap-4">
+          <h1 className="text-2xl font-medium text-gray-800 whitespace-nowrap">
+            <a href={`${trimmedPath}announcements`}>Upcoming Announcements</a>
+          </h1>
+          <div className="text-center text-sm font-semibold text-gray-800 whitespace-nowrap">
+            {formatDate(start)} to {formatDate(end)}
+          </div>
+          <div className="flex justify-end gap-2">
             <button onClick={() => setWeekOffset(weekOffset - 1)} className="text-sm px-3 py-1 rounded bg-gray-200 hover:bg-gray-300">
               Previous Week
             </button>
@@ -88,15 +104,31 @@ export default function UpcomingAnnouncements() {
               Next Week
             </button>
           </div>
-          <a href={`${trimmedPath}announcements`} className="text-sm px-3 py-1 rounded bg-gray-200 hover:bg-gray-300">
-              More Announcements
-            </a>
         </div>
 
         {loading ? (
-          <p className="text-center text-gray-500">Loading announcements...</p>
+           <div className="flex justify-center items-center h-screen">
+           <CircularProgress sx={{ color: '#f97316' }} />
+           <span className="ml-3 text-gray-600">Loading...</span>
+         </div>
         ) : error ? (
-          <p className="text-center text-red-500">{error}</p>
+          <div className="flex justify-center items-center h-screen">
+          <div className="text-center">
+            <div className="text-red-500 text-xl mb-2">Error</div>
+            <p className="text-gray-600">{error}</p>
+            <Button
+              onClick={() => window.location.reload()}
+              className="mt-4 bg-orange-500 hover:bg-orange-600 text-white"
+              sx={{
+                backgroundColor: '#f97316',
+                '&:hover': { backgroundColor: '#ea580c' },
+                marginTop: '16px'
+              }}
+            >
+              Try Again
+            </Button>
+          </div>
+        </div>
         ) : (
           <div className="relative">
             {/* Time slots header */}

@@ -1,5 +1,5 @@
 "use client";
-
+import { Card, CardContent, CircularProgress, Button, Pagination, Select, MenuItem } from '@mui/material';
 import { useEffect, useState } from "react";
 import Circularprogress from "./Ui/Circularprogress";
 import { apiRequest } from "../../utils/api";
@@ -53,8 +53,38 @@ export default function LearningJourney({onCloseLearning}) {
     return Math.round((completed / topics.length) * 100);
   };
 
-  if (loading) return <div className="text-center py-8 text-gray-500">Loading your learning journey...</div>;
-  if (error) return <div className="text-center py-8 text-red-500">{error}</div>;
+  // Show loading state
+    if (loading) {
+      return (
+        <div className="flex justify-center items-center h-screen">
+          <CircularProgress sx={{ color: '#f97316' }} />
+          <span className="ml-3 text-gray-600">Loading...</span>
+        </div>
+      );
+    }
+  
+    // Show error state
+    if (error) {
+      return (
+        <div className="flex justify-center items-center h-screen">
+          <div className="text-center">
+            <div className="text-red-500 text-xl mb-2">Error</div>
+            <p className="text-gray-600">{error}</p>
+            <Button
+              onClick={() => window.location.reload()}
+              className="mt-4 bg-orange-500 hover:bg-orange-600 text-white"
+              sx={{
+                backgroundColor: '#f97316',
+                '&:hover': { backgroundColor: '#ea580c' },
+                marginTop: '16px'
+              }}
+            >
+              Try Again
+            </Button>
+          </div>
+        </div>
+      );
+    }
   if (!journey) return null;
 
   const cycles = journey.curriculums.map((curriculum, index) => {

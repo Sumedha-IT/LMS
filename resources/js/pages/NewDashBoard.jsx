@@ -1,4 +1,4 @@
-import { useState ,useEffect} from "react";
+import { useState, useEffect } from "react";
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import CircularProgress from "../components/DashBoard/CircularProgress";
@@ -10,32 +10,29 @@ import MyAssignment from "../components/DashBoard/MyAssignment";
 import LearningJourney from "../components/DashBoard/LearningJourney";
 import Announcements from "./Announcements";
 import { apiRequest } from "../utils/api";
-import { useLocation } from "react-router-dom";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
+
 const NewDashBoard = () => {
   const [showLearning, setShowLearning] = useState(false);
-
-
-
-  const [profileData, setProfileData] = useState(null);
+  const [profileData, setProfileData] = useState();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const location = useLocation();
   const navigate = useNavigate();
-  const trimmedPath = location.pathname
-  .split('/')
-  .slice(0, -1)
-  .join('/') + '/';
-
-  console.log(trimmedPath);
 
   useEffect(() => {
     const FetchUserdata = async () => {
       try {
         setLoading(true);
         const data = await apiRequest("/profile");
-        console.log(data);
-        setProfileData(data); // Save fetched data
+        
+        // Redirect if role is not 6
+        // if (data.user.role_id !== 6) {
+        //   navigate('/adminstartor/1/');
+        //   return;
+        // }
+        
+        setProfileData(data);
       } catch (err) {
         console.error("Error fetching profile data:", err);
         setError(err.message || "Failed to load profile");
@@ -45,23 +42,26 @@ const NewDashBoard = () => {
     };
 
     FetchUserdata();
-  }, []);
+  }, [navigate]); // Added navigate to dependency array
 
-  useEffect(() => {
-    if (profileData && profileData.user.role_id !== 6) {
-      navigate(trimmedPath);
-    }
-    else{
-      navigate(`${trimmedPath}student-dashboard-page`);
-    }
-  }, [profileData, location]);
+  // Return null while loading or if profile data isn't available
+  // if (loading || !profileData) {
+  //   return null;
+  // }
 
-// return (
-//   <>
-//   <Announcements/>
-//   </>
-// )
+  // // Additional safety check
+  // if (profileData.user.role_id !== 6) {
+  //   return null;
+  // }
 
+
+
+
+  
+  const trimmedPath = location.pathname
+    .split('/')
+    .slice(0, -1)
+    .join('/') + '/';
 
   return (
     <>
