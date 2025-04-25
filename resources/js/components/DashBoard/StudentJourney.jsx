@@ -1,9 +1,10 @@
-import { Box, Button, Grid, LinearProgress, Paper, Typography } from "@mui/material"
+import { Box, Button, Grid,CircularProgress, LinearProgress, Paper, Typography } from "@mui/material"
 import { styled } from "@mui/material/styles"
 import { FileText } from "lucide-react"
 import Circularprogress from "./Ui/Circularprogress";
 import { useEffect,useState } from "react";
 import { apiRequest } from "../../utils/api";
+import { useLocation } from "react-router-dom";
 
 // Custom styled components
 const StyledLinearProgress = styled(LinearProgress)(({ theme }) => ({
@@ -25,13 +26,19 @@ const ModuleCard = styled(Paper)(({ theme }) => ({
   borderRadius: 8,
 }))
 
-export default function StudentJourney() {
+export default function StudentJourney({onStartLearning}) {
   const [journey, setJourney] = useState({
     batch: { course: { name: "" } },
     curriculums: []
   });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const location = useLocation();
+  const trimmedPath = location.pathname
+  .split('/')
+  .slice(0, -1)
+  .join('/') + '/';
+
 
   useEffect(() => {
     const fetchJourneyData = async () => {
@@ -75,8 +82,38 @@ export default function StudentJourney() {
     return Math.round((completedTopics / topics.length) * 100);
   };
 
-  if (loading) return <div>Loading...</div>;
-  if (error) return <div>Error: {error}</div>;
+ // Show loading state
+    if (loading) {
+      return (
+        <div className="flex justify-center items-center h-screen">
+          <CircularProgress sx={{ color: '#f97316' }} />
+          <span className="ml-3 text-gray-600">Loading...</span>
+        </div>
+      );
+    }
+  
+    // Show error state
+    if (error) {
+      return (
+        <div className="flex justify-center items-center h-screen">
+          <div className="text-center">
+            <div className="text-red-500 text-xl mb-2">Error</div>
+            <p className="text-gray-600">{error}</p>
+            <Button
+              onClick={() => window.location.reload()}
+              className="mt-4 bg-orange-500 hover:bg-orange-600 text-white"
+              sx={{
+                backgroundColor: '#f97316',
+                '&:hover': { backgroundColor: '#ea580c' },
+                marginTop: '16px'
+              }}
+            >
+              Try Again
+            </Button>
+          </div>
+        </div>
+      );
+    }
 
   const overallCompletion = calculateOverallCompletion();
 
@@ -84,10 +121,13 @@ export default function StudentJourney() {
     <Box sx={{ p: 3, position: "relative", bgcolor: "white", borderRadius: 2, boxShadow: 1, marginTop: 5 }}>
       {/* Header */}
       <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 3 }}>
-        <Typography variant="h5" sx={{ fontWeight: 500, color: "#424242" }}>
-          Student Journey
+        <Typography  variant="h5" sx={{ fontWeight: 500, color: "#424242" }}>
+         
+         <a href={`${trimmedPath}my-courses`}> Student Journey</a>
+         
         </Typography>
         <Button
+        onClick={onStartLearning}
           variant="outlined"
           sx={{
             borderColor: "#E53510",
@@ -161,12 +201,12 @@ export default function StudentJourney() {
               </div>
 
               {/* Content Section */}
-              <div className="flex flex-1 pl-12 justify-between items-center">
+              <a href={`${trimmedPath}my-courses`} className="flex flex-1 pl-12 justify-between items-center">
                 <span className="text-gray-800 font-medium">
                   {curriculum.curriculum.name}
                 </span>
                 <Circularprogress value={completionPercentage}  color={completionPercentage === 100 ? "#E53510" : "#E53510"}/>
-              </div>
+              </a>
             </div>
           );
         })}

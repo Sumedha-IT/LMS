@@ -14,7 +14,7 @@ const getDecodedCookie = (cookieName) => {
   }
 };
 
-const baseUrl = import.meta.env.REACT_APP_API_URL || "http://localhost:8000/api/"; // Ensure this is set in your .env file
+const baseUrl = import.meta.env.VITE_DEV_SERVER_URL; // Ensure this is set in your .env file
 
 export const apiRequest = async (endpoint, method = 'GET', body = null) => {
   try {

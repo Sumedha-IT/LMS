@@ -194,13 +194,13 @@ const Announcements = () => {
                     <div className="flex flex-col sm:flex-row">
                       <div className="sm:w-1/3 relative">
                         <img
-                          src={announcement.image || announcement.placeholderImage}
+                          src={announcement.image}
                           alt={announcement.title}
                           className="h-full w-full object-cover"
                           style={{ minHeight: '200px' }}
                           onError={(e) => {
                             e.target.onerror = null;
-                            e.target.src = 'https://via.placeholder.com/300x200?text=Announcement';
+                            e.target.src = 'https://www.google.com/url?sa=i&url=https%3A%2F%2Fwww.go4worldbusiness.com%2Fsuppliers%2Fchina%2FShenzhen%2Fpackaging-items-containers.html%3Fregion%3Dworldwide%26pg_suppliers%3D7&psig=AOvVaw0hjIv_JLuqJh_tlC3Kh3hp&ust=1745655681308000&source=images&cd=vfe&opi=89978449&ved=0CBQQjRxqFwoTCKD9p6jg8owDFQAAAAAdAAAAABAE';
                           }}
                         />
                       </div>
