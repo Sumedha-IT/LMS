@@ -93,8 +93,11 @@ const UserExamModule = () => {
 
     useEffect(() => {
         const handleBeforeUnload = (event) => {
-            event.preventDefault();
-            event.returnValue = '';  // This triggers the browser's confirmation dialog
+            // Only show confirmation dialog if not in submission/completed state
+            if (!isSubmit) {
+                event.preventDefault();
+                event.returnValue = '';  // This triggers the browser's confirmation dialog
+            }
         };
 
         // Add the event listener for the beforeunload event
@@ -104,7 +107,7 @@ const UserExamModule = () => {
             // Cleanup the event listener when the component is unmounted
             window.removeEventListener('beforeunload', handleBeforeUnload);
         };
-    }, []);
+    }, [isSubmit]);
 
     useEffect(() => {
         setButtonDisable(false)
@@ -269,7 +272,7 @@ const UserExamModule = () => {
         <>
             {/* {questions ? */}
             <Box sx={{
-                width: '100%', bgcolor: '#f4f5f7', 
+                width: '100%', bgcolor: '#f4f5f7',
             }}>
                 {/* Header Section */}
                 <Box sx={{ bgcolor: '#f97316' }}>

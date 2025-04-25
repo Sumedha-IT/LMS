@@ -39,7 +39,7 @@ class MyCourseController extends Controller
             ]);
 
             $user = Auth::user();
-            
+
             if (!$user) {
                 Log::error('User not authenticated in MyCourseController');
                 return response()->json(['message' => 'User not authenticated'], 401);
@@ -101,6 +101,7 @@ class MyCourseController extends Controller
                     return [
                         'id' => $batchCurriculum->curriculum->id,
                         'name' => $batchCurriculum->curriculum->name,
+                        'image' => $batchCurriculum->curriculum->image ? asset('storage/' . $batchCurriculum->curriculum->image) : null,
                         'tutor' => $batchCurriculum->tutor ? [
                             'id' => $batchCurriculum->tutor->id,
                             'name' => $batchCurriculum->tutor->name
@@ -119,12 +120,12 @@ class MyCourseController extends Controller
             });
 
             Log::info('Successfully retrieved ' . $formattedCourses->count() . ' courses for user: ' . $user->id);
-            
+
             return response()->json([
                 'courses' => $formattedCourses,
                 'total' => $formattedCourses->count()
             ]);
-            
+
         } catch (\Exception $e) {
             Log::error('Error in MyCourseController: ' . $e->getMessage(), [
                 'exception' => $e,
@@ -140,7 +141,7 @@ class MyCourseController extends Controller
     {
         try {
             $curriculumId = $request->query('curriculum_id');
-            
+
             if (!$curriculumId) {
                 return response()->json(['message' => 'Curriculum ID is required'], 400);
             }
@@ -157,7 +158,7 @@ class MyCourseController extends Controller
                 });
 
             return response()->json($topics);
-            
+
         } catch (\Exception $e) {
             Log::error('Error in getTopics: ' . $e->getMessage());
             return response()->json(['message' => 'Failed to fetch topics'], 500);
