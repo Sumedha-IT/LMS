@@ -49,7 +49,7 @@ class AdministratorPanelProvider extends PanelProvider
             ->databaseNotifications()
             ->font('Poppins')
             ->plugins([
-                FilamentFullCalendarPlugin::make(),
+                // FilamentFullCalendarPlugin::make(),
                 TableLayoutTogglePlugin::make()
                     ->setDefaultLayout('grid')
                     ->persistLayoutInLocalStorage(true)
