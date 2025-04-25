@@ -93,22 +93,20 @@ const NewDashBoard = () => {
         </div>
 
       </section>
-
-          <UpcomingAnnouncements />
-          <StudentJourney onStartLearning={() => setShowLearning(true)} />
-          
-          <div className="hidden justify-between w-full px-1 my-10">
-            <div className="w-2/5">
-              <AttendanceTracker />
-            </div>
-            <div className="w-3/5">
-              <MyAssignment />
-            </div>
-          </div>
-        </>
-      )}
+      <UpcomingAnnouncements />
+      <StudentJourney onStartLearning={() => setShowLearning(true)} />
+      
+      <div className="hidden justify-between w-full px-1 my-10">
+        <div className="w-2/5">
+          <AttendanceTracker />
+        </div>
+        <div className="w-3/5">
+          <MyAssignment />
+        </div>
+      </div>
     </>
   );
 };
+
 
 export default NewDashBoard;
