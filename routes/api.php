@@ -155,6 +155,7 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
     //Api for student dashboard 
         // api for exam chart
         Route::get('/exam-chart', [ExamController::class, 'GetExamChart']);
+        Route::get('/getUserAssignments', [ExamController::class, 'getUserAssignments']);
         Route::get('/leaderboard', [ExamController::class, 'ExamLeaderBoard']);
 
     Route::post('/leaves/apply', [LeaveController::class, 'applyLeave']);

@@ -1,4 +1,4 @@
-<x-filament-panels::page>
+{{--  <x-filament-panels::page>
 
     <style>
         .dropdown-content {
@@ -62,7 +62,7 @@
 {{--                        </div>--}}
 {{--                    </div>--}}
 {{--                </div>--}}
-            </div>
+            {{-- </div>
             <div class="p-4">
                 <img
                     class="w-full rounded-lg"
@@ -153,6 +153,6 @@
                 });
             });
         });
-    </script>
+    </script> --}}
 
-</x-filament-panels::page>
+{{--  </x-filament-panels::page>

@@ -1,44 +1,67 @@
-import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { apiRequest } from "../utils/api"; // Import the utility function
-import CircularProgress from "../components/DashBoard/CircularProgress";
-import PerformanceChart from "../components/DashBoard/PerformanceChart";
-import { toast, ToastContainer } from 'react-toastify';
+import { useState, useEffect } from "react";
+import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import CircularProgress from "../components/DashBoard/CircularProgress";
 import UpcomingAnnouncements from "../components/DashBoard/UpcomingAnnouncements";
 import StudentPlacedCard from "../components/DashBoard/StudentPlacementslider";
 import StudentJourney from "../components/DashBoard/StudentJourney";
 import AttendanceTracker from "../components/DashBoard/AttendanceTracker";
 import MyAssignment from "../components/DashBoard/MyAssignment";
 import LearningJourney from "../components/DashBoard/LearningJourney";
+import Announcements from "./Announcements";
+import { apiRequest } from "../utils/api";
+import { useLocation, useNavigate } from "react-router-dom";
 
 const NewDashBoard = () => {
-  const [examChartData, setExamChartData] = useState(null);
-  const [UserData, setUserData] = useState([]);
+  const [showLearning, setShowLearning] = useState(false);
+  const [profileData, setProfileData] = useState();
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const location = useLocation();
   const navigate = useNavigate();
 
   useEffect(() => {
-    // Fetch profile data and check role_id
-    const fetchData = async () => {
+    const FetchUserdata = async () => {
       try {
-        // Example using the utility function
-        const profileData = await apiRequest("/profile");
-        setUserData(profileData);
-
-        // if (profileData.user.role_id !== 6) {
-        //   navigate("/administrator/1");
+        setLoading(true);
+        const data = await apiRequest("/profile");
+        
+        // Redirect if role is not 6
+        // if (data.user.role_id !== 6) {
+        //   navigate('/adminstartor/1/');
+        //   return;
         // }
-
-        const examData = await apiRequest("/exam-chart");
-        setExamChartData(examData);
-      } catch (error) {
-        console.error("Failed to fetch data:", error);
-        toast.error("Failed to fetch data");
+        
+        setProfileData(data);
+      } catch (err) {
+        console.error("Error fetching profile data:", err);
+        setError(err.message || "Failed to load profile");
+      } finally {
+        setLoading(false);
       }
     };
 
-    fetchData();
-  }, [navigate]);
+    FetchUserdata();
+  }, [navigate]); // Added navigate to dependency array
+
+  // Return null while loading or if profile data isn't available
+  // if (loading || !profileData) {
+  //   return null;
+  // }
+
+  // // Additional safety check
+  // if (profileData.user.role_id !== 6) {
+  //   return null;
+  // }
+
+
+
+
+  
+  const trimmedPath = location.pathname
+    .split('/')
+    .slice(0, -1)
+    .join('/') + '/';
 
   return (
     <>
@@ -70,25 +93,20 @@ const NewDashBoard = () => {
         </div>
 
       </section>
-
-      {/* Pass the fetched data to PerformanceChart */}
-      {/* <PerformanceChart UserData={UserData} examChartData={examChartData} /> */}
       <UpcomingAnnouncements />
-      <StudentJourney />
-      <div className=" flex justify-between w-full px-1 my-10">
-        <div className="  w-2/5">
+      <StudentJourney onStartLearning={() => setShowLearning(true)} />
+      
+      <div className="hidden justify-between w-full px-1 my-10">
+        <div className="w-2/5">
           <AttendanceTracker />
         </div>
-        <div className=" w-3/5">
+        <div className="w-3/5">
           <MyAssignment />
         </div>
-
-
       </div>
-      <ToastContainer />
-      {/* <LearningJourney/> */}
     </>
   );
 };
+
 
 export default NewDashBoard;

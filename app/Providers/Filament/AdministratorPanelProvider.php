@@ -6,7 +6,7 @@ use App\Filament\Pages\Dashboard;
 use App\Filament\Pages\MyProfilePage;
 use App\Filament\Pages\MyCoursesPage;
 use App\Filament\Pages\AnnouncementsPage;
-// use App\Filament\Pages\StudentDashboardPage;
+use App\Filament\Pages\StudentDashboardPage;
 use App\Http\Middleware\ApplyTenantScopes;
 use App\Livewire\MyCustomPersonalInfo;
 use Filament\Http\Middleware\Authenticate;
@@ -49,7 +49,7 @@ class AdministratorPanelProvider extends PanelProvider
             ->databaseNotifications()
             ->font('Poppins')
             ->plugins([
-                FilamentFullCalendarPlugin::make(),
+                // FilamentFullCalendarPlugin::make(),
                 TableLayoutTogglePlugin::make()
                     ->setDefaultLayout('grid')
                     ->persistLayoutInLocalStorage(true)
@@ -83,7 +83,7 @@ class AdministratorPanelProvider extends PanelProvider
             ->discoverResources(in: app_path('Filament/Resources'), for: 'App\\Filament\\Resources')
             ->discoverPages(in: app_path('Filament/Pages'), for: 'App\\Filament\\Pages')
             ->pages([
-                // StudentDashboardPage::class,
+                StudentDashboardPage::class,
                 MyProfilePage::class,
                 MyCoursesPage::class,
                 AnnouncementsPage::class,

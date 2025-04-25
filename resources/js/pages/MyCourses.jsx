@@ -58,13 +58,9 @@ function getCookie(name) {
   return null;
 }
 
-// Function to get image based on curriculum name
-const getCurriculumImage = (name) => {
-    const lowerName = name.toLowerCase();
-    if (lowerName.includes('cmos')) return '/images/courses/cmos.jpeg';
-    if (lowerName.includes('slc') || lowerName.includes('sl')) return '/images/courses/SLC.jpg';
-    if (lowerName.includes('ddf')) return '/images/courses/DDF.png';
-    return null;
+// Function to get default image if curriculum image is not available
+const getDefaultCurriculumImage = () => {
+    return '/images/placeholder.jpg';
 };
 
 const MyCourses = () => {
@@ -72,7 +68,7 @@ const MyCourses = () => {
     const [courses, setCourses] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
-    
+
     // New state variables for expanded functionality
     const [expandedCurriculums, setExpandedCurriculums] = useState({});
     const [selectedCurriculum, setSelectedCurriculum] = useState(null);
@@ -99,7 +95,6 @@ const MyCourses = () => {
 
     const fetchCourses = async () => {
         try {
-            console.log('Fetching courses...');
             const userInfo = getCookie("user_info");
             let userData;
 
@@ -127,12 +122,10 @@ const MyCourses = () => {
                     },
                     withCredentials: true
                 });
-                
-                console.log('Courses response:', response.data);
-                
+
                 if (response.data.courses) {
                     setCourses(response.data.courses);
-                    
+
                     // Fetch topics for all curriculums immediately
                     for (const course of response.data.courses) {
                         for (const curriculum of course.curriculums) {
@@ -156,7 +149,7 @@ const MyCourses = () => {
                                     updateCurriculumProgress(curriculum.id, topicsData);
                                 }
                             } catch (error) {
-                                console.error(`Error fetching topics for curriculum ${curriculum.id}:`, error);
+                                // Silently handle topic fetching errors
                             }
                         }
                     }
@@ -168,7 +161,6 @@ const MyCourses = () => {
                     setError('No courses available');
                 }
             } catch (error) {
-                console.error('Error fetching data:', error);
                 if (error.response?.status === 403) {
                     toast.error('You do not have permission to access these courses');
                 } else {
@@ -176,11 +168,10 @@ const MyCourses = () => {
                 }
             }
         } catch (err) {
-            console.error('Error fetching courses:', err);
             const errorMessage = err.response?.data?.error || err.response?.data?.message || 'Failed to fetch courses';
             setError(errorMessage);
             setLoading(false);
-            
+
             if (err.message === 'Authentication required' || err.response?.status === 401) {
                 navigate('/administrator/login');
             }
@@ -219,7 +210,7 @@ const MyCourses = () => {
 
         if (!document.fullscreenElement) {
             element.requestFullscreen().catch(err => {
-                console.error(`Error attempting to enable full-screen mode: ${err.message}`);
+                toast.error(`Could not enable full-screen mode`);
             });
         } else {
             document.exitFullscreen();
@@ -228,14 +219,14 @@ const MyCourses = () => {
 
     const handleCurriculumClick = async (curriculum) => {
         const newExpandedState = !expandedCurriculums[curriculum.id];
-        
+
         // Close all other curriculums and reset content
         const newExpandedCurriculums = {};
         if (newExpandedState) {
             newExpandedCurriculums[curriculum.id] = true;
         }
         setExpandedCurriculums(newExpandedCurriculums);
-        
+
         // Reset all content when switching curriculums
         setSelectedTopic(null);
         setTopics([]);
@@ -244,7 +235,7 @@ const MyCourses = () => {
         setAssignments([]);
         setSelectedAssignment(null);
         setActiveTab('materials');
-        
+
         if (newExpandedState) {
             setSelectedCurriculum(curriculum);
             if (topicsMap[curriculum.id]) {
@@ -268,8 +259,8 @@ const MyCourses = () => {
         setCourses(prevCourses => {
             return prevCourses.map(course => ({
                 ...course,
-                curriculums: course.curriculums.map(curr => 
-                    curr.id === curriculumId 
+                curriculums: course.curriculums.map(curr =>
+                    curr.id === curriculumId
                         ? { ...curr, progress: progress }
                         : curr
                 )
@@ -312,7 +303,7 @@ const MyCourses = () => {
 
         setSelectedTopic(topic);
         setSelectedAssignment(null);
-        
+
         if (topic?.id) {
             await Promise.all([
                 fetchMaterials(topic.id),
@@ -325,14 +316,14 @@ const MyCourses = () => {
         if (!date || date === 'null' || date === null) {
             return 'No date set';
         }
-        
+
         try {
             const dateObj = new Date(date);
-            
+
             if (isNaN(dateObj.getTime())) {
                 return 'Invalid date';
             }
-            
+
             return dateObj.toLocaleString('en-US', {
                 year: 'numeric',
                 month: 'long',
@@ -343,7 +334,6 @@ const MyCourses = () => {
                 timeZone: 'Asia/Kolkata'
             });
         } catch (error) {
-            console.error('Error formatting date:', error);
             return 'Error formatting date';
         }
     };
@@ -359,7 +349,7 @@ const MyCourses = () => {
         const now = new Date();
         const start = startSubmission ? new Date(startSubmission) : null;
         const stop = stopSubmission ? new Date(stopSubmission) : null;
-        
+
         if (!start && !stop) return true;
         if (start && !stop) return now >= start;
         if (!start && stop) return now <= stop;
@@ -380,9 +370,9 @@ const MyCourses = () => {
                 <div className="bg-white rounded-lg shadow-xl max-w-md w-full p-6">
                     <div className="text-center">
                         <div className="mb-6">
-                            <img 
-                                src="/images/courses/sub.png" 
-                                alt="Success" 
+                            <img
+                                src="/images/courses/sub.png"
+                                alt="Success"
                                 className="mx-auto w-64"
                             />
                         </div>
@@ -480,7 +470,6 @@ const MyCourses = () => {
     const fetchTopics = async (curriculumId) => {
         try {
             setLoadingTopics(true);
-            console.log('Fetching topics for curriculum:', curriculumId);
             const userInfo = getCookie("user_info");
             const userData = JSON.parse(userInfo);
 
@@ -506,7 +495,6 @@ const MyCourses = () => {
                 updateCurriculumProgress(curriculumId, topicsData);
             }
         } catch (error) {
-            console.error('Topics fetch error:', error);
             setTopics([]);
             // Show a toast notification for error
             toast.error('Failed to load topics. Please try again.');
@@ -542,7 +530,6 @@ const MyCourses = () => {
                 }
             }
         } catch (error) {
-            console.error('Error fetching materials:', error);
             // Don't show error toast to avoid disrupting UX
         }
     };
@@ -578,7 +565,7 @@ const MyCourses = () => {
                     });
 
                 setAssignments(assignmentsData);
-                
+
                 // Fetch submission status for each assignment
                 for (const assignment of assignmentsData) {
                     if (assignment.id) {
@@ -589,7 +576,6 @@ const MyCourses = () => {
                 setAssignments([]);
             }
         } catch (error) {
-            console.error('Error fetching assignments:', error);
             // Don't show error toast to avoid disrupting UX
             setAssignments([]);
         } finally {
@@ -599,11 +585,11 @@ const MyCourses = () => {
 
     const fetchSubmissionStatus = async (assignmentId) => {
         if (!assignmentId) return;
-        
+
         try {
             const userInfo = getCookie("user_info");
             const userData = JSON.parse(userInfo);
-            
+
             const response = await axios.get(`/api/assignment-submission/${assignmentId}`, {
                 headers: {
                     'Accept': 'application/json',
@@ -621,9 +607,7 @@ const MyCourses = () => {
                 }));
             }
         } catch (error) {
-            if (error.response?.status !== 404) {
-                console.error('Error fetching submission status:', error);
-            }
+            // Silently handle submission status errors
         }
     };
 
@@ -806,40 +790,41 @@ const MyCourses = () => {
                 {/* Left Side - Curriculums and Topics */}
                 <div className={`${selectedTopic ? 'w-1/3' : 'w-full'} transition-all duration-300`}>
                     <div className="space-y-4">
-                        {courses.flatMap(course => 
+                        {courses.flatMap(course =>
                             course.curriculums.map(curriculum => (
                                 <div key={curriculum.id} className="bg-white rounded-lg shadow-lg overflow-hidden">
                                     {/* Curriculum Header */}
-                                    <div 
+                                    <div
                                         onClick={() => handleCurriculumClick(curriculum)}
                                         className="p-4 bg-orange-600 text-white flex justify-between items-center cursor-pointer hover:bg-orange-700 transition-colors duration-200"
                                     >
                                         <div className="flex items-center space-x-4">
-                                            {getCurriculumImage(curriculum.name) && (
-                                                <div className="w-16 h-16 rounded-lg overflow-hidden bg-white">
-                                                    <img 
-                                                        src={getCurriculumImage(curriculum.name)} 
-                                                        alt={curriculum.name}
-                                                        className="w-full h-full object-cover"
-                                                    />
-                                                </div>
-                                            )}
+                                            <div className="w-16 h-16 rounded-lg overflow-hidden bg-white">
+                                                <img
+                                                    src={curriculum.image || getDefaultCurriculumImage()}
+                                                    alt={curriculum.name}
+                                                    className="w-full h-full object-cover"
+                                                    onError={(e) => {
+                                                        e.target.src = getDefaultCurriculumImage();
+                                                    }}
+                                                />
+                                            </div>
                                             <div>
                                                 <h2 className="text-xl font-medium">{curriculum.name}</h2>
                                                 <p className="text-sm text-white/80">{course.name}</p>
                                             </div>
                                         </div>
                                         <div className="flex items-center space-x-4">
-                                            <CircularProgress 
+                                            <CircularProgress
                                                 percentage={curriculum.progress || 0}
                                                 size={45}
                                                 strokeWidth={4}
                                                 white={true}
                                             />
-                                            <svg 
+                                            <svg
                                                 className={`w-6 h-6 transform transition-transform duration-200 ${expandedCurriculums[curriculum.id] ? 'rotate-180' : ''}`}
-                                                fill="none" 
-                                                viewBox="0 0 24 24" 
+                                                fill="none"
+                                                viewBox="0 0 24 24"
                                                 stroke="currentColor"
                                             >
                                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
@@ -862,12 +847,12 @@ const MyCourses = () => {
                                                 topics.map((topic) => {
                                                     const topicStatus = getTopicStatus(topics, topic);
                                                     return (
-                                                        <div 
+                                                        <div
                                                             key={topic.id}
                                                             onClick={() => handleTopicClick(topic)}
                                                             className={`p-4 transition-colors duration-200 ${
-                                                                !topicStatus.accessible ? 
-                                                                'cursor-not-allowed opacity-60' : 
+                                                                !topicStatus.accessible ?
+                                                                'cursor-not-allowed opacity-60' :
                                                                 'cursor-pointer hover:bg-gray-50'
                                                             } ${
                                                                 selectedTopic?.id === topic.id ? 'bg-orange-50' : ''
@@ -878,26 +863,26 @@ const MyCourses = () => {
                                                                     <div className="flex-shrink-0">
                                                                         {topic.is_completed ? (
                                                                             <div className="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center">
-                                                                                <svg 
-                                                                                    className="w-6 h-6 text-green-600" 
-                                                                                    fill="none" 
-                                                                                    stroke="currentColor" 
+                                                                                <svg
+                                                                                    className="w-6 h-6 text-green-600"
+                                                                                    fill="none"
+                                                                                    stroke="currentColor"
                                                                                     viewBox="0 0 24 24"
                                                                                 >
-                                                                                    <path 
-                                                                                        strokeLinecap="round" 
-                                                                                        strokeLinejoin="round" 
-                                                                                        strokeWidth={2} 
-                                                                                        d="M5 13l4 4L19 7" 
+                                                                                    <path
+                                                                                        strokeLinecap="round"
+                                                                                        strokeLinejoin="round"
+                                                                                        strokeWidth={2}
+                                                                                        d="M5 13l4 4L19 7"
                                                                                     />
                                                                                 </svg>
                                                                             </div>
                                                                         ) : (
                                                                             <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center">
-                                                                                <svg 
-                                                                                    className="w-6 h-6 text-gray-400" 
-                                                                                    fill="none" 
-                                                                                    stroke="currentColor" 
+                                                                                <svg
+                                                                                    className="w-6 h-6 text-gray-400"
+                                                                                    fill="none"
+                                                                                    stroke="currentColor"
                                                                                     viewBox="0 0 24 24"
                                                                                 >
                                                                                     <circle cx="12" cy="12" r="10" strokeWidth={2} />
@@ -914,17 +899,17 @@ const MyCourses = () => {
                                                                         {topicStatus.status}
                                                                     </span>
                                                                     {!topicStatus.accessible && (
-                                                                        <svg 
-                                                                            className="w-5 h-5 text-amber-600" 
-                                                                            fill="none" 
-                                                                            stroke="currentColor" 
+                                                                        <svg
+                                                                            className="w-5 h-5 text-amber-600"
+                                                                            fill="none"
+                                                                            stroke="currentColor"
                                                                             viewBox="0 0 24 24"
                                                                         >
-                                                                            <path 
-                                                                                strokeLinecap="round" 
-                                                                                strokeLinejoin="round" 
-                                                                                strokeWidth={2} 
-                                                                                d="M12 15v2m0 0v2m0-2h2m-2 0H8m4-6V4" 
+                                                                            <path
+                                                                                strokeLinecap="round"
+                                                                                strokeLinejoin="round"
+                                                                                strokeWidth={2}
+                                                                                d="M12 15v2m0 0v2m0-2h2m-2 0H8m4-6V4"
                                                                             />
                                                                         </svg>
                                                                     )}
@@ -971,8 +956,8 @@ const MyCourses = () => {
                                         <button
                                             onClick={() => setActiveTab('materials')}
                                             className={`flex-1 px-6 py-3 text-center font-medium transition-colors duration-200 ${
-                                                activeTab === 'materials' 
-                                                ? 'bg-orange-600 text-white' 
+                                                activeTab === 'materials'
+                                                ? 'bg-orange-600 text-white'
                                                 : 'bg-white text-gray-600 hover:bg-gray-50'
                                             }`}
                                         >
@@ -981,8 +966,8 @@ const MyCourses = () => {
                                         <button
                                             onClick={() => setActiveTab('assignments')}
                                             className={`flex-1 px-6 py-3 text-center font-medium transition-colors duration-200 ${
-                                                activeTab === 'assignments' 
-                                                ? 'bg-orange-600 text-white' 
+                                                activeTab === 'assignments'
+                                                ? 'bg-orange-600 text-white'
                                                 : 'bg-white text-gray-600 hover:bg-gray-50'
                                             }`}
                                         >
@@ -992,8 +977,8 @@ const MyCourses = () => {
                                             <button
                                                 onClick={() => setActiveTab('submit')}
                                                 className={`flex-1 px-6 py-3 text-center font-medium transition-colors duration-200 ${
-                                                    activeTab === 'submit' 
-                                                    ? 'bg-orange-600 text-white' 
+                                                    activeTab === 'submit'
+                                                    ? 'bg-orange-600 text-white'
                                                     : 'bg-white text-gray-600 hover:bg-gray-50'
                                                 }`}
                                             >
@@ -1028,17 +1013,17 @@ const MyCourses = () => {
                                             ) : (
                                                 <div className="flex flex-col items-center justify-center h-64 bg-white rounded-lg border-2 border-dashed border-gray-300">
                                                     <div className="bg-gray-100 rounded-full p-4 mb-4">
-                                                        <svg 
-                                                            className="w-12 h-12 text-gray-400" 
-                                                            fill="none" 
-                                                            stroke="currentColor" 
+                                                        <svg
+                                                            className="w-12 h-12 text-gray-400"
+                                                            fill="none"
+                                                            stroke="currentColor"
                                                             viewBox="0 0 24 24"
                                                         >
-                                                            <path 
-                                                                strokeLinecap="round" 
-                                                                strokeLinejoin="round" 
-                                                                strokeWidth={1.5} 
-                                                                d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" 
+                                                            <path
+                                                                strokeLinecap="round"
+                                                                strokeLinejoin="round"
+                                                                strokeWidth={1.5}
+                                                                d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
                                                             />
                                                         </svg>
                                                     </div>
@@ -1061,8 +1046,8 @@ const MyCourses = () => {
                                                         }}
                                                         disabled={currentMaterialIndex === 0}
                                                         className={`px-4 py-2 rounded ${
-                                                            currentMaterialIndex === 0 
-                                                            ? 'bg-gray-200 text-gray-500 cursor-not-allowed' 
+                                                            currentMaterialIndex === 0
+                                                            ? 'bg-gray-200 text-gray-500 cursor-not-allowed'
                                                             : 'bg-orange-600 text-white hover:bg-orange-700'
                                                         }`}
                                                     >
@@ -1078,7 +1063,7 @@ const MyCourses = () => {
                                                         disabled={currentMaterialIndex === materials.length - 1}
                                                         className={`px-4 py-2 rounded ${
                                                             currentMaterialIndex === materials.length - 1
-                                                            ? 'bg-gray-200 text-gray-500 cursor-not-allowed' 
+                                                            ? 'bg-gray-200 text-gray-500 cursor-not-allowed'
                                                             : 'bg-orange-600 text-white hover:bg-orange-700'
                                                         }`}
                                                     >
@@ -1097,17 +1082,17 @@ const MyCourses = () => {
                                             ) : assignments.length === 0 ? (
                                                 <div className="flex flex-col items-center justify-center h-64 bg-gray-50 rounded-lg border-2 border-dashed border-gray-300 p-8">
                                                     <div className="bg-gray-100 rounded-full p-4 mb-4">
-                                                        <svg 
-                                                            className="w-12 h-12 text-gray-400" 
-                                                            fill="none" 
-                                                            stroke="currentColor" 
+                                                        <svg
+                                                            className="w-12 h-12 text-gray-400"
+                                                            fill="none"
+                                                            stroke="currentColor"
                                                             viewBox="0 0 24 24"
                                                         >
-                                                            <path 
-                                                                strokeLinecap="round" 
-                                                                strokeLinejoin="round" 
-                                                                strokeWidth={1.5} 
-                                                                d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" 
+                                                            <path
+                                                                strokeLinecap="round"
+                                                                strokeLinejoin="round"
+                                                                strokeWidth={1.5}
+                                                                d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
                                                             />
                                                         </svg>
                                                     </div>
@@ -1124,9 +1109,9 @@ const MyCourses = () => {
                                                             const isWindowOpen = isSubmissionWindowOpen(assignment.start_submission, assignment.stop_submission);
                                                             const startDate = formatDate(assignment.start_submission);
                                                             const dueDate = formatDate(assignment.stop_submission);
-                                                            
+
                                                             return (
-                                                                <div 
+                                                                <div
                                                                     key={assignment.id}
                                                                     className="bg-white rounded-lg border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-200 cursor-pointer"
                                                                     onClick={() => setSelectedAssignment(assignment)}
@@ -1229,7 +1214,7 @@ const MyCourses = () => {
                                                                     </span>
                                                                 )}
                                                             </div>
-                                                            
+
                                                             <div className="bg-gray-50 rounded-lg p-4 grid grid-cols-2 gap-4">
                                                                 <div>
                                                                     <p className="text-sm text-gray-600">Start Date</p>
@@ -1382,10 +1367,10 @@ const MyCourses = () => {
                     </div>
                 )}
             </div>
-            
+
             {/* Success Modal */}
             {showSuccessModal && (
-                <SuccessModal 
+                <SuccessModal
                     onClose={() => {
                         setShowSuccessModal(false);
                         setActiveTab('assignments');
