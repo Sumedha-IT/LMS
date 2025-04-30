@@ -33,6 +33,7 @@ use Filament\Navigation\MenuItem;
 use Jeffgreco13\FilamentBreezy\BreezyCore;
 use Saade\FilamentFullCalendar\FilamentFullCalendarPlugin;
 
+
 class AdministratorPanelProvider extends PanelProvider
 {
     public function panel(Panel $panel): Panel
@@ -44,6 +45,12 @@ class AdministratorPanelProvider extends PanelProvider
             ->path('administrator')
             ->darkMode(false)
             ->login()
+            ->userMenuItems([
+                'account' => MenuItem::make()
+                    ->label(fn () => auth()->user()->name)
+                    ->url('/profile') // Redirect to your React profile page
+                    ->icon('heroicon-o-user'),
+            ])
             ->passwordReset()
             ->sidebarCollapsibleOnDesktop()
             ->databaseNotifications()
