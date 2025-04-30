@@ -85,7 +85,7 @@ export default function StudentJourney({onStartLearning}) {
  // Show loading state
     if (loading) {
       return (
-        <div className="flex justify-center items-center h-screen">
+        <div className="flex justify-center items-center">
           <CircularProgress sx={{ color: '#f97316' }} />
           <span className="ml-3 text-gray-600">Loading...</span>
         </div>
@@ -95,10 +95,9 @@ export default function StudentJourney({onStartLearning}) {
     // Show error state
     if (error) {
       return (
-        <div className="flex justify-center items-center h-screen">
+        <div className="flex justify-center items-center">
           <div className="text-center">
-            <div className="text-red-500 text-xl mb-2">Error</div>
-            <p className="text-gray-600">{error}</p>
+            <p className="text-red-500">You Are not Enrooled In Batch</p>
             <Button
               onClick={() => window.location.reload()}
               className="mt-4 bg-orange-500 hover:bg-orange-600 text-white"
@@ -127,7 +126,8 @@ export default function StudentJourney({onStartLearning}) {
          
         </Typography>
         <Button
-        onClick={onStartLearning}
+       onClick={() => { window.location.href = `${trimmedPath}my-courses`; }}
+
           variant="outlined"
           sx={{
             borderColor: "#E53510",
@@ -162,7 +162,7 @@ export default function StudentJourney({onStartLearning}) {
           elevation={1}
           sx={{
             position: "absolute",
-            top: 55,
+            top: 120,
             left: `${overallCompletion}%`,
             transform: "translateX(-50%)",
             p: 1.5,
@@ -172,14 +172,14 @@ export default function StudentJourney({onStartLearning}) {
             mb: 2,
           }}
         >
-          <Typography variant="body2" color="textSecondary">
+          {/* <Typography variant="body2" color="textSecondary">
             Module
           </Typography>
           <Typography variant="body2" color="textSecondary">
             Completed
-          </Typography>
+          </Typography> */}
           <Typography variant="h6" sx={{ color: "#E53510", fontWeight: 500 }}>
-            <div className="rounded-md mt-1 bg-[#E53510] bg-opacity-10 w-full">
+            <div className="rounded-md mt-1 p-1 bg-[#E53510] bg-opacity-10 w-full">
               {overallCompletion}%
             </div>
           </Typography>

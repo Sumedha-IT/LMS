@@ -4,10 +4,10 @@ import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 
 export default function CircularProgress({
-  value = 4,
-  max = 10,
-  label = "Total Assignments",
-  size = 200,
+  value = 0,
+  max = 0,
+  label = "Assignments",
+  size = 150,
   strokeWidth = 12,
   showPercentage = false,
 }) {
@@ -86,7 +86,7 @@ export default function CircularProgress({
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.5, duration: 0.5 }}
         >
-          <span className=" text-sm">{label}</span>
+          <span className=" text-sm ">{label}</span>
         </motion.span>
       </div>
     </motion.div>
