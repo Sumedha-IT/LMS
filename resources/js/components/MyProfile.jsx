@@ -15,7 +15,13 @@ import { FiPlus, FiTrash2, FiEdit2 } from 'react-icons/fi';
 import { Document, Page, Text, View, StyleSheet, PDFDownloadLink } from '@react-pdf/renderer';
 import { AiOutlineFilePdf } from 'react-icons/ai';
 
-const API_URL = import.meta.env.VITE_APP_API_URL;
+// Use the environment variables directly without modification
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+const API_ENDPOINT = import.meta.env.REACT_APP_API_URL || 'http://localhost:8000/api';
+
+// Log the URLs for debugging
+console.log('Base URL:', API_URL);
+console.log('API Endpoint:', API_ENDPOINT);
 
 // Validation functions
 const validateBasicDetails = (data) => {
@@ -260,14 +266,14 @@ const MyProfile = () => {
 
         // Fetch basic profile data and projects in parallel
         const [profileResponse, projectsResponse] = await Promise.all([
-          axios.get(`${API_URL}/api/profile`, {
+          axios.get(`${API_ENDPOINT}/profile`, {
             headers: {
               'Accept': 'application/json',
               'Authorization': `Bearer ${userData.token}`,
             },
             withCredentials: true,
           }),
-          axios.get(`${API_URL}/api/projects`, {
+          axios.get(`${API_ENDPOINT}/projects`, {
             headers: {
               'Accept': 'application/json',
               'Authorization': `Bearer ${userData.token}`,
@@ -315,7 +321,7 @@ const MyProfile = () => {
 
         // Fetch tab-specific data
         if (activeMenu === 'certifications') {
-          const certificationsResponse = await axios.get(`${API_URL}/api/certifications`, {
+          const certificationsResponse = await axios.get(`${API_ENDPOINT}/certifications`, {
             headers: {
               'Accept': 'application/json',
               'Authorization': `Bearer ${userData.token}`,
@@ -334,7 +340,7 @@ const MyProfile = () => {
         }
 
         if (activeMenu === 'projects') {
-          const projectsResponse = await axios.get(`${API_URL}/api/projects`, {
+          const projectsResponse = await axios.get(`${API_ENDPOINT}/projects`, {
             headers: {
               'Accept': 'application/json',
               'Authorization': `Bearer ${userData.token}`,
@@ -348,7 +354,7 @@ const MyProfile = () => {
 
         if (activeMenu === 'education') {
           // Fetch degree types first
-          const degreeResponse = await axios.get(`${API_URL}/api/get/degrees`, {
+          const degreeResponse = await axios.get(`${API_ENDPOINT}/get/degrees`, {
             headers: {
               'Accept': 'application/json',
               'Authorization': userData.token,
@@ -357,7 +363,7 @@ const MyProfile = () => {
           setDegreeTypes(degreeResponse.data.data || []);
 
           // Fetch education data
-          const educationResponse = await axios.get(`${API_URL}/api/get/education`, {
+          const educationResponse = await axios.get(`${API_ENDPOINT}/get/education`, {
             headers: {
               'Accept': 'application/json',
               'Authorization': userData.token,
@@ -376,7 +382,7 @@ const MyProfile = () => {
 
           // Fetch all specializations in parallel
           const specializationPromises = uniqueDegreeTypeIds.map(degreeTypeId =>
-            axios.get(`${API_URL}/api/get/specialization/${degreeTypeId}`, {
+            axios.get(`${API_ENDPOINT}/get/specialization/${degreeTypeId}`, {
               headers: {
                 'Accept': 'application/json',
                 'Authorization': userData.token,
@@ -432,7 +438,7 @@ const MyProfile = () => {
         return;
       }
 
-      const response = await axios.get(`${API_URL}/api/get/specialization/${degreeTypeId}`, {
+      const response = await axios.get(`${API_ENDPOINT}/get/specialization/${degreeTypeId}`, {
         headers: {
           'Accept': 'application/json',
           'Authorization': userData.token,
@@ -456,7 +462,7 @@ const MyProfile = () => {
         return;
       }
 
-      const response = await axios.get(`${API_URL}/api/get/education`, {
+      const response = await axios.get(`${API_ENDPOINT}/get/education`, {
         headers: {
           'Accept': 'application/json',
           'Authorization': `Bearer ${userData.token}`, // Ensure Bearer prefix is added
@@ -605,7 +611,7 @@ const MyProfile = () => {
 
       const response = await axios({
         method: 'post',
-        url: `${API_URL}/api/education`,
+        url: `${API_ENDPOINT}/education`,
         data: educationData,
         headers: {
           'Accept': 'application/json',
@@ -643,7 +649,7 @@ const MyProfile = () => {
 
       const response = await axios({
         method: 'put',
-        url: `${API_URL}/api/update/education`,
+        url: `${API_ENDPOINT}/update/education`,
         data: educationData,
         headers: {
           'Accept': 'application/json',
@@ -724,7 +730,7 @@ const MyProfile = () => {
   // Modify the toggleSubTab function to include validation
   const toggleSubTab = (id) => {
     let errors = [];
-    
+
     switch (activeSubTab) {
       case 'basic':
         errors = validateBasicDetails(formData);
@@ -1603,19 +1609,19 @@ const MyProfile = () => {
                 type="button"
                 onClick={() => toggleSubTab('parent')}
                 className={`px-4 py-2 text-white rounded-lg transition-colors ${
-                  !formData.aadhaar_number?.trim() || 
-                  (!formData.upload_aadhar && !formData.aadhar_path) || 
-                  !formData.linkedin_profile?.trim() || 
-                  (!formData.passport_photo && !formData.passport_photo_path) || 
+                  !formData.aadhaar_number?.trim() ||
+                  (!formData.upload_aadhar && !formData.aadhar_path) ||
+                  !formData.linkedin_profile?.trim() ||
+                  (!formData.passport_photo && !formData.passport_photo_path) ||
                   (!formData.upload_resume && !formData.resume_path)
                     ? 'bg-gray-400 cursor-not-allowed'
                     : 'bg-orange-500 hover:bg-orange-600'
                 }`}
                 disabled={
-                  !formData.aadhaar_number?.trim() || 
-                  (!formData.upload_aadhar && !formData.aadhar_path) || 
-                  !formData.linkedin_profile?.trim() || 
-                  (!formData.passport_photo && !formData.passport_photo_path) || 
+                  !formData.aadhaar_number?.trim() ||
+                  (!formData.upload_aadhar && !formData.aadhar_path) ||
+                  !formData.linkedin_profile?.trim() ||
+                  (!formData.passport_photo && !formData.passport_photo_path) ||
                   (!formData.upload_resume && !formData.resume_path)
                 }
               >
@@ -2717,7 +2723,7 @@ const MyProfile = () => {
         return;
       }
 
-      const response = await axios.get(`${API_URL}/api/projects`, {
+      const response = await axios.get(`${API_ENDPOINT}/projects`, {
         headers: {
           'Accept': 'application/json',
           'Authorization': `Bearer ${userData.token}`
@@ -3103,25 +3109,25 @@ const MyProfile = () => {
             }
 
             const [profileResponse, educationResponse, projectsResponse, certificationsResponse] = await Promise.all([
-              axios.get(`${API_URL}/api/profile`, {
+              axios.get(`${API_ENDPOINT}/profile`, {
                 headers: {
                   'Accept': 'application/json',
                   'Authorization': `Bearer ${userData.token}`,
                 }
               }),
-              axios.get(`${API_URL}/api/get/education`, {
+              axios.get(`${API_ENDPOINT}/get/education`, {
                 headers: {
                   'Accept': 'application/json',
                   'Authorization': `Bearer ${userData.token}`,
                 }
               }),
-              axios.get(`${API_URL}/api/projects`, {
+              axios.get(`${API_ENDPOINT}/projects`, {
                 headers: {
                   'Accept': 'application/json',
                   'Authorization': `Bearer ${userData.token}`,
                 }
               }),
-              axios.get(`${API_URL}/api/certifications`, {
+              axios.get(`${API_ENDPOINT}/certifications`, {
                 headers: {
                   'Accept': 'application/json',
                   'Authorization': `Bearer ${userData.token}`,
