@@ -124,13 +124,14 @@ const NewDashBoard = () => {
           {/* Illustration */}
           <img
             className="absolute -top-16 w-[17rem] right-0"
-            src="/storage/image.png"
+            src="/images/image%2067.png"
             alt="Decorative illustration"
             loading="lazy"
             onError={(e) => {
               e.target.onerror = null;
-              e.target.src = "/storage/fallback-image.png";
+              e.target.src = "/images/placeholder.jpg";
               e.target.alt = "Fallback decorative illustration";
+              console.log("Image failed to load, using fallback");
             }}
           />
         </div>
