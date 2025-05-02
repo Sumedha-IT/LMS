@@ -2,6 +2,60 @@
 
 @config 'tailwind.config.js';
 
+/* Sidebar Navigation Styles */
+.fi-sidebar-item {
+    @apply transition-colors duration-200;
+}
+
+.fi-sidebar-item a {
+    @apply text-gray-800 dark:text-gray-200;
+}
+
+.fi-sidebar-item a:hover {
+    @apply bg-gray-100 dark:bg-gray-800;
+}
+
+.fi-sidebar-item-active {
+    @apply bg-primary-50 dark:bg-primary-900/50;
+}
+
+.fi-sidebar-item-active a {
+    @apply text-primary-600 dark:text-primary-400;
+}
+
+.fi-sidebar-item svg {
+    @apply text-gray-600 dark:text-gray-400;
+}
+
+.fi-sidebar-item:hover svg {
+    @apply text-gray-700 dark:text-gray-300;
+}
+
+.fi-sidebar-item-active svg {
+    @apply text-primary-600 dark:text-primary-400;
+}
+
+/* Ensure text visibility */
+.fi-sidebar-item span {
+    @apply text-gray-800 dark:text-gray-200;
+}
+
+.fi-sidebar-item-active span {
+    @apply text-primary-600 dark:text-primary-400;
+}
+
+/* Fix for white text issue */
+.fi-sidebar-item a span,
+.fi-sidebar-item a svg,
+.fi-sidebar-group-label,
+.fi-sidebar-nav .fi-sidebar-header-heading {
+    @apply text-gray-800 dark:text-gray-200 !important;
+}
+
+.fi-sidebar-item-active a span,
+.fi-sidebar-item-active a svg {
+    @apply text-primary-600 dark:text-primary-400 !important;
+}
 
 .fi-sidebar-nav {
     /*@apply bg-gray-50 dark:bg-gray-950;*/
@@ -118,29 +172,10 @@ input:checked+.\[input\:checked\+\&\]\:hover\:bg-custom-500{
     row-gap:0.5rem;
 }
 
-/* Make all sidebar text white */
-.fi-sidebar-item a span,
-.fi-sidebar-item a svg,
-.fi-sidebar-group-label,
-.fi-sidebar-nav .fi-sidebar-header-heading {
-    color: #ffffff !important;
-    fill: #ffffff !important;
-}
-
-.fi-sidebar-item a svg path {
-    fill: #ffffff !important;
-}
-
 /* Logo styling */
 .fi-sidebar-header {
     border-bottom: none;
     position: relative;
-}
-
-/* Hover state for sidebar items */
-.fi-sidebar-item a:hover {
-    background-color: rgba(255, 255, 255, 0.1);
-    border-radius: 10px;
 }
 
 /* Custom sidebar toggle button */

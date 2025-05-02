@@ -16,7 +16,45 @@ import { Document, Page, Text, View, StyleSheet, PDFDownloadLink } from '@react-
 import { AiOutlineFilePdf } from 'react-icons/ai';
 
 const API_URL = import.meta.env.VITE_APP_API_URL;
-// const API_URL = import.meta.env.REACT_APP_API_URL
+
+// Validation functions
+const validateBasicDetails = (data) => {
+  const errors = [];
+  if (!data.name?.trim()) errors.push('Name is required');
+  if (!data.email?.trim()) errors.push('Email is required');
+  if (!data.gender) errors.push('Gender is required');
+  if (!data.birthday) errors.push('Birthday is required');
+  return errors;
+};
+
+const validateAdditionalDetails = (data) => {
+  const errors = [];
+  if (!data.address?.trim()) errors.push('Address is required');
+  if (!data.city?.trim()) errors.push('City is required');
+  if (!data.state_id) errors.push('State is required');
+  if (!data.pincode?.trim()) errors.push('Pincode is required');
+  return errors;
+};
+
+const validateDocs = (data) => {
+  const errors = [];
+  if (!data.aadhaar_number?.trim()) errors.push('Aadhaar number is required');
+  if (!data.upload_aadhar && !data.aadhar_path) errors.push('Aadhaar document is required');
+  if (!data.linkedin_profile?.trim()) errors.push('LinkedIn profile is required');
+  if (!data.passport_photo && !data.passport_photo_path) errors.push('Passport size photo is required');
+  if (!data.upload_resume && !data.resume_path) errors.push('Resume is required');
+  return errors;
+};
+
+const validateParentDetails = (data) => {
+  const errors = [];
+  if (!data.parent_name?.trim()) errors.push('Parent name is required');
+  if (!data.parent_email?.trim()) errors.push('Parent email is required');
+  if (!data.parent_aadhar?.trim()) errors.push('Parent Aadhaar is required');
+  if (!data.parent_occupation?.trim()) errors.push('Parent occupation is required');
+  if (!data.residential_address?.trim()) errors.push('Residential address is required');
+  return errors;
+};
 
 // Update mainMenu array
 const mainMenu = [
@@ -644,10 +682,72 @@ const MyProfile = () => {
     }
   };
 
+  // Add these validation functions before the renderSubTabContent function
+  const validateBasicDetails = (data) => {
+    const errors = [];
+    if (!data.name?.trim()) errors.push('Name is required');
+    if (!data.email?.trim()) errors.push('Email is required');
+    if (!data.gender) errors.push('Gender is required');
+    if (!data.birthday) errors.push('Birthday is required');
+    return errors;
+  };
+
+  const validateAdditionalDetails = (data) => {
+    const errors = [];
+    if (!data.address?.trim()) errors.push('Address is required');
+    if (!data.city?.trim()) errors.push('City is required');
+    if (!data.state_id) errors.push('State is required');
+    if (!data.pincode?.trim()) errors.push('Pincode is required');
+    return errors;
+  };
+
+  const validateDocs = (data) => {
+    const errors = [];
+    if (!data.aadhaar_number?.trim()) errors.push('Aadhaar number is required');
+    if (!data.upload_aadhar && !data.aadhar_path) errors.push('Aadhaar document is required');
+    if (!data.linkedin_profile?.trim()) errors.push('LinkedIn profile is required');
+    if (!data.passport_photo && !data.passport_photo_path) errors.push('Passport size photo is required');
+    if (!data.upload_resume && !data.resume_path) errors.push('Resume is required');
+    return errors;
+  };
+
+  const validateParentDetails = (data) => {
+    const errors = [];
+    if (!data.parent_name?.trim()) errors.push('Parent name is required');
+    if (!data.parent_email?.trim()) errors.push('Parent email is required');
+    if (!data.parent_aadhar?.trim()) errors.push('Parent Aadhaar is required');
+    if (!data.parent_occupation?.trim()) errors.push('Parent occupation is required');
+    if (!data.residential_address?.trim()) errors.push('Residential address is required');
+    return errors;
+  };
+
+  // Modify the toggleSubTab function to include validation
   const toggleSubTab = (id) => {
-    // Just change the active tab without showing success message
+    let errors = [];
+    
+    switch (activeSubTab) {
+      case 'basic':
+        errors = validateBasicDetails(formData);
+        break;
+      case 'additional':
+        errors = validateAdditionalDetails(formData);
+        break;
+      case 'docs':
+        errors = validateDocs(formData);
+        break;
+      case 'parent':
+        errors = validateParentDetails(formData);
+        break;
+    }
+
+    if (errors.length > 0) {
+      errors.forEach(error => {
+        toast.error(error);
+      });
+      return;
+    }
+
     setActiveSubTab(id);
-    // Clear any existing success/error messages
     setSuccess(null);
     setError(null);
   };
@@ -1243,7 +1343,12 @@ const MyProfile = () => {
               <button
                 type="button"
                 onClick={() => toggleSubTab('additional')}
-                className="px-4 py-2 text-white bg-orange-500 rounded-lg hover:bg-orange-600 transition-colors"
+                className={`px-4 py-2 text-white rounded-lg transition-colors ${
+                  !formData.name?.trim() || !formData.email?.trim() || !formData.gender || !formData.birthday
+                    ? 'bg-gray-400 cursor-not-allowed'
+                    : 'bg-orange-500 hover:bg-orange-600'
+                }`}
+                disabled={!formData.name?.trim() || !formData.email?.trim() || !formData.gender || !formData.birthday}
               >
                 Next
               </button>
@@ -1314,7 +1419,12 @@ const MyProfile = () => {
               <button
                 type="button"
                 onClick={() => toggleSubTab('docs')}
-                className="px-4 py-2 text-white bg-orange-500 rounded-lg hover:bg-orange-600 transition-colors"
+                className={`px-4 py-2 text-white rounded-lg transition-colors ${
+                  !formData.address?.trim() || !formData.city?.trim() || !formData.state_id || !formData.pincode?.trim()
+                    ? 'bg-gray-400 cursor-not-allowed'
+                    : 'bg-orange-500 hover:bg-orange-600'
+                }`}
+                disabled={!formData.address?.trim() || !formData.city?.trim() || !formData.state_id || !formData.pincode?.trim()}
               >
                 Next
               </button>
@@ -1492,7 +1602,22 @@ const MyProfile = () => {
               <button
                 type="button"
                 onClick={() => toggleSubTab('parent')}
-                className="px-4 py-2 text-white bg-orange-500 rounded-lg hover:bg-orange-600 transition-colors"
+                className={`px-4 py-2 text-white rounded-lg transition-colors ${
+                  !formData.aadhaar_number?.trim() || 
+                  (!formData.upload_aadhar && !formData.aadhar_path) || 
+                  !formData.linkedin_profile?.trim() || 
+                  (!formData.passport_photo && !formData.passport_photo_path) || 
+                  (!formData.upload_resume && !formData.resume_path)
+                    ? 'bg-gray-400 cursor-not-allowed'
+                    : 'bg-orange-500 hover:bg-orange-600'
+                }`}
+                disabled={
+                  !formData.aadhaar_number?.trim() || 
+                  (!formData.upload_aadhar && !formData.aadhar_path) || 
+                  !formData.linkedin_profile?.trim() || 
+                  (!formData.passport_photo && !formData.passport_photo_path) || 
+                  (!formData.upload_resume && !formData.resume_path)
+                }
               >
                 Next
               </button>
