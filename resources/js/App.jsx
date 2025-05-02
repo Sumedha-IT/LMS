@@ -30,6 +30,7 @@ import NewDashBoard from './pages/NewDashBoard.jsx';
 import MyCourses from './pages/MyCourses';
 import Topics from './pages/Topics';
 import Announcements from './pages/Announcements';
+import StudentJourney from './pages/StudentJourney';
 
 function App() {
   return (
@@ -79,6 +80,9 @@ function App() {
 
         {/* Announcements */}
         <Route path="/administrator/:id/student-announcements" element={<Announcements />} />
+
+        {/* Student Journey */}
+        <Route path="/administrator/:id/student-journey" element={<StudentJourney />} />
 
         {/* Remove Topics route as functionality is now in MyCourses */}
         {/* <Route path="/administrator/:id/topics/:curriculumId" element={<Topics />} /> */}

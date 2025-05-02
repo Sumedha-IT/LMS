@@ -19,6 +19,7 @@ const NewDashBoard = () => {
   const [error, setError] = useState("");
 
   const navigate = useNavigate();
+  const location = useLocation();
 
   useEffect(() => {
     const fetchDashboardData = async () => {
@@ -141,7 +142,10 @@ const NewDashBoard = () => {
       </section>
 
       <UpcomingAnnouncements />
-      <StudentJourney onStartLearning={() => {}} />
+      <StudentJourney onStartLearning={() => {
+        const path = location.pathname.split('/').slice(0, -1).join('/');
+        window.location.href = `${path}/student-journey`;
+      }} />
 
       {/* Attendance and Assignments */}
       <div className="flex justify-between w-full px-1 my-10">

@@ -7,6 +7,7 @@ use App\Filament\Pages\MyProfilePage;
 use App\Filament\Pages\MyCoursesPage;
 use App\Filament\Pages\AnnouncementsPage;
 use App\Filament\Pages\StudentDashboardPage;
+use App\Filament\Pages\StudentJourneyPage;
 use App\Http\Middleware\ApplyTenantScopes;
 use App\Livewire\MyCustomPersonalInfo;
 use Filament\Http\Middleware\Authenticate;
@@ -94,6 +95,7 @@ class AdministratorPanelProvider extends PanelProvider
                 MyProfilePage::class,
                 MyCoursesPage::class,
                 AnnouncementsPage::class,
+                StudentJourneyPage::class,
             ])
             ->discoverClusters(in: app_path('Filament/Clusters'), for: 'App\\Filament\\Clusters')
             ->discoverWidgets(in: app_path('Filament/Widgets'), for: 'App\\Filament\\Widgets')

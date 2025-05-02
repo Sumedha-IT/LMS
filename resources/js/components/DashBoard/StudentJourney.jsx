@@ -60,24 +60,24 @@ export default function StudentJourney({onStartLearning}) {
   // Calculate overall completion percentage
   const calculateOverallCompletion = () => {
     if (!journey.curriculums || journey.curriculums.length === 0) return 0;
-    
+
     let totalTopics = 0;
     let completedTopics = 0;
-    
+
     journey.curriculums.forEach(curriculum => {
       if (curriculum.topics && curriculum.topics.length > 0) {
         totalTopics += curriculum.topics.length;
         completedTopics += curriculum.topics.filter(topic => topic.is_topic_completed).length;
       }
     });
-    
+
     return totalTopics > 0 ? Math.round((completedTopics / totalTopics) * 100) : 0;
   };
 
   // Calculate completion percentage for a specific curriculum
   const calculateCurriculumCompletion = (topics) => {
     if (!topics || topics.length === 0) return 0;
-    
+
     const completedTopics = topics.filter(topic => topic.is_topic_completed).length;
     return Math.round((completedTopics / topics.length) * 100);
   };
@@ -91,7 +91,7 @@ export default function StudentJourney({onStartLearning}) {
         </div>
       );
     }
-  
+
     // Show error state
     if (error) {
       return (
@@ -121,12 +121,12 @@ export default function StudentJourney({onStartLearning}) {
       {/* Header */}
       <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 3 }}>
         <Typography  variant="h5" sx={{ fontWeight: 500, color: "#424242" }}>
-         
-         <a href={`${trimmedPath}my-courses`}> Student Journey</a>
-         
+
+         <a href={`${trimmedPath}student-journey`}> Student Journey</a>
+
         </Typography>
         <Button
-       onClick={() => { window.location.href = `${trimmedPath}my-courses`; }}
+       onClick={() => { window.location.href = `${trimmedPath}student-journey`; }}
 
           variant="outlined"
           sx={{
