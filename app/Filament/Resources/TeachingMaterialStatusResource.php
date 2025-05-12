@@ -30,8 +30,8 @@ class TeachingMaterialStatusResource extends Resource
 
     protected static ?string $navigationGroup = 'Curriculum';
 
-    protected static ?string $pluralLabel = 'Submissions';
-    protected static ?string $label = 'Submission';
+    protected static ?string $pluralLabel = 'Assignments';
+    protected static ?string $label = 'Assignment';
 
 
     public static function form(Form $form): Form

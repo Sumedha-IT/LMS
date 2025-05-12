@@ -7,6 +7,7 @@ use App\Filament\Pages\MyProfilePage;
 use App\Filament\Pages\MyCoursesPage;
 use App\Filament\Pages\AnnouncementsPage;
 use App\Filament\Pages\StudentDashboardPage;
+use App\Filament\Pages\StudentJourneyPage;
 use App\Http\Middleware\ApplyTenantScopes;
 use App\Livewire\MyCustomPersonalInfo;
 use Filament\Http\Middleware\Authenticate;
@@ -33,6 +34,7 @@ use Filament\Navigation\MenuItem;
 use Jeffgreco13\FilamentBreezy\BreezyCore;
 use Saade\FilamentFullCalendar\FilamentFullCalendarPlugin;
 
+
 class AdministratorPanelProvider extends PanelProvider
 {
     public function panel(Panel $panel): Panel
@@ -44,6 +46,12 @@ class AdministratorPanelProvider extends PanelProvider
             ->path('administrator')
             ->darkMode(false)
             ->login()
+            ->userMenuItems([
+                'account' => MenuItem::make()
+                    ->label(fn () => auth()->user()->name)
+                    ->url('/profile') // Redirect to your React profile page
+                    ->icon('heroicon-o-user'),
+            ])
             ->passwordReset()
             ->sidebarCollapsibleOnDesktop()
             ->databaseNotifications()
@@ -87,6 +95,7 @@ class AdministratorPanelProvider extends PanelProvider
                 MyProfilePage::class,
                 MyCoursesPage::class,
                 AnnouncementsPage::class,
+                StudentJourneyPage::class,
             ])
             ->discoverClusters(in: app_path('Filament/Clusters'), for: 'App\\Filament\\Clusters')
             ->discoverWidgets(in: app_path('Filament/Widgets'), for: 'App\\Filament\\Widgets')

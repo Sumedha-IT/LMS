@@ -1,3 +1,6 @@
+import { useEffect ,useState} from "react";
+import { apiRequest } from "../../utils/api";
+
 export default function MyAssignment({ assignments = [] }) {
   const sampleAssignments = [
     { task: "Physics Chapter", grade: "--/100", completed: false },
@@ -7,6 +10,28 @@ export default function MyAssignment({ assignments = [] }) {
 
   const data = assignments.length > 0 ? assignments : sampleAssignments;
 
+  const [Assignment,setAssignment] = useState([])
+
+    useEffect(() => {
+      const fetchAssignment = async () => {
+        try {
+        
+          const data = await apiRequest("/getUserAssignments");
+         
+          setAssignment(data.data);
+        } catch (err) {
+          console.error("Error fetching announcements:", err);
+         
+        } finally {
+          
+        }
+      };
+  
+      fetchAssignment();
+    }, []);
+
+
+    console.log("Assignment",Assignment)
   return (
     <div className="w-full">
       <div className="w-full bg-white rounded-lg shadow-sm p-6">
@@ -27,20 +52,20 @@ export default function MyAssignment({ assignments = [] }) {
 
         {/* Assignments List */}
         <div className="border-t border-gray-100">
-          {data.length > 0 ? (
-            data.map((assignment, index) => (
+          {Assignment.length > 0 ? (
+            Assignment.map((assignment, index) => (
               <div key={index} className="grid grid-cols-3 py-3 items-center  last:border-none">
-                <div className="text-sm text-gray-700">{assignment.task}</div>
-                <div className="text-sm text-gray-700 text-center">{assignment.grade ?? "--/100"}</div>
+                <div className="text-sm text-gray-700">{assignment.assignments[0].name}</div>
+                <div className="text-sm text-gray-700 text-center">{assignment.assignments[0].marks_scored ?? "--"}/{assignment.assignments[0].total_marks ?? "--"}</div>
                 <div className="flex justify-center">
                   <span
                     className={`px-3 py-1 text-xs rounded-md ${
                       assignment.completed
-                        ? "bg-green-100 text-green-800"
-                        : "bg-red-100 text-red-800"
+                        ? "bg-[#CAFFE2] text-green-800"
+                        : "bg-[#FFCACB] text-red-800"
                     }`}
                   >
-                    {assignment.completed ? "Completed" : "Not Completed"}
+                    {assignment.assignments[0].completed ? "Completed" : "Not Completed"}
                   </span>
                 </div>
               </div>

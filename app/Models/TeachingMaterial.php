@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Batch;
 use App\Models\Topic;
 use Filament\Facades\Filament;
 use App\Models\BatchTeachingMaterial;
@@ -37,5 +38,9 @@ class TeachingMaterial extends Model
     public function topic()
     {
         return $this->belongsTo(Topic::class, 'topic_id', 'id');
+    }
+    public function batches()
+    {
+        return $this->belongsToMany(Batch::class, 'batch_teaching_materials');
     }
 }
