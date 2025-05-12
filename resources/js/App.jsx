@@ -53,7 +53,7 @@ function App() {
         <Route path="/user/:userId/exam/:examId" element={<PermissionUserExam />} />
         <Route path="/user/:userId/exam/:examId/assessment/:examAttemptId" element={<UserExamModuel />} />
         <Route path="/administrator/:id/examinations/user/:userId/exam/:examId/review" element={<ReviewPage />} />
-        <Route path="/administrator/:id/examinations/user/:userId/exam/:examId/review" element={<ReviewPage />} />
+        <Route path="/user/:userId/exam/:examId/review/:examAttemptId" element={<ReviewPage />} />
         <Route path="/user/:userId/exam/:examId/result" element={<ResultComponent />} />
 
         {/* <Route path='/administrator/:id/placement' element={<PlacementCoordinator />} /> */}

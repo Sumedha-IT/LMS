@@ -9,14 +9,102 @@ import ErrorOutlineIcon from '@mui/icons-material/ErrorOutline';
 const ExamScoreDialog = ({ exam, open, onClose }) => {
     if (!exam) return null;
 
-    // Calculate correct and wrong answers
-    const correctAnswers = exam.correctAnswers || Math.floor((exam.obtainedMarks / exam.totalMarks) * exam.totalQuestions);
-    const wrongAnswers = exam.wrongAnswers || (exam.totalQuestions - correctAnswers);
-    const percentage = Math.round((exam.obtainedMarks / exam.totalMarks) * 100);
+    // Process the exam data
+
+    // Ensure we have valid numeric values for calculations
+    const obtainedMarks = parseInt(exam.obtainedMarks || exam.totalMarksObtained || 0);
+    const totalMarks = parseInt(exam.totalMarks || 0);
+
+    // Get actual question count from the exam data
+    // First try to get it from aggregateReport if available
+    let actualQuestionCount = 0;
+
+    // Check if we have report data with aggregateReport
+    if (exam.report && exam.report.aggregateReport) {
+        if (exam.report.aggregateReport.totalQuestions) {
+            actualQuestionCount = parseInt(exam.report.aggregateReport.totalQuestions);
+        } else if (exam.report.aggregateReport.noOfQuestions) {
+            // Some APIs return noOfQuestions instead of totalQuestions
+            actualQuestionCount = parseInt(exam.report.aggregateReport.noOfQuestions);
+        }
+    }
+
+    // If we still don't have a count, try to get it from partWiseReport
+    if (!actualQuestionCount && exam.report && exam.report.partWiseReport && exam.report.partWiseReport.length > 0) {
+        // Sum up questions from all parts
+        actualQuestionCount = exam.report.partWiseReport.reduce((total, part) => {
+            return total + parseInt(part.totalQuestions || part.noOfQuestions || 0);
+        }, 0);
+    }
+
+    // If still no count, try to parse from totalQuestions if it's a string like "x/y"
+    if (!actualQuestionCount && exam.totalQuestions) {
+        const parts = exam.totalQuestions.toString().split('/');
+        if (parts.length > 1) {
+            actualQuestionCount = parseInt(parts[1]);
+        } else {
+            actualQuestionCount = parseInt(exam.totalQuestions);
+        }
+    }
+
+    // Fallback to correct + wrong if we have those values
+    if (!actualQuestionCount && (exam.correctAnswers || exam.wrongAnswers)) {
+        actualQuestionCount = (parseInt(exam.correctAnswers || 0) + parseInt(exam.wrongAnswers || 0));
+    }
+
+    // If we still don't have a count and have report data, try to extract it
+    if (!actualQuestionCount && exam.report) {
+        // Try to find question count in the report structure
+        // This is a silent operation, no logging needed
+    }
+
+    // Use the actual question count from the data, no defaults
+    const totalQuestions = actualQuestionCount || 0;
+
+    // Calculate correct and wrong answers based on actual data
+    // Only calculate if we have a valid question count
+    let correctAnswers = 0;
+    let wrongAnswers = 0;
+
+    // First try to get correct/wrong answers directly from the report
+    if (exam.report && exam.report.aggregateReport) {
+        if (exam.report.aggregateReport.correct !== undefined) {
+            correctAnswers = parseInt(exam.report.aggregateReport.correct);
+        }
+        if (exam.report.aggregateReport.wrong !== undefined) {
+            wrongAnswers = parseInt(exam.report.aggregateReport.wrong);
+        }
+    }
+
+    // If we still don't have correct/wrong counts, try other properties
+    if (correctAnswers === 0 && wrongAnswers === 0) {
+        // Try direct properties on the exam object
+        if (exam.correctAnswers !== undefined) {
+            correctAnswers = parseInt(exam.correctAnswers);
+        }
+        if (exam.wrongAnswers !== undefined) {
+            wrongAnswers = parseInt(exam.wrongAnswers);
+        }
+
+        // If we have totalQuestions but not correct/wrong, estimate based on score
+        if (correctAnswers === 0 && wrongAnswers === 0 && totalQuestions > 0) {
+            if (totalMarks > 0) {
+                // Estimate correct answers based on score percentage
+                correctAnswers = Math.round((obtainedMarks / totalMarks) * totalQuestions);
+                wrongAnswers = totalQuestions - correctAnswers;
+            } else {
+                console.warn('Cannot calculate correct/wrong answers: missing total marks');
+            }
+        }
+    }
+
+    // Calculate final values for display
+
+    const percentage = totalMarks > 0 ? Math.round((obtainedMarks / totalMarks) * 100) : 0;
 
     return (
-        <Dialog 
-            open={open} 
+        <Dialog
+            open={open}
             onClose={onClose}
             maxWidth="md"
             fullWidth
@@ -27,9 +115,9 @@ const ExamScoreDialog = ({ exam, open, onClose }) => {
                 }
             }}
         >
-            <DialogTitle sx={{ 
-                p: 3, 
-                display: 'flex', 
+            <DialogTitle sx={{
+                p: 3,
+                display: 'flex',
                 justifyContent: 'space-between',
                 alignItems: 'center',
                 borderBottom: '1px solid #E2E8F0'
@@ -62,7 +150,7 @@ const ExamScoreDialog = ({ exam, open, onClose }) => {
                             position: 'relative',
                             overflow: 'hidden'
                         }}>
-                            <Box sx={{ 
+                            <Box sx={{
                                 position: 'absolute',
                                 top: 0,
                                 left: 0,
@@ -70,10 +158,10 @@ const ExamScoreDialog = ({ exam, open, onClose }) => {
                                 height: '4px',
                                 background: percentage >= 70 ? '#48BB78' : percentage >= 40 ? '#F6AD55' : '#F56565'
                             }} />
-                            <Box sx={{ 
-                                width: 48, 
-                                height: 48, 
-                                borderRadius: '50%', 
+                            <Box sx={{
+                                width: 48,
+                                height: 48,
+                                borderRadius: '50%',
                                 bgcolor: '#FFF5F3',
                                 display: 'flex',
                                 alignItems: 'center',
@@ -84,7 +172,7 @@ const ExamScoreDialog = ({ exam, open, onClose }) => {
                                 <GradeOutlinedIcon sx={{ color: '#f4511e' }} />
                             </Box>
                             <Typography variant="h4" sx={{ fontWeight: 700, color: '#2D3748', mb: 1 }}>
-                                {exam.obtainedMarks}/{exam.totalMarks}
+                                {obtainedMarks}/{totalMarks}
                             </Typography>
                             <Typography variant="body2" sx={{ color: '#718096' }}>
                                 Total Score ({percentage}%)
@@ -98,10 +186,10 @@ const ExamScoreDialog = ({ exam, open, onClose }) => {
                             borderRadius: '16px',
                             textAlign: 'center'
                         }}>
-                            <Box sx={{ 
-                                width: 48, 
-                                height: 48, 
-                                borderRadius: '50%', 
+                            <Box sx={{
+                                width: 48,
+                                height: 48,
+                                borderRadius: '50%',
                                 bgcolor: '#F0FFF4',
                                 display: 'flex',
                                 alignItems: 'center',
@@ -112,7 +200,7 @@ const ExamScoreDialog = ({ exam, open, onClose }) => {
                                 <CheckCircleOutlineIcon sx={{ color: '#48BB78' }} />
                             </Box>
                             <Typography variant="h4" sx={{ fontWeight: 700, color: '#2D3748', mb: 1 }}>
-                                {correctAnswers}/{exam.totalQuestions}
+                                {correctAnswers}/{totalQuestions}
                             </Typography>
                             <Typography variant="body2" sx={{ color: '#718096' }}>
                                 Correct Answers
@@ -126,10 +214,10 @@ const ExamScoreDialog = ({ exam, open, onClose }) => {
                             borderRadius: '16px',
                             textAlign: 'center'
                         }}>
-                            <Box sx={{ 
-                                width: 48, 
-                                height: 48, 
-                                borderRadius: '50%', 
+                            <Box sx={{
+                                width: 48,
+                                height: 48,
+                                borderRadius: '50%',
                                 bgcolor: '#FFF5F5',
                                 display: 'flex',
                                 alignItems: 'center',
@@ -140,7 +228,7 @@ const ExamScoreDialog = ({ exam, open, onClose }) => {
                                 <ErrorOutlineIcon sx={{ color: '#E53E3E' }} />
                             </Box>
                             <Typography variant="h4" sx={{ fontWeight: 700, color: '#2D3748', mb: 1 }}>
-                                {wrongAnswers}/{exam.totalQuestions}
+                                {wrongAnswers}/{totalQuestions}
                             </Typography>
                             <Typography variant="body2" sx={{ color: '#718096' }}>
                                 Wrong Answers
@@ -157,7 +245,7 @@ const ExamScoreDialog = ({ exam, open, onClose }) => {
                             Total Questions
                         </Typography>
                         <Typography variant="body1" sx={{ fontWeight: 600, color: '#2D3748' }}>
-                            {exam.totalQuestions}
+                            {totalQuestions}
                         </Typography>
                     </Box>
                 </Box>

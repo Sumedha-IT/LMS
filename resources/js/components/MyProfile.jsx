@@ -9,13 +9,14 @@ import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { BsPersonFill, BsBriefcaseFill, BsBookFill, BsAwardFill } from 'react-icons/bs';
 import { MdLocationOn, MdEmail, MdPhone } from 'react-icons/md';
-import { FiExternalLink } from 'react-icons/fi';
+import { FiExternalLink, FiFile, FiEye } from 'react-icons/fi';
 import './MyProfile.css';
 import { FiPlus, FiTrash2, FiEdit2 } from 'react-icons/fi';
 import { Document, Page, Text, View, StyleSheet, PDFDownloadLink } from '@react-pdf/renderer';
 import { AiOutlineFilePdf } from 'react-icons/ai';
 
-const API_URL = import.meta.env.VITE_APP_API_URL;
+// Make sure we're using the correct API URL
+const API_URL = import.meta.env.VITE_APP_API_URL || 'http://localhost:8000';
 // const API_URL = import.meta.env.REACT_APP_API_URL
 
 // Update mainMenu array
@@ -185,7 +186,7 @@ const MyProfile = () => {
   const [photoPreview, setPhotoPreview] = useState(null);
   const [deleteConfirmations, setDeleteConfirmations] = useState({});
   const [projects, setProjects] = useState([]);
-  const [showProjectModal, setShowProjectModal] = useState(false);
+  // const [showProjectModal, setShowProjectModal] = useState(false); // Unused, replaced by showProjectForm
   const [editingProject, setEditingProject] = useState(null);
   const [projectForm, setProjectForm] = useState({
     title: '',
@@ -204,6 +205,11 @@ const MyProfile = () => {
   const [showProjectForm, setShowProjectForm] = useState(false);
   const [showResumeModal, setShowResumeModal] = useState(false);
   const [selectedTemplate, setSelectedTemplate] = useState('modern');
+  const [pdfViewerModal, setPdfViewerModal] = useState({
+    isOpen: false,
+    fileUrl: '',
+    fileName: ''
+  });
 
   useEffect(() => {
     // Fetch basic profile data on component mount
@@ -221,6 +227,7 @@ const MyProfile = () => {
         }
 
         // Fetch basic profile data and projects in parallel
+        // Make sure we're using absolute URLs with the correct base
         const [profileResponse, projectsResponse] = await Promise.all([
           axios.get(`${API_URL}/api/profile`, {
             headers: {
@@ -228,12 +235,14 @@ const MyProfile = () => {
               'Authorization': `Bearer ${userData.token}`,
             },
             withCredentials: true,
+            baseURL: API_URL, // Ensure the base URL is set correctly
           }),
           axios.get(`${API_URL}/api/projects`, {
             headers: {
               'Accept': 'application/json',
               'Authorization': `Bearer ${userData.token}`,
-            }
+            },
+            baseURL: API_URL, // Ensure the base URL is set correctly
           })
         ]);
 
@@ -281,7 +290,8 @@ const MyProfile = () => {
             headers: {
               'Accept': 'application/json',
               'Authorization': `Bearer ${userData.token}`,
-            }
+            },
+            baseURL: API_URL // Ensure the base URL is set correctly
           });
 
           if (certificationsResponse.data) {
@@ -300,7 +310,8 @@ const MyProfile = () => {
             headers: {
               'Accept': 'application/json',
               'Authorization': `Bearer ${userData.token}`,
-            }
+            },
+            baseURL: API_URL // Ensure the base URL is set correctly
           });
 
           if (projectsResponse.data.success) {
@@ -314,7 +325,8 @@ const MyProfile = () => {
             headers: {
               'Accept': 'application/json',
               'Authorization': userData.token,
-            }
+            },
+            baseURL: API_URL // Ensure the base URL is set correctly
           });
           setDegreeTypes(degreeResponse.data.data || []);
 
@@ -325,6 +337,7 @@ const MyProfile = () => {
               'Authorization': userData.token,
             },
             withCredentials: true,
+            baseURL: API_URL // Ensure the base URL is set correctly
           });
 
           const educationData = educationResponse.data.data || [];
@@ -342,7 +355,8 @@ const MyProfile = () => {
               headers: {
                 'Accept': 'application/json',
                 'Authorization': userData.token,
-              }
+              },
+              baseURL: API_URL // Ensure the base URL is set correctly
             })
           );
 
@@ -400,6 +414,7 @@ const MyProfile = () => {
           'Authorization': userData.token,
         },
         withCredentials: true,
+        baseURL: API_URL // Ensure the base URL is set correctly
       });
 
       setSpecializations(response.data.data || []);
@@ -424,6 +439,7 @@ const MyProfile = () => {
           'Authorization': `Bearer ${userData.token}`, // Ensure Bearer prefix is added
         },
         withCredentials: true,
+        baseURL: API_URL // Ensure the base URL is set correctly
       });
 
       setFormData((prev) => ({
@@ -574,7 +590,8 @@ const MyProfile = () => {
           'Authorization': `Bearer ${userData.token}`,
           'Content-Type': 'application/json'
         },
-        withCredentials: true
+        withCredentials: true,
+        baseURL: API_URL // Ensure the base URL is set correctly
       });
 
       if (response.data) {
@@ -612,7 +629,8 @@ const MyProfile = () => {
           'Authorization': `Bearer ${userData.token}`,
           'Content-Type': 'application/json'
         },
-        withCredentials: true
+        withCredentials: true,
+        baseURL: API_URL // Ensure the base URL is set correctly
       });
 
       if (response.data) {
@@ -653,12 +671,38 @@ const MyProfile = () => {
   };
 
   const handleChange = (e) => {
-    const { name, value, type, checked } = e.target;
-
-    setFormData((prev) => ({
-      ...prev,
-      [name]: type === 'checkbox' ? checked : value,
-    }));
+    const { name, value } = e.target;
+    
+    // Add validation for Aadhaar number and PIN code
+    if (name === 'aadhaar_number') {
+      // Only allow numbers and limit to 12 digits
+      if (value.length <= 12 && /^\d*$/.test(value)) {
+        setFormData(prev => ({
+          ...prev,
+          [name]: value
+        }));
+      }
+    } else if (name === 'pincode') {
+      // Only allow numbers and limit to 6 digits
+      if (value.length <= 6 && /^\d*$/.test(value)) {
+        setFormData(prev => ({
+          ...prev,
+          [name]: value
+        }));
+      }
+    } else if (name === 'parent_aadhar') {
+      if (value.length <= 12 && /^\d*$/.test(value)) {
+        setFormData(prev => ({
+          ...prev,
+          [name]: value
+        }));
+      }
+    } else {
+      setFormData(prev => ({
+        ...prev,
+        [name]: value
+      }));
+    }
   };
 
   const handleFileChange = (e) => {
@@ -863,7 +907,6 @@ const MyProfile = () => {
 
     // Parent Details
     if (!data.parent_name?.trim()) errors.push('Parent name is required');
-    if (!data.parent_email?.trim()) errors.push('Parent email is required');
     if (!data.parent_aadhar?.trim()) errors.push('Parent Aadhaar is required');
     if (!data.parent_occupation?.trim()) errors.push('Parent occupation is required');
     if (!data.residential_address?.trim()) errors.push('Residential address is required');
@@ -1307,6 +1350,9 @@ const MyProfile = () => {
                   onChange={handleChange}
                   className="w-full p-2 border rounded-lg focus:ring-orange-500 focus:border-orange-500"
                   required
+                  pattern="\d{6}"
+                  title="PIN code must be exactly 6 digits"
+                  maxLength={6}
                 />
               </div>
             </div>
@@ -1336,6 +1382,9 @@ const MyProfile = () => {
                   onChange={handleChange}
                   className="w-full p-2 border rounded-lg focus:ring-orange-500 focus:border-orange-500"
                   required
+                  pattern="\d{12}"
+                  title="Aadhaar number must be exactly 12 digits"
+                  maxLength={12}
                 />
 
                 <div className="mt-3">
@@ -1540,6 +1589,9 @@ const MyProfile = () => {
                   onChange={handleChange}
                   className="w-full p-2 border rounded-lg focus:ring-orange-500 focus:border-orange-500"
                   required
+                  pattern="\d{12}"
+                  title="Parent Aadhaar must be exactly 12 digits"
+                  maxLength={12}
                 />
               </div>
               <div>
@@ -1732,7 +1784,7 @@ const MyProfile = () => {
 
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Institute Name<span className="text-red-500">*</span>
+                        Institute/University Name<span className="text-red-500">*</span>
                       </label>
                       <input
                         type="text"
@@ -1871,12 +1923,12 @@ const MyProfile = () => {
 
             <div className="bg-white rounded-lg p-6">
               <div className="flex justify-end mb-6">
-                {!showProjectForm && (
+                {!showProjectForm && projects.length > 0 && (
                   <button
                     onClick={() => setShowProjectForm(true)}
-                    className="flex items-center gap-2 px-4 py-2 text-white bg-orange-500 rounded-lg hover:bg-orange-600 transition-colors"
+                    className="add-project-btn"
                   >
-                    <FiPlus className="w-5 h-5" />
+                    <FiPlus className="add-project-btn-icon" />
                     Add Project
                   </button>
                 )}
@@ -1886,10 +1938,15 @@ const MyProfile = () => {
               {!showProjectForm && projects.length > 0 && (
                 <div className="space-y-6">
                   {projects.map((project, index) => (
-                    <div key={project.id} className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-                      <div className="flex justify-between items-start mb-4">
-                        <h3 className="text-lg font-semibold">{project.title}</h3>
-                        <div className="flex space-x-2">
+                    <div key={project.id} className="project-card">
+                      <div className="project-card-header">
+                        <h3 className="project-card-title">
+                          <span className="project-card-title-icon">
+                            <MdBuild />
+                          </span>
+                          {project.title}
+                        </h3>
+                        <div className="project-card-actions">
                           <button
                             onClick={() => {
                               setEditingProject(project);
@@ -1909,206 +1966,296 @@ const MyProfile = () => {
                               });
                               setShowProjectForm(true);
                             }}
-                            className="p-2 text-gray-600 hover:text-orange-500"
+                            className="project-card-action-btn project-card-edit-btn"
+                            title="Edit project"
                           >
                             <FiEdit2 className="w-5 h-5" />
                           </button>
                           <button
                             onClick={() => handleDeleteProject(project.id)}
-                            className="p-2 text-gray-600 hover:text-red-500"
+                            className="project-card-action-btn project-card-delete-btn"
+                            title="Delete project"
                           >
                             <FiTrash2 className="w-5 h-5" />
                           </button>
                         </div>
                       </div>
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div>
-                          <p className="text-sm text-gray-600">Description</p>
-                          <p className="mt-1">{project.description}</p>
+
+                      <div className="project-card-body">
+                        <div className="project-card-section">
+                          <h4 className="project-card-section-title">Description</h4>
+                          <p className="project-card-section-content">{project.description}</p>
                         </div>
-                        <div>
-                          <p className="text-sm text-gray-600">Technologies</p>
-                          <p className="mt-1">{project.technologies}</p>
-                        </div>
-                        <div>
-                          <p className="text-sm text-gray-600">Project Type</p>
-                          <p className="mt-1">{project.project_type}</p>
-                        </div>
-                        <div>
-                          <p className="text-sm text-gray-600">Duration</p>
-                          <p className="mt-1">
-                            {new Date(project.start_date).toLocaleDateString()} -
-                            {project.is_ongoing ? ' Present' : ` ${new Date(project.end_date).toLocaleDateString()}`}
-                          </p>
-                        </div>
-                        {project.organization && (
-                          <div>
-                            <p className="text-sm text-gray-600">Organization</p>
-                            <p className="mt-1">{project.organization}</p>
+
+                        <div className="project-card-section">
+                          <h4 className="project-card-section-title">Technologies</h4>
+                          <div className="project-card-technologies">
+                            {project.technologies && project.technologies.split(',').map((tech, i) => (
+                              <span key={i} className="project-card-tag">
+                                {tech.trim()}
+                              </span>
+                            ))}
                           </div>
-                        )}
-                        {project.project_url && (
-                          <div>
-                            <p className="text-sm text-gray-600">Project URL</p>
-                            <a
-                              href={project.project_url}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="mt-1 text-orange-500 hover:underline flex items-center gap-1"
-                            >
-                              {project.project_url}
-                              <FiExternalLink className="w-4 h-4" />
-                            </a>
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <div className="project-card-section">
+                            <h4 className="project-card-section-title">Project Type</h4>
+                            <div>
+                              {project.project_type && (
+                                <span className={`project-card-tag project-card-tag-${project.project_type.toLowerCase()}`}>
+                                  {project.project_type}
+                                </span>
+                              )}
+                              {project.is_ongoing && (
+                                <span className="project-card-tag project-card-tag-ongoing">
+                                  Ongoing
+                                </span>
+                              )}
+                            </div>
                           </div>
-                        )}
+
+                          {project.organization && (
+                            <div className="project-card-section">
+                              <h4 className="project-card-section-title">Organization</h4>
+                              <p className="project-card-section-content">{project.organization}</p>
+                            </div>
+                          )}
+
+                          {project.key_achievements && (
+                            <div className="project-card-section">
+                              <h4 className="project-card-section-title">Key Achievements</h4>
+                              <p className="project-card-section-content">{project.key_achievements}</p>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Project Files Section */}
+                      {project.project_files && (
+                        <div className="project-card-section">
+                          <h4 className="project-card-section-title" style={{ fontFamily: '"Poppins", "Poppins-SemiBold", sans-serif' }}>
+                            Project Files
+                          </h4>
+                          <div className="flex flex-wrap gap-2 mt-2">
+                            {JSON.parse(project.project_files || '[]').map((file, fileIndex) => (
+                              <button
+                                key={fileIndex}
+                                onClick={() => {
+                                  const fileUrl = getDocumentUrl(file.path);
+                                  openPdfViewer(fileUrl, file.name);
+                                }}
+                                className="flex items-center gap-1 px-3 py-1.5 bg-gray-100 hover:bg-gray-200 rounded-md text-sm transition-colors"
+                                style={{ fontFamily: '"Poppins", "Poppins-Medium", sans-serif' }}
+                              >
+                                <FiEye className="w-4 h-4 text-orange-500" />
+                                <span className="truncate max-w-[150px]">{file.name}</span>
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      <div className="project-card-footer">
+                        <div className="project-card-date">
+                          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                          </svg>
+                          {new Date(project.start_date).toLocaleDateString()} -
+                          {project.is_ongoing ? ' Present' : ` ${new Date(project.end_date).toLocaleDateString()}`}
+                        </div>
                       </div>
                     </div>
                   ))}
                 </div>
               )}
 
+              {/* Empty state when no projects */}
+              {!showProjectForm && projects.length === 0 && (
+                <div className="project-empty-state">
+                  <div className="project-empty-state-icon">
+                    <MdBuild />
+                  </div>
+                  <h3 className="project-empty-state-title" style={{ fontFamily: '"Poppins", "Poppins-SemiBold", sans-serif' }}>No projects yet</h3>
+                  <p className="project-empty-state-text" style={{ fontFamily: '"Poppins", "Poppins-Regular", sans-serif' }}>
+                    Showcase your skills and experience by adding projects you've worked on.
+                  </p>
+                  <button
+                    onClick={() => setShowProjectForm(true)}
+                    className="add-project-btn"
+                    style={{ fontFamily: '"Poppins", "Poppins-Medium", sans-serif' }}
+                  >
+                    <FiPlus className="add-project-btn-icon" />
+                    Add Your First Project
+                  </button>
+                </div>
+              )}
+
               {/* Project Form */}
               {showProjectForm && (
-                <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-6">
-                  <h3 className="text-lg font-semibold mb-4">
-                    {editingProject ? 'Edit Project' : 'Add New Project'}
-                  </h3>
+                <div className="project-form">
+                  <div className="project-form-header">
+                    <h3 className="project-form-title" style={{ fontFamily: '"Poppins", "Poppins-SemiBold", sans-serif' }}>
+                      <span className="project-form-title-icon">
+                        <MdBuild />
+                      </span>
+                      {editingProject ? 'Edit Project' : 'Add New Project'}
+                    </h3>
+                  </div>
+
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <div className="project-form-group">
+                      <label className="project-form-label">
                         Title<span className="text-red-500">*</span>
                       </label>
                       <input
                         type="text"
                         value={projectForm.title}
                         onChange={(e) => setProjectForm({...projectForm, title: e.target.value})}
-                        className="w-full p-2 border rounded-lg focus:ring-orange-500 focus:border-orange-500"
+                        className="project-form-input"
                         placeholder="Enter project title"
                         required
                       />
                     </div>
 
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <div className="project-form-group">
+                      <label className="project-form-label">
+                        Project Type
+                      </label>
+                      <select
+                        value={projectForm.project_type}
+                        onChange={(e) => setProjectForm({...projectForm, project_type: e.target.value})}
+                        className="project-form-input"
+                      >
+                        <option value="">Select Project Type</option>
+                        <option value="Personal">Personal</option>
+                        <option value="Academic">Academic</option>
+                        <option value="Professional">Professional</option>
+                      </select>
+                    </div>
+
+                    <div className="project-form-group md:col-span-2">
+                      <label className="project-form-label">
+                        Description<span className="text-red-500">*</span>
+                      </label>
+                      <textarea
+                        value={projectForm.description}
+                        onChange={(e) => setProjectForm({...projectForm, description: e.target.value})}
+                        className="project-form-input project-form-textarea"
+                        rows={4}
+                        placeholder="Describe your project"
+                        required
+                      />
+                    </div>
+
+                    <div className="project-form-group">
+                      <label className="project-form-label">
                         Technologies
                       </label>
                       <input
                         type="text"
                         value={projectForm.technologies}
                         onChange={(e) => setProjectForm({...projectForm, technologies: e.target.value})}
-                        className="w-full p-2 border rounded-lg focus:ring-orange-500 focus:border-orange-500"
-                        placeholder="e.g., React, Node.js, MongoDB"
+                        className="project-form-input"
+                        placeholder="e.g. React, Node.js, MongoDB (comma separated)"
                       />
                     </div>
 
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Project Type
-                      </label>
-                      <select
-                        value={projectForm.project_type}
-                        onChange={(e) => setProjectForm({...projectForm, project_type: e.target.value})}
-                        className="w-full p-2 border rounded-lg focus:ring-orange-500 focus:border-orange-500"
-                      >
-                        <option value="">Select Type</option>
-                        <option value="Academic">Academic</option>
-                        <option value="Personal">Personal</option>
-                        <option value="Professional">Professional</option>
-                      </select>
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Start Date<span className="text-red-500">*</span>
-                      </label>
-                      <input
-                        type="date"
-                        value={projectForm.start_date}
-                        onChange={(e) => setProjectForm({...projectForm, start_date: e.target.value})}
-                        className="w-full p-2 border rounded-lg focus:ring-orange-500 focus:border-orange-500"
-                        required
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        End Date
-                      </label>
-                      <div className="space-y-2">
-                        <input
-                          type="date"
-                          value={projectForm.end_date}
-                          onChange={(e) => setProjectForm({...projectForm, end_date: e.target.value})}
-                          className="w-full p-2 border rounded-lg focus:ring-orange-500 focus:border-orange-500"
-                          disabled={projectForm.is_ongoing}
-                        />
-                        <label className="inline-flex items-center">
-                          <input
-                            type="checkbox"
-                            checked={projectForm.is_ongoing}
-                            onChange={(e) => setProjectForm({...projectForm, is_ongoing: e.target.checked})}
-                            className="form-checkbox h-4 w-4 text-orange-500"
-                          />
-                          <span className="ml-2 text-sm text-gray-700">This is an ongoing project</span>
-                        </label>
-                      </div>
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Organization
-                      </label>
-                      <input
-                        type="text"
-                        value={projectForm.organization}
-                        onChange={(e) => setProjectForm({...projectForm, organization: e.target.value})}
-                        className="w-full p-2 border rounded-lg focus:ring-orange-500 focus:border-orange-500"
-                        placeholder="Organization name"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <div className="project-form-group">
+                      <label className="project-form-label">
                         Project URL
                       </label>
                       <input
                         type="url"
                         value={projectForm.project_url}
                         onChange={(e) => setProjectForm({...projectForm, project_url: e.target.value})}
-                        className="w-full p-2 border rounded-lg focus:ring-orange-500 focus:border-orange-500"
-                        placeholder="https://"
+                        className="project-form-input"
+                        placeholder="https://example.com"
                       />
                     </div>
 
-                    <div className="md:col-span-2">
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Description<span className="text-red-500">*</span>
+                    <div className="project-form-group">
+                      <label className="project-form-label">
+                        Start Date<span className="text-red-500">*</span>
                       </label>
-                      <textarea
-                        value={projectForm.description}
-                        onChange={(e) => setProjectForm({...projectForm, description: e.target.value})}
-                        className="w-full p-2 border rounded-lg focus:ring-orange-500 focus:border-orange-500"
-                        rows={4}
-                        placeholder="Project description"
+                      <input
+                        type="date"
+                        value={projectForm.start_date}
+                        onChange={(e) => setProjectForm({...projectForm, start_date: e.target.value})}
+                        className="project-form-input"
                         required
                       />
                     </div>
 
-                    <div className="md:col-span-2">
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <div className="project-form-group">
+                      <label className="project-form-label">
+                        End Date
+                      </label>
+                      <div className="space-y-2">
+                        <div className="project-form-checkbox-group">
+                          <input
+                            type="checkbox"
+                            id="is_ongoing"
+                            checked={projectForm.is_ongoing}
+                            onChange={(e) => setProjectForm({...projectForm, is_ongoing: e.target.checked})}
+                            className="project-form-checkbox"
+                          />
+                          <label htmlFor="is_ongoing" className="text-sm text-gray-700">
+                            This is an ongoing project
+                          </label>
+                        </div>
+                        {!projectForm.is_ongoing && (
+                          <input
+                            type="date"
+                            value={projectForm.end_date}
+                            onChange={(e) => setProjectForm({...projectForm, end_date: e.target.value})}
+                            className="project-form-input"
+                          />
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="project-form-group">
+                      <label className="project-form-label">
+                        Organization
+                      </label>
+                      <input
+                        type="text"
+                        value={projectForm.organization}
+                        onChange={(e) => setProjectForm({...projectForm, organization: e.target.value})}
+                        className="project-form-input"
+                        placeholder="Organization name"
+                      />
+                    </div>
+
+                    <div className="project-form-group">
+                      <label className="project-form-label">
+                        Client Name (if applicable)
+                      </label>
+                      <input
+                        type="text"
+                        value={projectForm.client_name}
+                        onChange={(e) => setProjectForm({...projectForm, client_name: e.target.value})}
+                        className="project-form-input"
+                        placeholder="Client or company name"
+                      />
+                    </div>
+
+                    <div className="project-form-group md:col-span-2">
+                      <label className="project-form-label">
                         Key Achievements
                       </label>
                       <textarea
                         value={projectForm.key_achievements}
                         onChange={(e) => setProjectForm({...projectForm, key_achievements: e.target.value})}
-                        className="w-full p-2 border rounded-lg focus:ring-orange-500 focus:border-orange-500"
+                        className="project-form-input project-form-textarea"
                         rows={3}
                         placeholder="List your key achievements in this project"
                       />
                     </div>
 
-                    <div className="md:col-span-2">
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <div className="project-form-group md:col-span-2">
+                      <label className="project-form-label">
                         Project Files
                       </label>
                       <div className="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-lg">
@@ -2135,7 +2282,7 @@ const MyProfile = () => {
                       {/* Display uploaded files */}
                       {projectForm.project_files.length > 0 && (
                         <div className="mt-4">
-                          <h4 className="text-sm font-medium text-gray-700">Uploaded Files:</h4>
+                          <h4 className="text-sm font-medium text-gray-700">Selected files:</h4>
                           <ul className="mt-2 divide-y divide-gray-200">
                             {projectForm.project_files.map((file, index) => (
                               <li key={index} className="py-2 flex justify-between items-center">
@@ -2155,20 +2302,22 @@ const MyProfile = () => {
                     </div>
                   </div>
 
-                  <div className="flex justify-end space-x-4 mt-6">
+                  <div className="project-form-actions">
                     <button
                       type="button"
                       onClick={resetProjectForm}
-                      className="px-4 py-2 text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
+                      className="project-form-cancel-btn"
+                      style={{ fontFamily: '"Poppins", "Poppins-Medium", sans-serif' }}
                     >
                       Cancel
                     </button>
                     <button
                       type="button"
                       onClick={handleProjectSubmit}
-                      className="px-4 py-2 text-white bg-orange-500 rounded-lg hover:bg-orange-600 transition-colors"
+                      className="project-form-submit-btn"
+                      style={{ fontFamily: '"Poppins", "Poppins-Medium", sans-serif' }}
                     >
-                      {editingProject ? 'Update Project' : 'Add Project'}
+                      {editingProject ? 'Update Project' : 'Save'}
                     </button>
                   </div>
                 </div>
@@ -2307,9 +2456,7 @@ const MyProfile = () => {
                             target="_blank"
                             rel="noopener noreferrer"
                             className="text-orange-500 hover:text-orange-600"
-                            onClick={(e) => {
-                              // View certificate
-                            }}
+
                           >
                             View Certificate
                           </a>
@@ -2729,8 +2876,15 @@ const MyProfile = () => {
     }));
   };
 
-  const handleDeleteProject = async (projectId) => {
-    if (!confirm('Are you sure you want to delete this project?')) return;
+  const [projectToDelete, setProjectToDelete] = useState(null);
+
+  const handleDeleteProject = (projectId) => {
+    // Set the project ID to delete, which will trigger the confirmation UI
+    setProjectToDelete(projectId);
+  };
+
+  const confirmDeleteProject = async () => {
+    if (!projectToDelete) return;
 
     try {
       const userInfo = getCookie("user_info");
@@ -2741,7 +2895,7 @@ const MyProfile = () => {
         return;
       }
 
-      const response = await axios.delete(`${API_URL}/api/projects/${projectId}`, {
+      const response = await axios.delete(`${API_URL}/api/projects/${projectToDelete}`, {
         headers: {
           'Accept': 'application/json',
           'Authorization': `Bearer ${userData.token}`
@@ -2755,7 +2909,15 @@ const MyProfile = () => {
       }
     } catch (error) {
       toast.error('Failed to delete project');
+    } finally {
+      // Reset the project to delete
+      setProjectToDelete(null);
     }
+  };
+
+  const cancelDeleteProject = () => {
+    // Reset the project to delete
+    setProjectToDelete(null);
   };
 
   const resetProjectForm = () => {
@@ -2776,24 +2938,25 @@ const MyProfile = () => {
     setShowProjectForm(false);
   };
 
-  const handleAddProject = () => {
-    setEditingProject(null);
-    setProjectForm({
-      title: '',
-      description: '',
-      technologies: '',
-      project_url: '',
-      start_date: '',
-      end_date: '',
-      is_ongoing: false,
-      key_achievements: '',
-      project_type: '',
-      client_name: '',
-      organization: '',
-      project_files: []
-    });
-    setShowProjectModal(true);
-  };
+  // This function is used in StudentProfile.jsx but kept here for reference
+  // const handleAddProject = () => {
+  //   setEditingProject(null);
+  //   setProjectForm({
+  //     title: '',
+  //     description: '',
+  //     technologies: '',
+  //     project_url: '',
+  //     start_date: '',
+  //     end_date: '',
+  //     is_ongoing: false,
+  //     key_achievements: '',
+  //     project_type: '',
+  //     client_name: '',
+  //     organization: '',
+  //     project_files: []
+  //   });
+  //   setShowProjectModal(true);
+  // };
 
   // Add the resume templates
   const resumeTemplates = [
@@ -3099,8 +3262,89 @@ const MyProfile = () => {
     );
   };
 
+  // Confirmation Dialog Component
+  const DeleteConfirmationDialog = ({ isOpen, onConfirm, onCancel }) => {
+    if (!isOpen) return null;
+
+    return (
+      <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+        <div className="bg-white rounded-lg p-6 max-w-md w-full">
+          <h3 className="text-lg font-semibold mb-4">Confirm Deletion</h3>
+          <p className="mb-6">Are you sure you want to delete this project? This action cannot be undone.</p>
+          <div className="flex justify-end space-x-4">
+            <button
+              onClick={onCancel}
+              className="px-4 py-2 text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={onConfirm}
+              className="px-4 py-2 text-white bg-red-500 rounded-lg hover:bg-red-600 transition-colors"
+            >
+              Delete
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  // Function to open PDF viewer modal
+  const openPdfViewer = (fileUrl, fileName) => {
+    setPdfViewerModal({
+      isOpen: true,
+      fileUrl,
+      fileName
+    });
+  };
+
+  // Function to close PDF viewer modal
+  const closePdfViewer = () => {
+    setPdfViewerModal({
+      isOpen: false,
+      fileUrl: '',
+      fileName: ''
+    });
+  };
+
   return (
     <div className="min-h-screen bg-gray-50">
+      {/* Delete Confirmation Dialog */}
+      <DeleteConfirmationDialog
+        isOpen={projectToDelete !== null}
+        onConfirm={confirmDeleteProject}
+        onCancel={cancelDeleteProject}
+      />
+
+      {/* PDF Viewer Modal */}
+      {pdfViewerModal.isOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-75">
+          <div className="bg-white rounded-lg w-11/12 h-5/6 max-w-6xl flex flex-col">
+            <div className="flex justify-between items-center p-4 border-b">
+              <h3 className="text-lg font-semibold" style={{ fontFamily: '"Poppins", "Poppins-SemiBold", sans-serif' }}>
+                {pdfViewerModal.fileName}
+              </h3>
+              <button
+                onClick={closePdfViewer}
+                className="text-gray-500 hover:text-gray-700"
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+            <div className="flex-1 p-4">
+              <iframe
+                src={pdfViewerModal.fileUrl}
+                className="w-full h-full border-0"
+                title={pdfViewerModal.fileName}
+              />
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="profile-header">
         <div
           className="profile-header-bg"
