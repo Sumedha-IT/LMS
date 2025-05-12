@@ -39,7 +39,7 @@ const UserDashboard = () => {
                                 <button className="bg-transparent hover:bg-white/10 transition-colors border border-white rounded-full px-5 py-2 text-sm font-medium">
                                     Set Reminder
                                 </button>
-                                <button 
+                                <button
                                     className="bg-white hover:bg-white/90 transition-colors text-[#F03A17] rounded-full px-5 py-2 text-sm font-medium"
                                     onClick={() => setShowExams(true)}
                                 >
@@ -67,16 +67,21 @@ const UserDashboard = () => {
                             </div>
                             <div className="w-[40%] h-full flex items-center justify-center">
                                 <img
-                                    src="/storage/image.png"
+                                    src="/images/image%2067.png"
                                     alt="Student illustration"
                                     className="object-contain"
+                                    onError={(e) => {
+                                        e.target.onerror = null;
+                                        e.target.src = "/images/placeholder.jpg";
+                                        console.log("Image failed to load, using fallback");
+                                    }}
                                 />
                             </div>
                         </div>
 
 
                        <div className=' w-full items-center flex justify-center border-t-[0.5px] py-2 border-[#E53510]'>
-                       <button 
+                       <button
                                     className="bg-[#F03A17] hover:bg-[#f03b17cc] transition-colors  text-white rounded-full px-5 py-2 text-sm font-medium"
                                     onClick={() => {
                                         setShowExams(true);
@@ -86,7 +91,7 @@ const UserDashboard = () => {
                                      View Result
                                 </button>
                        </div>
-                        
+
                     </div>
                 </div>
 

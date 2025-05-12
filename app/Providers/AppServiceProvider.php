@@ -7,6 +7,9 @@ use Filament\Forms\Components\DateTimePicker;
 use Filament\Resources\Resource;
 use Illuminate\Auth\Notifications\ResetPassword;
 use Illuminate\Support\ServiceProvider;
+use Filament\Pages\Dashboard;
+use Filament\Navigation\MenuItem;
+use Filament\Facades\Filament;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -30,6 +33,14 @@ class AppServiceProvider extends ServiceProvider
         DateTimePicker::configureUsing(function (DateTimePicker $datePicker) {
             $datePicker->native(false);
             $datePicker->displayFormat('d/m/Y H:i');
+        });
+        Filament::serving(function () {
+            Filament::registerUserMenuItems([
+                'account' => MenuItem::make()
+                    ->label(fn () => auth()->user()->name) // Displays the user's name (e.g., "gurmeet")
+                    ->url('/profile') // Redirect to your React profile page
+                    ->icon('heroicon-o-user'), // Optional: Add an icon
+            ]);
         });
 
 

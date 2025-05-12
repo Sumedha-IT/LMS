@@ -60,24 +60,24 @@ export default function StudentJourney({onStartLearning}) {
   // Calculate overall completion percentage
   const calculateOverallCompletion = () => {
     if (!journey.curriculums || journey.curriculums.length === 0) return 0;
-    
+
     let totalTopics = 0;
     let completedTopics = 0;
-    
+
     journey.curriculums.forEach(curriculum => {
       if (curriculum.topics && curriculum.topics.length > 0) {
         totalTopics += curriculum.topics.length;
         completedTopics += curriculum.topics.filter(topic => topic.is_topic_completed).length;
       }
     });
-    
+
     return totalTopics > 0 ? Math.round((completedTopics / totalTopics) * 100) : 0;
   };
 
   // Calculate completion percentage for a specific curriculum
   const calculateCurriculumCompletion = (topics) => {
     if (!topics || topics.length === 0) return 0;
-    
+
     const completedTopics = topics.filter(topic => topic.is_topic_completed).length;
     return Math.round((completedTopics / topics.length) * 100);
   };
@@ -85,20 +85,19 @@ export default function StudentJourney({onStartLearning}) {
  // Show loading state
     if (loading) {
       return (
-        <div className="flex justify-center items-center h-screen">
+        <div className="flex justify-center items-center">
           <CircularProgress sx={{ color: '#f97316' }} />
           <span className="ml-3 text-gray-600">Loading...</span>
         </div>
       );
     }
-  
+
     // Show error state
     if (error) {
       return (
-        <div className="flex justify-center items-center h-screen">
+        <div className="flex justify-center items-center">
           <div className="text-center">
-            <div className="text-red-500 text-xl mb-2">Error</div>
-            <p className="text-gray-600">{error}</p>
+            <p className="text-red-500">You Are not Enrooled In Batch</p>
             <Button
               onClick={() => window.location.reload()}
               className="mt-4 bg-orange-500 hover:bg-orange-600 text-white"
@@ -122,12 +121,13 @@ export default function StudentJourney({onStartLearning}) {
       {/* Header */}
       <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 3 }}>
         <Typography  variant="h5" sx={{ fontWeight: 500, color: "#424242" }}>
-         
-         <a href={`${trimmedPath}my-courses`}> Student Journey</a>
-         
+
+         <a href={`${trimmedPath}student-journey`}> Student Journey</a>
+
         </Typography>
         <Button
-        onClick={onStartLearning}
+       onClick={() => { window.location.href = `${trimmedPath}student-journey`; }}
+
           variant="outlined"
           sx={{
             borderColor: "#E53510",
@@ -162,7 +162,7 @@ export default function StudentJourney({onStartLearning}) {
           elevation={1}
           sx={{
             position: "absolute",
-            top: 55,
+            top: 120,
             left: `${overallCompletion}%`,
             transform: "translateX(-50%)",
             p: 1.5,
@@ -172,14 +172,14 @@ export default function StudentJourney({onStartLearning}) {
             mb: 2,
           }}
         >
-          <Typography variant="body2" color="textSecondary">
+          {/* <Typography variant="body2" color="textSecondary">
             Module
           </Typography>
           <Typography variant="body2" color="textSecondary">
             Completed
-          </Typography>
+          </Typography> */}
           <Typography variant="h6" sx={{ color: "#E53510", fontWeight: 500 }}>
-            <div className="rounded-md mt-1 bg-[#E53510] bg-opacity-10 w-full">
+            <div className="rounded-md mt-1 p-1 bg-[#E53510] bg-opacity-10 w-full">
               {overallCompletion}%
             </div>
           </Typography>
