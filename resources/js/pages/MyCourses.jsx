@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import Cookies from 'js-cookie';
@@ -88,9 +88,27 @@ const MyCourses = () => {
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [submissions, setSubmissions] = useState({});
     const [showSuccessModal, setShowSuccessModal] = useState(false);
+    const viewerRef = useRef(null);
 
     useEffect(() => {
         fetchCourses();
+    }, []);
+
+    useEffect(() => {
+        const handleFullScreenChange = () => {
+            const fsElement = document.fullscreenElement || document.webkitFullscreenElement || document.mozFullScreenElement || document.msFullscreenElement;
+            setIsFullScreen(!!fsElement && fsElement.id === 'teaching-material-viewer');
+        };
+        document.addEventListener('fullscreenchange', handleFullScreenChange);
+        document.addEventListener('webkitfullscreenchange', handleFullScreenChange);
+        document.addEventListener('mozfullscreenchange', handleFullScreenChange);
+        document.addEventListener('MSFullscreenChange', handleFullScreenChange);
+        return () => {
+            document.removeEventListener('fullscreenchange', handleFullScreenChange);
+            document.removeEventListener('webkitfullscreenchange', handleFullScreenChange);
+            document.removeEventListener('mozfullscreenchange', handleFullScreenChange);
+            document.removeEventListener('MSFullscreenChange', handleFullScreenChange);
+        };
     }, []);
 
     const fetchCourses = async () => {
@@ -207,7 +225,6 @@ const MyCourses = () => {
     const toggleFullScreen = (elementId) => {
         const element = document.getElementById(elementId);
         if (!element) return;
-
         if (!document.fullscreenElement) {
             element.requestFullscreen().catch(err => {
                 toast.error(`Could not enable full-screen mode`);
@@ -994,13 +1011,30 @@ const MyCourses = () => {
                                         // Teaching Materials Content
                                         <>
                                             {selectedMaterial ? (
-                                                <div className="bg-white rounded-lg shadow-md p-6" style={{ minHeight: '75vh' }}>
+                                                <div
+                                                    className={`bg-white rounded-lg shadow-md p-6 relative${isFullScreen ? ' fullscreen' : ''}`}
+                                                    style={isFullScreen ? { minHeight: '100vh', height: '100vh', width: '100vw', padding: 0, borderRadius: 0, boxShadow: 'none', background: '#111' } : { minHeight: '75vh' }}
+                                                    id="teaching-material-viewer"
+                                                    ref={viewerRef}
+                                                >
+                                                    {/* Fullscreen Button */}
+                                                    <button
+                                                        onClick={() => toggleFullScreen('teaching-material-viewer')}
+                                                        className="absolute top-4 right-4 z-10 bg-orange-600 hover:bg-orange-700 text-white rounded-full p-2 shadow-md focus:outline-none"
+                                                        title="Fullscreen"
+                                                    >
+                                                        {/* Simple SVG fullscreen icon */}
+                                                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 8V6a2 2 0 012-2h2M20 8V6a2 2 0 00-2-2h-2M4 16v2a2 2 0 002 2h2M20 16v2a2 2 0 01-2 2h-2" />
+                                                        </svg>
+                                                    </button>
+                                                    {/* PDF Viewer */}
                                                     {selectedMaterial.material_source === 'file' && selectedMaterial.file?.toLowerCase().endsWith('.pdf') ? (
-                                                        <div className="relative w-full h-full">
+                                                        <div className="relative w-full h-full" style={isFullScreen ? { height: 'calc(100vh - 0px)' } : {}}>
                                                             <iframe
                                                                 src={`${selectedMaterial.file}#toolbar=0&navpanes=0&scrollbar=0`}
                                                                 className="w-full h-full border border-gray-200 rounded"
-                                                                style={{ height: 'calc(75vh - 2rem)' }}
+                                                                style={isFullScreen ? { height: '100vh', width: '100vw', border: 'none', background: '#111' } : { height: 'calc(75vh - 2rem)' }}
                                                                 title={selectedMaterial.material_name}
                                                             />
                                                         </div>
@@ -1381,6 +1415,23 @@ const MyCourses = () => {
                     }}
                 />
             )}
+
+            {/* Add fullscreen CSS for .fullscreen class */}
+            <style>{`
+                .fullscreen {
+                    position: fixed !important;
+                    top: 0 !important;
+                    left: 0 !important;
+                    width: 100vw !important;
+                    height: 100vh !important;
+                    min-height: 100vh !important;
+                    z-index: 9999 !important;
+                    background: #111 !important;
+                    border-radius: 0 !important;
+                    box-shadow: none !important;
+                    padding: 0 !important;
+                }
+            `}</style>
         </div>
     );
 };

@@ -15,12 +15,9 @@ import { FiPlus, FiTrash2, FiEdit2 } from 'react-icons/fi';
 import { Document, Page, Text, View, StyleSheet, PDFDownloadLink } from '@react-pdf/renderer';
 import { AiOutlineFilePdf } from 'react-icons/ai';
 
-// // Make sure we're using the correct API URL
-// const API_URL = import.meta.env.VITE_APP_API_URL || 'http://localhost:8000';
-// const API_ENDPOINT = `${API_URL}/api`;
-
-const API_URL = import.meta.env.VITE_APP_API_URL;
-// const API_URL = import.meta.env.REACT_APP_API_URL
+// Make sure we're using the correct API URL
+const API_URL = import.meta.env.VITE_APP_API_URL || 'http://localhost:8000';
+const API_ENDPOINT = `${API_URL}/api`;
 
 // Update mainMenu array
 const mainMenu = [
@@ -511,7 +508,7 @@ const MyProfile = () => {
       });
 
       // Log the education data to see what we're getting from the API
-      console.log('Education data from API:', response.data.data);
+      // console.log('Education data from API:', response.data.data);
 
       // Process the education data to ensure percentage_cgpa is a number
       const processedEducation = (response.data.data || []).map(edu => ({
@@ -519,7 +516,7 @@ const MyProfile = () => {
         percentage_cgpa: typeof edu.percentage_cgpa === 'string' ? parseFloat(edu.percentage_cgpa) : edu.percentage_cgpa
       }));
 
-      console.log('Processed education data:', processedEducation);
+      // console.log('Processed education data:', processedEducation);
 
       setFormData((prev) => ({
         ...prev,
@@ -778,6 +775,7 @@ const MyProfile = () => {
   const validateParentDetails = (data) => {
     const errors = [];
     if (!data.parent_name?.trim()) errors.push('Parent name is required');
+    if (!data.parent_email?.trim()) errors.push('Parent email is required');
     if (!data.parent_aadhar?.trim()) errors.push('Parent Aadhaar is required');
     if (!data.parent_occupation?.trim()) errors.push('Parent occupation is required');
     if (!data.residential_address?.trim()) errors.push('Residential address is required');
@@ -1737,7 +1735,7 @@ const MyProfile = () => {
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Parent Email
+                  Parent Email<span className="text-red-500">*</span>
                 </label>
                 <input
                   type="email"
@@ -1745,6 +1743,7 @@ const MyProfile = () => {
                   value={formData.parent_email || ''}
                   onChange={handleChange}
                   className="w-full p-2 border rounded-lg focus:ring-orange-500 focus:border-orange-500"
+                  required
                 />
               </div>
               <div>
@@ -1794,20 +1793,7 @@ const MyProfile = () => {
               <button
                 type="button"
                 onClick={handleSubmit}
-                className={`px-4 py-2 text-white rounded-lg transition-colors ${
-                  !formData.parent_name?.trim() || 
-                  !formData.parent_aadhar?.trim() || 
-                  !formData.parent_occupation?.trim() || 
-                  !formData.residential_address?.trim()
-                    ? 'bg-gray-400 cursor-not-allowed'
-                    : 'bg-orange-500 hover:bg-orange-600'
-                }`}
-                disabled={
-                  !formData.parent_name?.trim() || 
-                  !formData.parent_aadhar?.trim() || 
-                  !formData.parent_occupation?.trim() || 
-                  !formData.residential_address?.trim()
-                }
+                className="px-4 py-2 text-white bg-orange-500 rounded-lg hover:bg-orange-600 transition-colors"
               >
                 Save Changes
               </button>
