@@ -32,15 +32,15 @@ class AttendanceController extends Controller
             'Attendance_percentage' => $attendancePercentage,
         ];
     }
-    
+
     public function getChartData(Request $request)
 {
-    
+
     $scheduleData = $this->getMonthlyScheduleData();
     $attendanceData = $this->getMonthlyAttendanceData();
 
     $months = [
-        'January', 'February', 'March', 'April', 'May', 'June', 
+        'January', 'February', 'March', 'April', 'May', 'June',
         'July', 'August', 'September', 'October', 'November', 'December'
     ];
 
@@ -49,12 +49,12 @@ class AttendanceController extends Controller
             [
                 'label' => 'Scheduled Classes',
                 'data' => $scheduleData,
-                
+
             ],
             [
                 'label' => 'Attendance',
                 'data' => $attendanceData,
-                
+
             ],
         ],
         'labels' => $months,
@@ -64,7 +64,7 @@ class AttendanceController extends Controller
 protected function getMonthlyScheduleData()
 {
     $schedules = Calendar::select(
-            DB::raw('MONTH(start_time) as month'), 
+            DB::raw('MONTH(start_time) as month'),
             DB::raw('COUNT(*) as total')
         )
         ->groupBy('month')
@@ -79,9 +79,9 @@ protected function getMonthlyAttendanceData()
 {
     $userId = Auth::id(); // Get the logged-in user's ID
 
-    
+
     $attendances = Attendance::where('user_id', $userId)->select(
-            DB::raw('MONTH(date) as month'), 
+            DB::raw('MONTH(date) as month'),
             DB::raw('COUNT(*) as total')
         )
         ->groupBy('month')
@@ -133,8 +133,8 @@ protected function formatDataForChart($data)
 
         $attendanceRecord = $attendanceRecords->first(function ($attendance) use ($calendarStart, $calendarEnd) {
             $attendanceDate = Carbon::parse($attendance->date);
-            
-            return $attendanceDate->isSameDay($calendarStart) || 
+
+            return $attendanceDate->isSameDay($calendarStart) ||
                    $attendanceDate->isSameDay($calendarEnd) ||
                    $attendanceDate->between($calendarStart, $calendarEnd);
         });
@@ -148,6 +148,83 @@ protected function formatDataForChart($data)
     }
 
     return response()->json($report);
+}
+
+/**
+ * Mark attendance for a student
+ *
+ * @param Request $request
+ * @return \Illuminate\Http\JsonResponse
+ */
+public function markAttendance(Request $request)
+{
+    $request->validate([
+        'calendar_id' => 'required|exists:calendars,id',
+        'date' => 'required|date',
+    ]);
+
+    $user = $request->user();
+
+    // Check if attendance already exists for this user and date
+    $existingAttendance = Attendance::where('user_id', $user->id)
+        ->whereDate('date', $request->date)
+        ->first();
+
+    if ($existingAttendance) {
+        return response()->json([
+            'message' => 'Attendance already marked for today',
+            'attendance' => $existingAttendance
+        ], 200);
+    }
+
+    // Get the calendar entry to verify it's for the user's batch
+    $calendar = Calendar::findOrFail($request->calendar_id);
+
+    // Get user's batch
+    $userBatch = BatchUser::where('user_id', $user->id)->value('batch_id');
+
+    // Verify the calendar entry is for the user's batch
+    if ($calendar->batch_id != $userBatch) {
+        return response()->json([
+            'message' => 'This class is not for your batch'
+        ], 403);
+    }
+
+    // Verify the calendar entry is for today
+    $calendarDate = Carbon::parse($calendar->start_time)->toDateString();
+    $requestDate = Carbon::parse($request->date)->toDateString();
+
+    if ($calendarDate !== $requestDate) {
+        return response()->json([
+            'message' => 'Calendar entry date does not match the requested date'
+        ], 400);
+    }
+
+    // Verify the current time is within the class time
+    $now = Carbon::now();
+    $classStart = Carbon::parse($calendar->start_time);
+    $classEnd = Carbon::parse($calendar->end_time);
+
+    if ($now->lt($classStart) || $now->gt($classEnd)) {
+        return response()->json([
+            'message' => 'Attendance can only be marked during class hours'
+        ], 400);
+    }
+
+    // Create attendance record
+    $attendance = new Attendance([
+        'user_id' => $user->id,
+        'date' => $request->date,
+        'attendance_by' => $user->id, // Self-marked attendance
+        'team_id' => $user->current_team_id
+    ]);
+
+    $attendance->save();
+
+    return response()->json([
+        'message' => 'Attendance marked successfully',
+        'attendance' => $attendance
+    ], 201);
 }
 
 }

@@ -15,8 +15,11 @@ import { FiPlus, FiTrash2, FiEdit2 } from 'react-icons/fi';
 import { Document, Page, Text, View, StyleSheet, PDFDownloadLink } from '@react-pdf/renderer';
 import { AiOutlineFilePdf } from 'react-icons/ai';
 
-// Make sure we're using the correct API URL
-const API_URL = import.meta.env.VITE_APP_API_URL || 'http://localhost:8000';
+// // Make sure we're using the correct API URL
+// const API_URL = import.meta.env.VITE_APP_API_URL || 'http://localhost:8000';
+// const API_ENDPOINT = `${API_URL}/api`;
+
+const API_URL = import.meta.env.VITE_APP_API_URL;
 // const API_URL = import.meta.env.REACT_APP_API_URL
 
 // Update mainMenu array
@@ -40,73 +43,117 @@ const mainMenu = [
 
 // Add this after the mainMenu constant
 const calculateCompletionPercentage = (formData, menuId, projects) => {
-  switch (menuId) {
-    case 'personal':
-      const basicFields = ['name', 'email', 'gender', 'birthday'];
-      const additionalFields = ['address', 'city', 'state_id', 'pincode'];
-      const docsFields = ['aadhaar_number', 'upload_aadhar', 'linkedin_profile', 'passport_photo', 'upload_resume'];
-      const parentFields = ['parent_name', 'parent_email', 'parent_aadhar', 'parent_occupation', 'residential_address'];
+  // Safety check to prevent errors
+  if (!formData || typeof formData !== 'object') {
+    console.error('Invalid formData in calculateCompletionPercentage:', formData);
+    return 0;
+  }
 
-      const basicComplete = basicFields.filter(field => formData[field]).length;
-      const additionalComplete = additionalFields.filter(field => formData[field]).length;
-      const docsComplete = docsFields.filter(field => formData[field]).length;
-      const parentComplete = parentFields.filter(field => formData[field]).length;
+  try {
+    switch (menuId) {
+      case 'personal':
+        const basicFields = ['name', 'email', 'gender', 'birthday'];
+        const additionalFields = ['address', 'city', 'state_id', 'pincode'];
+        const docsFields = ['aadhaar_number', 'upload_aadhar', 'linkedin_profile', 'passport_photo', 'upload_resume'];
+        const parentFields = ['parent_name', 'parent_email', 'parent_aadhar', 'parent_occupation', 'residential_address'];
 
-      const totalFields = basicFields.length + additionalFields.length + docsFields.length + parentFields.length;
-      const completedFields = basicComplete + additionalComplete + docsComplete + parentComplete;
+        const basicComplete = basicFields.filter(field => formData[field]).length;
+        const additionalComplete = additionalFields.filter(field => formData[field]).length;
+        const docsComplete = docsFields.filter(field => formData[field]).length;
+        const parentComplete = parentFields.filter(field => formData[field]).length;
 
-      return Math.round((completedFields / totalFields) * 100);
+        const totalFields = basicFields.length + additionalFields.length + docsFields.length + parentFields.length;
+        const completedFields = basicComplete + additionalComplete + docsComplete + parentComplete;
 
-    case 'education':
-      if (!formData.education || formData.education.length === 0) return 0;
+        // Prevent division by zero
+        return totalFields > 0 ? Math.round((completedFields / totalFields) * 100) : 0;
 
-      const requiredEduFields = ['degree_type_id', 'institute_name', 'duration_from', 'duration_to', 'percentage_cgpa', 'location'];
-      let totalEduFields = 0;
-      let completedEduFields = 0;
+      case 'education':
+        if (!formData.education || !Array.isArray(formData.education) || formData.education.length === 0) return 0;
 
-      formData.education.forEach(edu => {
-        totalEduFields += requiredEduFields.length;
-        completedEduFields += requiredEduFields.filter(field => edu[field]).length;
-      });
+        const requiredEduFields = ['degree_type_id', 'institute_name', 'duration_from', 'duration_to', 'percentage_cgpa', 'location'];
+        let totalEduFields = 0;
+        let completedEduFields = 0;
 
-      return Math.round((completedEduFields / totalEduFields) * 100);
+        formData.education.forEach(edu => {
+          if (edu && typeof edu === 'object') {
+            totalEduFields += requiredEduFields.length;
+            completedEduFields += requiredEduFields.filter(field => edu[field]).length;
+          }
+        });
 
-    case 'projects':
-      // Get projects from the projects state instead of formData
-      if (!projects || projects.length === 0) return 0;
+        // Prevent division by zero
+        return totalEduFields > 0 ? Math.round((completedEduFields / totalEduFields) * 100) : 0;
 
-      const requiredProjFields = ['title', 'description', 'start_date', 'technologies', 'project_type'];
-      let totalProjFields = 0;
-      let completedProjFields = 0;
+      case 'projects':
+        // Get projects from the projects state instead of formData
+        if (!projects || !Array.isArray(projects) || projects.length === 0) {
+          // Fallback to formData.projects if projects parameter is not available
+          if (!formData.projects || !Array.isArray(formData.projects) || formData.projects.length === 0) return 0;
 
-      formData.projects.forEach(proj => {
-        totalProjFields += requiredProjFields.length;
-        completedProjFields += requiredProjFields.filter(field => proj[field]).length;
-      });
+          const requiredProjFields = ['title', 'description', 'start_date', 'technologies', 'project_type'];
+          let totalProjFields = 0;
+          let completedProjFields = 0;
 
-      return Math.round((completedProjFields / totalProjFields) * 100);
+          formData.projects.forEach(proj => {
+            if (proj && typeof proj === 'object') {
+              totalProjFields += requiredProjFields.length;
+              completedProjFields += requiredProjFields.filter(field => proj[field]).length;
+            }
+          });
 
-    case 'certifications':
-      if (!formData.certifications || formData.certifications.length === 0) return 0;
+          // Prevent division by zero
+          return totalProjFields > 0 ? Math.round((completedProjFields / totalProjFields) * 100) : 0;
+        } else {
+          const requiredProjFields = ['title', 'description', 'start_date', 'technologies', 'project_type'];
+          let totalProjFields = 0;
+          let completedProjFields = 0;
 
-      const requiredCertFields = ['certification_name', 'authority', 'certification_date', 'certificate_number'];
-      let totalCertFields = 0;
-      let completedCertFields = 0;
+          projects.forEach(proj => {
+            if (proj && typeof proj === 'object') {
+              totalProjFields += requiredProjFields.length;
+              completedProjFields += requiredProjFields.filter(field => proj[field]).length;
+            }
+          });
 
-      formData.certifications.forEach(cert => {
-        totalCertFields += requiredCertFields.length;
-        completedCertFields += requiredCertFields.filter(field => cert[field]).length;
-      });
+          // Prevent division by zero
+          return totalProjFields > 0 ? Math.round((completedProjFields / totalProjFields) * 100) : 0;
+        }
 
-      return Math.round((completedCertFields / totalCertFields) * 100);
+      case 'certifications':
+        if (!formData.certifications || !Array.isArray(formData.certifications) || formData.certifications.length === 0) return 0;
+
+        const requiredCertFields = ['certification_name', 'authority', 'certification_date', 'certificate_number'];
+        let totalCertFields = 0;
+        let completedCertFields = 0;
+
+        formData.certifications.forEach(cert => {
+          if (cert && typeof cert === 'object') {
+            totalCertFields += requiredCertFields.length;
+            completedCertFields += requiredCertFields.filter(field => cert[field]).length;
+          }
+        });
+
+        // Prevent division by zero
+        return totalCertFields > 0 ? Math.round((completedCertFields / totalCertFields) * 100) : 0;
 
     default:
       return 0;
+    }
+  } catch (error) {
+    console.error('Error in calculateCompletionPercentage:', error);
+    return 0;
   }
 };
 
 // Add this function after calculateCompletionPercentage
 const calculateOverallProgress = (formData, projects) => {
+  // Check if formData is valid to prevent NaN
+  if (!formData || typeof formData !== 'object') {
+    console.error('Invalid formData in calculateOverallProgress:', formData);
+    return 0;
+  }
+
   const sections = ['personal', 'education', 'projects', 'certifications'];
   const weights = {
     personal: 0.4,    // 40% weight for personal details
@@ -117,11 +164,21 @@ const calculateOverallProgress = (formData, projects) => {
 
   let weightedSum = 0;
   sections.forEach(section => {
-    const sectionPercentage = calculateCompletionPercentage(formData, section, projects);
-    weightedSum += (sectionPercentage * weights[section]);
+    try {
+      const sectionPercentage = calculateCompletionPercentage(formData, section, projects);
+      // Ensure sectionPercentage is a valid number
+      if (!isNaN(sectionPercentage)) {
+        weightedSum += (sectionPercentage * weights[section]);
+      } else {
+        console.warn(`Invalid percentage for section ${section}:`, sectionPercentage);
+      }
+    } catch (error) {
+      console.error(`Error calculating percentage for section ${section}:`, error);
+    }
   });
 
-  return Math.round(weightedSum);
+  // Ensure we return a valid number, not NaN
+  return isNaN(weightedSum) ? 0 : Math.round(weightedSum);
 };
 
 function getCookie(name) {
@@ -226,8 +283,9 @@ const MyProfile = () => {
           return;
         }
 
+        console.log('Fetching profile with token:', userData.token);
+
         // Fetch basic profile data and projects in parallel
-        // Make sure we're using absolute URLs with the correct base
         const [profileResponse, projectsResponse] = await Promise.all([
           axios.get(`${API_ENDPOINT}/profile`, {
             headers: {
@@ -235,38 +293,39 @@ const MyProfile = () => {
               'Authorization': `Bearer ${userData.token}`,
             },
             withCredentials: true,
-            baseURL: API_URL, // Ensure the base URL is set correctly
           }),
           axios.get(`${API_ENDPOINT}/projects`, {
             headers: {
               'Accept': 'application/json',
               'Authorization': `Bearer ${userData.token}`,
             },
-            baseURL: API_URL, // Ensure the base URL is set correctly
           })
         ]);
 
-        setFormData(prev => ({
-          ...prev,
-          ...profileResponse.data.user,
-        }));
-
-        if (projectsResponse.data.success) {
-          setProjects(projectsResponse.data.projects);
+        if (profileResponse.data && profileResponse.data.user) {
+          console.log('Profile data received:', profileResponse.data);
           setFormData(prev => ({
             ...prev,
-            projects: projectsResponse.data.projects
+            ...profileResponse.data.user
           }));
+        } else {
+          console.error('Profile data format unexpected:', profileResponse.data);
         }
+
+        if (projectsResponse.data) {
+          setProjects(projectsResponse.data);
+        }
+
       } catch (error) {
-        toast.error('Failed to load profile data');
+        console.error('Error fetching profile data:', error);
+        toast.error(error.response?.data?.message || 'Failed to fetch profile data');
       } finally {
         setLoading(false);
       }
     };
 
     fetchBasicProfileData();
-  }, []); // Empty dependency array means this runs once on mount
+  }, []);
 
   useEffect(() => {
     const fetchMenuData = async () => {
@@ -324,7 +383,7 @@ const MyProfile = () => {
           const degreeResponse = await axios.get(`${API_ENDPOINT}/get/degrees`, {
             headers: {
               'Accept': 'application/json',
-              'Authorization': userData.token,
+              'Authorization': `Bearer ${userData.token}`,
             },
             baseURL: API_URL // Ensure the base URL is set correctly
           });
@@ -334,13 +393,22 @@ const MyProfile = () => {
           const educationResponse = await axios.get(`${API_ENDPOINT}/get/education`, {
             headers: {
               'Accept': 'application/json',
-              'Authorization': userData.token,
+              'Authorization': `Bearer ${userData.token}`,
             },
             withCredentials: true,
             baseURL: API_URL // Ensure the base URL is set correctly
           });
 
-          const educationData = educationResponse.data.data || [];
+          // Process education data to ensure percentage_cgpa is a number
+          const rawEducationData = educationResponse.data.data || [];
+          console.log('Raw education data from API:', rawEducationData);
+
+          const educationData = rawEducationData.map(edu => ({
+            ...edu,
+            percentage_cgpa: typeof edu.percentage_cgpa === 'string' ? parseFloat(edu.percentage_cgpa) : edu.percentage_cgpa
+          }));
+
+          console.log('Processed education data:', educationData);
 
           // Get unique degree type IDs that need specializations
           const uniqueDegreeTypeIds = [...new Set(
@@ -354,7 +422,7 @@ const MyProfile = () => {
             axios.get(`${API_ENDPOINT}/get/specialization/${degreeTypeId}`, {
               headers: {
                 'Accept': 'application/json',
-                'Authorization': userData.token,
+                'Authorization': `Bearer ${userData.token}`,
               },
               baseURL: API_URL // Ensure the base URL is set correctly
             })
@@ -411,7 +479,7 @@ const MyProfile = () => {
       const response = await axios.get(`${API_ENDPOINT}/get/specialization/${degreeTypeId}`, {
         headers: {
           'Accept': 'application/json',
-          'Authorization': userData.token,
+          'Authorization': `Bearer ${userData.token}`,
         },
         withCredentials: true,
         baseURL: API_URL // Ensure the base URL is set correctly
@@ -442,9 +510,20 @@ const MyProfile = () => {
         baseURL: API_URL // Ensure the base URL is set correctly
       });
 
+      // Log the education data to see what we're getting from the API
+      console.log('Education data from API:', response.data.data);
+
+      // Process the education data to ensure percentage_cgpa is a number
+      const processedEducation = (response.data.data || []).map(edu => ({
+        ...edu,
+        percentage_cgpa: typeof edu.percentage_cgpa === 'string' ? parseFloat(edu.percentage_cgpa) : edu.percentage_cgpa
+      }));
+
+      console.log('Processed education data:', processedEducation);
+
       setFormData((prev) => ({
         ...prev,
-        education: response.data.data || [],
+        education: processedEducation,
       }));
     } catch (error) {
       toast.error(error.response?.data?.message || 'Failed to load education data');
@@ -481,14 +560,19 @@ const MyProfile = () => {
         if (field === 'education') {
           switch(key) {
             case 'percentage_cgpa':
-              const numValue = parseFloat(value);
-              if (!isNaN(numValue) && numValue >= 0 && numValue <= 100) {
-                transformedValue = numValue.toString();
-              } else if (value === '') {
+              // Make sure we're handling the percentage as a number
+              if (value === '') {
                 transformedValue = '';
               } else {
-                toast.error('Percentage/CGPA must be between 0 and 100');
-                return updatedData;
+                const numValue = parseFloat(value);
+                if (!isNaN(numValue) && numValue >= 0 && numValue <= 100) {
+                  // Store as a number, not a string
+                  transformedValue = numValue;
+                  console.log('Percentage value set:', numValue, typeof numValue);
+                } else {
+                  toast.error('Percentage/CGPA must be between 0 and 100');
+                  return updatedData;
+                }
               }
               break;
             case 'duration_from':
@@ -547,7 +631,7 @@ const MyProfile = () => {
         degree_type_id: edu.degree_type_id || edu.degree_type?.id,
         specialization_id: edu.specialization_id || edu.specialization?.id || null,
         other_specialization: edu.other_specialization || null,
-        percentage_cgpa: parseFloat(edu.percentage_cgpa),
+        percentage_cgpa: typeof edu.percentage_cgpa === 'number' ? edu.percentage_cgpa : parseFloat(edu.percentage_cgpa || '0'),
         institute_name: edu.institute_name.trim(),
         location: edu.location.trim(),
         duration_from: edu.duration_from,
@@ -694,7 +778,6 @@ const MyProfile = () => {
   const validateParentDetails = (data) => {
     const errors = [];
     if (!data.parent_name?.trim()) errors.push('Parent name is required');
-    if (!data.parent_email?.trim()) errors.push('Parent email is required');
     if (!data.parent_aadhar?.trim()) errors.push('Parent Aadhaar is required');
     if (!data.parent_occupation?.trim()) errors.push('Parent occupation is required');
     if (!data.residential_address?.trim()) errors.push('Residential address is required');
@@ -734,7 +817,7 @@ const MyProfile = () => {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    
+
     // Add validation for Aadhaar number and PIN code
     if (name === 'aadhaar_number') {
       // Only allow numbers and limit to 12 digits
@@ -1654,7 +1737,7 @@ const MyProfile = () => {
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Parent Email<span className="text-red-500">*</span>
+                  Parent Email
                 </label>
                 <input
                   type="email"
@@ -1662,7 +1745,6 @@ const MyProfile = () => {
                   value={formData.parent_email || ''}
                   onChange={handleChange}
                   className="w-full p-2 border rounded-lg focus:ring-orange-500 focus:border-orange-500"
-                  required
                 />
               </div>
               <div>
@@ -1712,7 +1794,20 @@ const MyProfile = () => {
               <button
                 type="button"
                 onClick={handleSubmit}
-                className="px-4 py-2 text-white bg-orange-500 rounded-lg hover:bg-orange-600 transition-colors"
+                className={`px-4 py-2 text-white rounded-lg transition-colors ${
+                  !formData.parent_name?.trim() || 
+                  !formData.parent_aadhar?.trim() || 
+                  !formData.parent_occupation?.trim() || 
+                  !formData.residential_address?.trim()
+                    ? 'bg-gray-400 cursor-not-allowed'
+                    : 'bg-orange-500 hover:bg-orange-600'
+                }`}
+                disabled={
+                  !formData.parent_name?.trim() || 
+                  !formData.parent_aadhar?.trim() || 
+                  !formData.parent_occupation?.trim() || 
+                  !formData.residential_address?.trim()
+                }
               >
                 Save Changes
               </button>
@@ -1933,7 +2028,13 @@ const MyProfile = () => {
                         min="0"
                         max="100"
                         value={edu.percentage_cgpa || ''}
-                        onChange={(e) => handleItemChange('education', index, 'percentage_cgpa', e.target.value)}
+                        onChange={(e) => {
+                          console.log('Percentage input value:', e.target.value, typeof e.target.value);
+                          handleItemChange('education', index, 'percentage_cgpa', e.target.value);
+                        }}
+                        onBlur={() => {
+                          console.log('Current percentage value after blur:', edu.percentage_cgpa, typeof edu.percentage_cgpa);
+                        }}
                         className="w-full p-2 border rounded-lg focus:ring-orange-500 focus:border-orange-500"
                         placeholder="Enter percentage (0-100)"
                         required
@@ -3531,14 +3632,20 @@ const MyProfile = () => {
             <div className="flex items-center justify-between mb-2">
               <h3 className="text-lg font-semibold text-gray-800">Profile Completion</h3>
               <span className="text-2xl font-bold text-orange-500">
-                {calculateOverallProgress(formData, projects)}%
+                {(() => {
+                  const percentage = calculateOverallProgress(formData, projects);
+                  return isNaN(percentage) ? '0%' : `${percentage}%`;
+                })()}
               </span>
             </div>
             <div className="relative group">
               <div className="w-full bg-gray-200 rounded-full h-2.5 cursor-pointer">
                 <div
                   className="bg-orange-500 h-2.5 rounded-full transition-all duration-300"
-                  style={{ width: `${calculateOverallProgress(formData, projects)}%` }}
+                  style={{ width: `${(() => {
+                    const percentage = calculateOverallProgress(formData, projects);
+                    return isNaN(percentage) ? 0 : percentage;
+                  })()}%` }}
                 />
               </div>
               {/* Tooltip */}
@@ -3547,6 +3654,8 @@ const MyProfile = () => {
                 <div className="space-y-1.5">
                   {mainMenu.filter(menu => menu.id !== 'resume').map((menu) => {
                     const percentage = calculateCompletionPercentage(formData, menu.id, projects);
+                    // Ensure percentage is a valid number
+                    const validPercentage = isNaN(percentage) ? 0 : percentage;
                     return (
                       <div key={menu.id} className="flex items-center justify-between gap-4">
                         <div className="flex items-center gap-2 min-w-[150px]">
@@ -3557,11 +3666,11 @@ const MyProfile = () => {
                           <div className="w-24 bg-gray-700 rounded-full h-1.5">
                             <div
                               className="bg-orange-500 h-1.5 rounded-full"
-                              style={{ width: `${percentage}%` }}
+                              style={{ width: `${validPercentage}%` }}
                             />
                           </div>
                           <span className="font-medium min-w-[40px] text-right">
-                            {percentage}%
+                            {validPercentage}%
                           </span>
                         </div>
                       </div>

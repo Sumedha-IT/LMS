@@ -27,16 +27,48 @@ const QuestionPanel = ({ question, onAnswer, onNext, onMarkForReview, onClearRes
     }, [partIds, activePartId]);
 
     useEffect(() => {
-        let selectedValue = question?.answer?.selectedOption;
-        // setSelectedOption(selectedValue ? selectedValue : question?.selectedOption || null);
-        setSelectedOption(question && question.selectedOption ? question.selectedOption : selectedValue || null);
+        // In review mode, we need to set the selected option from the user's answer
+        if (isReviewMode) {
+            // The answer field contains the user's selected option
+            // Parse the answer data correctly based on its format
+            let userAnswer = null;
+
+            if (question?.answer) {
+                // If answer is a JSON object with selectedOption property
+                if (typeof question.answer === 'object' && question.answer.selectedOption) {
+                    userAnswer = Number(question.answer.selectedOption);
+                }
+                // If answer is a string that might be a JSON string
+                else if (typeof question.answer === 'string' && question.answer.includes('selectedOption')) {
+                    try {
+                        const parsedAnswer = JSON.parse(question.answer);
+                        userAnswer = Number(parsedAnswer.selectedOption);
+                    } catch (e) {
+                        // If parsing fails, try to use the answer directly
+                        userAnswer = Number(question.answer);
+                    }
+                }
+                // If answer is a direct number or string number
+                else {
+                    userAnswer = Number(question.answer);
+                }
+            }
+
+            setSelectedOption(userAnswer);
+
+            // We no longer need to set any inferred correct option
+            // We'll only use the explicit correctOption from the backend
+        } else {
+            let selectedValue = question?.answer?.selectedOption;
+            setSelectedOption(question && question.selectedOption ? question.selectedOption : selectedValue || null);
+        }
     }, [isReviewMode, question]);
 
 
     const handleOptionChange = (event) => {
         const selected = event.target.value;
-        setSelectedOption(selected);
-        onAnswer(question?.id, selected); // Update the selected answer in the parent
+        setSelectedOption(Number(selected));
+        onAnswer(question?.id, Number(selected)); // Update the selected answer in the parent
     };
 
     const handleSave = async ({ markedForReview = false }) => {
@@ -61,26 +93,87 @@ const QuestionPanel = ({ question, onAnswer, onNext, onMarkForReview, onClearRes
             }
         }
         try {
-            let result = await UploadExamQuestions({ userId, payloadData: payloadData });
-            // if (result.data.success) {
-            //     onNext(question?.id + 1)
-            // }
+            await UploadExamQuestions({ userId, payloadData: payloadData });
+            // No need to check result as we're already calling onNext above
         } catch (e) {
-            console.log(e);
+            // Silently handle error - could add error handling UI if needed
         }
     }
 
     const getOptionStyles = (optionId) => {
-
         if (!isReviewMode) return {}; // No special styles if not in review mode
 
-        if (optionId === question?.correctOption) {
-            return { backgroundColor: '#dff0d8', color: 'white' };  // Correct answer highlighted green
+        // Only use the explicit correctOption from the backend
+        const correctOption = question?.correctOption !== null && question?.correctOption !== undefined
+            ? Number(question?.correctOption)
+            : null;
+
+        const userSelectedOption = Number(selectedOption);
+
+        // For questions with "Incorrect" status, we can infer that the selected option is wrong
+        const isQuestionIncorrect = question?.questionStatus === "Incorrect";
+
+        // Determine if this is the correct answer - ONLY if explicitly provided
+        const isCorrectAnswer = correctOption === optionId;
+
+        // Determine if this is the user's answer
+        const isUserAnswer = optionId === userSelectedOption;
+
+        // Case 1: This option is both the correct answer and the user's answer
+        if (isCorrectAnswer && isUserAnswer) {
+            return {
+                backgroundColor: '#dff0d8', // Light green background
+                color: '#3c763d', // Dark green text
+                border: '2px solid #28a745',
+                position: 'relative',
+                '&::after': {
+                    content: '"✓ Correct Answer (Your Selection)"',
+                    position: 'absolute',
+                    right: '10px',
+                    fontSize: '12px',
+                    fontWeight: 'bold',
+                    color: '#28a745'
+                }
+            };
         }
-        if (optionId === Number(selectedOption) && optionId !== question?.correctOption) {
-            return { backgroundColor: '#fababa', color: 'white' };  // Incorrect answer highlighted gray
+
+        // Case 2: This option is the correct answer (but not what the user selected)
+        if (isCorrectAnswer) {
+            return {
+                backgroundColor: '#dff0d8', // Light green background
+                color: '#3c763d', // Dark green text
+                border: '2px solid #28a745',
+                position: 'relative',
+                '&::after': {
+                    content: '"✓ Correct Answer"',
+                    position: 'absolute',
+                    right: '10px',
+                    fontSize: '12px',
+                    fontWeight: 'bold',
+                    color: '#28a745'
+                }
+            };
         }
-        return {}; // Default style
+
+        // Case 3: This option is the user's incorrect selection
+        if (isUserAnswer && isQuestionIncorrect) {
+            return {
+                backgroundColor: '#f8d7da', // Light red background
+                color: '#721c24', // Dark red text
+                border: '2px solid #dc3545',
+                position: 'relative',
+                '&::after': {
+                    content: '"✗ Your Answer"',
+                    position: 'absolute',
+                    right: '10px',
+                    fontSize: '12px',
+                    fontWeight: 'bold',
+                    color: '#dc3545'
+                }
+            };
+        }
+
+        return {}; // Default style for other options
     };
 
     const handleClearResponse = () => {
@@ -146,7 +239,7 @@ const QuestionPanel = ({ question, onAnswer, onNext, onMarkForReview, onClearRes
 
                         <Box sx={{ p: 2, height: 'calc(100vh - 289px)', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', overflow: 'auto' }}>
                             <FormControl component="fieldset" sx={{ borderBottom: 2, borderColor: "#c0bfbf", pb: 4 }}>
-                                <RadioGroup value={selectedOption} onChange={handleOptionChange}>
+                                <RadioGroup value={String(selectedOption)} onChange={handleOptionChange}>
                                     <Box sx={{ borderTop: 1, borderBottom: 1, mb: 3, display: 'flex', justifyContent: "space-between" }}>
                                         <Typography sx={{ fontSize: { xs: '16px', md: '18px', lg: '20px' }, borderColor: "#c0bfbf", pt: 2, pb: 2, fontWeight: 'bold' }}>Question {question && questions.findIndex(q => q.id === question.id) + 1} </Typography>
                                         <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
@@ -179,15 +272,69 @@ const QuestionPanel = ({ question, onAnswer, onNext, onMarkForReview, onClearRes
                                             )}
                                         </Box>
                                     </Box>
+
+                                    {/* Legend for review mode */}
+                                    {isReviewMode && (
+                                        <Box sx={{ display: 'flex', gap: 2, mb: 2, alignItems: 'center', justifyContent: 'flex-end' }}>
+                                            <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                                                <Box sx={{ width: 16, height: 16, backgroundColor: '#dff0d8', border: '1px solid #28a745', mr: 1, borderRadius: '2px' }}></Box>
+                                                <Typography sx={{ fontSize: '12px', color: '#3c763d' }}>Correct Answer</Typography>
+                                            </Box>
+                                            <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                                                <Box sx={{ width: 16, height: 16, backgroundColor: '#f8d7da', border: '1px solid #dc3545', mr: 1, borderRadius: '2px' }}></Box>
+                                                <Typography sx={{ fontSize: '12px', color: '#721c24' }}>Your Answer</Typography>
+                                            </Box>
+                                        </Box>
+                                    )}
                                     <Typography sx={{ fontSize: { xs: '16px', md: '18px', lg: '19px' }, mb: 3 }}>  {<div dangerouslySetInnerHTML={{ __html: question?.question }} />}</Typography>
                                     {question?.meta.map((option, index) => (
                                         <FormControlLabel
                                             key={index}
-                                            value={option.id}
+                                            value={String(option.id)}
                                             control={<Radio />}
                                             disabled={isReviewMode}
-                                            label={<Box dangerouslySetInnerHTML={{ __html: option.option }} sx={{ fontSize: { xs: '14px', md: '16px', xl: '17px' } }} />}
-                                            sx={getOptionStyles(option.id)}
+                                            label={
+                                                <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                                                    <span dangerouslySetInnerHTML={{ __html: option.option }} />
+                                                    {isReviewMode && (
+                                                        <>
+                                                            {/* Show correct answer indicator ONLY if explicitly provided in the backend */}
+                                                            {question?.correctOption !== null &&
+                                                             question?.correctOption !== undefined &&
+                                                             Number(option.id) === Number(question?.correctOption) && (
+                                                                <Typography sx={{ color: 'green', fontWeight: 'bold', ml: 1 }}>
+                                                                    {question?.questionStatus === "Not Attempted" ? "(Correct Answer - Not Attempted)" : "(Correct Answer)"}
+                                                                </Typography>
+                                                            )}
+
+                                                            {/* Always show the user's answer */}
+                                                            {Number(option.id) === Number(selectedOption) && (
+                                                                <Typography
+                                                                    sx={{
+                                                                        color: question?.questionStatus === "Correct" ? 'green' : 'red',
+                                                                        fontWeight: 'bold',
+                                                                        ml: 1
+                                                                    }}
+                                                                >
+                                                                    {question?.questionStatus === "Correct"
+                                                                        ? "(Your Correct Answer)"
+                                                                        : "(Your Answer)"}
+                                                                </Typography>
+                                                            )}
+                                                        </>
+                                                    )}
+                                                </Box>
+                                            }
+                                            sx={{
+                                                ...getOptionStyles(Number(option.id)),
+                                                margin: '8px 0',
+                                                padding: '8px',
+                                                borderRadius: '4px',
+                                                width: '100%',
+                                                '& .MuiFormControlLabel-label': {
+                                                    width: '100%'
+                                                }
+                                            }}
                                         />
                                     ))}
                                 </RadioGroup>

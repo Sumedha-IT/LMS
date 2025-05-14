@@ -9,7 +9,6 @@ import { apiRequest } from '../utils/api';
 
 const Announcements = () => {
   const [date, setDate] = useState(new Date());
-  const [filter, setFilter] = useState('all');
   const [calendarView, setCalendarView] = useState('day');
   const [announcements, setAnnouncements] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -52,16 +51,12 @@ const Announcements = () => {
 
   useEffect(() => {
     setCurrentPage(1);
-  }, [filter]);
-
-  const filteredAnnouncements = filter === 'all' 
-    ? announcements 
-    : announcements.filter(ann => ann.type === filter);
+  }, []);
 
   const indexOfLastItem = currentPage * itemsPerPage;
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
-  const currentAnnouncements = filteredAnnouncements.slice(indexOfFirstItem, indexOfLastItem);
-  const totalPages = Math.ceil(filteredAnnouncements.length / itemsPerPage);
+  const currentAnnouncements = announcements.slice(indexOfFirstItem, indexOfLastItem);
+  const totalPages = Math.ceil(announcements.length / itemsPerPage);
 
   const handlePageChange = (event, value) => {
     setCurrentPage(value);
@@ -139,23 +134,6 @@ const Announcements = () => {
         <div className="w-full md:w-2/3">
           <div className="flex justify-between items-center mb-6">
             <h1 className="text-2xl font-bold">Announcements by Institute</h1>
-            <div className="flex items-center gap-4">
-             
-              <Select
-                value={filter}
-                onChange={(e) => setFilter(e.target.value)}
-                className="w-32 bg-red-50 border-none rounded-full"
-                sx={{
-                  '& .MuiOutlinedInput-notchedOutline': { border: 'none' },
-                  '& .MuiSelect-select': { padding: '8px 16px' }
-                }}
-              >
-                <MenuItem value="all">All</MenuItem>
-                <MenuItem value="event">Events</MenuItem>
-                <MenuItem value="academic">Academic</MenuItem>
-                <MenuItem value="holiday">Holidays</MenuItem>
-              </Select>
-            </div>
           </div>
 
           <div className="space-y-6">
@@ -180,7 +158,7 @@ const Announcements = () => {
                       {announcement.subtitle}
                     </p>
                     <div className="flex items-center gap-4">
-                      <div className="bg-red-500 text-white px-4 py-2 rounded-full text-sm">
+                      <div className="bg-orange-500 text-white px-4 py-2 rounded-full text-sm">
                         📅 {announcement.date}
                       </div>
                       {announcement.time && (

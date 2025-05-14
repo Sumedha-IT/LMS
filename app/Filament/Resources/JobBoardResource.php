@@ -30,9 +30,8 @@ class JobBoardResource extends Resource
     public static function shouldRegisterNavigation(): bool
     {
         if (auth()->check() && auth()->user()) {
-            return (auth()->user()->getIsStudentAttribute()) || auth()->user()->isRecruitor();
+            return auth()->user()->isRecruitor();
         }
-        // Return false if no user is logged in or role is not 'Student'
         return false;
     }
 

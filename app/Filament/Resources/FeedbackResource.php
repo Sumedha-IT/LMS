@@ -24,9 +24,9 @@ class FeedbackResource extends Resource
   
     public static function shouldRegisterNavigation(): bool
     {
-        // Check if there’s a logged-in user with a 'Student' role
+        // Check if there's a logged-in user with a 'Student' role
         if (auth()->check() && auth()->user()) {
-            return auth()->user()->getIsStudentAttribute();
+            return !auth()->user()->getIsStudentAttribute();
         }
     
         return false;

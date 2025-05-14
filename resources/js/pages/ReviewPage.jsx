@@ -109,6 +109,7 @@ const ReviewPage = () => {
         try {
             const resultData = await getReviewExamQuestion(obj);
             const { data } = resultData;
+
             if (data && data.data.length > 0) {
                 const updatedQuestions = data.data.map((q, index) =>
                     index === 0 ? { ...q, visited: true } : q
