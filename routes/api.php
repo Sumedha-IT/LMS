@@ -54,6 +54,11 @@ use App\Http\Controllers\api\TopicController;
 |
 */
 
+// Assignment submission route - placed at the top level for testing
+Route::get('/assignment-submission/{assignmentId}', [TeachingMaterialController::class, 'getAssignmentSubmission']);
+// Alternative route with a different URL pattern
+Route::get('/get-assignment-submission/{assignmentId}', [TeachingMaterialController::class, 'getAssignmentSubmission']);
+
 Route::post('/send-notification', [\App\Http\Controllers\NotificationController::class, 'sendNotification']);
 Route::middleware([
     'auth:sanctum'
@@ -71,7 +76,7 @@ Route::post('login', [AuthController::class, 'login']);
 Route::get('cities', function() {
     return \App\Http\Resources\CityResource::collection(\App\Models\City::all());
 });
-//states api 
+//states api
 Route::get('states', function() {
     return \App\Http\Resources\StateResource::collection(\App\Models\State::all());
 });
@@ -116,9 +121,9 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
     Route::delete('/notifications/{id}', [\App\Http\Controllers\NotificationController::class, 'delete']);
 
     Route::post('/notifications/mark-all-read', [\App\Http\Controllers\NotificationController::class, 'markAllAsRead']);
-    
+
     Route::get('/notifications/count', [\App\Http\Controllers\NotificationController::class, 'count']);
-    
+
     //Batch + Course
     Route::get('/batches', [BatchController::class,'index']);
     Route::get('/{id}/batch', [BatchController::class,'view']);
@@ -131,19 +136,21 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
 
     //Teaching Material
     Route::get('/{id}/materials/{curriculum_id?}/{section_id?}/',[TeachingMaterialController::class,'index']);
-    
+
     Route::get('assignments', [TeachingMaterialController::class, 'getPendingAssignments']);
-    
+
     Route::post('/submit-assignment', [TeachingMaterialController::class, 'submitAssignment']);
-    
+
     Route::get('/assignment-chart', [TeachingMaterialController::class, 'getChartData']);
+
+
 
 
     //Api for user profile
     Route::get('/profile',[UserProfileController::class,'Index']);
     Route::post('/profile',[UserProfileController::class,'Update']);
 
-    //Api for education section 
+    //Api for education section
     Route::get('get/degrees',[StudentEducationController::class,'GetDegreeTypes']);
     Route::get('get/specialization/{id}',[StudentEducationController::class,'GetSpecializations']);
 
@@ -152,7 +159,7 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
     Route::put('update/education',[StudentEducationController::class,'Update']);
     Route::delete('delete/education',[StudentEducationController::class,'delete']);
 
-    //Api for student dashboard 
+    //Api for student dashboard
         // api for exam chart
         Route::get('/exam-chart', [ExamController::class, 'GetExamChart']);
         Route::get('/getUserAssignments', [ExamController::class, 'getUserAssignments']);
@@ -169,25 +176,29 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
 
     //Api for attendances
     Route::get('/attendances', [\App\Http\Controllers\AttendanceController::class, 'index']);
-    
+
     Route::get('/attendance-report', [\App\Http\Controllers\AttendanceController::class, 'getAttendanceReport']);
 
     Route::get('/attendance-chart', [\App\Http\Controllers\AttendanceController::class, 'getChartData']);
+
+    Route::post('/mark-attendance', [\App\Http\Controllers\AttendanceController::class, 'markAttendance']);
+
+    Route::post('/verify-campus-location', [\App\Http\Controllers\AttendanceController::class, 'verifyCampusLocation']);
     //Api for annoucements
     Route::get('/announcements', [\App\Http\Controllers\AnnouncementController::class, 'index']);
-    
+
     Route::get('/tutors', [\App\Http\Controllers\UserController::class, 'tutors']);
 
     Route::get('/student/journey', [StudentJourneyController::class, 'journey']);
 
     //api for listing for sections
-    
+
 
 });
 
 
 Route::group(['middleware' => [
-    'addHeader', 
+    'addHeader',
     'auth:sanctum',
     ]], function () {
 
@@ -198,16 +209,16 @@ Route::group(['middleware' => [
     Route::get('/student/{id}/examQuestions', [QuestionAttempLogController::class,'getQuestions']);
     Route::post('/student/{id}/examQuestions', [QuestionAttempLogController::class,'attemptQuestion']);
     Route::post('/student/{id}/exam/{examId}/submitExam', [ExamAttemptController::class,'submitExam']);
-    Route::get('/student/{id}/exam/{examId}/examStat', [ExamAttemptController::class,'getExamStat']);    
-    Route::get('/student/{id}/exam/{examId}/reviewExam', [ExamAttemptController::class,'reviewExam']);    
-    Route::get('/student/{id}/exam/{examId}/examReport', [ExamAttemptController::class,'getExamReport']);    
+    Route::get('/student/{id}/exam/{examId}/examStat', [ExamAttemptController::class,'getExamStat']);
+    Route::get('/student/{id}/exam/{examId}/reviewExam', [ExamAttemptController::class,'reviewExam']);
+    Route::get('/student/{id}/exam/{examId}/examReport', [ExamAttemptController::class,'getExamReport']);
 
 
 
     Route::get('/invigilators',[UserController::class,'tutors']);
 
-      
-        
+
+
     Route::get('posts', [PostController::class, 'index']);
     // Route::get('posts/{id}', [PostController::class, 'show']);
     Route::post('posts/like', [PostController::class, 'like']);
@@ -289,14 +300,14 @@ Route::group(['middleware' => [
         Route::post('/questionBanks', [QuestionBankController::class,'create']);
         Route::post('/questions', [QuestionController::class,'create']);
         Route::post('/options', [QuestionOptionController::class,'create']);
-        
+
         Route::put('/{examId}/examQuestions', [ExamQuestionController::class,'patch']);
         Route::post('/questionIds', [ExamQuestionController::class,'getQuestionIds']);
         Route::post('/student/{id}/examQuestions', [QuestionAttempLogController::class,'attemptQuestion']);
 
 
         Route::patch('{user}/profile', [JobProfileController::class,'create']);
-     
+
         Route::post('/{user}/profileEducations', [JobProfileController::class,'createProfileEducations']);
         Route::put('/{user}/profileEducations/{profileEducation}', [JobProfileController::class,'updateProfileEducation']);
 
@@ -308,7 +319,7 @@ Route::group(['middleware' => [
 
         Route::post('/{user}/job', [JobController::class, 'create']);
         Route::put('/{user}/job/{job}', [JobController::class, 'update']);
-        
+
         Route::patch('/{user}/jobStatus/{jobStatus}', [JobStatusController::class, 'updateJobStatus']);
 
         // Route::post('/{user}/awards', [JobProfileController::class,'createAwards']);
@@ -324,39 +335,41 @@ Route::group(['middleware' => [
      Route::delete('/{user}/profileEducations/{profileEducation}', [JobProfileController::class,'deleteProfileEducation']);
      Route::delete('/{user}/profileExperience/{profileExperience}', [JobProfileController::class,'deleteProfileExperience']);
      Route::delete('/{user}/projects/{project}', [JobProfileController::class,'deleteProject']);
- 
+
      Route::get('/{user}/documents', [JobProfileController::class,'addCertificate']);
-     
+
      Route::post('/{user}/documents', [JobProfileController::class,'addCertificate']);
      Route::delete('/{user}/documents/{certificate}', [JobProfileController::class,'deleteCertificate']);
     //  Route::get('/{user}/documents', [JobProfileController::class,'getDocuments'])->name('api.certificate');
      Route::get('/{user}/documents/{certificate}', [JobProfileController::class,'previewCertificate'])->name('api.certificate');
- 
- 
+
+
      Route::delete('/{user}/job/{jobId}', [JobController::class, 'delete']);
      Route::get('/{user}/job', [JobController::class, 'index']);
- 
+
      Route::post('/{user}/job/{job}/apply', [JobStatusController::class, 'applyJob']);
      Route::get('/{user}/appliedJobs', [JobStatusController::class, 'indexJobs']);
      Route::get('/{user}/job/{job}', [JobStatusController::class, 'deleteJobApplication']);
-     
+
 });
 
 Route::middleware(['zohoAuth'])->group(function () {
     Route::get('/paymentDetails/{zohoCrmId}/refresh', [ZohoInvoiceController::class,'refreshZoho']);
-  
+
     Route::post('/student', [UserController::class,'createStudent']);
     Route::post('/batches', [BatchController::class,'create']);
     Route::put('/batches/{id}', [BatchController::class,'update']);
 
-   
+
 });
 
-    
+
 
 Route::get('/test', [TestingController::class,'testMail']);
 
 Route::get("/teams", [UserController::class, "getTeams"]);
+
+
 
 // Project routes
 Route::middleware('auth:sanctum')->group(function () {
@@ -372,7 +385,7 @@ Route::middleware(['auth:sanctum', 'addHeader'])->group(function () {
     Route::prefix('courses')->group(function () {
         // My courses
         Route::get('/my/{id}', [MyCourseController::class, 'index']);
-        
+
         // Batch related routes
         Route::prefix('batches')->group(function () {
             Route::get('/', [ApiBatchController::class, 'index']);
@@ -398,7 +411,7 @@ Route::middleware(['auth:sanctum', 'addHeader'])->group(function () {
 
 Route::middleware(['auth:sanctum'])->group(function () {
     // ... other routes ...
-    
+
     Route::get('/courses/my/{id}', [MyCourseController::class, 'index']);
     Route::get('/topics', [MyCourseController::class, 'getTopics']);
     Route::get('/teaching-materials', [TeachingMaterialController::class, 'index']);
