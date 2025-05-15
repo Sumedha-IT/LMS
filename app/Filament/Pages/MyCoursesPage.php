@@ -13,7 +13,6 @@ class MyCoursesPage extends Page
     protected static ?string $title = 'My Courses';
     protected static ?string $slug = 'my-courses';
     protected static ?int $navigationSort = -1;
-    protected static ?string $navigationGroup = 'My Courses';
 
     protected static string $view = 'filament.pages.my-courses-page';
 

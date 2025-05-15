@@ -8,53 +8,82 @@
 }
 
 .fi-sidebar-item a {
-    @apply text-gray-800 dark:text-gray-200;
+    color: #333333 !important;
+    font-weight: 500;
+    font-size: 1.1rem !important;
 }
 
 .fi-sidebar-item a:hover {
-    @apply bg-gray-100 dark:bg-gray-800;
+    @apply bg-white/20;
 }
 
 .fi-sidebar-item-active {
-    @apply bg-primary-50 dark:bg-primary-900/50;
+    @apply bg-white/30;
+    border-radius: 10px;
 }
 
 .fi-sidebar-item-active a {
-    @apply text-primary-600 dark:text-primary-400;
+    color: #ffffff !important;
+    font-weight: 600;
+    font-size: 1.1rem !important;
 }
 
 .fi-sidebar-item svg {
-    @apply text-gray-600 dark:text-gray-400;
+    color: #333333 !important;
+    stroke: #333333 !important;
+    fill: transparent !important;
+    background-color: transparent !important;
 }
 
 .fi-sidebar-item:hover svg {
-    @apply text-gray-700 dark:text-gray-300;
+    color: #333333 !important;
+    stroke: #333333 !important;
+    fill: transparent !important;
+    background-color: transparent !important;
 }
 
 .fi-sidebar-item-active svg {
-    @apply text-primary-600 dark:text-primary-400;
+    color: #ffffff !important;
+    stroke: #ffffff !important;
+    fill: transparent !important;
+    background-color: transparent !important;
 }
 
 /* Ensure text visibility */
 .fi-sidebar-item span {
-    @apply text-gray-800 dark:text-gray-200;
+    color: #333333 !important;
 }
 
 .fi-sidebar-item-active span {
-    @apply text-primary-600 dark:text-primary-400;
+    color: #ffffff !important;
 }
 
-/* Fix for white text issue */
+/* Fix for text color issue */
 .fi-sidebar-item a span,
 .fi-sidebar-item a svg,
 .fi-sidebar-group-label,
 .fi-sidebar-nav .fi-sidebar-header-heading {
-    @apply text-gray-800 dark:text-gray-200 !important;
+    color: #333333 !important;
+}
+
+/* Target icon containers */
+.fi-sidebar-item-icon {
+    color: #333333 !important;
+    width: 1.5rem !important;
+    height: 1.5rem !important;
+    background-color: transparent !important;
+}
+
+.fi-sidebar-item-active .fi-sidebar-item-icon {
+    color: #ffffff !important;
+    width: 1.5rem !important;
+    height: 1.5rem !important;
+    background-color: transparent !important;
 }
 
 .fi-sidebar-item-active a span,
 .fi-sidebar-item-active a svg {
-    @apply text-primary-600 dark:text-primary-400 !important;
+    color: #ffffff !important;
 }
 
 .fi-sidebar-nav {
@@ -62,35 +91,44 @@
     background: var(--orange-gradient, linear-gradient(135.51deg, rgba(235, 103, 7, 1) 0%, rgba(228, 43, 18, 1) 100%));
 }
 .fi-sidebar-item-active a,.fi-sidebar-item-active a:hover {
-    @apply color-white;
+    @apply text-white;
+    background-color: transparent !important;
 }
 
 .fi-sidebar-item-active a span,
 .fi-sidebar-item-active a svg,
 .fi-sidebar-item-active a svg #icon path{
-    @apply color-white;
-}
-.color-white{
-    fill: #ffffff !important;
     color: #ffffff !important;
-    background-color:transparent !important;
+    fill: #ffffff !important;
 }
-.fi-sidebar-item-active a svg path{
-    fill: transparent;
+
+.fi-sidebar-item a svg path,
+.fi-sidebar-item a svg rect,
+.fi-sidebar-item a svg circle,
+.fi-sidebar-item a svg line,
+.fi-sidebar-item a svg polyline,
+.fi-sidebar-item a svg polygon {
+    stroke: #333333 !important;
+    fill: transparent !important;
+    background-color: transparent !important;
 }
+
+.fi-sidebar-item-active a svg path,
+.fi-sidebar-item-active a svg rect,
+.fi-sidebar-item-active a svg circle,
+.fi-sidebar-item-active a svg line,
+.fi-sidebar-item-active a svg polyline,
+.fi-sidebar-item-active a svg polygon {
+    stroke: #ffffff !important;
+    fill: transparent !important;
+    background-color: transparent !important;
+}
+
 .fi-sidebar-item-active{
-    background: rgba(255, 255, 255, 0.2);
+    background: rgba(0, 0, 0, 0.15);
     border-radius: 10px;
-    /*padding: 0px 16px 0px 16px;
-    display: flex;
-    flex-direction: row;
-    gap: 10px;
-    align-items: center;
-    justify-content: flex-start;
-    flex-shrink: 0;*/
-    /*width: 240px;*/
-    /*height: 50px;
-    position: relative;*/
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    border-left: 3px solid #ffffff;
 }
 .button{
     background: #ff5003;
@@ -161,21 +199,102 @@ input:checked+.\[input\:checked\+\&\]\:hover\:bg-custom-500{
     color: #ffffff !important;
 }
 .fi-sidebar-nav .fi-sidebar-nav-groups{
-    row-gap: 0.5rem;
+    row-gap: 0.75rem;
 }
 .fi-sidebar-nav .fi-sidebar-nav-groups .fi-sidebar-group .fi-sidebar-group-items{
-    row-gap: 0;
+    row-gap: 0.5rem;
 }
 .fi-sidebar-nav{
-    padding-top: 0.5rem;
-    padding-bottom: 0.5rem;
-    row-gap:0.5rem;
+    padding-top: 0.75rem;
+    padding-bottom: 0.75rem;
+    row-gap: 0.75rem;
+}
+
+/* Add spacing between menu items */
+.fi-sidebar-item {
+    margin-bottom: 0.75rem;
+    padding: 0.25rem 0;
+}
+
+/* Adjust padding for menu items */
+.fi-sidebar-item a {
+    padding: 0.5rem 0.75rem !important;
+}
+
+/* Force icon colors */
+.fi-sidebar-item svg * {
+    stroke: #333333 !important;
+    fill: transparent !important;
+    color: #333333 !important;
+    background-color: transparent !important;
+}
+
+/* Target heroicon SVGs specifically */
+.fi-sidebar-item svg[data-slot="icon"] {
+    color: #333333 !important;
+    width: 1.5rem !important;
+    height: 1.5rem !important;
+    background-color: transparent !important;
+}
+
+.fi-sidebar-item svg[data-slot="icon"] path {
+    stroke: #333333 !important;
+    stroke-width: 1.5 !important;
+    fill: transparent !important;
+    background-color: transparent !important;
+}
+
+.fi-sidebar-item-active svg * {
+    stroke: #ffffff !important;
+    fill: transparent !important;
+    color: #ffffff !important;
+    background-color: transparent !important;
+}
+
+/* Target heroicon SVGs specifically for active items */
+.fi-sidebar-item-active svg[data-slot="icon"] {
+    color: #ffffff !important;
+    width: 1.5rem !important;
+    height: 1.5rem !important;
+    background-color: transparent !important;
+}
+
+.fi-sidebar-item-active svg[data-slot="icon"] path {
+    stroke: #ffffff !important;
+    stroke-width: 1.5 !important;
+    fill: transparent !important;
+    background-color: transparent !important;
+}
+
+.fi-sidebar-group-label {
+    color: #333333 !important;
+    font-weight: 600;
+    font-size: 1.15rem !important;
+}
+
+.fi-sidebar-group-button {
+    color: #333333 !important;
+}
+
+.fi-sidebar-group-button svg {
+    color: #333333 !important;
+    fill: #333333 !important;
 }
 
 /* Logo styling */
 .fi-sidebar-header {
     border-bottom: none;
     position: relative;
+}
+
+.fi-sidebar-header-heading {
+    color: #333333 !important;
+    font-weight: 600;
+    font-size: 1.2rem !important;
+}
+
+.fi-sidebar-header a {
+    color: #333333 !important;
 }
 
 /* Custom sidebar toggle button */

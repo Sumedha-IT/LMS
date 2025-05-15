@@ -9,10 +9,9 @@ class AnnouncementsPage extends Page
 {
     protected static ?string $navigationIcon = 'heroicon-o-megaphone';
     protected static ?string $navigationLabel = 'Announcements';
-    protected static ?string $title = 'Announcements';
+    protected static ?string $title = '';
     protected static ?string $slug = 'student-announcements';
     protected static ?int $navigationSort = 2; // Position in the sidebar
-    protected static ?string $navigationGroup = 'Communication';
 
 
     protected static string $view = 'filament.pages.announcements-page';

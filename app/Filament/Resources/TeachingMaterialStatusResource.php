@@ -33,6 +33,10 @@ class TeachingMaterialStatusResource extends Resource
     protected static ?string $pluralLabel = 'Assignments';
     protected static ?string $label = 'Assignment';
 
+    public static function shouldRegisterNavigation(): bool
+    {
+        return false; // This will hide the Assignments menu item from the sidebar
+    }
 
     public static function form(Form $form): Form
     {

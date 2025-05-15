@@ -12,7 +12,6 @@ class StudentJourneyPage extends Page
     protected static ?string $title = 'Student Journey';
     protected static ?string $slug = 'student-journey';
     protected static ?int $navigationSort = 1; // Position in the sidebar
-    protected static ?string $navigationGroup = 'Learning';
 
     public function mount(): void
     {

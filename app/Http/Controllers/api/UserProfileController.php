@@ -14,9 +14,14 @@ class UserProfileController extends Controller
     public function Index(Request $request)
     {
         $user = $request->user();
+        // Add more detailed user information
+        $user->load('state'); // Load state relationship if it exists
+
+        // Return a more detailed response
         return response()->json([
             'success' => true,
-            'user' => $user
+            'user' => $user,
+            'message' => 'User profile retrieved successfully'
         ]);
     }
 
@@ -58,7 +63,7 @@ class UserProfileController extends Controller
                 $path = $request->file('upload_aadhar')->store('documents', 'public');
                 $user->upload_aadhar = $path;
             }
-            
+
             // Handle passport photo upload
             if ($request->hasFile('passport_photo')) {
                 if ($user->passport_photo_path) {

@@ -43,6 +43,9 @@ Route::get('user/{userId}/exam/{examId}/assessment/{attemptId}', function ($user
     return view('questionPanel');  // This should point to the Blade file that loads the React component.
 })->name('user.exam.questionPanel');
 
+Route::get('user/{userId}/exam/{examId}/review/{attemptId}', function ($userId, $examId, $attemptId) {
+    return view('examReview');  // This should point to the Blade file that loads the React component.
+})->name('user.exam.review');
 
 Route::get('/administrator/{adminId}/examinations/user/{userId}/exam/{examId}/result}', function ($userId, $examId) {
     return view('examResult');  // This should point to the Blade file that loads the React component.
@@ -51,6 +54,9 @@ Route::get('/administrator/{adminId}/examinations/user/{userId}/exam/{examId}/re
 Route::get('/user', function () {
     return redirect('/administrator');
 });
+
+// Test route for assignment submission
+Route::get('/test-assignment-submission/{assignmentId}', [App\Http\Controllers\TeachingMaterialController::class, 'getAssignmentSubmission']);
 
 // MyCourses and Announcements React UI routes
 Route::middleware(['auth'])->group(function () {

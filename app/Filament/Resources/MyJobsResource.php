@@ -24,12 +24,7 @@ class MyJobsResource extends Resource
 
     public static function shouldRegisterNavigation(): bool
     {
-        if (auth()->check() && auth()->user()) {
-            return (auth()->user()->getIsStudentAttribute());
-        }
-    
-        // Return false if no user is logged in or role is not 'Student'
-        return false;
+        return false; // Temporarily hiding my jobs menu item
     }
     
     public static function form(Form $form): Form
