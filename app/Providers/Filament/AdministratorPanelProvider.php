@@ -8,6 +8,9 @@ use App\Filament\Pages\MyCoursesPage;
 use App\Filament\Pages\AnnouncementsPage;
 use App\Filament\Pages\StudentDashboardPage;
 use App\Filament\Pages\StudentJourneyPage;
+use App\Filament\Pages\StudentAttendancePage;
+use App\Filament\Pages\AdminAttendancePage;
+use App\Filament\Pages\TutorAttendancePage;
 use App\Http\Middleware\ApplyTenantScopes;
 use App\Livewire\MyCustomPersonalInfo;
 use Filament\Http\Middleware\Authenticate;
@@ -91,11 +94,14 @@ class AdministratorPanelProvider extends PanelProvider
             ->discoverResources(in: app_path('Filament/Resources'), for: 'App\\Filament\\Resources')
             ->discoverPages(in: app_path('Filament/Pages'), for: 'App\\Filament\\Pages')
             ->pages([
+                // Pages\Dashboard::class, // Removing default dashboard
                 StudentDashboardPage::class,
-                MyProfilePage::class,
                 MyCoursesPage::class,
                 AnnouncementsPage::class,
                 StudentJourneyPage::class,
+                StudentAttendancePage::class,
+                AdminAttendancePage::class,
+                TutorAttendancePage::class,
             ])
             ->discoverClusters(in: app_path('Filament/Clusters'), for: 'App\\Filament\\Clusters')
             ->discoverWidgets(in: app_path('Filament/Widgets'), for: 'App\\Filament\\Widgets')

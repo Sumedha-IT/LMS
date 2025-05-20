@@ -9,6 +9,9 @@ const cache = new Map();
 // Default cache expiration time (5 minutes)
 const DEFAULT_CACHE_TIME = 5 * 60 * 1000;
 
+// Debug flag to log cache operations
+const DEBUG_CACHE = false;
+
 /**
  * Get data from cache
  * @param {string} key - Cache key
@@ -16,6 +19,7 @@ const DEFAULT_CACHE_TIME = 5 * 60 * 1000;
  */
 export const getFromCache = (key) => {
   if (!cache.has(key)) {
+    if (DEBUG_CACHE) console.log(`Cache miss: ${key}`);
     return null;
   }
 
@@ -24,10 +28,12 @@ export const getFromCache = (key) => {
 
   // Check if cache has expired
   if (now > cachedData.expiry) {
+    if (DEBUG_CACHE) console.log(`Cache expired: ${key}`);
     cache.delete(key);
     return null;
   }
 
+  if (DEBUG_CACHE) console.log(`Cache hit: ${key}`);
   return cachedData.data;
 };
 
@@ -40,6 +46,7 @@ export const getFromCache = (key) => {
 export const saveToCache = (key, data, expiryTime = DEFAULT_CACHE_TIME) => {
   const expiry = Date.now() + expiryTime;
   cache.set(key, { data, expiry });
+  if (DEBUG_CACHE) console.log(`Cache set: ${key}, expires in ${expiryTime/1000}s`);
 };
 
 /**
@@ -48,8 +55,10 @@ export const saveToCache = (key, data, expiryTime = DEFAULT_CACHE_TIME) => {
  */
 export const clearCache = (key) => {
   if (key) {
+    if (DEBUG_CACHE) console.log(`Cache clear: ${key}`);
     cache.delete(key);
   } else {
+    if (DEBUG_CACHE) console.log('Cache clear: all');
     cache.clear();
   }
 };

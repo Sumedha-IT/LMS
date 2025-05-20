@@ -31,6 +31,9 @@ import MyCourses from './pages/MyCourses';
 import Topics from './pages/Topics';
 import Announcements from './pages/Announcements';
 import StudentJourney from './pages/StudentJourney';
+import StudentAttendance from './components/Attendance/StudentAttendance';
+import AdminAttendance from './components/Attendance/AdminAttendance';
+import TutorAttendance from './components/Attendance/TutorAttendance';
 
 function App() {
   return (
@@ -83,6 +86,11 @@ function App() {
 
         {/* Student Journey */}
         <Route path="/administrator/:id/student-journey" element={<StudentJourney />} />
+
+        {/* Attendance Routes */}
+        <Route path="/administrator/:id/student-attendance" element={<StudentAttendance />} />
+        <Route path="/administrator/:id/admin-attendance" element={<AdminAttendance />} />
+        <Route path="/administrator/:id/tutor-attendance" element={<TutorAttendance />} />
 
         {/* Remove Topics route as functionality is now in MyCourses */}
         {/* <Route path="/administrator/:id/topics/:curriculumId" element={<Topics />} /> */}

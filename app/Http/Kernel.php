@@ -87,6 +87,7 @@ class Kernel extends HttpKernel
         'addHeader'=>\App\Http\Middleware\AddHeader::class,
         'encryptCookie' =>\App\Http\Middleware\EncryptCookies::class,
         'zohoAuth' =>\App\Http\Middleware\ZohoMiddleware::class,
-        'checkFeatureAcc' =>\App\Http\Middleware\CheckFeatureAccessMiddleware::class
+        'checkFeatureAcc' =>\App\Http\Middleware\CheckFeatureAccessMiddleware::class,
+        'checkStudentAttendance' => \App\Http\Middleware\CheckStudentAttendance::class
     ];
 }

@@ -88,7 +88,7 @@
 
 .fi-sidebar-nav {
     /*@apply bg-gray-50 dark:bg-gray-950;*/
-    background: var(--orange-gradient, linear-gradient(135.51deg, rgba(235, 103, 7, 1) 0%, rgba(228, 43, 18, 1) 100%));
+    background: var(--orange-gradient, linear-gradient(135.51deg, rgb(216, 82, 15) 0%, rgb(228, 81, 18) 100%)); 
 }
 .fi-sidebar-item-active a,.fi-sidebar-item-active a:hover {
     @apply text-white;

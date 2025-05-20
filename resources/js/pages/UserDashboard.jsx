@@ -25,10 +25,14 @@ const UserDashboard = () => {
 
     if (!showExams) {
         return (
-            <section className='w-full flex flex-col gap-8 p-2 min-h-screen'>
+            <section className='w-full flex flex-col gap-8 p-2 min-h-screen bg-white'>
                 <div className="w-full flex gap-2">
                     {/* Upcoming Exams Card */}
-                    <div className="w-8/12 bg-[#F03A17] text-white pl-10 py-2 rounded-xl flex justify-between items-center">
+                    <div className="w-8/12 text-white pl-10 py-2 rounded-xl flex justify-between items-center border border-white/30 shadow-lg"
+                        style={{
+                            background: 'linear-gradient(135.51deg, rgba(235, 103, 7, 1) 0%, rgba(228, 43, 18, 1) 100%)',
+                        }}
+                    >
                         <div className="space-y-4 max-w-[70%]">
                             <h2 className="text-2xl font-bold">Check your Upcoming Exams Here.</h2>
                             <p className="text-sm font-normal opacity-90">
@@ -49,7 +53,7 @@ const UserDashboard = () => {
                         </div>
                         <div className="max-w-[40%]">
                             <img
-                                src="/storage/Calender.png"
+                                src="/images/Calender.png"
                                 alt="Calendar illustration"
                                 className="object-contain"
                             />
@@ -57,11 +61,15 @@ const UserDashboard = () => {
                     </div>
 
                     {/* Attempted Exams Card */}
-                    <div className="w-4/12 bg-white border border-gray-100 shadow-sm p-1 flex-col rounded-xl flex justify-between items-center">
+                    <div className="w-4/12 border border-white/30 shadow-lg p-1 flex-col rounded-xl flex justify-between items-center backdrop-blur-md"
+                        style={{
+                            background: 'linear-gradient(135.51deg, rgba(235, 103, 7, 0.8) 0%, rgba(228, 43, 18, 0.8) 100%)',
+                        }}
+                    >
                         <div className="flex">
                             <div className="space-y-2 pl-3 w-[60%] py-5">
-                                <h2 className="text-xl font-bold text-gray-700">Attempted Exams Summary</h2>
-                                <p className="text-sm text-gray-500">
+                                <h2 className="text-xl font-bold text-white">Attempted Exams Summary</h2>
+                                <p className="text-sm text-white/80">
                                     You've completed some of your exams. Click below to review your results and performance summary
                                 </p>
                             </div>
@@ -79,10 +87,9 @@ const UserDashboard = () => {
                             </div>
                         </div>
 
-
-                       <div className=' w-full items-center flex justify-center border-t-[0.5px] py-2 border-[#E53510]'>
+                       <div className='w-full items-center flex justify-center border-t-[0.5px] py-2 border-white/40'>
                        <button
-                                    className="bg-[#F03A17] hover:bg-[#f03b17cc] transition-colors  text-white rounded-full px-5 py-2 text-sm font-medium"
+                                    className="bg-[#F03A17] hover:bg-[#f03b17cc] transition-colors text-white rounded-full px-5 py-2 text-sm font-medium shadow"
                                     onClick={() => {
                                         setShowExams(true);
                                         setMainTab(1); // Switch to Attempted Exams tab

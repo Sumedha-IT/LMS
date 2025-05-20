@@ -18,17 +18,34 @@ export default function AttendanceTracker() {
     const fetchAttendanceData = async () => {
       try {
         setLoading(true)
-        const data = await apiRequest("/attendances", { skipCache: loading })
+        // Use the student attendance report API which has the correct attendance calculation
+        const data = await apiRequest("/student-attendance/report?filter_type=all", { skipCache: true })
 
-        setAttendanceData({
-          current: data.Attendance_count || 0,
-          total: data.Attendance_count + (data.Attendance_percentage ? (100 / data.Attendance_percentage * data.Attendance_count - data.Attendance_count) : 0),
-          percentage: data.Attendance_percentage || 0
-        })
-        setProgress(data.Attendance_percentage || 0)
+        // Check if we have attendance data
+        if (data) {
+          // Calculate the correct attendance percentage from the report
+          const presentDays = data.present_days || 0
+          const totalDays = data.total_days || 0
+          const attendancePercentage = totalDays > 0 ? Math.round((presentDays / totalDays) * 100) : 0
+
+          // Set the attendance data from the API response
+          setAttendanceData({
+            current: presentDays,
+            total: totalDays,
+            percentage: attendancePercentage
+          })
+          setProgress(attendancePercentage)
+        }
         setLoading(false)
       } catch (err) {
         console.error('Error fetching attendance data:', err)
+        // Set default values in case of error
+        setAttendanceData({
+          current: 0,
+          total: 0,
+          percentage: 0
+        })
+        setProgress(0)
         setLoading(false)
       }
     }

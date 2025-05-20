@@ -33,8 +33,8 @@ class CheckFeatureAccessMiddleware
                     // Define patterns in a single regex with alternation
                     $modelToDisablePattern = "/^\/administrator\/\d+(\/(calendar|calendars|timeline|examinations|feedback|my-profile|announcements|attendances|leaves|holidays|teaching-material-statuses|master\/batches)?)?$/";
 
-                    // Match pattern
-                    if (preg_match($modelToDisablePattern, $path)) {
+                    // Match pattern but exclude payment-details from blocking
+                    if (preg_match($modelToDisablePattern, $path) && !str_contains($path, 'payment-details')) {
                         // Redirect if match is found
                         $branchId = 1;
                         return redirect('/administrator/'.$branchId.'/payment-details');

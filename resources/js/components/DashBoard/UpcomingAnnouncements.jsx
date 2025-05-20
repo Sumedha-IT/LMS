@@ -138,8 +138,8 @@ export default function UpcomingAnnouncements() {
   // Get current week dates
   const { start, end } = getWeekRange();
   return (
-    <div className="bg-gray-50 p-1 flex justify-center items-center min-h-[400px]">
-      <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 w-full">
+    <div className="bg-gray-50 p-1 flex justify-center items-center h-full min-h-[400px]">
+      <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 w-full h-full">
       <div className="grid grid-cols-[auto_1fr_auto] items-center mb-4 gap-4">
           <h1 className="text-2xl font-medium text-gray-800 whitespace-nowrap">
             <a href={`${trimmedPath}announcements`}>Upcoming Announcements</a>

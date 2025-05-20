@@ -18,54 +18,65 @@ class CalendarController extends Controller
         $request->validate([
             'start' => 'required|date_format:Y-m-d',
             'end' => 'required|date_format:Y-m-d|after_or_equal:start',
-            
         ]);
-    
+
         $startDate = $request->input('start');
         $endDate = $request->input('end');
-    
-        
-        $calendar = Calendar::with('curriculum')// as  sir told retrive the data with start and end date 
-            ->whereBetween('start_time', [$startDate. ' 00:00:00', $endDate. ' 23:59:59'])
-            ->get();
-    
-    
-        $calendar = CalendarResource::collection($calendar);
-        
-        
-        $holidays = Holiday::wherebetween('date', [$startDate,$endDate])
-        ->get();
-    
-      
-        $holidays = HolidayResource::collection($holidays);
-    
-    
-        $mergedData = $calendar->merge($holidays);
-    
-        // $mergedData = $calendar->merge($holidays);
+        $getAllHolidays = $request->input('all_holidays', false);
 
-    
+        // Get calendar events
+        $calendar = Calendar::with('curriculum')
+            ->whereBetween('start_time', ["{$startDate} 00:00:00", "{$endDate} 23:59:59"])
+            ->get();
+
+        $calendarData = CalendarResource::collection($calendar);
+
+        // Get all holidays
+        $holidays = Holiday::all();
+        $holidaysData = HolidayResource::collection($holidays);
+
+        // Check if we should return all holidays without pagination
+        if ($getAllHolidays) {
+            // For the all_holidays request, we'll return all holidays and calendar events
+            $allData = [];
+
+            // Add calendar events
+            foreach ($calendarData as $event) {
+                $allData[] = $event;
+            }
+
+            // Add all holidays
+            foreach ($holidaysData as $holiday) {
+                $allData[] = $holiday;
+            }
+
+            return [
+                'data' => $allData,
+            ];
+        }
+
+        // For regular requests with pagination
+        $mergedData = [];
+
+        // Add calendar events
+        foreach ($calendarData as $event) {
+            $mergedData[] = $event;
+        }
+
+        // Add holidays
+        foreach ($holidaysData as $holiday) {
+            $mergedData[] = $holiday;
+        }
+
+        // Apply pagination
         $perPage = $request->input('page_size', 3); // Default page size is 3
         $page = Paginator::resolveCurrentPage() ?: 1;
-        $items = $mergedData->slice(($page - 1) * $perPage, $perPage)->values();
-        $total = $mergedData->count();
-        $start = ($page - 1) * $perPage + 1;
-        // $end = min($start + $perPage - 1, $total);
-        $lastPage = ceil($total / $perPage);
-    
-        // Construct the pagination response
-        $pagination = [
-            'total' => $total,
-            'page' => $page,
-            'start' => $start,
-            'end' => $lastPage,
-            'page_size' => $perPage,
-        ];
-    
-        // Return the paginated data along with pagination information
+
+        $collection = collect($mergedData);
+        $items = $collection->slice(($page - 1) * $perPage, $perPage)->values();
+
         return [
             'data' => $items,
-            // 'pagination' => $pagination,
         ];
     }
 }

@@ -1,16 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { LocalizationProvider } from '@mui/x-date-pickers';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
-import { DateCalendar } from '@mui/x-date-pickers/DateCalendar';
-import { PickersDay } from '@mui/x-date-pickers/PickersDay';
-import { Avatar, Button, Select, MenuItem, Card, CardContent, CircularProgress, Alert, Pagination } from '@mui/material';
-import { Event, School, BeachAccess } from '@mui/icons-material';
+import { Avatar, Button, Select, MenuItem, Card, CardContent, CircularProgress, Alert, Pagination, Typography, Box } from '@mui/material';
+import { Event, School, BeachAccess, Flag, CalendarMonth } from '@mui/icons-material';
 import { apiRequest } from '../utils/api';
 
 const Announcements = () => {
-  const [date, setDate] = useState(new Date());
-  const [calendarView, setCalendarView] = useState('day');
   const [announcements, setAnnouncements] = useState([]);
+  const [holidays, setHolidays] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
@@ -19,34 +16,54 @@ const Announcements = () => {
   const DEFAULT_IMAGE = 'https://www.creativecoloursolutions.com.au/wp-content/uploads/2017/09/400x400.jpg';
 
   useEffect(() => {
-    const fetchAnnouncements = async () => {
+    const fetchData = async () => {
       try {
         setLoading(true);
-        const response = await apiRequest("/announcements");
-        setAnnouncements(response.data.map(ann => ({
+
+        // Fetch announcements
+        const announcementsResponse = await apiRequest("/announcements");
+        setAnnouncements(announcementsResponse.data.map(ann => ({
           id: ann.Id,
           title: ann.Title,
           subtitle: ann.Description,
           rawDate: new Date(ann.Schedule_at),
           date: new Date(ann.Schedule_at).toLocaleDateString('en-GB'),
-          time: new Date(ann.Schedule_at).toLocaleTimeString('en-US', { 
-            hour: 'numeric', 
-            minute: '2-digit' 
+          time: new Date(ann.Schedule_at).toLocaleTimeString('en-US', {
+            hour: 'numeric',
+            minute: '2-digit'
           }),
           venue: ann.Venue || "Online",
           image: ann.Image || DEFAULT_IMAGE,
           type: 'event',
           icon: <Event sx={{ color: 'white' }} />
         })));
+
+        // Fetch all holidays
+        // We still need to provide start and end dates for the API, but the backend will return all holidays
+        const startDate = '2000-01-01';
+        const endDate = '2100-12-31';
+
+        const holidaysResponse = await apiRequest(`/calenders/list?start=${startDate}&end=${endDate}&all_holidays=true`);
+
+        // Filter only holiday type items
+        const holidayItems = holidaysResponse.data.filter(item => item.type === 'Holiday');
+
+        // Sort holidays by date (ascending)
+        const sortedHolidays = holidayItems.sort((a, b) => {
+          return new Date(a.start) - new Date(b.start);
+        });
+
+        setHolidays(sortedHolidays);
+
       } catch (err) {
-        console.error("Error fetching announcements:", err);
-        setError(err.message || "Failed to load announcements");
+        console.error("Error fetching data:", err);
+        setError(err.message || "Failed to load data");
       } finally {
         setLoading(false);
       }
     };
 
-    fetchAnnouncements();
+    fetchData();
   }, []);
 
   useEffect(() => {
@@ -62,54 +79,16 @@ const Announcements = () => {
     setCurrentPage(value);
   };
 
-  const hasEvents = (date) => {
-    return announcements.some(ann => {
-      const annDate = ann.rawDate;
-      return (
-        annDate.getDate() === date.getDate() &&
-        annDate.getMonth() === date.getMonth() &&
-        annDate.getFullYear() === date.getFullYear()
-      );
+  // Format date for display
+  const formatDate = (dateString) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-GB', {
+      weekday: 'long',
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
     });
   };
-
-  const CustomDay = (props) => {
-    const { day, ...other } = props;
-    const isEventDate = hasEvents(day);
-
-    return (
-      <PickersDay 
-        {...other} 
-        day={day}
-        sx={{
-          position: 'relative',
-          ...(isEventDate && {
-            '&:after': {
-              content: '""',
-              position: 'absolute',
-              bottom: 2,
-              left: '50%',
-              width: 6,
-              height: 6,
-              backgroundColor: '#f97316',
-              borderRadius: '50%',
-              transform: 'translateX(-50%)'
-            }
-          })
-        }}
-      />
-    );
-  };
-
-  const selectedDateEvents = announcements.filter(ann => {
-    const annDate = ann.rawDate;
-    const selectedDate = date;
-    return (
-      annDate.getDate() === selectedDate.getDate() &&
-      annDate.getMonth() === selectedDate.getMonth() &&
-      annDate.getFullYear() === selectedDate.getFullYear()
-    );
-  });
 
   if (loading) {
     return (
@@ -150,7 +129,7 @@ const Announcements = () => {
                         e.target.src = DEFAULT_IMAGE;
                       }}
                     />
-                   
+
                   </div>
                   <CardContent className="p-6 flex-1">
                     <h2 className="text-2xl font-bold mb-3">{announcement.title}</h2>
@@ -166,7 +145,7 @@ const Announcements = () => {
                           ⏰ {announcement.time}
                         </div>
                       )}
-                      
+
                     </div>
                   </CardContent>
                 </div>
@@ -196,67 +175,109 @@ const Announcements = () => {
           )}
         </div>
 
-        {/* Calendar Section */}
+        {/* Holidays Section */}
         <div className="w-full md:w-1/3 relative">
           <div className="sticky top-4">
             <Card className="border rounded-lg shadow-sm">
               <CardContent className="p-4">
-                <div className="flex justify-between items-center mb-4">
-                  <h2 className="text-xl font-bold">Academic Calendar</h2>
-                  <Select
-                    value={calendarView}
-                    onChange={(e) => setCalendarView(e.target.value)}
-                    className="bg-red-50 border-none rounded-full"
+                <div className="flex justify-between items-center mb-3">
+                  <h2 className="text-xl font-bold">All Holidays</h2>
+                  <Box sx={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 1,
+                    bgcolor: 'rgba(249, 115, 22, 0.1)',
+                    px: 1.5,
+                    py: 0.5,
+                    borderRadius: 2
+                  }}>
+                    <Flag sx={{ color: '#f97316', fontSize: '1.2rem' }} />
+                    <Typography variant="body2" sx={{ fontWeight: 600, color: '#f97316' }}>
+                      {holidays.length} Holidays
+                    </Typography>
+                  </Box>
+                </div>
+
+                {holidays.length > 0 ? (
+                  <Box
                     sx={{
-                      '& .MuiOutlinedInput-notchedOutline': { border: 'none' },
-                      '& .MuiSelect-select': { padding: '4px 16px' }
+                      maxHeight: '450px',
+                      overflowY: 'auto',
+                      pr: 1,
+                      mt: 1,
+                      pb: 1,
+                      '&::-webkit-scrollbar': {
+                        width: '6px',
+                      },
+                      '&::-webkit-scrollbar-track': {
+                        background: '#f1f1f1',
+                        borderRadius: '10px',
+                      },
+                      '&::-webkit-scrollbar-thumb': {
+                        background: '#f97316',
+                        borderRadius: '10px',
+                      },
+                      '&::-webkit-scrollbar-thumb:hover': {
+                        background: '#e65c00',
+                      },
                     }}
                   >
-                    <MenuItem value="day">Day</MenuItem>
-                    <MenuItem value="week">Week</MenuItem>
-                    <MenuItem value="month">Month</MenuItem>
-                  </Select>
-                </div>
-
-                <div className="mb-6 border rounded-lg overflow-hidden">
-                  <DateCalendar
-                    value={date}
-                    onChange={(newDate) => setDate(newDate)}
-                    views={['day', 'month', 'year']}
-                    slots={{
-                      day: CustomDay,
-                    }}
-                    sx={{
-                      width: '100%',
-                      '& .MuiPickersDay-root': {
-                        '&.Mui-selected': {
-                          backgroundColor: '#f97316',
-                          '&:hover': { backgroundColor: '#ea580c' }
-                        }
-                      }
-                    }}
-                  />
-                </div>
-
-                <h3 className="text-lg font-semibold mb-2">
-                  Events on {date.toLocaleDateString('en-GB')}
-                </h3>
-                {selectedDateEvents.length > 0 ? (
-                  selectedDateEvents.map(event => (
-                    <Card key={event.id} className="mb-2 hover:bg-gray-50">
-                      <CardContent className="p-3">
-                        <h4 className="font-medium">{event.title}</h4>
-                        <p className="text-sm text-gray-600">{event.subtitle}</p>
-                        <div className="mt-2 text-xs text-gray-500">
-                          ⏰ {event.time} 
+                    <div className="space-y-2">
+                      {holidays.map((holiday, index) => (
+                        <div key={holiday.id}>
+                          <Card
+                            className="border border-orange-100 hover:bg-orange-50 transition-colors"
+                            sx={{
+                              boxShadow: '0 2px 4px rgba(0,0,0,0.05)',
+                              borderRadius: 2,
+                              overflow: 'hidden'
+                            }}
+                          >
+                            <CardContent sx={{ p: 2 }}>
+                              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.5 }}>
+                                <CalendarMonth fontSize="small" sx={{ color: '#f97316' }} />
+                                <Typography variant="body2" sx={{ fontWeight: 600, color: '#f97316' }}>
+                                  {formatDate(holiday.start)}
+                                </Typography>
+                              </Box>
+                              <Typography variant="h6" sx={{ fontWeight: 600, fontSize: '0.95rem', pl: 0.5 }}>
+                                {holiday.title}
+                              </Typography>
+                            </CardContent>
+                          </Card>
+                          {index < holidays.length - 1 && (
+                            <Box sx={{
+                              height: '8px',
+                              display: 'flex',
+                              justifyContent: 'center',
+                              alignItems: 'center'
+                            }}>
+                              <Box sx={{
+                                width: '4px',
+                                height: '4px',
+                                borderRadius: '50%',
+                                bgcolor: 'rgba(249, 115, 22, 0.3)'
+                              }} />
+                            </Box>
+                          )}
                         </div>
-                      </CardContent>
-                    </Card>
-                  ))
+                      ))}
+                    </div>
+                  </Box>
                 ) : (
-                  <p className="text-sm text-gray-600">
-                    No events scheduled for this day
-                  </p>
+                  <Box sx={{
+                    p: 3,
+                    textAlign: 'center',
+                    bgcolor: 'rgba(249, 115, 22, 0.05)',
+                    borderRadius: 2
+                  }}>
+                    <Typography variant="body1" sx={{ color: 'text.secondary', mb: 1 }}>
+                      No holidays found
+                    </Typography>
+                    <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+                      No holidays have been added to the system yet
+                    </Typography>
+                  </Box>
                 )}
               </CardContent>
             </Card>

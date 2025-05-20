@@ -42,6 +42,7 @@ use App\Http\Controllers\api\MyCourseController;
 use App\Http\Controllers\api\BatchController as ApiBatchController;
 use App\Http\Controllers\api\CurriculumController as ApiCurriculumController;
 use App\Http\Controllers\api\TopicController;
+use App\Http\Controllers\StudentAttendanceController;
 
 /*
 |--------------------------------------------------------------------------
@@ -184,6 +185,12 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
     Route::post('/mark-attendance', [\App\Http\Controllers\AttendanceController::class, 'markAttendance']);
 
     Route::post('/verify-campus-location', [\App\Http\Controllers\AttendanceController::class, 'verifyCampusLocation']);
+
+    // Student Attendance Routes
+    Route::get('/student-attendance/status', [StudentAttendanceController::class, 'getAttendanceStatus']);
+    Route::post('/student-attendance/check-in', [StudentAttendanceController::class, 'checkIn']);
+    Route::post('/student-attendance/check-out', [StudentAttendanceController::class, 'checkOut']);
+
     //Api for annoucements
     Route::get('/announcements', [\App\Http\Controllers\AnnouncementController::class, 'index']);
 
@@ -416,4 +423,14 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::get('/topics', [MyCourseController::class, 'getTopics']);
     Route::get('/teaching-materials', [TeachingMaterialController::class, 'index']);
     Route::get('/teaching-materials/{topic_id}', [TeachingMaterialController::class, 'getByTopic']);
+
+    // Student Attendance Routes
+    Route::prefix('student-attendance')->group(function () {
+        Route::post('/check-in', [StudentAttendanceController::class, 'checkIn']);
+        Route::post('/check-out', [StudentAttendanceController::class, 'checkOut']);
+        Route::get('/report', [StudentAttendanceController::class, 'getAttendanceReport']);
+        Route::get('/admin-report', [StudentAttendanceController::class, 'getAdminReport']);
+        Route::get('/tutor-report', [StudentAttendanceController::class, 'getTutorReport']);
+        Route::get('/batches', [StudentAttendanceController::class, 'getBatches']);
+    });
 });

@@ -59,7 +59,7 @@ Route::get('/user', function () {
 Route::get('/test-assignment-submission/{assignmentId}', [App\Http\Controllers\TeachingMaterialController::class, 'getAssignmentSubmission']);
 
 // MyCourses and Announcements React UI routes
-Route::middleware(['auth'])->group(function () {
+Route::middleware(['auth', 'checkStudentAttendance'])->group(function () {
     // React UI routes
     Route::get('/my-courses', function () {
         return view('my-courses');
@@ -75,6 +75,49 @@ Route::middleware(['auth'])->group(function () {
         // Redirect admins to the Filament admin panel
         return redirect('/administrator/' . $id);
     })->name('student.announcements');
+
+    // Student Attendance Pages - support both URL patterns
+    Route::get('/student-attendance', function () {
+        return view('student-attendance');
+    })->name('student.attendance');
+
+    // Support the administrator URL pattern for student attendance
+    Route::get('/administrator/{id}/student-attendance', function ($id) {
+        // Only allow students to access this page
+        if (auth()->user() && auth()->user()->is_student) {
+            return view('student-attendance');
+        }
+
+        // Redirect admins to the Filament admin panel
+        return redirect('/administrator/' . $id);
+    });
+
+    // Admin Attendance Page
+    Route::get('/admin-attendance', function () {
+        if (!auth()->user()->is_admin) {
+            return redirect('/');
+        }
+        return view('admin-attendance');
+    })->name('admin.attendance');
+
+    // Tutor Attendance Page
+    Route::get('/tutor-attendance', function () {
+        if (!auth()->user()->is_tutor) {
+            return redirect('/');
+        }
+        return view('tutor-attendance');
+    })->name('tutor.attendance');
+
+    // Support the administrator URL pattern for tutor attendance
+    Route::get('/administrator/{id}/tutor-attendance', function ($id) {
+        // Only allow tutors to access this page
+        if (auth()->user() && auth()->user()->is_tutor) {
+            return view('tutor-attendance');
+        }
+
+        // Redirect non-tutors to the Filament admin panel
+        return redirect('/administrator/' . $id);
+    });
 });
 
 // Fallback route for React router

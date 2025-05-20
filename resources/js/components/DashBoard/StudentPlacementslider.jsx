@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { Box, Card, Typography, IconButton, Avatar, ThemeProvider, createTheme } from "@mui/material"
 import { ChevronLeft, ChevronRight, Star } from "lucide-react"
@@ -53,9 +53,25 @@ const MotionBox = motion(Box)
 const MotionTypography = motion(Typography)
 const MotionAvatar = motion(Avatar)
 
-export default function StudentPlacedCard() {
+export default function StudentPlacedCard({ autoScroll = false }) {
   const [currentIndex, setCurrentIndex] = useState(0)
   const [direction, setDirection] = useState(0) // -1 for left, 1 for right
+
+  // Auto-scroll functionality
+  useEffect(() => {
+    let intervalId;
+
+    if (autoScroll) {
+      intervalId = setInterval(() => {
+        setDirection(1);
+        setCurrentIndex((prev) => (prev === students.length - 1 ? 0 : prev + 1));
+      }, 3000); // Change slide every 3 seconds
+    }
+
+    return () => {
+      if (intervalId) clearInterval(intervalId);
+    };
+  }, [autoScroll]);
 
   const handlePrevious = () => {
     setDirection(-1)
@@ -124,7 +140,8 @@ export default function StudentPlacedCard() {
     <ThemeProvider theme={theme}>
       <MotionBox
         sx={{
-          maxWidth: 320,
+          maxWidth: "100%",
+          height: "100%",
           margin: "0 auto",
         }}
         variants={containerVariants}
@@ -136,6 +153,9 @@ export default function StudentPlacedCard() {
             bgcolor: "primary.main",
             color: "white",
             padding: 2,
+            height: "100%",
+            display: "flex",
+            flexDirection: "column",
           }}
         >
           <MotionTypography
@@ -156,6 +176,8 @@ export default function StudentPlacedCard() {
               position: "relative",
               overflow: "hidden",
               p: 2,
+              boxShadow: '0 4px 12px rgba(0,0,0,0.08)',
+              borderRadius: '12px',
             }}
           >
             {/* Navigation buttons */}
@@ -248,13 +270,14 @@ export default function StudentPlacedCard() {
 
                   {/* Profile image */}
                   <MotionAvatar
-                    // src={currentStudent?.image}
+                    src="/images/image%2067.png"
                     alt={currentStudent?.name}
                     sx={{
                       width: 96,
                       height: 96,
                       border: "2px solid #e0e0e0",
                       mx: "auto",
+                      boxShadow: '0 4px 8px rgba(0,0,0,0.1)',
                     }}
                     initial={{ scale: 0.8, opacity: 0 }}
                     animate={{ scale: 1, opacity: 1 }}
@@ -263,26 +286,31 @@ export default function StudentPlacedCard() {
                 </Box>
 
                 {/* Student details */}
-                <MotionTypography
-                  variant="subtitle1"
-                  component="h3"
-                  sx={{ fontWeight: 500, color: "text.primary" }}
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.2 }}
-                >
-                  {currentStudent.name}
-                </MotionTypography>
+                <Box sx={{
+                  mt: 1,
+                  textAlign: 'center'
+                }}>
+                  <MotionTypography
+                    variant="subtitle1"
+                    component="h3"
+                    sx={{ fontWeight: 700, color: "#E53510" }}
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.2 }}
+                  >
+                    {currentStudent.name}
+                  </MotionTypography>
 
-                <MotionTypography
-                  variant="body2"
-                  color="text.secondary"
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.3 }}
-                >
-                  {currentStudent.company}
-                </MotionTypography>
+                  <MotionTypography
+                    variant="body2"
+                    sx={{ fontWeight: 500, color: "#333" }}
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.3 }}
+                  >
+                    {currentStudent.company}
+                  </MotionTypography>
+                </Box>
               </MotionBox>
             </AnimatePresence>
           </Card>
