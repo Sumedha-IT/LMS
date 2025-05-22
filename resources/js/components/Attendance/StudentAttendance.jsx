@@ -3,11 +3,12 @@ import { apiRequest } from '../../utils/api';
 import {
     Box, Button, Card, CardContent, Typography, Table, TableBody, TableCell,
     TableContainer, TableHead, TableRow, Paper, CircularProgress, Skeleton,
-    Alert, Select, MenuItem, FormControl, Grid
+    Alert, Select, MenuItem, FormControl, Grid, Dialog, DialogTitle,
+    DialogContent, DialogActions, IconButton
 } from '@mui/material';
 import { format, isSameDay, isWeekend } from 'date-fns';
 import { motion } from 'framer-motion';
-import { Calendar, Clock, CheckCircle, AlertCircle } from 'lucide-react';
+import { Calendar, Clock, CheckCircle, AlertCircle, X } from 'lucide-react';
 import { toast } from 'react-toastify';
 import { useLocation } from 'react-router-dom';
 import { DateCalendar, LocalizationProvider, PickersDay } from '@mui/x-date-pickers';
@@ -24,6 +25,10 @@ export default function StudentAttendance() {
     const [selectedDate, setSelectedDate] = useState(new Date());
     const [holidays, setHolidays] = useState([]);
     const location = useLocation();
+    const [deviceErrorDialog, setDeviceErrorDialog] = useState({
+        open: false,
+        message: ''
+    });
 
     // Function to check if a date is present in the attendance records
     const isDatePresent = (date) => {
@@ -154,54 +159,31 @@ export default function StudentAttendance() {
         }
     }, []);
 
-    const fetchAttendanceReport = useCallback(async (filter = null) => {
+    const fetchAttendanceReport = useCallback(async () => {
         try {
             setLoading(true);
-
-            // Prepare query parameters
-            const params = new URLSearchParams();
-            const currentFilter = filter || filterType;
-            params.append('filter_type', currentFilter);
-
-            // If we have a custom date range or specific date selected
-            if (currentFilter === 'custom' && selectedDate) {
-                const formattedDate = format(selectedDate, 'yyyy-MM-dd');
-                params.append('start_date', formattedDate);
-                params.append('end_date', formattedDate);
-            }
-
-            const url = `/student-attendance/report?${params.toString()}`;
-
-            const response = await apiRequest(url, {
-                skipCache: true, // Disable caching to ensure fresh data
-                cacheTime: 0 // No cache
+            const response = await apiRequest(`/student-attendance/report?filter_type=${filterType}`, {
+                skipCache: true
             });
 
             if (response) {
-                console.log('Attendance report response:', response);
-                setReport(response);
-            } else {
-                // Set default report data if response is empty
+                // Calculate attendance percentage consistently with the dashboard widget
+                const presentDays = response.present_days || 0;
+                const totalDays = response.total_days || 0;
+                const attendancePercentage = totalDays > 0 ? Math.round((presentDays / totalDays) * 100) : 0;
+
                 setReport({
-                    total_days: 0,
-                    present_days: 0,
-                    absent_days: 0,
-                    attendance_details: []
+                    ...response,
+                    attendance_percentage: attendancePercentage
                 });
             }
         } catch (error) {
             console.error('Error fetching attendance report:', error);
-            // Set default report data on error
-            setReport({
-                total_days: 0,
-                present_days: 0,
-                absent_days: 0,
-                attendance_details: []
-            });
+            toast.error('Failed to fetch attendance report');
         } finally {
             setLoading(false);
         }
-    }, [filterType, selectedDate]);
+    }, [filterType]);
 
     // Function to fetch all holidays
     const fetchHolidays = useCallback(async () => {
@@ -358,7 +340,7 @@ export default function StudentAttendance() {
                 // Don't proceed with check-in if location access is denied
                 toast.error('Location access denied. Please enable location services to verify you are within campus boundaries.', {
                     position: "top-center",
-                    autoClose: 8000, // Show for longer
+                    autoClose: 8000,
                     style: {
                         background: "#f44336",
                         color: "#fff",
@@ -381,7 +363,7 @@ export default function StudentAttendance() {
                         latitude: locationData.latitude,
                         longitude: locationData.longitude,
                         accuracy: locationData.accuracy,
-                        ip_address: null // Let the server determine this
+                        ip_address: null
                     },
                     skipCache: true
                 });
@@ -393,7 +375,7 @@ export default function StudentAttendance() {
                     // Show a more prominent error message
                     toast.error(verificationResponse.message || 'Out of the campus. Not able to check in. Please be present within campus boundaries.', {
                         position: "top-center",
-                        autoClose: 8000, // Show for longer
+                        autoClose: 8000,
                         style: {
                             background: "#f44336",
                             color: "#fff",
@@ -458,8 +440,15 @@ export default function StudentAttendance() {
                 // Revert optimistic update on error
                 fetchAttendanceStatus();
 
-                // Check if it's a location verification error
-                if (error.response?.status === 403 && error.response?.data?.message) {
+                // Check if it's a device mismatch error
+                if (error.response?.data?.show_dialog) {
+                    setDeviceErrorDialog({
+                        open: true,
+                        message: error.response.data.dialog_message || error.response.data.message
+                    });
+                    // Do NOT show a toast for this error
+                    return;
+                } else if (error.response?.status === 403 && error.response?.data?.message) {
                     toast.error(error.response.data.message, {
                         position: "top-center",
                         autoClose: 5000
@@ -565,9 +554,9 @@ export default function StudentAttendance() {
 
     return (
         <Box sx={{ p: 4, maxWidth: '1200px', margin: '0 auto' }}>
-            <Typography variant="h4" sx={{ mb: 4, fontWeight: 600, color: '#1a237e' }}>
+            {/* <Typography variant="h4" sx={{ mb: 4, fontWeight: 600, color: '#1a237e' }}>
                 Student Attendance
-            </Typography>
+            </Typography> */}
 
             {redirectMessage && (
                 <Alert
@@ -577,6 +566,55 @@ export default function StudentAttendance() {
                     {redirectMessage}
                 </Alert>
             )}
+
+            {/* Device Error Dialog */}
+            <Dialog
+                open={deviceErrorDialog.open}
+                onClose={() => setDeviceErrorDialog({ open: false, message: '' })}
+                PaperProps={{
+                    sx: {
+                        borderRadius: 2,
+                        boxShadow: '0 4px 20px rgba(0, 0, 0, 0.15)',
+                        minWidth: '400px'
+                    }
+                }}
+            >
+                <DialogTitle sx={{ 
+                    display: 'flex', 
+                    justifyContent: 'space-between', 
+                    alignItems: 'center',
+                    bgcolor: '#f44336',
+                    color: 'white',
+                    py: 2
+                }}>
+                    Device Mismatch
+                    <IconButton
+                        onClick={() => setDeviceErrorDialog({ open: false, message: '' })}
+                        sx={{ color: 'white' }}
+                    >
+                        <X size={20} />
+                    </IconButton>
+                </DialogTitle>
+                <DialogContent sx={{ py: 3 }}>
+                    <Typography variant="body1" sx={{ color: '#333', fontWeight: 500 }}>
+                        {deviceErrorDialog.message}
+                    </Typography>
+                </DialogContent>
+                <DialogActions sx={{ px: 3, pb: 2 }}>
+                    <Button
+                        onClick={() => setDeviceErrorDialog({ open: false, message: '' })}
+                        variant="contained"
+                        sx={{
+                            bgcolor: '#f44336',
+                            '&:hover': { bgcolor: '#d32f2f' },
+                            textTransform: 'none',
+                            px: 3
+                        }}
+                    >
+                        Close
+                    </Button>
+                </DialogActions>
+            </Dialog>
 
             {/* Check-in/Check-out Section */}
             <motion.div
@@ -838,7 +876,7 @@ export default function StudentAttendance() {
                                         onChange={(newDate) => {
                                             setSelectedDate(newDate);
                                             // Fetch attendance for the selected date
-                                            fetchAttendanceReport('custom');
+                                            fetchAttendanceReport();
                                         }}
                                         slots={{
                                             day: CustomDay
@@ -916,7 +954,7 @@ export default function StudentAttendance() {
                                         onChange={(e) => {
                                             const newFilter = e.target.value;
                                             setFilterType(newFilter);
-                                            fetchAttendanceReport(newFilter);
+                                            fetchAttendanceReport();
                                         }}
                                         displayEmpty
                                         variant="standard"

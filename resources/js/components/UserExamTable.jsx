@@ -173,14 +173,14 @@ const UserExamTable = ({ Value, userId }) => {
                 <TableContainer component={Paper} sx={{ borderRadius: '12px', boxShadow: '0 4px 20px rgba(0,0,0,0.08)', overflow: 'hidden' }}>
                     <Table>
                         <TableHead>
-                            <TableRow sx={{ backgroundColor: '#E84C0F' }}>
-                                <TableCell sx={{ fontWeight: 600, color: '#FFFFFF', padding: '16px' }}>Exam Name</TableCell>
-                                <TableCell sx={{ fontWeight: 600, color: '#FFFFFF', padding: '16px' }}>Date</TableCell>
-                                <TableCell sx={{ fontWeight: 600, color: '#FFFFFF', padding: '16px' }}>Duration</TableCell>
-                                <TableCell sx={{ fontWeight: 600, color: '#FFFFFF', padding: '16px' }}>Questions</TableCell>
-                                <TableCell sx={{ fontWeight: 600, color: '#FFFFFF', padding: '16px' }}>Marks</TableCell>
-                                <TableCell sx={{ fontWeight: 600, color: '#FFFFFF', padding: '16px' }}>Time Taken</TableCell>
-                                <TableCell sx={{ fontWeight: 600, color: '#FFFFFF', padding: '16px', textAlign: 'center' }}>Action</TableCell>
+                            <TableRow sx={{ backgroundColor: '#E84C0F !important' }}>
+                                <TableCell sx={{ fontWeight: 600, color: '#FFFFFF !important', padding: '16px' }}>Exam Name</TableCell>
+                                <TableCell sx={{ fontWeight: 600, color: '#FFFFFF !important', padding: '16px' }}>Date</TableCell>
+                                <TableCell sx={{ fontWeight: 600, color: '#FFFFFF !important', padding: '16px' }}>Duration</TableCell>
+                                <TableCell sx={{ fontWeight: 600, color: '#FFFFFF !important', padding: '16px' }}>Questions</TableCell>
+                                <TableCell sx={{ fontWeight: 600, color: '#FFFFFF !important', padding: '16px' }}>Marks</TableCell>
+                                <TableCell sx={{ fontWeight: 600, color: '#FFFFFF !important', padding: '16px' }}>Time Taken</TableCell>
+                                <TableCell sx={{ fontWeight: 600, color: '#FFFFFF !important', padding: '16px', textAlign: 'center' }}>Action</TableCell>
                             </TableRow>
                         </TableHead>
                         <TableBody>
@@ -188,33 +188,30 @@ const UserExamTable = ({ Value, userId }) => {
                                 <TableRow
                                     key={exam.id}
                                     sx={{
-                                        backgroundColor: index % 3 === 0 ? '#FFF0EE' :
-                                                        index % 3 === 1 ? '#FFF8E8' :
-                                                        '#F0F8FF',
+                                        backgroundColor: index % 2 === 0 ? '#FFF0EE !important' : '#E8F4FF !important',
+                                        color: '#495057 !important',
                                         '&:hover': {
-                                            backgroundColor: index % 3 === 0 ? '#FFE4E0' :
-                                                            index % 3 === 1 ? '#FFF0D0' :
-                                                            '#E0F0FF'
+                                            backgroundColor: index % 2 === 0 ? '#FFE4E0 !important' : '#D4E8FF !important'
                                         }
                                     }}
                                 >
-                                    <TableCell sx={{ color: '#2D3748', padding: '16px' }}>{exam.title || 'N/A'}</TableCell>
-                                    <TableCell sx={{ color: '#2D3748', padding: '16px' }}>{exam.examDate || 'N/A'}</TableCell>
-                                    <TableCell sx={{ color: '#2D3748', padding: '16px' }}>{exam.duration || 'N/A'}</TableCell>
-                                    <TableCell sx={{ color: '#2D3748', padding: '16px' }}>
+                                    <TableCell sx={{ color: '#495057 !important', padding: '16px' }}>{exam.title || 'N/A'}</TableCell>
+                                    <TableCell sx={{ color: '#495057 !important', padding: '16px' }}>{exam.examDate || 'N/A'}</TableCell>
+                                    <TableCell sx={{ color: '#495057 !important', padding: '16px' }}>{exam.duration || 'N/A'}</TableCell>
+                                    <TableCell sx={{ color: '#495057 !important', padding: '16px' }}>
                                         {exam.totalQuestions}
                                     </TableCell>
-                                    <TableCell sx={{ color: '#2D3748', padding: '16px' }}>
+                                    <TableCell sx={{ color: '#495057 !important', padding: '16px' }}>
                                         {exam.obtainedMarks || '0'}/{exam.totalMarks || '0'}
                                     </TableCell>
-                                    <TableCell sx={{ color: '#2D3748', padding: '16px' }}>{exam.timeTaken || 'N/A'}</TableCell>
+                                    <TableCell sx={{ color: '#495057 !important', padding: '16px' }}>{exam.timeTaken || 'N/A'}</TableCell>
                                     <TableCell sx={{ padding: '16px', textAlign: 'center' }}>
                                         <IconButton
                                             onClick={() => handleViewScore(exam)}
                                             sx={{
-                                                color: '#f4511e',
+                                                color: '#E84C0F',
                                                 '&:hover': {
-                                                    backgroundColor: 'rgba(244, 81, 30, 0.04)'
+                                                    backgroundColor: 'rgba(232, 76, 15, 0.04)'
                                                 }
                                             }}
                                             size="small"

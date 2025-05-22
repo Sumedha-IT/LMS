@@ -61,7 +61,8 @@ class User extends Authenticatable implements HasTenants, FilamentUser, HasAvata
         'parent_occupation',
         'residential_address',
         'receive_email_notification',
-        'receive_sms_notification'
+        'receive_sms_notification',
+        'zoho_crm_id'
     ];
 
     /**

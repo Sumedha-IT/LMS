@@ -802,14 +802,18 @@ const MyCourses = () => {
     }
 
     return (
-        <div className="container mx-auto px-4 py-8">
-            <div className={`flex gap-4 ${selectedTopic ? 'space-x-4' : ''}`}>
+        <div className={`container mx-auto px-4 py-8${isFullScreen ? ' fullscreen-parent' : ''}`} style={isFullScreen ? { width: '100vw', height: '100vh', maxWidth: '100vw', margin: 0, padding: 0, background: '#111' } : {}}>
+            <div className={`flex gap-4${selectedTopic ? ' space-x-4' : ''}${isFullScreen ? ' fullscreen-parent' : ''}`} style={isFullScreen ? { width: '100vw', height: '100vh', maxWidth: '100vw', margin: 0, padding: 0, background: '#111' } : {}}>
                 {/* Left Side - Curriculums and Topics */}
                 <div className={`${selectedTopic ? 'w-1/3' : 'w-full'} transition-all duration-300`}>
                     <div className="space-y-4">
                         {courses.flatMap(course =>
                             course.curriculums.map(curriculum => (
-                                <div key={curriculum.id} className="bg-white rounded-lg shadow-lg overflow-hidden">
+                                <div
+                                    key={curriculum.id}
+                                    className={`bg-white rounded-lg shadow-lg overflow-hidden${isFullScreen ? ' fullscreen-card' : ' max-w-4xl mx-auto'}`}
+                                    style={isFullScreen ? { width: '100vw', height: '100vh', maxWidth: '100vw', margin: 0, borderRadius: 0, boxShadow: 'none', background: '#111' } : {}}
+                                >
                                     {/* Curriculum Header */}
                                     <div
                                         onClick={() => handleCurriculumClick(curriculum)}
@@ -1012,8 +1016,8 @@ const MyCourses = () => {
                                         <>
                                             {selectedMaterial ? (
                                                 <div
-                                                    className={`bg-white rounded-lg shadow-md p-6 relative${isFullScreen ? ' fullscreen' : ''}`}
-                                                    style={isFullScreen ? { minHeight: '100vh', height: '100vh', width: '100vw', padding: 0, borderRadius: 0, boxShadow: 'none', background: '#111' } : { minHeight: '75vh' }}
+                                                    className={`bg-white rounded-lg shadow-md p-6 relative${isFullScreen ? ' fullscreen-inner' : ''}`}
+                                                    style={isFullScreen ? { width: '100vw', height: '100vh', padding: 0, borderRadius: 0, boxShadow: 'none', background: '#fff' } : { minHeight: '75vh' }}
                                                     id="teaching-material-viewer"
                                                     ref={viewerRef}
                                                 >
@@ -1030,11 +1034,11 @@ const MyCourses = () => {
                                                     </button>
                                                     {/* PDF Viewer */}
                                                     {selectedMaterial.material_source === 'file' && selectedMaterial.file?.toLowerCase().endsWith('.pdf') ? (
-                                                        <div className="relative w-full h-full" style={isFullScreen ? { height: 'calc(100vh - 0px)' } : {}}>
+                                                        <div className="relative w-full h-full" style={isFullScreen ? { height: '100vh' } : {}}>
                                                             <iframe
                                                                 src={`${selectedMaterial.file}#toolbar=0&navpanes=0&scrollbar=0`}
                                                                 className="w-full h-full border border-gray-200 rounded"
-                                                                style={isFullScreen ? { height: '100vh', width: '100vw', border: 'none', background: '#111' } : { height: 'calc(75vh - 2rem)' }}
+                                                                style={isFullScreen ? { height: '100vh', width: '100vw', border: 'none', background: '#fff' } : { height: 'calc(75vh - 2rem)' }}
                                                                 title={selectedMaterial.material_name}
                                                             />
                                                         </div>
@@ -1430,6 +1434,31 @@ const MyCourses = () => {
                     border-radius: 0 !important;
                     box-shadow: none !important;
                     padding: 0 !important;
+                }
+                .fullscreen-parent {
+                    width: 100vw !important;
+                    height: 100vh !important;
+                    max-width: 100vw !important;
+                    margin: 0 !important;
+                    padding: 0 !important;
+                    background: #111 !important;
+                }
+                .fullscreen-card {
+                    width: 100vw !important;
+                    height: 100vh !important;
+                    max-width: 100vw !important;
+                    margin: 0 !important;
+                    border-radius: 0 !important;
+                    box-shadow: none !important;
+                    background: #111 !important;
+                }
+                .fullscreen-inner {
+                    width: 100vw !important;
+                    height: 100vh !important;
+                    padding: 0 !important;
+                    border-radius: 0 !important;
+                    box-shadow: none !important;
+                    background: #fff !important;
                 }
             `}</style>
         </div>

@@ -57,9 +57,12 @@ class StudentAttendanceController extends Controller
                     'laptop_id' => $request->laptop_id
                 ]);
                 return response()->json([
-                    'message' => 'This device has already been used to check in by another user today. Please use your own device to check in.',
-                    'status' => 'error'
-                ], 400);
+                    'message' => 'This device does not match the Laptop used for attendance. Please use the associated Laptop for attendance.',
+                    'status' => 'error',
+                    'show_dialog' => true,
+                    'dialog_title' => 'Device Mismatch',
+                    'dialog_message' => 'This device does not match the Laptop used for attendance. Please use the associated Laptop for attendance.'
+                ], 403);
             }
 
             // Check if already checked in today (regardless of checkout status)

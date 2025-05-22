@@ -23,14 +23,14 @@ class AttendanceController extends Controller
     // Campus geolocation boundaries based on provided coordinates (Lat: 17.4384856, Lng: 78.3794686)
     protected $campusGeoBoundaries = [
         // Campus center point
-        'center_lat' => 17.4384856,
-        'center_lng' => 78.3794686,
+        'center_lat' => 13.0226992,
+        'center_lng' => 77.5733937,
 
         // Rectangular boundary (approximately 100m in each direction from center)
-        'lat_min' => 17.4374856,  // About 100m south of center
-        'lat_max' => 17.4394856,  // About 100m north of center
-        'lng_min' => 78.3784686,  // About 100m west of center
-        'lng_max' => 78.3804686,  // About 100m east of center
+        'lat_min' => 13.0126992,  // About 100m south of center
+        'lat_max' => 13.0326992,  // About 100m north of center
+        'lng_min' => 77.5633937,  // About 100m west of center
+        'lng_max' => 77.5833937,  // About 100m east of center
 
         // Accuracy settings
         'max_distance' => 100,  // Maximum allowed distance from campus in meters (100m radius)

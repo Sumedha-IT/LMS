@@ -157,7 +157,7 @@ export default function StudentJourney({onStartLearning}) {
 
       {/* Progress Section */}
       <Box sx={{ mb: 8, mt: 6 }}>
-        {/* Module Completed Card - Positioned ABOVE the progress bar */}
+        {/* Only show percentage in the floating card above the progress bar */}
         <Paper
           elevation={1}
           sx={{
@@ -172,12 +172,6 @@ export default function StudentJourney({onStartLearning}) {
             mb: 2,
           }}
         >
-          <Typography variant="body2" color="textSecondary">
-            Module
-          </Typography>
-          <Typography variant="body2" color="textSecondary">
-            Completed
-          </Typography>
           <Typography variant="h6" sx={{ color: "#E53510", fontWeight: 500 }}>
             <div className="rounded-md mt-1 bg-[#E53510] bg-opacity-10 w-full">
               {overallCompletion}%
@@ -185,7 +179,7 @@ export default function StudentJourney({onStartLearning}) {
           </Typography>
         </Paper>
 
-        {/* Progress Bar - Now below the Module Completed card */}
+        {/* Progress Bar - Now below the percentage card */}
         <StyledLinearProgress variant="determinate" value={overallCompletion} sx={{ mt: 2 }} />
       </Box>
 

@@ -304,14 +304,23 @@ const NewDashBoard = () => {
               <section className="w-full p-2 mb-10">
                 <div className="relative min-h-[15.75rem] bg-[#404040] rounded-2xl flex items-center px-10 w-full">
                   <div className="flex gap-2 w-3/4 justify-evenly">
-                    <CircularProgress
-                      value={attendanceData.attendance_percentage || 0}
-                      max={100}
-                      label="Attendance"
-                      size={140}
-                      strokeWidth={12}
-                      showPercentage
-                    />
+                    <div 
+                      onClick={() => window.location.href = '/administrator/1/student-attendance'}
+                      className="cursor-pointer hover:opacity-90 transition-opacity group"
+                      title="Click to view detailed attendance"
+                    >
+                      <CircularProgress
+                        value={attendanceData.attendance_percentage || 0}
+                        max={100}
+                        label="Attendance"
+                        size={140}
+                        strokeWidth={12}
+                        showPercentage
+                      />
+                      <div className="text-center mt-2 text-sm text-gray-400 group-hover:text-white transition-colors">
+                        {/* Click to view details */}
+                      </div>
+                    </div>
 
                     <CircularProgress
                       value={assignmentStats.submitted}
@@ -345,18 +354,20 @@ const NewDashBoard = () => {
                     )}
                   </div>
 
-                  {/* Illustration */}
-                  <img
-                    className="absolute -top-16 w-[17rem] right-0"
-                    src="/images/image%2067.png"
-                    alt="Decorative illustration"
-                    loading="lazy"
-                    onError={(e) => {
-                      e.target.onerror = null;
-                      e.target.src = "/images/placeholder.jpg";
-                      e.target.alt = "Fallback decorative illustration";
-                    }}
-                  />
+                  {/* Illustration - Only show when not loading */}
+                  {!loading && (
+                    <img
+                      className="absolute -top-16 w-[17rem] right-0"
+                      src="/images/image%2067.png"
+                      alt="Decorative illustration"
+                      loading="lazy"
+                      onError={(e) => {
+                        e.target.onerror = null;
+                        e.target.src = "/images/placeholder.jpg";
+                        e.target.alt = "Fallback decorative illustration";
+                      }}
+                    />
+                  )}
                 </div>
               </section>
 
@@ -410,14 +421,23 @@ const NewDashBoard = () => {
                 </div>
               ) : (
                 <div className="flex gap-2 w-3/4 justify-evenly">
-                  <CircularProgress
-                    value={attendanceData.attendance_percentage || 0}
-                    max={100}
-                    label="Attendance"
-                    size={140}
-                    strokeWidth={12}
-                    showPercentage
-                  />
+                  <div 
+                    onClick={() => window.location.href = '/administrator/1/student-attendance'}
+                    className="cursor-pointer hover:opacity-90 transition-opacity group"
+                    title="Click to view detailed attendance"
+                  >
+                    <CircularProgress
+                      value={attendanceData.attendance_percentage || 0}
+                      max={100}
+                      label="Attendance"
+                      size={140}
+                      strokeWidth={12}
+                      showPercentage
+                    />
+                    <div className="text-center mt-2 text-sm text-gray-400 group-hover:text-white transition-colors">
+                      {/* Click to view details */}
+                    </div>
+                  </div>
 
                   <CircularProgress
                     value={assignmentStats.submitted}
@@ -501,14 +521,9 @@ const NewDashBoard = () => {
                 }} />
               </Suspense>
 
-              {/* Attendance and Assignments */}
+              {/* Assignments Section */}
               <div className="flex justify-between w-full px-1 my-10">
-                <div className="w-2/5">
-                  <Suspense fallback={<LoadingFallback />}>
-                    <AttendanceTracker />
-                  </Suspense>
-                </div>
-                <div className="w-3/5">
+                <div className="w-full">
                   <Suspense fallback={<LoadingFallback />}>
                     <MyAssignment assignments={assignmentData} />
                   </Suspense>

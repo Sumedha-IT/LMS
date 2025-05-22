@@ -147,8 +147,11 @@ class UserController extends Controller
 
         if(gettype($data) != 'array')
             $data = json_decode($data,true);
-            if(gettype($data) != 'array')
-                return response()->json(['message' => "Data key must be in array", 'status' => 400, 'success' => false], 400);
+        if(gettype($data) != 'array')
+            return response()->json(['message' => "Data key must be in array", 'status' => 400, 'success' => false], 400);
+
+        // Log the incoming data for debugging
+        \Log::info('Incoming student data:', $data);
 
         $validator = Validator::make($data, [
             'email' => 'required|email',

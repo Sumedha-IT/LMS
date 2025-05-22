@@ -35,6 +35,11 @@ export default function AttendanceCheckInModal({ open, onClose, onSuccess }) {
   const [attendanceStatus, setAttendanceStatus] = useState(null);
   // Add state to track if this is the first load after login
   const [isFirstLoad, setIsFirstLoad] = useState(false);
+  const [deviceErrorDialog, setDeviceErrorDialog] = useState({
+    open: false,
+    title: '',
+    message: ''
+  });
 
   // Location verification states
   const [showLocationVerification, setShowLocationVerification] = useState(false);
@@ -420,7 +425,20 @@ export default function AttendanceCheckInModal({ open, onClose, onSuccess }) {
         }, 1000); // Small delay to ensure the success message is seen
       }
     } catch (error) {
-      const errorMessage = error.response?.data?.message || error.message || 'Error checking in. Please try again.';
+      const errorResponse = error.response?.data;
+      if (errorResponse?.show_dialog) {
+        setDeviceErrorDialog({
+          open: true,
+          title: errorResponse.dialog_title || 'Device Mismatch',
+          message: errorResponse.dialog_message || errorResponse.message
+        });
+        // Close the main check-in dialog when showing the device mismatch dialog
+        if (onClose) onClose();
+        // Do NOT show a toast for this error
+        return;
+      }
+      // Only show toast if not a dialog error
+      const errorMessage = errorResponse?.message || error.message || 'Error checking in. Please try again.';
       toast.error(errorMessage, {
         position: "top-center",
         autoClose: 5000,
@@ -476,7 +494,20 @@ export default function AttendanceCheckInModal({ open, onClose, onSuccess }) {
       // Call the onSuccess callback
       if (onSuccess) onSuccess();
     } catch (error) {
-      const errorMessage = error.response?.data?.message || error.message || 'Error checking in. Please try again.';
+      const errorResponse = error.response?.data;
+      if (errorResponse?.show_dialog) {
+        setDeviceErrorDialog({
+          open: true,
+          title: errorResponse.dialog_title || 'Device Mismatch',
+          message: errorResponse.dialog_message || errorResponse.message
+        });
+        // Close the verification dialog when showing the device mismatch dialog
+        setShowLocationVerification(false);
+        // Do NOT show a toast for this error
+        return;
+      }
+      // Only show toast if not a dialog error
+      const errorMessage = errorResponse?.message || error.message || 'Error checking in. Please try again.';
       toast.error(errorMessage);
     } finally {
       setLoading(false);
@@ -878,6 +909,49 @@ export default function AttendanceCheckInModal({ open, onClose, onSuccess }) {
             }}
           >
             {verificationStatus.overall === null ? 'Verify Location' : 'Check In'}
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Device Mismatch Dialog */}
+      <Dialog
+        open={deviceErrorDialog.open}
+        onClose={() => setDeviceErrorDialog({ ...deviceErrorDialog, open: false })}
+        maxWidth="sm"
+        fullWidth
+        PaperProps={{
+          sx: {
+            borderRadius: 2,
+            boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1)'
+          }
+        }}
+      >
+        <DialogTitle sx={{
+          bgcolor: '#f44336',
+          color: 'white',
+          display: 'flex',
+          alignItems: 'center',
+          gap: 1
+        }}>
+          <AlertTriangle size={24} />
+          {deviceErrorDialog.title}
+        </DialogTitle>
+        <DialogContent sx={{ py: 3 }}>
+          <Typography variant="body1" sx={{ mb: 2 }}>
+            {deviceErrorDialog.message}
+          </Typography>
+        </DialogContent>
+        <DialogActions sx={{ px: 3, pb: 3 }}>
+          <Button
+            onClick={() => setDeviceErrorDialog({ ...deviceErrorDialog, open: false })}
+            variant="contained"
+            sx={{
+              bgcolor: '#f44336',
+              '&:hover': { bgcolor: '#d32f2f' },
+              borderRadius: '8px'
+            }}
+          >
+            Close
           </Button>
         </DialogActions>
       </Dialog>

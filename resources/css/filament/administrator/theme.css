@@ -8,7 +8,7 @@
 }
 
 .fi-sidebar-item a {
-    color: #333333 !important;
+    color: #000000 !important; /* Black text for unselected items */
     font-weight: 500;
     font-size: 1.1rem !important;
 }
@@ -18,26 +18,26 @@
 }
 
 .fi-sidebar-item-active {
-    @apply bg-white/30;
+    background-color: #0d264b !important; /* Dark blue background for selected items */
     border-radius: 10px;
 }
 
 .fi-sidebar-item-active a {
-    color: #ffffff !important;
+    color: #ffffff !important; /* White text for selected items */
     font-weight: 600;
     font-size: 1.1rem !important;
 }
 
 .fi-sidebar-item svg {
-    color: #333333 !important;
-    stroke: #333333 !important;
+    color: #000000 !important; /* Black icon for unselected items */
+    stroke: #000000 !important;
     fill: transparent !important;
     background-color: transparent !important;
 }
 
 .fi-sidebar-item:hover svg {
-    color: #333333 !important;
-    stroke: #333333 !important;
+    color: #000000 !important; /* Black icon on hover for unselected items */
+    stroke: #000000 !important;
     fill: transparent !important;
     background-color: transparent !important;
 }
@@ -51,7 +51,7 @@
 
 /* Ensure text visibility */
 .fi-sidebar-item span {
-    color: #333333 !important;
+    color: #000000 !important; /* Black text for unselected items */
 }
 
 .fi-sidebar-item-active span {
@@ -63,12 +63,12 @@
 .fi-sidebar-item a svg,
 .fi-sidebar-group-label,
 .fi-sidebar-nav .fi-sidebar-header-heading {
-    color: #333333 !important;
+    color: #000000 !important; /* Black text */
 }
 
 /* Target icon containers */
 .fi-sidebar-item-icon {
-    color: #333333 !important;
+    color: #000000 !important; /* Black icon for unselected items */
     width: 1.5rem !important;
     height: 1.5rem !important;
     background-color: transparent !important;
@@ -87,8 +87,7 @@
 }
 
 .fi-sidebar-nav {
-    /*@apply bg-gray-50 dark:bg-gray-950;*/
-    background: var(--orange-gradient, linear-gradient(135.51deg, rgb(216, 82, 15) 0%, rgb(228, 81, 18) 100%)); 
+    background: #e35914 !important; /* White background for the full menu */
 }
 .fi-sidebar-item-active a,.fi-sidebar-item-active a:hover {
     @apply text-white;
@@ -108,7 +107,7 @@
 .fi-sidebar-item a svg line,
 .fi-sidebar-item a svg polyline,
 .fi-sidebar-item a svg polygon {
-    stroke: #333333 !important;
+    stroke: #000000 !important; /* Black stroke for unselected SVG parts */
     fill: transparent !important;
     background-color: transparent !important;
 }
@@ -125,10 +124,10 @@
 }
 
 .fi-sidebar-item-active{
-    background: rgba(0, 0, 0, 0.15);
+    background-color: #314d7b !important; /* Dark blue background for selected items */
     border-radius: 10px;
     box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-    border-left: 3px solid #ffffff;
+    border-left: 3px solid #314d7d; /* Light blue border */
 }
 .button{
     background: #ff5003;
@@ -150,6 +149,24 @@
 /*    z-index: 50;*/
 /*}*/
 /* opacity does not looks good in dark mode, so insert the corresponding bg color here */
+
+/* Table Styles */
+.fi-ta-table thead th {
+    background-color: orange !important;
+    color: white !important;
+}
+
+.fi-ta-table tbody tr td {
+    color: black !important;
+}
+
+.fi-ta-table tbody tr:nth-child(odd) {
+    background-color: #add8e6 !important; /* Light Blue */
+}
+
+.fi-ta-table tbody tr:nth-child(even) {
+    background-color: #ffcccb !important; /* Light Orange (using light red as a proxy for light orange) */
+}
 thead .dark\:bg-white\/5:is(.dark *), thead  .dark\:bg-white\/5{
     background-color: rgba(255, 240, 234, 1)  !important;
 }
@@ -223,22 +240,22 @@ input:checked+.\[input\:checked\+\&\]\:hover\:bg-custom-500{
 
 /* Force icon colors */
 .fi-sidebar-item svg * {
-    stroke: #333333 !important;
+    stroke: #000000 !important; /* Black stroke for unselected icons */
     fill: transparent !important;
-    color: #333333 !important;
+    color: #000000 !important; /* Black color for unselected icons */
     background-color: transparent !important;
 }
 
 /* Target heroicon SVGs specifically */
 .fi-sidebar-item svg[data-slot="icon"] {
-    color: #333333 !important;
+    color: #000000 !important; /* Black icon color */
     width: 1.5rem !important;
     height: 1.5rem !important;
     background-color: transparent !important;
 }
 
 .fi-sidebar-item svg[data-slot="icon"] path {
-    stroke: #333333 !important;
+    stroke: #000000 !important; /* Black stroke for icon paths */
     stroke-width: 1.5 !important;
     fill: transparent !important;
     background-color: transparent !important;
@@ -267,18 +284,18 @@ input:checked+.\[input\:checked\+\&\]\:hover\:bg-custom-500{
 }
 
 .fi-sidebar-group-label {
-    color: #333333 !important;
+    color: #000000 !important; /* Black text for group labels */
     font-weight: 600;
     font-size: 1.15rem !important;
 }
 
 .fi-sidebar-group-button {
-    color: #333333 !important;
+    color: #000000 !important; /* Black color for group buttons */
 }
 
 .fi-sidebar-group-button svg {
-    color: #333333 !important;
-    fill: #333333 !important;
+    color: #000000 !important; /* Black color for group button SVGs */
+    fill: #000000 !important;
 }
 
 /* Logo styling */
@@ -288,13 +305,13 @@ input:checked+.\[input\:checked\+\&\]\:hover\:bg-custom-500{
 }
 
 .fi-sidebar-header-heading {
-    color: #333333 !important;
+    color: #000000 !important; /* Black text for sidebar header */
     font-weight: 600;
     font-size: 1.2rem !important;
 }
 
 .fi-sidebar-header a {
-    color: #333333 !important;
+    color: #000000 !important; /* Black text for sidebar header link */
 }
 
 /* Custom sidebar toggle button */

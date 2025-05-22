@@ -2,8 +2,9 @@
 
 import { useState, useEffect } from "react"
 import { motion } from "framer-motion"
-import { User } from "lucide-react"
+import { User, ArrowRight } from "lucide-react"
 import { apiRequest } from "../../utils/api"
+import { useNavigate } from "react-router-dom"
 
 export default function AttendanceTracker() {
   const [progress, setProgress] = useState(0)
@@ -13,6 +14,7 @@ export default function AttendanceTracker() {
     percentage: 0
   })
   const [loading, setLoading] = useState(true)
+  const navigate = useNavigate()
 
   useEffect(() => {
     const fetchAttendanceData = async () => {
@@ -53,44 +55,54 @@ export default function AttendanceTracker() {
     fetchAttendanceData()
   }, [])
 
+  const handleViewDetails = () => {
+    navigate('/student/attendance')
+  }
+
   return (
-    <div className="w-full">
-      <div className="bg-white rounded-xl shadow-md p-6 w-full">
-        <div className="flex justify-between items-center mb-4">
-          <h2 className="text-gray-800 font-medium text-lg">My Attendance</h2>
+    <div className="w-full h-full bg-white rounded-2xl p-6 shadow-sm">
+      <div className="flex justify-between items-center mb-6">
+        <h2 className="text-xl font-semibold text-gray-800">Attendance</h2>
+        <button
+          onClick={handleViewDetails}
+          className="flex items-center text-[#E53510] hover:text-[#d32f2f] transition-colors"
+        >
+          View Details
+          <ArrowRight className="ml-1" size={16} />
+        </button>
+      </div>
+
+      {loading ? (
+        <div className="flex items-center justify-center h-32">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#E53510]"></div>
         </div>
-
-        <div className="relative flex justify-center items-center">
-          <div className="relative w-48 h-48">
-            <svg className="absolute inset-0 transform -rotate-90" viewBox="0 0 100 100">
-              <circle cx="50" cy="50" r="45" fill="none" stroke="#f1f1f1" strokeWidth="10" />
-              <motion.circle
-                cx="50"
-                cy="50"
-                r="45"
-                fill="none"
-                stroke="#FF3B30"
-                strokeWidth="10"
-                strokeLinecap="round"
-                strokeDasharray="283"
-                initial={{ strokeDasharray: "0 283" }}
-                animate={{ strokeDasharray: `${progress * 2.83} 283` }}
-                transition={{ duration: 1, ease: "easeInOut" }}
-              />
-            </svg>
-
-            <div className="absolute inset-0 flex flex-col justify-center items-center">
-              <div className="text-red-500 mb-1 bg-[#E53510] bg-opacity-5 rounded-full p-2">
-                <User size={20} className="fill-current" />
-              </div>
-              <div className="text-3xl font-bold text-gray-800">
-                {loading ? "..." : `${Math.round(attendanceData.percentage)}%`}
-              </div>
-              <div className="text-sm text-gray-500">Attendance</div>
+      ) : (
+        <div className="space-y-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-2">
+              <User className="text-[#E53510]" size={20} />
+              <span className="text-gray-600">Current Attendance</span>
             </div>
+            <span className="text-lg font-semibold text-gray-800">
+              {attendanceData.percentage}%
+            </span>
+          </div>
+
+          <div className="w-full bg-gray-200 rounded-full h-2.5">
+            <motion.div
+              className="bg-[#E53510] h-2.5 rounded-full"
+              initial={{ width: 0 }}
+              animate={{ width: `${progress}%` }}
+              transition={{ duration: 1, ease: "easeOut" }}
+            />
+          </div>
+
+          <div className="flex justify-between text-sm text-gray-500">
+            <span>{attendanceData.current} days present</span>
+            <span>out of {attendanceData.total} days</span>
           </div>
         </div>
-      </div>
+      )}
     </div>
   )
 }
