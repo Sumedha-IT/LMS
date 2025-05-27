@@ -150,12 +150,12 @@ export default function StudentPlacedCard({ autoScroll = false }) {
       >
         <Card
           sx={{
-            bgcolor: "primary.main",
-            color: "white",
+            background: 'linear-gradient(135deg, #1e3c72 0%, #2a5298 100%)',
+            color: 'white',
             padding: 2,
-            height: "100%",
-            display: "flex",
-            flexDirection: "column",
+            height: '100%',
+            display: 'flex',
+            flexDirection: 'column',
           }}
         >
           <MotionTypography

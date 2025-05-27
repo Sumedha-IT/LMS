@@ -6,6 +6,10 @@ import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import NoCourses from '../components/NoCourses';
 import { FaFilePdf, FaFileImage, FaYoutube, FaFileWord, FaFileExcel, FaFilePowerpoint, FaFile, FaLink } from 'react-icons/fa';
+import { Worker, Viewer } from '@react-pdf-viewer/core';
+import { defaultLayoutPlugin } from '@react-pdf-viewer/default-layout';
+import '@react-pdf-viewer/core/lib/styles/index.css';
+import '@react-pdf-viewer/default-layout/lib/styles/index.css';
 
 const API_URL = import.meta.env.REACT_APP_API_URL;
 
@@ -89,6 +93,9 @@ const MyCourses = () => {
     const [submissions, setSubmissions] = useState({});
     const [showSuccessModal, setShowSuccessModal] = useState(false);
     const viewerRef = useRef(null);
+
+    // Add this near the top of your component
+    const defaultLayoutPluginInstance = defaultLayoutPlugin();
 
     useEffect(() => {
         fetchCourses();
@@ -452,7 +459,7 @@ const MyCourses = () => {
 
             const formData = new FormData();
             formData.append('file', submissionFile);
-            formData.append('teaching_material_id', selectedAssignment.section_id);
+            formData.append('teaching_material_id', selectedAssignment.id);
             formData.append('batch_id', correctBatchId);
 
             const response = await axios.post('/api/submit-assignment', formData, {
@@ -567,6 +574,8 @@ const MyCourses = () => {
                 withCredentials: true
             });
 
+            console.log('Assignments API response:', response.data);
+
             if (response.data?.data) {
                 const assignmentsData = response.data.data
                     .filter(item => item.doc_type === 2)
@@ -586,6 +595,7 @@ const MyCourses = () => {
                 // Fetch submission status for each assignment
                 for (const assignment of assignmentsData) {
                     if (assignment.id) {
+                        console.log('Fetching submission status for assignment:', assignment.id);
                         await fetchSubmissionStatus(assignment.id);
                     }
                 }
@@ -617,13 +627,21 @@ const MyCourses = () => {
                 withCredentials: true
             });
 
+            console.log('Submission status API response for', assignmentId, ':', response.data);
+
             if (response.data?.submission) {
-                setSubmissions(prev => ({
-                    ...prev,
-                    [assignmentId]: response.data.submission
-                }));
+                setSubmissions(prev => {
+                    console.log('Setting submission for', assignmentId, response.data.submission);
+                    return {
+                        ...prev,
+                        [assignmentId]: response.data.submission
+                    };
+                });
+            } else {
+                console.log('No submission found for assignment', assignmentId);
             }
         } catch (error) {
+            console.log('Error fetching submission status for', assignmentId, error);
             // Silently handle submission status errors
         }
     };
@@ -647,13 +665,13 @@ const MyCourses = () => {
             switch (fileExtension) {
                 case 'pdf':
                     return (
-                        <div className="w-full h-full bg-white rounded-lg overflow-hidden">
-                            <iframe
-                                src={`${fileUrl}#toolbar=0&navpanes=0&scrollbar=0`}
-                                className="w-full h-full border border-gray-200"
-                                style={{ height: 'calc(75vh - 2rem)' }}
-                                title={material.material_name}
-                            />
+                        <div style={{ height: '80vh' }}>
+                            <Worker workerUrl={`https://unpkg.com/pdfjs-dist@3.11.174/build/pdf.worker.min.js`}>
+                                <Viewer
+                                    fileUrl={fileUrl}
+                                    plugins={[defaultLayoutPluginInstance]}
+                                />
+                            </Worker>
                         </div>
                     );
                 case 'jpg':
@@ -817,10 +835,11 @@ const MyCourses = () => {
                                     {/* Curriculum Header */}
                                     <div
                                         onClick={() => handleCurriculumClick(curriculum)}
-                                        className="p-4 bg-orange-600 text-white flex justify-between items-center cursor-pointer hover:bg-orange-700 transition-colors duration-200"
+                                        className="p-3 text-white flex justify-between items-center cursor-pointer transition-colors duration-200"
+                                        style={{ background: 'linear-gradient(135deg, #1e3c72 0%, #2a5298 100%)' }}
                                     >
                                         <div className="flex items-center space-x-4">
-                                            <div className="w-16 h-16 rounded-lg overflow-hidden bg-white">
+                                            <div className="w-12 h-12 rounded-lg overflow-hidden bg-white">
                                                 <img
                                                     src={curriculum.image || getDefaultCurriculumImage()}
                                                     alt={curriculum.name}
@@ -831,14 +850,14 @@ const MyCourses = () => {
                                                 />
                                             </div>
                                             <div>
-                                                <h2 className="text-xl font-medium">{curriculum.name}</h2>
+                                                <h2 className="text-lg font-medium">{curriculum.name}</h2>
                                                 <p className="text-sm text-white/80">{course.name}</p>
                                             </div>
                                         </div>
                                         <div className="flex items-center space-x-4">
                                             <CircularProgress
                                                 percentage={curriculum.progress || 0}
-                                                size={45}
+                                                size={36}
                                                 strokeWidth={4}
                                                 white={true}
                                             />
@@ -1021,17 +1040,6 @@ const MyCourses = () => {
                                                     id="teaching-material-viewer"
                                                     ref={viewerRef}
                                                 >
-                                                    {/* Fullscreen Button */}
-                                                    <button
-                                                        onClick={() => toggleFullScreen('teaching-material-viewer')}
-                                                        className="absolute top-4 right-4 z-10 bg-orange-600 hover:bg-orange-700 text-white rounded-full p-2 shadow-md focus:outline-none"
-                                                        title="Fullscreen"
-                                                    >
-                                                        {/* Simple SVG fullscreen icon */}
-                                                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 8V6a2 2 0 012-2h2M20 8V6a2 2 0 00-2-2h-2M4 16v2a2 2 0 002 2h2M20 16v2a2 2 0 01-2 2h-2" />
-                                                        </svg>
-                                                    </button>
                                                     {/* PDF Viewer */}
                                                     {selectedMaterial.material_source === 'file' && selectedMaterial.file?.toLowerCase().endsWith('.pdf') ? (
                                                         <div className="relative w-full h-full" style={isFullScreen ? { height: '100vh' } : {}}>

@@ -1432,8 +1432,13 @@ const MyProfile = () => {
                 className={`px-4 py-2 text-white rounded-lg transition-colors ${
                   !formData.name?.trim() || !formData.email?.trim() || !formData.gender || !formData.birthday
                     ? 'bg-gray-400 cursor-not-allowed'
-                    : 'bg-orange-500 hover:bg-orange-600'
+                    : 'hover:opacity-90'
                 }`}
+                style={{
+                  background: !formData.name?.trim() || !formData.email?.trim() || !formData.gender || !formData.birthday
+                    ? '#9ca3af'
+                    : 'linear-gradient(270deg, #eb6707 0%, #e42b12 100%)'
+                }}
                 disabled={!formData.name?.trim() || !formData.email?.trim() || !formData.gender || !formData.birthday}
               >
                 Next
@@ -1511,8 +1516,13 @@ const MyProfile = () => {
                 className={`px-4 py-2 text-white rounded-lg transition-colors ${
                   !formData.address?.trim() || !formData.city?.trim() || !formData.state_id || !formData.pincode?.trim()
                     ? 'bg-gray-400 cursor-not-allowed'
-                    : 'bg-orange-500 hover:bg-orange-600'
+                    : 'hover:opacity-90'
                 }`}
+                style={{
+                  background: !formData.address?.trim() || !formData.city?.trim() || !formData.state_id || !formData.pincode?.trim()
+                    ? '#9ca3af'
+                    : 'linear-gradient(270deg, #eb6707 0%, #e42b12 100%)'
+                }}
                 disabled={!formData.address?.trim() || !formData.city?.trim() || !formData.state_id || !formData.pincode?.trim()}
               >
                 Next
@@ -1545,7 +1555,7 @@ const MyProfile = () => {
                     Aadhaar Document<span className="text-red-500">*</span>
                   </label>
                   <div className="flex items-center space-x-4">
-                    <label className="cursor-pointer bg-orange-500 text-white px-4 py-2 rounded-lg hover:bg-orange-600 transition-colors">
+                    <label className="cursor-pointer text-white px-4 py-2 rounded-lg transition-colors" style={{background: 'linear-gradient(270deg, #eb6707 0%, #e42b12 100%)'}}>
                       <input
                         type="file"
                         name="upload_aadhar"
@@ -1612,7 +1622,7 @@ const MyProfile = () => {
                   Passport Size Photo<span className="text-red-500">*</span>
                 </label>
                 <div className="flex items-center space-x-4">
-                  <label className="cursor-pointer bg-orange-500 text-white px-4 py-2 rounded-lg hover:bg-orange-600 transition-colors">
+                  <label className="cursor-pointer text-white px-4 py-2 rounded-lg transition-colors" style={{background: 'linear-gradient(270deg, #eb6707 0%, #e42b12 100%)'}}>
                     <input
                       type="file"
                       name="passport_photo"
@@ -1657,7 +1667,7 @@ const MyProfile = () => {
                   Resume<span className="text-red-500">*</span>
                 </label>
                 <div className="flex items-center space-x-4">
-                  <label className="cursor-pointer bg-orange-500 text-white px-4 py-2 rounded-lg hover:bg-orange-600 transition-colors">
+                  <label className="cursor-pointer text-white px-4 py-2 rounded-lg transition-colors" style={{background: 'linear-gradient(270deg, #eb6707 0%, #e42b12 100%)'}}>
                     <input
                       type="file"
                       name="upload_resume"
@@ -1701,8 +1711,17 @@ const MyProfile = () => {
                   (!formData.passport_photo && !formData.passport_photo_path) ||
                   (!formData.upload_resume && !formData.resume_path)
                     ? 'bg-gray-400 cursor-not-allowed'
-                    : 'bg-orange-500 hover:bg-orange-600'
+                    : 'hover:opacity-90'
                 }`}
+                style={{
+                  background: !formData.aadhaar_number?.trim() ||
+                    (!formData.upload_aadhar && !formData.aadhar_path) ||
+                    !formData.linkedin_profile?.trim() ||
+                    (!formData.passport_photo && !formData.passport_photo_path) ||
+                    (!formData.upload_resume && !formData.resume_path)
+                    ? '#9ca3af'
+                    : 'linear-gradient(270deg, #eb6707 0%, #e42b12 100%)'
+                }}
                 disabled={
                   !formData.aadhaar_number?.trim() ||
                   (!formData.upload_aadhar && !formData.aadhar_path) ||
@@ -1793,7 +1812,10 @@ const MyProfile = () => {
               <button
                 type="button"
                 onClick={handleSubmit}
-                className="px-4 py-2 text-white bg-orange-500 rounded-lg hover:bg-orange-600 transition-colors"
+                className="px-4 py-2 text-white rounded-lg transition-colors hover:opacity-90"
+                style={{
+                  background: 'linear-gradient(270deg, #eb6707 0%, #e42b12 100%)'
+                }}
               >
                 Save Changes
               </button>
@@ -2063,7 +2085,10 @@ const MyProfile = () => {
                         <button
                           type="button"
                           onClick={() => handleSaveEducation(edu, index)}
-                          className="px-4 py-2 text-white bg-orange-500 rounded-lg hover:bg-orange-600 transition-colors"
+                          className="px-4 py-2 text-white rounded-lg transition-colors hover:opacity-90"
+                          style={{
+                            background: 'linear-gradient(270deg, #eb6707 0%, #e42b12 100%)'
+                          }}
                         >
                           Save
                         </button>
@@ -2079,7 +2104,10 @@ const MyProfile = () => {
               <button
                 type="button"
                 onClick={() => handleAddItem('education')}
-                className="flex items-center gap-2 px-4 py-2 text-white bg-orange-500 rounded-lg hover:bg-orange-600 transition-colors"
+                className="flex items-center gap-2 px-4 py-2 text-white rounded-lg transition-colors hover:opacity-90"
+                style={{
+                  background: 'linear-gradient(270deg, #eb6707 0%, #e42b12 100%)'
+                }}
               >
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
@@ -2174,15 +2202,35 @@ const MyProfile = () => {
 
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                           <div className="project-card-section">
-                            <h4 className="project-card-section-title">Project Type</h4>
+                            <h4 className="project-card-section-title" style={{
+                              background: 'linear-gradient(270deg, #eb6707 0%, #e42b12 100%)',
+                              WebkitBackgroundClip: 'text',
+                              WebkitTextFillColor: 'transparent',
+                              backgroundClip: 'text'
+                            }}>Project Type</h4>
                             <div>
                               {project.project_type && (
-                                <span className={`project-card-tag project-card-tag-${project.project_type.toLowerCase()}`}>
+                                <span className="project-card-tag" style={{
+                                  background: 'linear-gradient(270deg, #eb6707 0%, #e42b12 100%)',
+                                  color: 'white',
+                                  padding: '0.25rem 0.75rem',
+                                  borderRadius: '0.375rem',
+                                  fontSize: '0.875rem',
+                                  fontWeight: 500
+                                }}>
                                   {project.project_type}
                                 </span>
                               )}
                               {project.is_ongoing && (
-                                <span className="project-card-tag project-card-tag-ongoing">
+                                <span className="project-card-tag" style={{
+                                  background: 'linear-gradient(270deg, #eb6707 0%, #e42b12 100%)',
+                                  color: 'white',
+                                  padding: '0.25rem 0.75rem',
+                                  borderRadius: '0.375rem',
+                                  fontSize: '0.875rem',
+                                  fontWeight: 500,
+                                  marginLeft: '0.5rem'
+                                }}>
                                   Ongoing
                                 </span>
                               )}
@@ -2191,14 +2239,24 @@ const MyProfile = () => {
 
                           {project.organization && (
                             <div className="project-card-section">
-                              <h4 className="project-card-section-title">Organization</h4>
+                              <h4 className="project-card-section-title" style={{
+                                background: 'linear-gradient(270deg, #eb6707 0%, #e42b12 100%)',
+                                WebkitBackgroundClip: 'text',
+                                WebkitTextFillColor: 'transparent',
+                                backgroundClip: 'text'
+                              }}>Organization</h4>
                               <p className="project-card-section-content">{project.organization}</p>
                             </div>
                           )}
 
                           {project.key_achievements && (
                             <div className="project-card-section">
-                              <h4 className="project-card-section-title">Key Achievements</h4>
+                              <h4 className="project-card-section-title" style={{
+                                background: 'linear-gradient(270deg, #eb6707 0%, #e42b12 100%)',
+                                WebkitBackgroundClip: 'text',
+                                WebkitTextFillColor: 'transparent',
+                                backgroundClip: 'text'
+                              }}>Key Achievements</h4>
                               <p className="project-card-section-content">{project.key_achievements}</p>
                             </div>
                           )}
@@ -2502,18 +2560,18 @@ const MyProfile = () => {
       case 'certifications':
         return (
           <div className="space-y-6">
-            {/* Certifications Header */}
-            <div className="flex justify-between items-center mb-6">
-              <h2 className="text-xl font-semibold flex items-center gap-2">
-                <MdStar className="text-orange-500" />
-                Certifications
-              </h2>
+            <div className="flex justify-end mb-6">
               <button
                 onClick={() => handleAddItem('certifications')}
-                className="flex items-center gap-2 px-4 py-2 text-white bg-orange-500 rounded-lg hover:bg-orange-600 transition-colors"
+                className="flex items-center gap-2 px-4 py-2 text-white rounded-lg transition-colors hover:opacity-90"
+                style={{
+                  background: 'linear-gradient(270deg, #eb6707 0%, #e42b12 100%)'
+                }}
               >
-                <FiPlus className="w-5 h-5" />
-                Add Certification
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                </svg>
+                Add Certificate
               </button>
             </div>
 
@@ -2614,7 +2672,7 @@ const MyProfile = () => {
                       Upload Certificate
                     </label>
                     <div className="flex items-center space-x-4">
-                      <label className="cursor-pointer bg-orange-500 text-white px-4 py-2 rounded-lg hover:bg-orange-600 transition-colors">
+                      <label className="cursor-pointer text-white px-4 py-2 rounded-lg transition-colors" style={{background: 'linear-gradient(270deg, #eb6707 0%, #e42b12 100%)'}}>
                         <input
                           type="file"
                           onChange={(e) => handleCertificateUpload(index, e)}
@@ -2680,7 +2738,10 @@ const MyProfile = () => {
                       <button
                         type="button"
                         onClick={() => handleSaveCertification(cert, index)}
-                        className="px-4 py-2 text-white bg-orange-500 rounded-lg hover:bg-orange-600 transition-colors"
+                        className="px-4 py-2 text-white rounded-lg transition-colors hover:opacity-90"
+                        style={{
+                          background: 'linear-gradient(270deg, #eb6707 0%, #e42b12 100%)'
+                        }}
                       >
                         Save
                       </button>
@@ -3617,7 +3678,12 @@ const MyProfile = () => {
           <div className="mt-8 bg-white rounded-lg p-6 shadow-sm progress-container">
             <div className="flex items-center justify-between mb-2">
               <h3 className="text-lg font-semibold text-gray-800">Profile Completion</h3>
-              <span className="text-2xl font-bold text-orange-500">
+              <span className="text-2xl font-bold" style={{
+                background: 'linear-gradient(270deg, #eb6707 0%, #e42b12 100%)',
+                WebkitBackgroundClip: 'text',
+                WebkitTextFillColor: 'transparent',
+                backgroundClip: 'text'
+              }}>
                 {(() => {
                   const percentage = calculateOverallProgress(formData, projects);
                   return isNaN(percentage) ? '0%' : `${percentage}%`;
@@ -3627,11 +3693,14 @@ const MyProfile = () => {
             <div className="relative group">
               <div className="w-full bg-gray-200 rounded-full h-2.5 cursor-pointer">
                 <div
-                  className="bg-orange-500 h-2.5 rounded-full transition-all duration-300"
-                  style={{ width: `${(() => {
-                    const percentage = calculateOverallProgress(formData, projects);
-                    return isNaN(percentage) ? 0 : percentage;
-                  })()}%` }}
+                  className="h-2.5 rounded-full transition-all duration-300"
+                  style={{ 
+                    width: `${(() => {
+                      const percentage = calculateOverallProgress(formData, projects);
+                      return isNaN(percentage) ? 0 : percentage;
+                    })()}%`,
+                    background: 'linear-gradient(270deg, #eb6707 0%, #e42b12 100%)'
+                  }}
                 />
               </div>
               {/* Tooltip */}
@@ -3640,19 +3709,26 @@ const MyProfile = () => {
                 <div className="space-y-1.5">
                   {mainMenu.filter(menu => menu.id !== 'resume').map((menu) => {
                     const percentage = calculateCompletionPercentage(formData, menu.id, projects);
-                    // Ensure percentage is a valid number
                     const validPercentage = isNaN(percentage) ? 0 : percentage;
                     return (
                       <div key={menu.id} className="flex items-center justify-between gap-4">
                         <div className="flex items-center gap-2 min-w-[150px]">
-                          <span className="text-orange-500">{menu.icon}</span>
+                          <span style={{
+                            background: 'linear-gradient(270deg, #eb6707 0%, #e42b12 100%)',
+                            WebkitBackgroundClip: 'text',
+                            WebkitTextFillColor: 'transparent',
+                            backgroundClip: 'text'
+                          }}>{menu.icon}</span>
                           <span className="whitespace-nowrap">{menu.label}</span>
                         </div>
                         <div className="flex items-center gap-2">
                           <div className="w-24 bg-gray-700 rounded-full h-1.5">
                             <div
-                              className="bg-orange-500 h-1.5 rounded-full"
-                              style={{ width: `${validPercentage}%` }}
+                              className="h-1.5 rounded-full"
+                              style={{ 
+                                width: `${validPercentage}%`,
+                                background: 'linear-gradient(270deg, #eb6707 0%, #e42b12 100%)'
+                              }}
                             />
                           </div>
                           <span className="font-medium min-w-[40px] text-right">
@@ -3662,10 +3738,6 @@ const MyProfile = () => {
                       </div>
                     );
                   })}
-                </div>
-                {/* Arrow */}
-                <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 translate-y-full">
-                  <div className="border-8 border-transparent border-t-gray-900"></div>
                 </div>
               </div>
             </div>

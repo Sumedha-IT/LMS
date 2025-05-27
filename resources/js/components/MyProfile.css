@@ -1,7 +1,7 @@
 @keyframes slowBlink {
-  0% { border-color: #f97316; }
+  0% { border-color: #eb6707; }
   50% { border-color: transparent; }
-  100% { border-color: #f97316; }
+  100% { border-color: #eb6707; }
 }
 
 .slow-blink {
@@ -11,7 +11,7 @@
 }
 
 .active-menu {
-  background-color: #f97316;
+  background: linear-gradient(270deg, #eb6707 0%, #e42b12 100%);
   color: white;
 }
 
@@ -82,7 +82,7 @@
   position: absolute;
   bottom: 0;
   right: 0;
-  background-color: #f97316;
+  background: linear-gradient(270deg, #eb6707 0%, #e42b12 100%);
   padding: 0.5rem;
   border-radius: 9999px;
   box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
@@ -93,7 +93,7 @@
 }
 
 .profile-image-edit:hover {
-  background-color: #ea580c;
+  opacity: 0.9;
 }
 
 /* Main Menu Styles */
@@ -110,24 +110,32 @@
 }
 
 .main-menu-item-active {
-  background-color: #f97316;
-  color: white;
+  background: linear-gradient(270deg, #1e3c72 0%, #2a5298 100%);
+  color: white !important;
   box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  border: none;
+}
+
+.main-menu-item-active * {
+  color: white !important;
 }
 
 .main-menu-item-inactive {
-  background-color: white;
-  border-color: #e5e7eb;
+  background: white;
+  border: 2px solid #1e3c72;
+  color: #1e3c72;
+  transition: border 0.2s, color 0.2s;
 }
 
 .main-menu-item-inactive:hover {
-  border-color: #f97316;
+  border: 2px solid #2a5298;
+  color: #2a5298;
 }
 
 .main-menu-icon {
-  color: #f97316;
+  color: #1e3c72;
   font-size: 1.25rem;
-  transition-property: transform;
+  transition-property: transform, color;
   transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
   transition-duration: 150ms;
 }
@@ -136,24 +144,26 @@
   color: white;
 }
 
-.main-menu-item:hover .main-menu-icon {
-  transform: scale(1.1);
+.main-menu-item-inactive:hover .main-menu-icon {
+  color: #2a5298;
 }
 
 .main-menu-arrow {
-  color: #f97316;
+  color: #1e3c72;
   opacity: 0;
-  transition-property: opacity;
+  transition-property: opacity, color;
   transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
   transition-duration: 150ms;
 }
 
 .main-menu-item-active .main-menu-arrow {
   opacity: 1;
+  color: white;
 }
 
-.main-menu-item:hover .main-menu-arrow {
+.main-menu-item-inactive:hover .main-menu-arrow {
   opacity: 1;
+  color: #2a5298;
 }
 
 /* Contact Info Styles */
@@ -243,21 +253,21 @@
 
 .form-submit-button {
   margin-top: 1.5rem;
-  background-color: #f97316;
+  background: linear-gradient(270deg, #eb6707 0%, #e42b12 100%);
   color: white;
   padding: 0.5rem 1rem;
   border-radius: 0.25rem;
-  transition-property: background-color;
+  transition-property: opacity;
   transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
   transition-duration: 150ms;
 }
 
 .form-submit-button:hover {
-  background-color: #ea580c;
+  opacity: 0.9;
 }
 
 .form-submit-button:disabled {
-  background-color: #9ca3af;
+  background: #9ca3af;
 }
 
 /* Progress bar tooltip styles */
@@ -360,7 +370,7 @@
 }
 
 .project-card-section {
-  margin-bottom: 1.25rem;
+  margin-bottom: 1rem;
 }
 
 .project-card-section:last-child {

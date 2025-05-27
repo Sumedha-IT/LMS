@@ -36,7 +36,7 @@ export default function AssignmentsReport() {
       <div className="overflow-x-auto">
         <table className="w-full border-collapse">
           <thead className="p-6">
-            <tr style={{background: 'linear-gradient(135.51deg, rgba(235, 103, 7, 0.95) 0%, rgba(228, 43, 18, 0.95) 100%)', color: 'white'}} className="font-medium text-xl">
+            <tr style={{background: 'linear-gradient(270deg, #eb6707 0%, #e42b12 100%)', color: 'white'}} className="font-medium text-xl">
               <th className="text-left px-4 py-3 font-semibold border-b border-gray-200">Name</th>
               <th className="px-4 py-3 font-semibold border-b border-gray-200">Topic</th>
               <th className="px-4 py-3 font-semibold border-b border-gray-200">Marks Scored</th>

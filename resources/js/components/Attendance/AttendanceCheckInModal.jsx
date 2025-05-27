@@ -11,7 +11,8 @@ import {
   Paper,
   Alert,
   AlertTitle,
-  LinearProgress
+  LinearProgress,
+  keyframes
 } from '@mui/material';
 import {
   Calendar,
@@ -26,6 +27,13 @@ import {
 } from 'lucide-react';
 import { apiRequest } from '../../utils/api';
 import { toast } from 'react-toastify';
+
+// Define blinking animation
+const blinkBorder = keyframes`
+  0% { border-color: rgba(229, 53, 16, 0.3); }
+  50% { border-color: rgba(229, 53, 16, 1); }
+  100% { border-color: rgba(229, 53, 16, 0.3); }
+`;
 
 // Key for storing login status in localStorage - must match the one in NewDashBoard.jsx
 const LOGIN_STATUS_KEY = 'dashboard_login_status';
@@ -151,130 +159,6 @@ export default function AttendanceCheckInModal({ open, onClose, onSuccess }) {
     }
   };
 
-  // Function to get geolocation
-  const getGeolocation = () => {
-    return new Promise((resolve, reject) => {
-      if (!navigator.geolocation) {
-        reject(new Error('Geolocation is not supported by your browser'));
-        return;
-      }
-
-      navigator.geolocation.getCurrentPosition(
-        (position) => {
-          resolve({
-            latitude: position.coords.latitude,
-            longitude: position.coords.longitude,
-            accuracy: position.coords.accuracy
-          });
-        },
-        (error) => {
-          let errorMessage;
-          switch (error.code) {
-            case error.PERMISSION_DENIED:
-              errorMessage = 'User denied the request for geolocation';
-              break;
-            case error.POSITION_UNAVAILABLE:
-              errorMessage = 'Location information is unavailable';
-              break;
-            case error.TIMEOUT:
-              errorMessage = 'The request to get user location timed out';
-              break;
-            default:
-              errorMessage = 'An unknown error occurred';
-          }
-          reject(new Error(errorMessage));
-        },
-        {
-          enableHighAccuracy: false, // Changed to false for faster response
-          timeout: 5000, // Reduced timeout to 5 seconds
-          maximumAge: 60000 // Cache location for 1 minute
-        }
-      );
-    });
-  };
-
-  // Function to verify campus location using geofencing
-  const verifyCampusLocation = async () => {
-    try {
-      setVerificationLoading(true);
-      setLocationError(null);
-
-      // Reset verification status
-      setVerificationStatus({
-        network: null,
-        location: null,
-        message: 'Verifying your location...',
-        overall: null
-      });
-
-      // Get network information
-      const networkData = await getNetworkInfo();
-      setWifiInfo(networkData);
-
-      // Get geolocation with high accuracy
-      let locationData;
-      try {
-        locationData = await getGeolocation();
-      } catch (error) {
-        setLocationError(error.message);
-        setVerificationStatus(prev => ({
-          ...prev,
-          location: false,
-          message: `Location error: ${error.message}. Please enable location services and try again.`,
-          overall: false
-        }));
-        return false;
-      }
-
-      // Send verification request to server
-      const verificationResponse = await apiRequest('/verify-campus-location', {
-        method: 'POST',
-        body: {
-          latitude: locationData.latitude,
-          longitude: locationData.longitude,
-          accuracy: locationData.accuracy,
-          ip_address: null // Let the server determine this
-        },
-        skipCache: true
-      });
-
-      if (verificationResponse.status === 'success') {
-        setVerificationStatus({
-          network: verificationResponse.verification.network,
-          location: verificationResponse.verification.location,
-          distance: verificationResponse.verification.distance,
-          accuracy: verificationResponse.verification.accuracy,
-          message: verificationResponse.message,
-          overall: true
-        });
-        return true;
-      } else {
-        setVerificationStatus({
-          network: verificationResponse.verification?.network || false,
-          location: verificationResponse.verification?.location || false,
-          distance: verificationResponse.verification?.distance || null,
-          accuracy: verificationResponse.verification?.accuracy || null,
-          message: verificationResponse.message,
-          overall: false
-        });
-        return false;
-      }
-    } catch (error) {
-      console.error('Error verifying location:', error);
-      const errorMessage = error.response?.data?.message || error.message || 'Error verifying your location. Please try again.';
-
-      setVerificationStatus({
-        network: false,
-        location: false,
-        message: errorMessage,
-        overall: false
-      });
-      return false;
-    } finally {
-      setVerificationLoading(false);
-    }
-  };
-
   const fetchAttendanceStatus = async () => {
     try {
       const response = await apiRequest('/student-attendance/status', {
@@ -307,61 +191,25 @@ export default function AttendanceCheckInModal({ open, onClose, onSuccess }) {
     try {
       setLoading(true);
 
-      // Silently verify location without showing the verification UI
-      // Get geolocation with high accuracy
-      let locationData;
-      try {
-        locationData = await getGeolocation();
-        console.log('Modal: Location data obtained:', locationData);
-      } catch (error) {
-        console.error('Modal: Error getting geolocation:', error);
-        // Don't proceed with check-in if location access is denied
-        toast.error('Location access denied. Please enable location services to verify you are within campus boundaries.', {
-          position: "top-center",
-          autoClose: 8000, // Show for longer
-          style: {
-            background: "#f44336",
-            color: "#fff",
-            fontWeight: "bold",
-            fontSize: "16px",
-            borderRadius: "10px",
-            boxShadow: "0 4px 12px rgba(0, 0, 0, 0.3)"
-          }
-        });
-        setLoading(false);
-        return;
-      }
-
       // Send verification request to server
-      console.log('Modal: Sending verification request with data:', locationData);
+      console.log('Sending verification request');
       const verificationResponse = await apiRequest('/verify-campus-location', {
         method: 'POST',
         body: {
-          latitude: locationData.latitude,
-          longitude: locationData.longitude,
-          accuracy: locationData.accuracy,
           ip_address: null // Let the server determine this
         },
         skipCache: true
       });
 
-      console.log('Modal: Verification response:', verificationResponse);
+      console.log('Verification response:', verificationResponse);
 
       // Only proceed with check-in if verification was successful
       if (verificationResponse.status !== 'success') {
-        // Show error message and don't allow check-in
-        // Show a more prominent error message
-        toast.error(verificationResponse.message || 'Out of the campus. Not able to check in. Please be present within campus boundaries.', {
-          position: "top-center",
-          autoClose: 8000, // Show for longer
-          style: {
-            background: "#f44336",
-            color: "#fff",
-            fontWeight: "bold",
-            fontSize: "16px",
-            borderRadius: "10px",
-            boxShadow: "0 4px 12px rgba(0, 0, 0, 0.3)"
-          }
+        // Show error in dialog instead of toast
+        setDeviceErrorDialog({
+          open: true,
+          title: 'Check-In Error',
+          message: verificationResponse.message || 'You must be connected to the campus WiFi network to check in'
         });
         setLoading(false);
         return;
@@ -372,14 +220,14 @@ export default function AttendanceCheckInModal({ open, onClose, onSuccess }) {
         location_verified: true
       };
 
-      console.log('Modal: Sending check-in request with body:', requestBody);
+      console.log('Sending check-in request with body:', requestBody);
       const response = await apiRequest('/student-attendance/check-in', {
         method: 'POST',
         body: requestBody,
         skipCache: true
       });
 
-      console.log('Modal: Check-in response:', response);
+      console.log('Check-in response:', response);
 
       // Show success animation and message
       toast.success(response.message || 'Successfully checked in!', {
@@ -411,43 +259,20 @@ export default function AttendanceCheckInModal({ open, onClose, onSuccess }) {
 
       setAttendanceStatus(updatedStatus);
 
-      // Store the updated attendance status in localStorage
+      // Store the updated status in localStorage
       localStorage.setItem('attendanceStatus', JSON.stringify(updatedStatus));
 
       // Call the onSuccess callback
       if (onSuccess) onSuccess();
 
-      // Instead of reloading the page, just call onSuccess to update the parent component
-      // This will be much faster and provide a better user experience
-      if (onSuccess) {
-        setTimeout(() => {
-          onSuccess();
-        }, 1000); // Small delay to ensure the success message is seen
-      }
+      // Close the modal
+      onClose();
     } catch (error) {
-      const errorResponse = error.response?.data;
-      if (errorResponse?.show_dialog) {
+      // Show error in dialog instead of toast
         setDeviceErrorDialog({
           open: true,
-          title: errorResponse.dialog_title || 'Device Mismatch',
-          message: errorResponse.dialog_message || errorResponse.message
-        });
-        // Close the main check-in dialog when showing the device mismatch dialog
-        if (onClose) onClose();
-        // Do NOT show a toast for this error
-        return;
-      }
-      // Only show toast if not a dialog error
-      const errorMessage = errorResponse?.message || error.message || 'Error checking in. Please try again.';
-      toast.error(errorMessage, {
-        position: "top-center",
-        autoClose: 5000,
-        style: {
-          background: "#f44336",
-          color: "#fff",
-          borderRadius: "10px",
-          boxShadow: "0 4px 12px rgba(0, 0, 0, 0.15)"
-        }
+        title: 'Check-In Error',
+        message: error.response?.data?.message || error.message || 'Error checking in. Please try again.'
       });
     } finally {
       setLoading(false);
@@ -515,446 +340,95 @@ export default function AttendanceCheckInModal({ open, onClose, onSuccess }) {
   };
 
   return (
-    <>
-      {/* Main Check-in Dialog */}
-      <Dialog
-        open={open && !showLocationVerification}
-        onClose={() => {
-          // Only temporarily close the modal - it will reappear
-          if (onClose) onClose();
-        }}
-        maxWidth="sm"
-        fullWidth
-        sx={{
-          '& .MuiDialog-paper': {
-            borderRadius: 2,
-            boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1)',
-            maxWidth: '450px'
-          },
-          zIndex: 9999
-        }}
-      >
-        <DialogTitle sx={{
-          bgcolor: '#E53510', // App's orange color
-          color: 'white',
-          display: 'flex',
-          alignItems: 'center',
-          gap: 1,
-          py: 1.5
-        }}>
-          <Calendar size={20} />
-          Attendance Check-In Required
-        </DialogTitle>
+    <Dialog
+      open={open}
+      onClose={onClose}
+      maxWidth="sm"
+      fullWidth
+      PaperProps={{
+        sx: {
+          position: 'fixed',
+          top: '50%',
+          left: '50%',
+          transform: 'translate(-50%, -50%)',
+          width: '90%',
+          maxWidth: '500px',
+          borderRadius: '16px',
+          boxShadow: '0 8px 32px rgba(0, 0, 0, 0.2)',
+          background: 'linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%)',
+          border: '2px solid #E53510',
+          animation: `${blinkBorder} 2s infinite`,
+        }
+      }}
+      BackdropProps={{
+        sx: {
+          backgroundColor: 'rgba(0, 0, 0, 0.7)',
+          backdropFilter: 'blur(4px)'
+        }
+      }}
+    >
+      <DialogTitle sx={{ 
+        textAlign: 'center', 
+        fontSize: '1.5rem',
+        fontWeight: 'bold',
+        color: '#E53510',
+        borderBottom: '2px solid #E53510',
+        padding: '20px'
+      }}>
+        Attendance Check-In Required
+      </DialogTitle>
+      <DialogContent sx={{ padding: '24px' }}>
+        <Box sx={{ textAlign: 'center', mb: 3 }}>
+          <Alert severity="info" sx={{ 
+            mb: 2,
+            backgroundColor: 'rgba(229, 53, 16, 0.1)',
+            border: '1px solid #E53510',
+            borderRadius: '8px'
+          }}>
+            <AlertTitle sx={{ color: '#E53510', fontWeight: 'bold' }}>Please Check In</AlertTitle>
+            You need to check in for attendance before accessing the LMS.
+          </Alert>
+        </Box>
+        
+        <Box sx={{ display: 'flex', justifyContent: 'center', mb: 3 }}>
+          <Button
+            variant="contained"
+            onClick={handleCheckIn}
+            disabled={loading}
+            startIcon={loading ? <CircularProgress size={20} color="inherit" /> : <CheckCircle size={20} />}
+            sx={{
+              background: 'linear-gradient(270deg, #eb6707 0%, #e42b12 100%)',
+              color: '#fff',
+              borderRadius: '50px',
+              textTransform: 'none',
+              padding: '12px 32px',
+              fontSize: '1.1rem',
+              fontWeight: 'bold',
+              boxShadow: '0 4px 16px rgba(229, 53, 16, 0.3)',
+              '&:hover': {
+                background: 'linear-gradient(270deg, #eb6707 0%, #e42b12 100%)',
+                opacity: 0.9,
+                boxShadow: '0 6px 20px rgba(229, 53, 16, 0.4)',
+              },
+            }}
+          >
+            {loading ? 'Checking In...' : 'Check In Now'}
+          </Button>
+        </Box>
 
-        <DialogContent sx={{ py: 3, px: 3 }}>
-          <Box sx={{ textAlign: 'center', mb: 2 }}>
-            <Typography variant="h6" sx={{ mb: 1, color: '#E53510', fontSize: '1.1rem' }}>
-              Welcome to the LMS
-            </Typography>
-            <Typography variant="body2" sx={{ mb: 2 }}>
-              You need to check in for attendance before accessing the system.
-            </Typography>
-
-            <Box sx={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: 1,
-              mb: 2,
-              mt: 3
-            }}>
-              <Clock size={16} color="#E53510" />
-              <Typography variant="body2" color="text.secondary">
-                Current Time: {new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit', hour12: true})}
-              </Typography>
-            </Box>
-
-            {attendanceStatus?.is_checked_in ? (
-              <Box sx={{
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-                p: 2,
-                bgcolor: 'rgba(76, 175, 80, 0.1)',
-                borderRadius: 2
-              }}>
-                <CheckCircle size={40} color="#4caf50" sx={{ mb: 1 }} />
-                <Typography variant="body1" sx={{ color: '#4caf50', fontWeight: 500 }}>
-                  You have successfully checked in!
-                </Typography>
-                <Typography variant="body2" color="text.secondary">
-                  Check-in time: {attendanceStatus.check_in_time}
-                </Typography>
-              </Box>
-            ) : (
-              <Button
-                variant="contained"
-                onClick={handleCheckIn}
-                disabled={loading}
-                fullWidth
-                sx={{
-                  bgcolor: '#E53510', // App's orange color
-                  '&:hover': {
-                    bgcolor: '#d32f2f',
-                  },
-                  borderRadius: '4px',
-                  py: 1.5,
-                  textTransform: 'none',
-                  fontSize: '1rem',
-                  fontWeight: 'medium',
-                  boxShadow: '0 2px 5px rgba(0,0,0,0.2)',
-                  transition: 'all 0.3s ease',
-                  mt: 1
-                }}
-              >
-                {loading ? (
-                  <>
-                    <CircularProgress size={20} color="inherit" sx={{ mr: 1 }} />
-                    Verifying Location...
-                  </>
-                ) : (
-                  'Check In Now'
-                )}
-              </Button>
-            )}
-
-            <Typography variant="body2" color="text.secondary" sx={{ fontWeight: 'medium', mt: 3 }}>
-              Note: You must check in daily to access the LMS system.
-            </Typography>
+        {loading && (
+          <Box sx={{ width: '100%', mt: 2 }}>
+            <LinearProgress sx={{ 
+              height: 8,
+              borderRadius: 4,
+              backgroundColor: 'rgba(229, 53, 16, 0.1)',
+              '& .MuiLinearProgress-bar': {
+                backgroundColor: '#E53510',
+              }
+            }} />
           </Box>
-        </DialogContent>
-
-        {!attendanceStatus?.is_checked_in && (
-          <DialogActions sx={{ px: 3, pb: 2, justifyContent: 'center' }}>
-            <Button
-              onClick={onClose}
-              variant="text"
-              sx={{
-                color: '#666',
-                '&:hover': {
-                  bgcolor: 'rgba(0, 0, 0, 0.04)'
-                },
-                textTransform: 'none',
-                fontWeight: 'normal',
-                fontSize: '0.9rem'
-              }}
-            >
-              Remind me later
-            </Button>
-          </DialogActions>
         )}
-      </Dialog>
-
-      {/* Location Verification Dialog */}
-      <Dialog
-        open={showLocationVerification}
-        onClose={() => setShowLocationVerification(false)}
-        maxWidth="sm"
-        fullWidth
-        PaperProps={{
-          sx: {
-            borderRadius: 2,
-            boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1)'
-          }
-        }}
-      >
-        <DialogTitle sx={{
-          bgcolor: '#1a237e',
-          color: 'white',
-          display: 'flex',
-          alignItems: 'center',
-          gap: 1
-        }}>
-          <MapPin size={24} />
-          Campus Location Verification
-        </DialogTitle>
-
-        <DialogContent sx={{ py: 3, mt: 2 }}>
-          {/* Explanation */}
-          <Typography variant="body1" sx={{ mb: 1 }}>
-            For attendance check-in, you must be physically present on campus.
-          </Typography>
-          <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
-            Our system uses geofencing technology to verify your location. Please ensure your device's location services are enabled and accurate. For best results, connect to the campus WiFi network.
-          </Typography>
-          <Typography variant="body2" color="text.secondary" sx={{ mb: 3, fontStyle: 'italic' }}>
-            Campus Location: Latitude 17.4384856, Longitude 78.3794686 (100m radius)
-          </Typography>
-
-
-          {/* Verification Status */}
-          {verificationLoading ? (
-            <Box sx={{ textAlign: 'center', my: 3 }}>
-              <CircularProgress size={40} sx={{ mb: 2, color: '#E53510' }} />
-              <Typography variant="body1">
-                Verifying your location...
-              </Typography>
-              <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
-                Please allow location access when prompted
-              </Typography>
-            </Box>
-          ) : (
-            <>
-              {/* Show verification results if available */}
-              {verificationStatus.overall !== null && (
-                <Box sx={{ mb: 3 }}>
-                  <Alert
-                    severity={verificationStatus.overall ? "success" : "error"}
-                    sx={{ mb: 2 }}
-                  >
-                    <AlertTitle>
-                      {verificationStatus.overall ? "Verification Successful" : "Verification Failed"}
-                    </AlertTitle>
-                    {verificationStatus.message}
-                  </Alert>
-
-                  <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, mt: 3 }}>
-                    {/* Network Status */}
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                      {verificationStatus.network ? (
-                        <Wifi size={24} color="#4caf50" />
-                      ) : (
-                        <WifiOff size={24} color="#f44336" />
-                      )}
-                      <Box>
-                        <Typography variant="body1" fontWeight="medium">
-                          {verificationStatus.network ? "Connected to Campus Network" : "Not Connected to Campus Network"}
-                        </Typography>
-                        <Typography variant="body2" color="text.secondary">
-                          {wifiInfo?.type ? `Network: ${wifiInfo.type}` : "Network verification is done server-side"}
-                        </Typography>
-                      </Box>
-                    </Box>
-
-                    {/* Location Status */}
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                      {verificationStatus.location ? (
-                        <MapPin size={24} color="#4caf50" />
-                      ) : (
-                        <AlertTriangle size={24} color="#f44336" />
-                      )}
-                      <Box>
-                        <Typography variant="body1" fontWeight="medium">
-                          {verificationStatus.location ? "Within Campus Boundaries" : "Outside Campus Boundaries"}
-                        </Typography>
-                        {locationError ? (
-                          <Typography variant="body2" color="error">
-                            {locationError}
-                          </Typography>
-                        ) : (
-                          <Typography variant="body2" color="text.secondary">
-                            {verificationStatus.location
-                              ? verificationStatus.distance_to_center
-                                ? `You are ${verificationStatus.distance_to_center}m from campus center`
-                                : "Your location has been verified"
-                              : verificationStatus.distance
-                                ? `You are approximately ${verificationStatus.distance}m away from campus boundary`
-                                : "You must be physically present on campus"}
-                          </Typography>
-                        )}
-                      </Box>
-                    </Box>
-
-                    {/* Location Accuracy */}
-                    {verificationStatus.accuracy && (
-                      <Box sx={{ mt: 1, px: 2 }}>
-                        <Typography variant="body2" color="text.secondary">
-                          Location Accuracy: ±{verificationStatus.accuracy} meters
-                        </Typography>
-                        <Box sx={{
-                          display: 'flex',
-                          alignItems: 'center',
-                          mt: 1,
-                          gap: 1
-                        }}>
-                          <Box sx={{ flexGrow: 1 }}>
-                            <LinearProgress
-                              variant="determinate"
-                              value={Math.max(0, 100 - (verificationStatus.accuracy / 2))}
-                              sx={{
-                                height: 8,
-                                borderRadius: 4,
-                                bgcolor: '#e0e0e0',
-                                '& .MuiLinearProgress-bar': {
-                                  bgcolor: verificationStatus.accuracy < 50
-                                    ? '#4caf50'
-                                    : verificationStatus.accuracy < 100
-                                      ? '#ff9800'
-                                      : '#f44336'
-                                }
-                              }}
-                            />
-                          </Box>
-                          <Typography variant="caption" color="text.secondary">
-                            {verificationStatus.accuracy < 50
-                              ? 'Good'
-                              : verificationStatus.accuracy < 100
-                                ? 'Fair'
-                                : 'Poor'}
-                          </Typography>
-                        </Box>
-                      </Box>
-                    )}
-
-                    {/* Simple Location Map Visualization */}
-                    {verificationStatus.location !== null && (
-                      <Box sx={{
-                        mt: 3,
-                        p: 2,
-                        bgcolor: '#f5f5f5',
-                        borderRadius: 2,
-                        position: 'relative',
-                        height: 150,
-                        overflow: 'hidden'
-                      }}>
-                        <Typography variant="subtitle2" sx={{ mb: 1, display: 'flex', alignItems: 'center', gap: 1 }}>
-                          <Map size={16} />
-                          Campus Location
-                        </Typography>
-
-                        {/* Campus boundary visualization (simplified) */}
-                        <Box sx={{
-                          position: 'absolute',
-                          top: '50%',
-                          left: '50%',
-                          transform: 'translate(-50%, -50%)',
-                          width: 80,
-                          height: 80,
-                          borderRadius: 2,
-                          border: '2px solid #1a237e',
-                          bgcolor: 'rgba(26, 35, 126, 0.1)',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center'
-                        }}>
-                          <MapPin size={20} color="#1a237e" />
-                          <Typography variant="caption" sx={{ position: 'absolute', bottom: -20, color: '#1a237e' }}>
-                            Campus
-                          </Typography>
-                        </Box>
-
-                        {/* User location indicator */}
-                        {verificationStatus.distance_to_center !== null && (
-                          <Box sx={{
-                            position: 'absolute',
-                            top: '50%',
-                            left: '50%',
-                            transform: `translate(
-                              calc(-50% + ${verificationStatus.location ? 0 : Math.min(100, verificationStatus.distance_to_center / 10)}px),
-                              calc(-50% + ${verificationStatus.location ? 0 : Math.min(50, verificationStatus.distance_to_center / 20)}px)
-                            )`,
-                            width: 30,
-                            height: 30,
-                            borderRadius: '50%',
-                            bgcolor: verificationStatus.location ? 'rgba(76, 175, 80, 0.2)' : 'rgba(244, 67, 54, 0.2)',
-                            border: `2px solid ${verificationStatus.location ? '#4caf50' : '#f44336'}`,
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            zIndex: 10
-                          }}>
-                            <Navigation size={16} color={verificationStatus.location ? '#4caf50' : '#f44336'} />
-                          </Box>
-                        )}
-
-                        <Typography variant="caption" sx={{
-                          position: 'absolute',
-                          bottom: 5,
-                          right: 10,
-                          color: 'text.secondary'
-                        }}>
-                          {verificationStatus.distance_to_center
-                            ? `Distance: ~${verificationStatus.distance_to_center}m`
-                            : 'Location unknown'}
-                        </Typography>
-                      </Box>
-                    )}
-
-
-                  </Box>
-                </Box>
-              )}
-            </>
-          )}
-        </DialogContent>
-
-        <DialogActions sx={{ px: 3, pb: 3 }}>
-          <Button
-            onClick={() => {
-              setShowLocationVerification(false);
-              // Go back to main check-in dialog
-              setVerificationStatus({
-                network: null,
-                location: null,
-                distance: null,
-                accuracy: null,
-                message: '',
-                overall: null
-              });
-            }}
-            variant="outlined"
-            sx={{ borderRadius: '8px' }}
-          >
-            Cancel
-          </Button>
-          <Button
-            onClick={handleVerifiedCheckIn}
-            variant="contained"
-            disabled={loading || verificationLoading || (verificationStatus.overall === false)}
-            startIcon={loading ? <CircularProgress size={16} color="inherit" /> : null}
-            sx={{
-              bgcolor: '#1a237e',
-              '&:hover': { bgcolor: '#0d47a1' },
-              borderRadius: '8px'
-            }}
-          >
-            {verificationStatus.overall === null ? 'Verify Location' : 'Check In'}
-          </Button>
-        </DialogActions>
-      </Dialog>
-
-      {/* Device Mismatch Dialog */}
-      <Dialog
-        open={deviceErrorDialog.open}
-        onClose={() => setDeviceErrorDialog({ ...deviceErrorDialog, open: false })}
-        maxWidth="sm"
-        fullWidth
-        PaperProps={{
-          sx: {
-            borderRadius: 2,
-            boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1)'
-          }
-        }}
-      >
-        <DialogTitle sx={{
-          bgcolor: '#f44336',
-          color: 'white',
-          display: 'flex',
-          alignItems: 'center',
-          gap: 1
-        }}>
-          <AlertTriangle size={24} />
-          {deviceErrorDialog.title}
-        </DialogTitle>
-        <DialogContent sx={{ py: 3 }}>
-          <Typography variant="body1" sx={{ mb: 2 }}>
-            {deviceErrorDialog.message}
-          </Typography>
-        </DialogContent>
-        <DialogActions sx={{ px: 3, pb: 3 }}>
-          <Button
-            onClick={() => setDeviceErrorDialog({ ...deviceErrorDialog, open: false })}
-            variant="contained"
-            sx={{
-              bgcolor: '#f44336',
-              '&:hover': { bgcolor: '#d32f2f' },
-              borderRadius: '8px'
-            }}
-          >
-            Close
-          </Button>
-        </DialogActions>
-      </Dialog>
-    </>
+      </DialogContent>
+    </Dialog>
   );
 }

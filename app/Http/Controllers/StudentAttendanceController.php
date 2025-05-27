@@ -13,6 +13,15 @@ class StudentAttendanceController extends Controller
 {
     public function checkIn(Request $request)
     {
+        // WiFi IP verification temporarily disabled for development/testing
+        // $attendanceController = new \App\Http\Controllers\AttendanceController();
+        // if (!$attendanceController->isIpInCampusRange($request->ip())) {
+        //     return response()->json([
+        //         'message' => 'You must be connected to the campus WiFi network to check in',
+        //         'status' => 'error'
+        //     ], 403);
+        // }
+
         try {
             $user = Auth::user();
             $ipAddress = $request->ip(); // Get IP address from the request
@@ -23,25 +32,24 @@ class StudentAttendanceController extends Controller
                 'ip_address' => $ipAddress
             ]);
 
-            // Verify campus location and WiFi if location data is provided
-            if ($request->has('location_verified') && $request->location_verified !== true) {
-                // If location_verified is explicitly set to false, return error
-                return response()->json([
-                    'message' => 'You must be on campus and connected to campus WiFi to check in',
-                    'status' => 'error',
-                    'require_verification' => true
-                ], 403);
-            }
+            // --- DISABLED: Campus WiFi/location verification for check-in ---
+            // if ($request->has('location_verified') && $request->location_verified !== true) {
+            //     // If location_verified is explicitly set to false, return error
+            //     return response()->json([
+            //         'message' => 'You must be on campus and connected to campus WiFi to check in',
+            //         'status' => 'error',
+            //         'require_verification' => true
+            //     ], 403);
+            // }
 
-            // Always enforce location verification, even in local environment
-            if (!$request->has('location_verified')) {
-                // Location verification is required but not provided
-                return response()->json([
-                    'message' => 'Location verification is required',
-                    'status' => 'error',
-                    'require_verification' => true
-                ], 403);
-            }
+            // if (!$request->has('location_verified')) {
+            //     // Location verification is required but not provided
+            //     return response()->json([
+            //         'message' => 'Location verification is required',
+            //         'status' => 'error',
+            //         'require_verification' => true
+            //     ], 403);
+            // }
 
             // Prevent check-in if another user has already checked in today with the same IP and laptop_id
             $duplicateCheck = StudentAttendance::where('ip_address', $ipAddress)

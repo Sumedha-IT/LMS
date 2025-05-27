@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import {
   Box,
   Button,
@@ -39,6 +39,8 @@ export default function AttendanceCheckInWidget({ displayMode = 'button' }) {
   const [hasAccess, setHasAccess] = useState(false);
   // Add state to track if this is the first load after login
   const [isFirstLoad, setIsFirstLoad] = useState(false);
+  const [timer, setTimer] = useState(0);
+  const timerInterval = useRef(null);
 
   // First check if this is the first load after login
   useEffect(() => {
@@ -302,130 +304,65 @@ export default function AttendanceCheckInWidget({ displayMode = 'button' }) {
     try {
       setCheckInLoading(true);
 
-      // Silently verify location in the background without showing the verification UI
-      // Get geolocation with high accuracy
-      let locationData;
-      try {
-        locationData = await getGeolocation();
-        console.log('Location data obtained:', locationData);
-      } catch (error) {
-        console.error('Error getting geolocation:', error);
-        // Don't proceed with check-in if location access is denied
-        toast.error('Location access denied. Please enable location services to verify you are within campus boundaries.', {
-          position: "top-center",
-          autoClose: 8000, // Show for longer
-          style: {
-            background: "#f44336",
-            color: "#fff",
-            fontWeight: "bold",
-            fontSize: "16px",
-            borderRadius: "10px",
-            boxShadow: "0 4px 12px rgba(0, 0, 0, 0.3)"
-          }
-        });
-        setCheckInLoading(false);
-        return;
-      }
+      // --- DISABLED: Geolocation and WiFi checks for now ---
+      // let locationData;
+      // try {
+      //   locationData = await getGeolocation();
+      //   console.log('Location data obtained:', locationData);
+      // } catch (error) {
+      //   console.error('Error getting geolocation:', error);
+      //   toast.error('Location access denied. Please enable location services to verify you are within campus boundaries.', { ... });
+      //   setCheckInLoading(false);
+      //   return;
+      // }
 
-      // Send verification request to server
-      try {
-        console.log('Sending verification request with data:', locationData);
-        const verificationResponse = await apiRequest('/verify-campus-location', {
-          method: 'POST',
-          body: {
-            latitude: locationData.latitude,
-            longitude: locationData.longitude,
-            accuracy: locationData.accuracy,
-            ip_address: null // Let the server determine this
-          },
-          skipCache: true
-        });
+      // --- DISABLED: Verification request ---
+      // const verificationResponse = await apiRequest('/verify-campus-location', { ... });
+      // if (verificationResponse.status !== 'success') { ... return; }
 
-        console.log('Verification response:', verificationResponse);
+      // Proceed directly to check-in
+      const requestBody = {
+        laptop_id: navigator.userAgent,
+        location_verified: false // Mark as false since we skip verification
+      };
 
-        // Only proceed with check-in if verification was successful
-        if (verificationResponse.status !== 'success') {
-          // Show error message and don't allow check-in
-          // Show a more prominent error message
-          toast.error(verificationResponse.message || 'Out of the campus. Not able to check in. Please be present within campus boundaries.', {
-            position: "top-center",
-            autoClose: 8000, // Show for longer
-            style: {
-              background: "#f44336",
-              color: "#fff",
-              fontWeight: "bold",
-              fontSize: "16px",
-              borderRadius: "10px",
-              boxShadow: "0 4px 12px rgba(0, 0, 0, 0.3)"
-            }
-          });
-          setCheckInLoading(false);
-          return;
+      const response = await apiRequest('/student-attendance/check-in', {
+        method: 'POST',
+        body: requestBody,
+        skipCache: true
+      });
+
+      toast.success(response.message || 'Successfully checked in!', {
+        position: 'top-center',
+        autoClose: 3000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+        progress: undefined,
+        style: {
+          background: '#4caf50',
+          color: '#fff',
+          borderRadius: '10px',
+          boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)'
         }
+      });
 
-        const requestBody = {
-          laptop_id: navigator.userAgent,
-          location_verified: true
-        };
-
-        console.log('Sending check-in request with body:', requestBody);
-        const response = await apiRequest('/student-attendance/check-in', {
-          method: 'POST',
-          body: requestBody,
-          skipCache: true
-        });
-
-        console.log('Check-in response:', response);
-
-        // Show success animation and message
-        toast.success(response.message || 'Successfully checked in!', {
-          position: "top-center",
-          autoClose: 3000,
-          hideProgressBar: false,
-          closeOnClick: true,
-          pauseOnHover: true,
-          draggable: true,
-          progress: undefined,
-          style: {
-            background: "#4caf50",
-            color: "#fff",
-            borderRadius: "10px",
-            boxShadow: "0 4px 12px rgba(0, 0, 0, 0.15)"
-          }
-        });
-
-        // Update local state
-        const today = new Date().toISOString().split('T')[0];
-        const updatedStatus = {
-          ...attendanceStatus,
-          is_checked_in: true,
-          is_checked_out: false,
-          check_in_time: new Date().toTimeString().split(' ')[0],
-          check_out_time: null,
-          date: today
-        };
-
-        setAttendanceStatus(updatedStatus);
-
-        // Store the updated status in localStorage
-        localStorage.setItem('attendanceStatus', JSON.stringify(updatedStatus));
-
-        // Set hasAccess to true to allow access to the page
-        setHasAccess(true);
-
-        // Close the modal
-        setShowModal(false);
-
-        // Instead of reloading the page, just refresh the attendance status
-        // This will be much faster and provide a better user experience
-        fetchAttendanceStatus();
-      } catch (error) {
-        console.error('Error during check-in process:', error);
-        const errorMessage = error.response?.data?.message || error.message || 'Error checking in. Please try again.';
-        toast.error(errorMessage);
-      }
+      const today = new Date().toISOString().split('T')[0];
+      const updatedStatus = {
+        ...attendanceStatus,
+        is_checked_in: true,
+        is_checked_out: false,
+        check_in_time: new Date().toTimeString().split(' ')[0],
+        check_out_time: null,
+        date: today
+      };
+      setAttendanceStatus(updatedStatus);
+      localStorage.setItem('attendanceStatus', JSON.stringify(updatedStatus));
+      setHasAccess(true);
+      setShowModal(false);
+      fetchAttendanceStatus();
     } catch (error) {
-      console.error('Unexpected error during check-in:', error);
       const errorMessage = error.response?.data?.message || error.message || 'Error checking in. Please try again.';
       toast.error(errorMessage);
     } finally {
@@ -518,25 +455,55 @@ export default function AttendanceCheckInWidget({ displayMode = 'button' }) {
     }, 10000); // Show again after 10 seconds
   };
 
+  // Start timer when checked in and not checked out
+  useEffect(() => {
+    if (attendanceStatus?.is_checked_in && !attendanceStatus?.is_checked_out) {
+      // Calculate seconds since check_in_time
+      let start = 0;
+      if (attendanceStatus.check_in_time) {
+        const now = new Date();
+        const [h, m, s] = attendanceStatus.check_in_time.split(":").map(Number);
+        const checkInDate = new Date(now.getFullYear(), now.getMonth(), now.getDate(), h, m, s || 0);
+        start = Math.floor((now - checkInDate) / 1000);
+      }
+      setTimer(start);
+      if (timerInterval.current) clearInterval(timerInterval.current);
+      timerInterval.current = setInterval(() => {
+        setTimer(t => t + 1);
+      }, 1000);
+    } else {
+      if (timerInterval.current) clearInterval(timerInterval.current);
+    }
+    return () => { if (timerInterval.current) clearInterval(timerInterval.current); };
+  }, [attendanceStatus?.is_checked_in, attendanceStatus?.is_checked_out, attendanceStatus?.check_in_time]);
+
+  // Format timer as hh:mm:ss
+  const formatTimer = (seconds) => {
+    const h = Math.floor(seconds / 3600).toString().padStart(2, '0');
+    const m = Math.floor((seconds % 3600) / 60).toString().padStart(2, '0');
+    const s = (seconds % 60).toString().padStart(2, '0');
+    return `${h}:${m}:${s}`;
+  };
+
   // Render as a card if displayMode is 'card'
   if (displayMode === 'card') {
-    // Determine if we need to show the blinking border (when checked in but not checked out)
     const needsCheckout = attendanceStatus?.is_checked_in && !attendanceStatus?.is_checked_out;
+    const today = new Date();
+    const dateString = today.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }).replace(/ /g, ' ');
 
     return (
       <Card sx={{
         height: '100%',
         display: 'flex',
         flexDirection: 'column',
-        justifyContent: 'center',
         alignItems: 'center',
-        borderRadius: '12px',
-        boxShadow: needsCheckout ? '0 4px 12px rgba(229, 53, 16, 0.3)' : '0 4px 12px rgba(0, 0, 0, 0.1)',
-        bgcolor: '#fff',
-        p: 2,
-        border: needsCheckout ? '2px solid rgba(229, 53, 16, 0.7)' : 'none',
-        animation: needsCheckout ? `${blinkBorder} 2s infinite` : 'none',
-        transition: 'all 0.3s ease'
+        borderRadius: '40px',
+        background: 'linear-gradient(135deg, #1e3c72 0%, #2a5298 100%)',
+        boxShadow: '0 4px 24px 0 rgba(30,60,114,0.10)',
+        p: 0,
+        border: 'none',
+        position: 'relative',
+        overflow: 'visible',
       }}>
         <CardContent sx={{
           display: 'flex',
@@ -544,130 +511,101 @@ export default function AttendanceCheckInWidget({ displayMode = 'button' }) {
           alignItems: 'center',
           justifyContent: 'center',
           width: '100%',
-          height: '100%'
+          height: '100%',
+          pt: 7,
+          pb: 4,
         }}>
-          <Typography variant="h6" component="h2" sx={{ mb: 2, fontWeight: 'bold', textAlign: 'center', color: attendanceStatus?.is_checked_in && !attendanceStatus?.is_checked_out ? '#E53510' : 'inherit' }}>
-            {attendanceStatus?.is_checked_in && !attendanceStatus?.is_checked_out
-              ? 'Please Check Out'
-              : attendanceStatus?.is_checked_in && attendanceStatus?.is_checked_out
-                ? 'Attendance Complete'
-                : 'Attendance Check-In'}
+          {/* Attendance Label */}
+          <Typography variant="h6" sx={{ color: '#eb6707', fontWeight: 900, letterSpacing: 1.5, fontSize: '1.4rem', mb: 2 }}>
+            ATTENDANCE
           </Typography>
-
-          {attendanceStatus?.is_checked_in && !attendanceStatus?.is_checked_out && (
-            <Box sx={{ display: 'flex', alignItems: 'center', mb: 2, color: '#E53510' }}>
-              <AlertTriangle size={16} style={{ marginRight: '8px' }} />
-              <Typography variant="body2" sx={{ fontWeight: 'medium' }}>
-                Don't forget to check out
-              </Typography>
-            </Box>
+          {/* Date */}
+          <Typography sx={{ color: '#fff', fontWeight: 700, fontSize: '1.5rem', mb: 3, mt: 2, letterSpacing: 1 }}>
+            {today.toLocaleDateString('en-GB', { day: '2-digit', month: 'long', year: 'numeric' })}
+          </Typography>
+          {/* Timer - reduced size */}
+          <Typography sx={{ color: '#fff', fontWeight: 900, fontSize: '2rem', mb: 4, letterSpacing: 2 }}>
+            {attendanceStatus?.is_checked_out ? (
+              <Box sx={{ textAlign: 'center' }}>
+                <Typography sx={{ color: '#fff', fontWeight: 600, fontSize: '1.2rem', mb: 1, letterSpacing: 1 }}>
+                  Checkout Time
+                </Typography>
+                <Typography sx={{ color: '#fff', fontWeight: 700, fontSize: '1.5rem', letterSpacing: 1.5 }}>
+                  {attendanceStatus.check_out_time || 'N/A'}
+                </Typography>
+              </Box>
+            ) : (
+              formatTimer(timer)
+            )}
+          </Typography>
+          {/* Checkout Done Message */}
+          {attendanceStatus?.is_checked_out && (
+            <Typography sx={{
+              background: 'linear-gradient(270deg, #eb6707 0%, #e42b12 100%)',
+              WebkitBackgroundClip: 'text',
+              WebkitTextFillColor: 'transparent',
+              fontWeight: 'bold',
+              fontSize: '1.5rem',
+              mb: 2,
+              letterSpacing: 1,
+            }}>
+              CHECKOUT DONE
+            </Typography>
           )}
-
-          {loading && !attendanceStatus ? (
-            <CircularProgress size={40} sx={{ color: '#E53510', my: 2 }} />
-          ) : (
-            <>
-              {attendanceStatus?.is_checked_in && !attendanceStatus.is_checked_out && (
-                <motion.div
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  initial={{ opacity: 0, y: -10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.3, ease: "easeOut" }}
-                  style={{ width: '100%' }}
-                >
-                  <Button
-                    variant="contained"
-                    onClick={handleCheckOut}
-                    disabled={checkOutLoading}
-                    startIcon={checkOutLoading ? <CircularProgress size={16} color="inherit" /> : <LogOut size={18} />}
-                    fullWidth
-                    sx={{
-                      bgcolor: '#E53510',
-                      '&:hover': {
-                        bgcolor: '#d32f2f',
-                        boxShadow: '0 4px 8px rgba(229, 53, 16, 0.4)'
-                      },
-                      textTransform: 'none',
-                      py: 2,
-                      borderRadius: '50px',
-                      fontSize: '1rem',
-                      fontWeight: 'bold',
-                      boxShadow: '0 2px 5px rgba(0,0,0,0.2)',
-                      transition: 'all 0.3s ease',
-                      mt: 2
-                    }}
-                  >
-                    {checkOutLoading ? 'Processing...' : 'Check Out'}
-                  </Button>
-                </motion.div>
-              )}
-
-              {attendanceStatus?.is_checked_in && attendanceStatus.is_checked_out && (
-                <motion.div
-                  initial={{ opacity: 0, y: -10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.3, ease: "easeOut" }}
-                  style={{ width: '100%' }}
-                >
-                  <Box sx={{
-                    bgcolor: 'rgba(76, 175, 80, 0.1)',
-                    p: 2,
-                    borderRadius: 2,
-                    display: 'flex',
-                    flexDirection: 'column',
-                    alignItems: 'center'
-                  }}>
-                    <CheckCircle size={40} color="#4caf50" />
-                    <Typography variant="body1" sx={{ color: '#4caf50', fontWeight: 500, mt: 1, textAlign: 'center' }}>
-                      Attendance Marked for Today
-                    </Typography>
-                    {attendanceStatus.check_out_time && (
-                      <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
-                        <Clock size={14} style={{ marginRight: '4px', display: 'inline' }} />
-                        Check-out time: {attendanceStatus.check_out_time}
-                      </Typography>
-                    )}
-                  </Box>
-                </motion.div>
-              )}
-
-              {!attendanceStatus?.is_checked_in && (
-                <motion.div
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  initial={{ opacity: 0, y: -10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.3, ease: "easeOut" }}
-                  style={{ width: '100%' }}
-                >
-                  <Button
-                    variant="contained"
-                    onClick={handleCheckIn}
-                    disabled={checkInLoading}
-                    startIcon={checkInLoading ? <CircularProgress size={16} color="inherit" /> : <CheckCircle size={18} />}
-                    fullWidth
-                    sx={{
-                      bgcolor: '#E53510',
-                      '&:hover': {
-                        bgcolor: '#d32f2f',
-                        boxShadow: '0 4px 8px rgba(229, 53, 16, 0.4)'
-                      },
-                      textTransform: 'none',
-                      py: 2,
-                      borderRadius: '50px',
-                      fontSize: '1rem',
-                      fontWeight: 'bold',
-                      boxShadow: '0 2px 5px rgba(0,0,0,0.2)',
-                      transition: 'all 0.3s ease',
-                      mt: 2
-                    }}
-                  >
-                    {checkInLoading ? 'Processing...' : 'Check In'}
-                  </Button>
-                </motion.div>
-              )}
-            </>
+          {/* Check In/Out Button */}
+          {!attendanceStatus?.is_checked_in && (
+            <Button
+              variant="contained"
+              onClick={handleCheckIn}
+              disabled={checkInLoading}
+              fullWidth={false}
+              sx={{
+                background: 'linear-gradient(270deg, #eb6707 0%, #e42b12 100%)',
+                color: '#fff',
+                fontWeight: 'bold',
+                fontSize: '1.2rem',
+                borderRadius: '12px',
+                px: 6,
+                py: 1.5,
+                boxShadow: '0 4px 16px 0 rgba(30,60,114,0.18)',
+                textTransform: 'none',
+                letterSpacing: 1,
+                mt: 2,
+                '&:hover': {
+                  background: 'linear-gradient(270deg, #eb6707 0%, #e42b12 100%)',
+                  opacity: 0.95,
+                },
+              }}
+            >
+              {checkInLoading ? 'Processing...' : 'CHECK IN'}
+            </Button>
+          )}
+          {attendanceStatus?.is_checked_in && !attendanceStatus?.is_checked_out && (
+            <Button
+              variant="contained"
+              onClick={handleCheckOut}
+              disabled={checkOutLoading}
+              fullWidth={false}
+              sx={{
+                background: 'linear-gradient(270deg, #eb6707 0%, #e42b12 100%)',
+                color: '#fff',
+                fontWeight: 'bold',
+                fontSize: '1.2rem',
+                borderRadius: '12px',
+                px: 6,
+                py: 1.5,
+                boxShadow: '0 4px 16px 0 rgba(30,60,114,0.18)',
+                textTransform: 'none',
+                letterSpacing: 1,
+                mt: 2,
+                '&:hover': {
+                  background: 'linear-gradient(270deg, #eb6707 0%, #e42b12 100%)',
+                  opacity: 0.95,
+                },
+              }}
+            >
+              {checkOutLoading ? 'Processing...' : 'CHECK OUT'}
+            </Button>
           )}
         </CardContent>
       </Card>
@@ -788,20 +726,23 @@ export default function AttendanceCheckInWidget({ displayMode = 'button' }) {
               onClick={handleCheckIn}
               disabled={checkInLoading}
               startIcon={checkInLoading ? <CircularProgress size={16} color="inherit" /> : <CheckCircle size={18} />}
+              fullWidth
               sx={{
-                bgcolor: '#E53510', // App's orange color
+                background: 'linear-gradient(270deg, #eb6707 0%, #e42b12 100%)',
+                color: '#fff',
                 '&:hover': {
-                  bgcolor: '#d32f2f', // Slightly darker on hover
-                  boxShadow: '0 4px 8px rgba(229, 53, 16, 0.4)'
+                  background: 'linear-gradient(270deg, #eb6707 0%, #e42b12 100%)',
+                  opacity: 0.95,
+                  boxShadow: '0 4px 8px rgba(30,60,114,0.25)'
                 },
                 textTransform: 'none',
-                py: 1,
-                px: 3,
+                py: 2,
                 borderRadius: '50px',
-                fontSize: '0.95rem',
+                fontSize: '1rem',
                 fontWeight: 'bold',
-                boxShadow: '0 2px 5px rgba(0,0,0,0.2)',
-                transition: 'all 0.3s ease'
+                boxShadow: '0 2px 5px rgba(228,43,18,0.10)',
+                transition: 'all 0.3s ease',
+                mt: 2
               }}
             >
               {checkInLoading ? 'Processing...' : 'Check In'}

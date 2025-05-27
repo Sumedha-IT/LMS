@@ -87,7 +87,7 @@
 }
 
 .fi-sidebar-nav {
-    background: #e35914 !important; /* White background for the full menu */
+    background: #ffffff !important; /* White background for the full menu */
 }
 .fi-sidebar-item-active a,.fi-sidebar-item-active a:hover {
     @apply text-white;
@@ -124,10 +124,10 @@
 }
 
 .fi-sidebar-item-active{
-    background-color: #314d7b !important; /* Dark blue background for selected items */
+    background: linear-gradient(270deg, #eb6707 0%, #e42b12 100%) !important; /* Orange gradient from right to left */
     border-radius: 10px;
-    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-    border-left: 3px solid #314d7d; /* Light blue border */
+    box-shadow: 0 4px 16px 0 rgba(30,60,114,0.18);
+    border-left: 3px solid #ffffff;
 }
 .button{
     background: #ff5003;

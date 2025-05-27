@@ -38,7 +38,7 @@ export default function Leaderboard() {
 
             <div className="divide-y divide-gray-200">
                 {/* Header Row */}
-                <div className="grid grid-cols-2 px-4 font-medium" style={{background: 'linear-gradient(135.51deg, rgba(235, 103, 7, 0.95) 0%, rgba(228, 43, 18, 0.95) 100%)', color: 'white'}}>
+                <div className="grid grid-cols-2 px-4 font-medium" style={{background: 'linear-gradient(270deg, #eb6707 0%, #e42b12 100%)', color: 'white'}}>
                     <div className="p-3 pl-4">Name</div>
                     <div className="p-3 text-right pr-4">Score</div>
                 </div>

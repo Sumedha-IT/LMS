@@ -30,7 +30,7 @@ const UserDashboard = () => {
                     {/* Upcoming Exams Card */}
                     <div className="w-8/12 text-white pl-10 py-2 rounded-xl flex justify-between items-center border border-white/30 shadow-lg"
                         style={{
-                            background: 'linear-gradient(135.51deg, rgba(235, 103, 7, 1) 0%, rgba(228, 43, 18, 1) 100%)',
+                            background: 'linear-gradient(135deg, #1e3c72 0%, #2a5298 100%)',
                         }}
                     >
                         <div className="space-y-4 max-w-[70%]">
@@ -40,11 +40,15 @@ const UserDashboard = () => {
                                 view the exam details.
                             </p>
                             <div className="flex flex-wrap gap-3 pt-2">
-                                <button className="bg-transparent hover:bg-white/10 transition-colors border border-white rounded-full px-5 py-2 text-sm font-medium">
-                                    Set Reminder
-                                </button>
                                 <button
-                                    className="bg-white hover:bg-white/90 transition-colors text-[#F03A17] rounded-full px-5 py-2 text-sm font-medium"
+                                    className="rounded-full px-5 py-2 text-sm font-medium shadow"
+                                    style={{
+                                        background: 'linear-gradient(270deg, #eb6707 0%, #e42b12 100%)',
+                                        color: '#fff',
+                                        border: 'none',
+                                        transition: 'all 0.3s',
+                                        boxShadow: '0 2px 8px 0 rgba(235,103,7,0.10)'
+                                    }}
                                     onClick={() => setShowExams(true)}
                                 >
                                     View Exam
@@ -63,7 +67,7 @@ const UserDashboard = () => {
                     {/* Attempted Exams Card */}
                     <div className="w-4/12 border border-white/30 shadow-lg p-1 flex-col rounded-xl flex justify-between items-center backdrop-blur-md"
                         style={{
-                            background: 'linear-gradient(135.51deg, rgba(235, 103, 7, 0.8) 0%, rgba(228, 43, 18, 0.8) 100%)',
+                            background: 'linear-gradient(135deg, #1e3c72 0%, #2a5298 100%)',
                         }}
                     >
                         <div className="flex">
@@ -86,19 +90,24 @@ const UserDashboard = () => {
                                 />
                             </div>
                         </div>
-
-                       <div className='w-full items-center flex justify-center border-t-[0.5px] py-2 border-white/40'>
-                       <button
-                                    className="bg-[#F03A17] hover:bg-[#f03b17cc] transition-colors text-white rounded-full px-5 py-2 text-sm font-medium shadow"
-                                    onClick={() => {
-                                        setShowExams(true);
-                                        setMainTab(1); // Switch to Attempted Exams tab
-                                    }}
-                                >
-                                     View Result
-                                </button>
-                       </div>
-
+                        <div className='w-full items-center flex justify-center border-t-[0.5px] py-2 border-white/40'>
+                            <button
+                                className="rounded-full px-5 py-2 text-sm font-medium shadow"
+                                style={{
+                                    background: 'linear-gradient(270deg, #eb6707 0%, #e42b12 100%)',
+                                    color: '#fff',
+                                    border: 'none',
+                                    transition: 'all 0.3s',
+                                    boxShadow: '0 2px 8px 0 rgba(235,103,7,0.10)'
+                                }}
+                                onClick={() => {
+                                    setShowExams(true);
+                                    setMainTab(1);
+                                }}
+                            >
+                                View Result
+                            </button>
+                        </div>
                     </div>
                 </div>
 
@@ -136,7 +145,7 @@ const UserDashboard = () => {
                             fontWeight: 500,
                             '&.Mui-selected': {
                                 color: '#fff',
-                                backgroundColor: '#f4511e',
+                                background: 'linear-gradient(270deg, #eb6707 0%, #e42b12 100%)',
                             },
                         },
                     }}

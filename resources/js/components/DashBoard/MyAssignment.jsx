@@ -40,14 +40,13 @@ export default function MyAssignment({ assignments = [] }) {
         {/* Header */}
         <Box className="flex justify-between items-center mb-4">
           <Typography variant="h6" sx={{ fontWeight: 600, color: '#404040' }}>My Assignments</Typography>
-          <a href="#" className="text-sm text-red-500 hover:text-red-600 transition-colors">
-            View More
-          </a>
         </Box>
         <TableContainer>
           <Table>
             <TableHead>
-              <TableRow sx={{ backgroundColor: '#E84C0F' }}>
+              <TableRow sx={{
+                background: 'linear-gradient(270deg, #eb6707 0%, #e42b12 100%)',
+              }}>
                 <TableCell sx={{ color: '#fff', fontWeight: 600 }}>Task</TableCell>
                 <TableCell sx={{ color: '#fff', fontWeight: 600, textAlign: 'center' }}>Grade</TableCell>
                 <TableCell sx={{ color: '#fff', fontWeight: 600, textAlign: 'center' }}>Update</TableCell>
@@ -65,9 +64,9 @@ export default function MyAssignment({ assignments = [] }) {
                   <TableRow
                     key={index}
                     sx={{
-                      backgroundColor: index % 2 === 0 ? '#FFF0EE' : '#E8F4FF',
+                      backgroundColor: index % 2 === 0 ? '#ffffff' : '#F5FAFF',
                       '&:hover': {
-                        backgroundColor: index % 2 === 0 ? '#FFE4E0' : '#D4E8FF'
+                        backgroundColor: index % 2 === 0 ? '#F0F8FF' : '#E6F4FF'
                       }
                     }}
                   >

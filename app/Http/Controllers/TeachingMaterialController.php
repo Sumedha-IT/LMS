@@ -232,4 +232,37 @@ class TeachingMaterialController extends Controller
             ], 500);
         }
     }
+
+    /**
+     * Get the submission status for a specific assignment for the current user.
+     */
+    public function getAssignmentSubmission(Request $request, $assignmentId)
+    {
+        $user = $request->user();
+        $userId = $user ? $user->id : null;
+        $batchId = $request->query('batch_id');
+        
+        \Log::info('getAssignmentSubmission called', [
+            'user_id' => $userId,
+            'assignment_id' => $assignmentId,
+            'batch_id' => $batchId
+        ]);
+
+        $query = TeachingMaterialStatus::where('teaching_material_id', $assignmentId)
+            ->where('user_id', $userId);
+        if ($batchId) {
+            $query->where('batch_id', $batchId);
+        }
+        $submission = $query->first();
+
+        \Log::info('Submission found:', [
+            'submission' => $submission
+        ]);
+
+        if ($submission) {
+            return response()->json(['submission' => $submission]);
+        } else {
+            return response()->json(['message' => 'No submission found.'], 404);
+        }
+    }
 }

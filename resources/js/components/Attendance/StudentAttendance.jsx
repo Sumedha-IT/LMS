@@ -285,84 +285,16 @@ export default function StudentAttendance() {
         return () => clearInterval(refreshInterval);
     }, [fetchAttendanceStatus, fetchAttendanceReport, fetchHolidays, location]);
 
-    // Function to get geolocation
-    const getGeolocation = () => {
-        return new Promise((resolve, reject) => {
-            if (!navigator.geolocation) {
-                reject(new Error('Geolocation is not supported by your browser'));
-                return;
-            }
-
-            navigator.geolocation.getCurrentPosition(
-                (position) => {
-                    resolve({
-                        latitude: position.coords.latitude,
-                        longitude: position.coords.longitude,
-                        accuracy: position.coords.accuracy
-                    });
-                },
-                (error) => {
-                    let errorMessage = 'Unknown error occurred while getting location.';
-                    switch (error.code) {
-                        case error.PERMISSION_DENIED:
-                            errorMessage = 'Location access denied. Please enable location services to check in.';
-                            break;
-                        case error.POSITION_UNAVAILABLE:
-                            errorMessage = 'Location information is unavailable.';
-                            break;
-                        case error.TIMEOUT:
-                            errorMessage = 'Location request timed out.';
-                            break;
-                    }
-                    reject(new Error(errorMessage));
-                },
-                {
-                    enableHighAccuracy: false, // Changed to false for faster response
-                    timeout: 5000, // Reduced timeout to 5 seconds
-                    maximumAge: 30000 // Cache location for 30 seconds
-                }
-            );
-        });
-    };
-
     const handleCheckIn = async () => {
         try {
             setCheckInLoading(true);
 
-            // Silently verify location in the background without showing the verification UI
-            // Get geolocation with high accuracy
-            let locationData;
-            try {
-                locationData = await getGeolocation();
-                console.log('Location data obtained:', locationData);
-            } catch (error) {
-                console.error('Error getting geolocation:', error);
-                // Don't proceed with check-in if location access is denied
-                toast.error('Location access denied. Please enable location services to verify you are within campus boundaries.', {
-                    position: "top-center",
-                    autoClose: 8000,
-                    style: {
-                        background: "#f44336",
-                        color: "#fff",
-                        fontWeight: "bold",
-                        fontSize: "16px",
-                        borderRadius: "10px",
-                        boxShadow: "0 4px 12px rgba(0, 0, 0, 0.3)"
-                    }
-                });
-                setCheckInLoading(false);
-                return;
-            }
-
             // Send verification request to server
             try {
-                console.log('Sending verification request with data:', locationData);
+                console.log('Sending verification request with data:', { ip_address: null });
                 const verificationResponse = await apiRequest('/verify-campus-location', {
                     method: 'POST',
                     body: {
-                        latitude: locationData.latitude,
-                        longitude: locationData.longitude,
-                        accuracy: locationData.accuracy,
                         ip_address: null
                     },
                     skipCache: true
@@ -597,7 +529,7 @@ export default function StudentAttendance() {
                 </DialogTitle>
                 <DialogContent sx={{ py: 3 }}>
                     <Typography variant="body1" sx={{ color: '#333', fontWeight: 500 }}>
-                        {deviceErrorDialog.message}
+                        {deviceErrorDialog.message}  
                     </Typography>
                 </DialogContent>
                 <DialogActions sx={{ px: 3, pb: 2 }}>
@@ -624,21 +556,21 @@ export default function StudentAttendance() {
             >
                 <Card sx={{
                     mb: 4,
-                    borderRadius: 2,
-                    boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
-                    background: 'linear-gradient(145deg, #ffffff 0%, #f8f9fa 100%)'
+                    borderRadius: 4,
+                    background: 'linear-gradient(135deg, #1e3c72 0%, #2a5298 100%)',
+                    boxShadow: '0 4px 24px 0 rgba(30,60,114,0.10)',
                 }}>
                     <CardContent>
                         <Grid container spacing={3} alignItems="center">
                             <Grid item xs={12} md={8}>
                                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2 }}>
-                                    <Calendar size={24} color="#1a237e" />
-                                    <Typography variant="h6" sx={{ fontWeight: 500, color: '#1a237e' }}>
+                                    <Calendar size={24} color="#fff" />
+                                    <Typography variant="h6" sx={{ fontWeight: 500, color: '#fff' }}>
                                         Today's Attendance
                                     </Typography>
                                 </Box>
                                 <Box sx={{ pl: 4 }}>
-                                    <Typography color="text.secondary" sx={{ mb: 1 }}>
+                                    <Typography color="#fff" sx={{ mb: 1, fontWeight: 500 }}>
                                         {attendanceStatus?.is_checked_in
                                             ? `Checked in at ${attendanceStatus?.check_in_time ? format(new Date(`1970-01-01T${attendanceStatus.check_in_time}`), 'HH:mm:ss') : ''}`
                                             : 'Not checked in today'}
@@ -648,19 +580,19 @@ export default function StudentAttendance() {
                                     {attendanceStatus?.is_checked_in && attendanceStatus?.is_checked_out && (
                                         <Typography variant="body2" color="#4caf50" sx={{ display: 'flex', alignItems: 'center', gap: 1, fontWeight: 500 }}>
                                             <CheckCircle size={16} />
-                                            Checked out at {attendanceStatus.check_out_time ? format(new Date(`1970-01-01T${attendanceStatus.check_out_time}`), 'HH:mm:ss') : ''}
+                                            <span style={{ color: '#fff' }}>Checked out at {attendanceStatus.check_out_time ? format(new Date(`1970-01-01T${attendanceStatus.check_out_time}`), 'HH:mm:ss') : ''}</span>
                                         </Typography>
                                     )}
 
                                     {attendanceStatus?.is_checked_in && !attendanceStatus?.is_checked_out && (
                                         <Typography variant="body2" color="#ff9800" sx={{ display: 'flex', alignItems: 'center', gap: 1, fontWeight: 500 }}>
                                             <Clock size={16} />
-                                            Please remember to check out before leaving
+                                            <span style={{ color: '#fff' }}>Please remember to check out before leaving</span>
                                         </Typography>
                                     )}
 
                                     {!attendanceStatus?.is_checked_in && (
-                                        <Typography variant="body2" color="text.secondary" sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                        <Typography variant="body2" color="#fff" sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                                             <Clock size={16} />
                                             Check-in window: {attendanceStatus?.check_in_start || '-'} - {attendanceStatus?.check_in_deadline || '-'}
                                         </Typography>
@@ -676,14 +608,19 @@ export default function StudentAttendance() {
                                             onClick={handleCheckIn}
                                             disabled={checkInLoading}
                                             sx={{
-                                                bgcolor: '#F03A17',
-                                                '&:hover': { bgcolor: '#d32f2f' },
+                                                background: 'linear-gradient(270deg, #eb6707 0%, #e42b12 100%)',
+                                                color: '#fff',
                                                 borderRadius: 2,
                                                 textTransform: 'none',
                                                 px: 3,
                                                 minWidth: '140px',
-                                                boxShadow: '0 4px 8px rgba(240, 58, 23, 0.2)',
-                                                transition: 'all 0.3s ease'
+                                                fontWeight: 'bold',
+                                                boxShadow: '0 4px 16px 0 rgba(30,60,114,0.18)',
+                                                transition: 'all 0.3s ease',
+                                                '&:hover': {
+                                                    background: 'linear-gradient(270deg, #eb6707 0%, #e42b12 100%)',
+                                                    opacity: 0.95,
+                                                },
                                             }}
                                         >
                                             {checkInLoading ? (
@@ -698,18 +635,23 @@ export default function StudentAttendance() {
                                     )}
                                     {attendanceStatus && attendanceStatus.is_checked_in && !attendanceStatus.is_checked_out && (
                                         <Button
-                                            variant="outlined"
+                                            variant="contained"
                                             onClick={handleCheckOut}
                                             disabled={checkOutLoading}
                                             sx={{
-                                                borderColor: '#F03A17',
-                                                color: '#F03A17',
-                                                '&:hover': { borderColor: '#d32f2f', bgcolor: 'rgba(240, 58, 23, 0.04)' },
+                                                background: 'linear-gradient(270deg, #eb6707 0%, #e42b12 100%)',
+                                                color: '#fff',
                                                 borderRadius: 2,
                                                 textTransform: 'none',
                                                 px: 3,
                                                 minWidth: '140px',
-                                                transition: 'all 0.3s ease'
+                                                fontWeight: 'bold',
+                                                boxShadow: '0 4px 16px 0 rgba(30,60,114,0.18)',
+                                                transition: 'all 0.3s ease',
+                                                '&:hover': {
+                                                    background: 'linear-gradient(270deg, #eb6707 0%, #e42b12 100%)',
+                                                    opacity: 0.95,
+                                                },
                                             }}
                                         >
                                             {checkOutLoading ? (
@@ -724,14 +666,19 @@ export default function StudentAttendance() {
                                     )}
                                     {attendanceStatus && attendanceStatus.is_checked_in && attendanceStatus.is_checked_out && (
                                         <Button
-                                            variant="outlined"
+                                            variant="contained"
                                             disabled
                                             sx={{
-                                                borderColor: '#4caf50',
-                                                color: '#4caf50',
+                                                background: 'linear-gradient(270deg, #eb6707 0%, #e42b12 100%)',
+                                                color: '#fff',
                                                 borderRadius: 2,
                                                 textTransform: 'none',
-                                                px: 3
+                                                px: 3,
+                                                minWidth: '140px',
+                                                fontWeight: 'bold',
+                                                boxShadow: '0 4px 16px 0 rgba(30,60,114,0.18)',
+                                                transition: 'all 0.3s ease',
+                                                opacity: 0.7
                                             }}
                                             startIcon={<CheckCircle size={20} />}
                                         >

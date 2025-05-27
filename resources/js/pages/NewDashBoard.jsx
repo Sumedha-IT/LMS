@@ -302,7 +302,7 @@ const NewDashBoard = () => {
             <>
               {/* Stats Card */}
               <section className="w-full p-2 mb-10">
-                <div className="relative min-h-[15.75rem] bg-[#404040] rounded-2xl flex items-center px-10 w-full">
+                <div className="relative min-h-[15.75rem] rounded-2xl flex items-center px-10 w-full" style={{ background: 'linear-gradient(135deg, #1e3c72 0%, #2a5298 100%)' }}>
                   <div className="flex gap-2 w-3/4 justify-evenly">
                     <div 
                       onClick={() => window.location.href = '/administrator/1/student-attendance'}
@@ -388,7 +388,7 @@ const NewDashBoard = () => {
               <Suspense fallback={<LoadingFallback />}>
                 <StudentJourney onStartLearning={() => {
                   const path = location.pathname.split('/').slice(0, -1).join('/');
-                  window.location.href = `${path}/student-journey`;
+                  window.location.href = `${path}/my-courses`;
                 }} />
               </Suspense>
 
@@ -412,7 +412,7 @@ const NewDashBoard = () => {
         <>
           <section className="w-full p-2 mb-10 flex gap-2">
             {/* Stats Card - Show loading state or actual data */}
-            <div className={`relative min-h-[15.75rem] ${loading ? 'bg-gray-100 animate-pulse' : 'bg-[#404040]'} rounded-2xl flex items-center px-10 w-3/4`}>
+            <div className={`relative min-h-[15.75rem] ${loading ? 'bg-gray-100 animate-pulse' : ''} rounded-2xl flex items-center px-10 w-3/4`} style={!loading ? { background: 'linear-gradient(135deg, #1e3c72 0%, #2a5298 100%)' } : {}}>
               {loading ? (
                 <div className="flex gap-2 w-3/4 justify-evenly">
                   <div className="h-36 w-36 rounded-full bg-gray-200"></div>
@@ -517,7 +517,7 @@ const NewDashBoard = () => {
               <Suspense fallback={<LoadingFallback />}>
                 <StudentJourney onStartLearning={() => {
                   const path = location.pathname.split('/').slice(0, -1).join('/');
-                  window.location.href = `${path}/student-journey`;
+                  window.location.href = `${path}/my-courses`;
                 }} />
               </Suspense>
 

@@ -23,6 +23,6 @@ class StudentJourneyPage extends Page
 
     public static function shouldRegisterNavigation(): bool
     {
-        return Auth::check() && Auth::user()->is_student;
+        return false; // Always hide from navigation
     }
 }

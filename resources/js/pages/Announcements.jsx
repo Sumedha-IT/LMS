@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { LocalizationProvider } from '@mui/x-date-pickers';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import { Avatar, Button, Select, MenuItem, Card, CardContent, CircularProgress, Alert, Pagination, Typography, Box } from '@mui/material';
@@ -12,6 +12,8 @@ const Announcements = () => {
   const [error, setError] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 6;
+  const scrollRef = useRef(null);
+  const [isScrolling, setIsScrolling] = useState(true);
 
   const DEFAULT_IMAGE = 'https://www.creativecoloursolutions.com.au/wp-content/uploads/2017/09/400x400.jpg';
 
@@ -69,6 +71,40 @@ const Announcements = () => {
   useEffect(() => {
     setCurrentPage(1);
   }, []);
+
+  // Add auto-scroll functionality
+  useEffect(() => {
+    if (!scrollRef.current || !isScrolling) return;
+
+    const scrollContainer = scrollRef.current;
+    let scrollInterval;
+
+    const startScrolling = () => {
+      scrollInterval = setInterval(() => {
+        if (scrollContainer.scrollTop >= scrollContainer.scrollHeight - scrollContainer.clientHeight) {
+          scrollContainer.scrollTop = 0;
+        } else {
+          scrollContainer.scrollTop += 1;
+        }
+      }, 50);
+    };
+
+    const stopScrolling = () => {
+      clearInterval(scrollInterval);
+    };
+
+    startScrolling();
+
+    // Pause scrolling on hover
+    scrollContainer.addEventListener('mouseenter', stopScrolling);
+    scrollContainer.addEventListener('mouseleave', startScrolling);
+
+    return () => {
+      stopScrolling();
+      scrollContainer.removeEventListener('mouseenter', stopScrolling);
+      scrollContainer.removeEventListener('mouseleave', startScrolling);
+    };
+  }, [isScrolling, holidays.length]);
 
   const indexOfLastItem = currentPage * itemsPerPage;
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
@@ -137,7 +173,10 @@ const Announcements = () => {
                       {announcement.subtitle}
                     </p>
                     <div className="flex items-center gap-4">
-                      <div className="bg-orange-500 text-white px-4 py-2 rounded-full text-sm">
+                      <div className="text-white px-4 py-2 rounded-full text-sm" style={{
+                        background: 'linear-gradient(270deg, #eb6707 0%, #e42b12 100%)',
+                        boxShadow: '0 2px 8px 0 rgba(235,103,7,0.10)'
+                      }}>
                         📅 {announcement.date}
                       </div>
                       {announcement.time && (
@@ -145,7 +184,6 @@ const Announcements = () => {
                           ⏰ {announcement.time}
                         </div>
                       )}
-
                     </div>
                   </CardContent>
                 </div>
@@ -178,21 +216,29 @@ const Announcements = () => {
         {/* Holidays Section */}
         <div className="w-full md:w-1/3 relative">
           <div className="sticky top-4">
-            <Card className="border rounded-lg shadow-sm">
+            <Card className="border rounded-lg shadow-sm" sx={{
+              background: 'linear-gradient(270deg, #1e3c72 0%, #2a5298 100%)',
+              boxShadow: '0 4px 24px 0 rgba(30,60,114,0.10)',
+            }}>
               <CardContent className="p-4">
                 <div className="flex justify-between items-center mb-3">
-                  <h2 className="text-xl font-bold">All Holidays</h2>
+                  <h2 className="text-xl font-bold" style={{
+                    background: 'linear-gradient(270deg, #eb6707 0%, #e42b12 100%)',
+                    WebkitBackgroundClip: 'text',
+                    WebkitTextFillColor: 'transparent',
+                    backgroundClip: 'text'
+                  }}>All Holidays</h2>
                   <Box sx={{
                     display: 'flex',
                     alignItems: 'center',
                     gap: 1,
-                    bgcolor: 'rgba(249, 115, 22, 0.1)',
+                    bgcolor: 'rgba(235, 103, 7, 0.1)',
                     px: 1.5,
                     py: 0.5,
                     borderRadius: 2
                   }}>
-                    <Flag sx={{ color: '#f97316', fontSize: '1.2rem' }} />
-                    <Typography variant="body2" sx={{ fontWeight: 600, color: '#f97316' }}>
+                    <Flag sx={{ color: '#eb6707', fontSize: '1.2rem' }} />
+                    <Typography variant="body2" sx={{ fontWeight: 600, color: '#eb6707' }}>
                       {holidays.length} Holidays
                     </Typography>
                   </Box>
@@ -200,6 +246,7 @@ const Announcements = () => {
 
                 {holidays.length > 0 ? (
                   <Box
+                    ref={scrollRef}
                     sx={{
                       maxHeight: '450px',
                       overflowY: 'auto',
@@ -210,15 +257,15 @@ const Announcements = () => {
                         width: '6px',
                       },
                       '&::-webkit-scrollbar-track': {
-                        background: '#f1f1f1',
+                        background: 'rgba(255, 255, 255, 0.1)',
                         borderRadius: '10px',
                       },
                       '&::-webkit-scrollbar-thumb': {
-                        background: '#f97316',
+                        background: 'rgba(255, 255, 255, 0.3)',
                         borderRadius: '10px',
                       },
                       '&::-webkit-scrollbar-thumb:hover': {
-                        background: '#e65c00',
+                        background: 'rgba(255, 255, 255, 0.4)',
                       },
                     }}
                   >
@@ -226,21 +273,33 @@ const Announcements = () => {
                       {holidays.map((holiday, index) => (
                         <div key={holiday.id}>
                           <Card
-                            className="border border-orange-100 hover:bg-orange-50 transition-colors"
+                            className="border hover:shadow-md transition-all cursor-pointer"
                             sx={{
                               boxShadow: '0 2px 4px rgba(0,0,0,0.05)',
                               borderRadius: 2,
-                              overflow: 'hidden'
+                              overflow: 'hidden',
+                              background: '#ffffff',
+                              border: '2px solid transparent',
+                              backgroundImage: 'linear-gradient(white, white), linear-gradient(270deg, #eb6707 0%, #e42b12 100%)',
+                              backgroundOrigin: 'border-box',
+                              backgroundClip: 'padding-box, border-box',
+                              '&:hover': {
+                                transform: 'translateY(-2px)',
+                                boxShadow: '0 4px 12px rgba(235,103,7,0.15)',
+                                backgroundImage: 'linear-gradient(white, white), linear-gradient(270deg, #eb6707 0%, #e42b12 100%)',
+                                backgroundOrigin: 'border-box',
+                                backgroundClip: 'padding-box, border-box',
+                              }
                             }}
                           >
                             <CardContent sx={{ p: 2 }}>
                               <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.5 }}>
-                                <CalendarMonth fontSize="small" sx={{ color: '#f97316' }} />
-                                <Typography variant="body2" sx={{ fontWeight: 600, color: '#f97316' }}>
+                                <CalendarMonth fontSize="small" sx={{ color: '#eb6707' }} />
+                                <Typography variant="body2" sx={{ fontWeight: 600, color: '#eb6707' }}>
                                   {formatDate(holiday.start)}
                                 </Typography>
                               </Box>
-                              <Typography variant="h6" sx={{ fontWeight: 600, fontSize: '0.95rem', pl: 0.5 }}>
+                              <Typography variant="h6" sx={{ fontWeight: 600, fontSize: '0.95rem', pl: 0.5, color: '#404040' }}>
                                 {holiday.title}
                               </Typography>
                             </CardContent>
@@ -256,7 +315,7 @@ const Announcements = () => {
                                 width: '4px',
                                 height: '4px',
                                 borderRadius: '50%',
-                                bgcolor: 'rgba(249, 115, 22, 0.3)'
+                                bgcolor: 'rgba(255, 255, 255, 0.3)'
                               }} />
                             </Box>
                           )}
@@ -268,13 +327,13 @@ const Announcements = () => {
                   <Box sx={{
                     p: 3,
                     textAlign: 'center',
-                    bgcolor: 'rgba(249, 115, 22, 0.05)',
+                    bgcolor: 'rgba(255, 255, 255, 0.05)',
                     borderRadius: 2
                   }}>
-                    <Typography variant="body1" sx={{ color: 'text.secondary', mb: 1 }}>
+                    <Typography variant="body1" sx={{ color: 'rgba(255, 255, 255, 0.8)', mb: 1 }}>
                       No holidays found
                     </Typography>
-                    <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+                    <Typography variant="body2" sx={{ color: 'rgba(255, 255, 255, 0.6)' }}>
                       No holidays have been added to the system yet
                     </Typography>
                   </Box>

@@ -123,20 +123,23 @@ export default function StudentJourney({onStartLearning}) {
       <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 3 }}>
         <Typography  variant="h5" sx={{ fontWeight: 500, color: "#424242" }}>
          
-         <a href={`${trimmedPath}student-journey`}> Student Journey</a>
+         <a href={`${trimmedPath}my-courses`}> Student Journey</a>
          
         </Typography>
         <Button
-        onClick={onStartLearning}
-          variant="outlined"
+          onClick={onStartLearning}
+          variant="contained"
           sx={{
-            borderColor: "#E53510",
-            color: "#E53510",
+            background: 'linear-gradient(270deg, #eb6707 0%, #e42b12 100%)',
+            color: '#fff',
             borderRadius: 2,
-            px: 2,
-            "&:hover": {
-              borderColor: "#E53510",
-              backgroundColor: "rgba(229, 53, 16, 0.04)",
+            px: 3,
+            fontWeight: 'bold',
+            boxShadow: '0 4px 16px 0 rgba(30,60,114,0.18)',
+            textTransform: 'none',
+            '&:hover': {
+              background: 'linear-gradient(270deg, #eb6707 0%, #e42b12 100%)',
+              opacity: 0.95,
             },
           }}
         >
@@ -162,7 +165,7 @@ export default function StudentJourney({onStartLearning}) {
           elevation={1}
           sx={{
             position: "absolute",
-            top: 55,
+            top: 90,
             left: `${overallCompletion}%`,
             transform: "translateX(-50%)",
             p: 1.5,

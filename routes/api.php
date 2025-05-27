@@ -55,16 +55,10 @@ use App\Http\Controllers\StudentAttendanceController;
 |
 */
 
-// Assignment submission route - placed at the top level for testing
-Route::get('/assignment-submission/{assignmentId}', [TeachingMaterialController::class, 'getAssignmentSubmission']);
-// Alternative route with a different URL pattern
-Route::get('/get-assignment-submission/{assignmentId}', [TeachingMaterialController::class, 'getAssignmentSubmission']);
+Route::middleware(['auth:sanctum'])->group(function () {
+    Route::get('/assignment-submission/{assignmentId}', [TeachingMaterialController::class, 'getAssignmentSubmission']);
+    Route::get('/get-assignment-submission/{assignmentId}', [TeachingMaterialController::class, 'getAssignmentSubmission']);
 
-Route::post('/send-notification', [\App\Http\Controllers\NotificationController::class, 'sendNotification']);
-Route::middleware([
-    'auth:sanctum'
-    //, 'verified'
-])->group(function () {
     Route::get('/user', function (Request $request) {
         return new \App\Http\Resources\UserResource($request->user());
     });
