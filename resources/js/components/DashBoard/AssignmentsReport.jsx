@@ -32,7 +32,15 @@ export default function AssignmentsReport() {
 
   return (
     <div className="w-full mx-auto bg-white rounded-xl shadow-md overflow-hidden">
-      <h1 className="p-3 text-2xl w-full text-center font-medium mb-4">Assignments Report</h1>
+      <div style={{
+        background: 'linear-gradient(270deg, #0f1f3d 0%, #1e3c72 100%)',
+        borderTopLeftRadius: '0.75rem',
+        borderTopRightRadius: '0.75rem',
+        padding: '1rem',
+        marginBottom: 0
+      }}>
+        <h1 className="text-2xl w-full text-center font-medium mb-0 text-white">Assignments Report</h1>
+      </div>
       <div className="overflow-x-auto">
         <table className="w-full border-collapse">
           <thead className="p-6">

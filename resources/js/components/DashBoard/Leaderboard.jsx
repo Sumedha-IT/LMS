@@ -32,8 +32,10 @@ export default function Leaderboard() {
 
     return (
         <div className="w-full h-full max-w-xs mx-auto bg-white rounded-xl shadow-md overflow-hidden">
-            <div className="p-4 border-b border-gray-200">
-                <h2 className="text-2xl font-semibold text-[#404040]">Leaderboard</h2>
+            <div className="p-4 border-b border-gray-200" style={{
+              background: 'linear-gradient(270deg, #0f1f3d 0%, #1e3c72 100%)'
+            }}>
+                <h2 className="text-2xl font-semibold text-white" style={{ fontWeight: 'bold' }}>Leaderboard</h2>
             </div>
 
             <div className="divide-y divide-gray-200">

@@ -9,8 +9,8 @@ use Illuminate\Support\Facades\Auth;
 class MyCoursesPage extends Page
 {
     protected static ?string $navigationIcon = 'heroicon-o-academic-cap';
-    protected static ?string $navigationLabel = 'My Courses';
-    protected static ?string $title = 'My Courses';
+    protected static ?string $navigationLabel = 'Curriculum';
+    protected static ?string $title = 'Curriculum';
     protected static ?string $slug = 'my-courses';
     protected static ?int $navigationSort = -1;
 

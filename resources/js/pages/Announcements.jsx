@@ -153,34 +153,33 @@ const Announcements = () => {
 
           <div className="space-y-6">
             {currentAnnouncements.map(announcement => (
-              <Card key={announcement.id} className="border rounded-lg overflow-hidden shadow-lg">
+              <Card key={announcement.id} className="border rounded-lg overflow-hidden shadow-md" sx={{ mb: 2, p: 0.5, maxWidth: 520, mx: 'auto' }}>
                 <div className="flex flex-col sm:flex-row">
-                  <div className="sm:w-1/3 max-w-[300px] relative">
+                  <div className="sm:w-1/4 max-w-[120px] relative">
                     <img
                       src={announcement.image}
                       alt={announcement.title}
-                      className="h-56 w-full object-cover"
+                      className="h-32 w-full object-cover"
                       onError={(e) => {
                         e.target.onerror = null;
                         e.target.src = DEFAULT_IMAGE;
                       }}
                     />
-
                   </div>
-                  <CardContent className="p-6 flex-1">
-                    <h2 className="text-2xl font-bold mb-3">{announcement.title}</h2>
-                    <p className="text-gray-600 text-base mb-4">
+                  <CardContent className="p-3 flex-1">
+                    <h2 className="text-lg font-bold mb-2">{announcement.title}</h2>
+                    <p className="text-gray-600 text-sm mb-2">
                       {announcement.subtitle}
                     </p>
-                    <div className="flex items-center gap-4">
-                      <div className="text-white px-4 py-2 rounded-full text-sm" style={{
-                        background: 'linear-gradient(270deg, #eb6707 0%, #e42b12 100%)',
-                        boxShadow: '0 2px 8px 0 rgba(235,103,7,0.10)'
+                    <div className="flex items-center gap-2">
+                      <div className="text-white px-3 py-1 rounded-full text-xs" style={{
+                        background: 'linear-gradient(135deg, #0f1f3d 0%, #1e3c72 100%)',
+                        boxShadow: '0 2px 8px 0 rgba(15,31,61,0.10)'
                       }}>
                         📅 {announcement.date}
                       </div>
                       {announcement.time && (
-                        <div className="text-gray-600 text-sm">
+                        <div className="text-gray-600 text-xs">
                           ⏰ {announcement.time}
                         </div>
                       )}
@@ -273,29 +272,24 @@ const Announcements = () => {
                       {holidays.map((holiday, index) => (
                         <div key={holiday.id}>
                           <Card
-                            className="border hover:shadow-md transition-all cursor-pointer"
+                            className="hover:shadow-md transition-all cursor-pointer"
                             sx={{
                               boxShadow: '0 2px 4px rgba(0,0,0,0.05)',
                               borderRadius: 2,
                               overflow: 'hidden',
                               background: '#ffffff',
-                              border: '2px solid transparent',
-                              backgroundImage: 'linear-gradient(white, white), linear-gradient(270deg, #eb6707 0%, #e42b12 100%)',
-                              backgroundOrigin: 'border-box',
-                              backgroundClip: 'padding-box, border-box',
+                              border: '1px solid #f3f3f3',
+                              backgroundImage: 'none',
                               '&:hover': {
                                 transform: 'translateY(-2px)',
-                                boxShadow: '0 4px 12px rgba(235,103,7,0.15)',
-                                backgroundImage: 'linear-gradient(white, white), linear-gradient(270deg, #eb6707 0%, #e42b12 100%)',
-                                backgroundOrigin: 'border-box',
-                                backgroundClip: 'padding-box, border-box',
+                                boxShadow: '0 4px 12px rgba(30,60,114,0.10)',
                               }
                             }}
                           >
                             <CardContent sx={{ p: 2 }}>
                               <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.5 }}>
-                                <CalendarMonth fontSize="small" sx={{ color: '#eb6707' }} />
-                                <Typography variant="body2" sx={{ fontWeight: 600, color: '#eb6707' }}>
+                                <CalendarMonth fontSize="small" sx={{ color: '#1e3c72' }} />
+                                <Typography variant="body2" sx={{ fontWeight: 600, color: '#1e3c72' }}>
                                   {formatDate(holiday.start)}
                                 </Typography>
                               </Box>

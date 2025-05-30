@@ -27,6 +27,7 @@ import {
 } from 'lucide-react';
 import { apiRequest } from '../../utils/api';
 import { toast } from 'react-toastify';
+import axios from 'axios';
 
 // Define blinking animation
 const blinkBorder = keyframes`
@@ -187,95 +188,83 @@ export default function AttendanceCheckInModal({ open, onClose, onSuccess }) {
     }
   };
 
-  const handleCheckIn = async () => {
+  // Function to generate a unique device fingerprint
+  const generateDeviceFingerprint = async () => {
     try {
-      setLoading(true);
+      // Get screen properties
+      const screenProps = {
+        width: window.screen.width,
+        height: window.screen.height,
+        colorDepth: window.screen.colorDepth,
+        pixelDepth: window.screen.pixelDepth
+      };
 
-      // Send verification request to server
-      console.log('Sending verification request');
-      const verificationResponse = await apiRequest('/verify-campus-location', {
-        method: 'POST',
-        body: {
-          ip_address: null // Let the server determine this
-        },
-        skipCache: true
-      });
+      // Get timezone
+      const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
 
-      console.log('Verification response:', verificationResponse);
+      // Get language
+      const language = navigator.language;
 
-      // Only proceed with check-in if verification was successful
-      if (verificationResponse.status !== 'success') {
-        // Show error in dialog instead of toast
-        setDeviceErrorDialog({
-          open: true,
-          title: 'Check-In Error',
-          message: verificationResponse.message || 'You must be connected to the campus WiFi network to check in'
-        });
-        setLoading(false);
-        return;
+      // Get platform
+      const platform = navigator.platform;
+
+      // Get hardware concurrency (number of CPU cores)
+      const hardwareConcurrency = navigator.hardwareConcurrency;
+
+      // Get device memory if available
+      const deviceMemory = navigator.deviceMemory;
+
+      // Get battery info if available
+      let batteryInfo = null;
+      if (navigator.getBattery) {
+        const battery = await navigator.getBattery();
+        batteryInfo = {
+          charging: battery.charging,
+          chargingTime: battery.chargingTime,
+          dischargingTime: battery.dischargingTime,
+          level: battery.level
+        };
       }
 
-      const requestBody = {
-        laptop_id: navigator.userAgent,
-        location_verified: true
+      // Combine all properties into a single object
+      const deviceInfo = {
+        screen: screenProps,
+        timezone,
+        language,
+        platform,
+        hardwareConcurrency,
+        deviceMemory,
+        battery: batteryInfo
       };
 
-      console.log('Sending check-in request with body:', requestBody);
-      const response = await apiRequest('/student-attendance/check-in', {
-        method: 'POST',
-        body: requestBody,
-        skipCache: true
-      });
+      // Create a hash of the device info
+      const deviceString = JSON.stringify(deviceInfo);
+      const deviceHash = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(deviceString));
+      const hashArray = Array.from(new Uint8Array(deviceHash));
+      const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
 
-      console.log('Check-in response:', response);
-
-      // Show success animation and message
-      toast.success(response.message || 'Successfully checked in!', {
-        position: "top-center",
-        autoClose: 3000,
-        hideProgressBar: false,
-        closeOnClick: true,
-        pauseOnHover: true,
-        draggable: true,
-        progress: undefined,
-        style: {
-          background: "#4caf50",
-          color: "#fff",
-          borderRadius: "10px",
-          boxShadow: "0 4px 12px rgba(0, 0, 0, 0.15)"
-        }
-      });
-
-      // Update local state with today's date
-      const today = new Date().toISOString().split('T')[0];
-      const updatedStatus = {
-        ...attendanceStatus,
-        is_checked_in: true,
-        is_checked_out: false,
-        check_in_time: new Date().toTimeString().split(' ')[0],
-        check_out_time: null,
-        date: today
-      };
-
-      setAttendanceStatus(updatedStatus);
-
-      // Store the updated status in localStorage
-      localStorage.setItem('attendanceStatus', JSON.stringify(updatedStatus));
-
-      // Call the onSuccess callback
-      if (onSuccess) onSuccess();
-
-      // Close the modal
-      onClose();
+      return hashHex;
     } catch (error) {
-      // Show error in dialog instead of toast
-        setDeviceErrorDialog({
-          open: true,
-        title: 'Check-In Error',
-        message: error.response?.data?.message || error.message || 'Error checking in. Please try again.'
+      console.error('Error generating device fingerprint:', error);
+      // Fallback to a simpler fingerprint if the advanced one fails
+      return `${navigator.platform}-${window.screen.width}-${window.screen.height}`;
+    }
+  };
+
+  const handleCheckIn = async () => {
+    try {
+      const response = await axios.post('/api/student/attendance/check-in', {
+        device_fingerprint: deviceFingerprint
       });
-    } finally {
-      setLoading(false);
+
+      if (response.data.success) {
+        toast.success('Check-in successful');
+        onClose();
+      } else {
+        toast.error(response.data.message);
+      }
+    } catch (error) {
+      toast.error(error.response?.data?.message || 'Check-in failed');
     }
   };
 

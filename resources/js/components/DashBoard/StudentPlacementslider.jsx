@@ -150,7 +150,7 @@ export default function StudentPlacedCard({ autoScroll = false }) {
       >
         <Card
           sx={{
-            background: 'linear-gradient(135deg, #1e3c72 0%, #2a5298 100%)',
+            background: 'linear-gradient(135deg, #0f1f3d 0%, #1e3c72 100%)',
             color: 'white',
             padding: 2,
             height: '100%',
@@ -162,7 +162,14 @@ export default function StudentPlacedCard({ autoScroll = false }) {
             variant="h6"
             component="h2"
             align="center"
-            sx={{ mb: 2 }}
+            sx={{ 
+              mb: 2,
+              background: 'linear-gradient(270deg, #eb6707 0%, #e42b12 100%)',
+              WebkitBackgroundClip: 'text',
+              WebkitTextFillColor: 'transparent',
+              fontWeight: 'bold',
+              fontSize: '1.2rem'
+            }}
             initial={{ y: -20, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             transition={{ delay: 0.2 }}
@@ -175,9 +182,11 @@ export default function StudentPlacedCard({ autoScroll = false }) {
               bgcolor: "white",
               position: "relative",
               overflow: "hidden",
-              p: 2,
+              p: 3,
               boxShadow: '0 4px 12px rgba(0,0,0,0.08)',
               borderRadius: '12px',
+              minHeight: '280px', // Increased height
+              width: '100%' // Ensure full width
             }}
           >
             {/* Navigation buttons */}
@@ -222,50 +231,54 @@ export default function StudentPlacedCard({ autoScroll = false }) {
                 sx={{ width: "100%", textAlign: "center" }}
               >
                 {/* Stars animation */}
-                <Box sx={{ height: 96, width: 96, mx: "auto", mb: 1 }}>
+                <Box sx={{ height: 148, width: 148, mx: "auto", mb: 2, position: 'relative' }}>
+                  {/* Main star above avatar */}
                   <MotionBox
                     sx={{
                       position: "absolute",
-                      top: 0,
-                      left: "45%",
-                      transform: "translate(-50%, -50%)",
+                      top: -18,
+                      left: "50%",
+                      transform: "translate(-50%, 0)",
+                      zIndex: 2
                     }}
                     variants={starVariants}
                     initial="initial"
                     animate="animate"
                     transition={{ delay: 0.1 }}
                   >
-                    <Star size={20} fill="#ff8c00" color="#ff8c00" />
+                    <Star size={28} fill="#ff8c00" color="#ff8c00" />
                   </MotionBox>
 
+                  {/* Left star */}
                   <MotionBox
                     sx={{
                       position: "absolute",
-                      top: 6,
-                      left: "35%",
-                      transform: "translateY(-50%)",
+                      top: 10,
+                      left: 0,
+                      zIndex: 2
                     }}
                     variants={starVariants}
                     initial="initial"
                     animate="animate"
                     transition={{ delay: 0.3 }}
                   >
-                    <Star size={16} fill="#ff8c00" color="#ff8c00" />
+                    <Star size={20} fill="#ff8c00" color="#ff8c00" />
                   </MotionBox>
 
+                  {/* Right star */}
                   <MotionBox
                     sx={{
                       position: "absolute",
-                      top: 6,
-                      right: "35%",
-                      transform: "translateY(-50%)",
+                      top: 10,
+                      right: 0,
+                      zIndex: 2
                     }}
                     variants={starVariants}
                     initial="initial"
                     animate="animate"
                     transition={{ delay: 0.5 }}
                   >
-                    <Star size={16} fill="#ff8c00" color="#ff8c00" />
+                    <Star size={20} fill="#ff8c00" color="#ff8c00" />
                   </MotionBox>
 
                   {/* Profile image */}
@@ -273,11 +286,14 @@ export default function StudentPlacedCard({ autoScroll = false }) {
                     src="/images/image%2067.png"
                     alt={currentStudent?.name}
                     sx={{
-                      width: 96,
-                      height: 96,
+                      width: 128,
+                      height: 128,
                       border: "2px solid #e0e0e0",
                       mx: "auto",
                       boxShadow: '0 4px 8px rgba(0,0,0,0.1)',
+                      background: '#fff',
+                      position: 'relative',
+                      zIndex: 1
                     }}
                     initial={{ scale: 0.8, opacity: 0 }}
                     animate={{ scale: 1, opacity: 1 }}

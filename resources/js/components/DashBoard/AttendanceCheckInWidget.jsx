@@ -7,17 +7,24 @@ import {
   Typography,
   CardContent,
   keyframes,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  IconButton,
 } from '@mui/material';
 import {
   CheckCircle,
   LogOut,
   Clock,
   AlertTriangle,
+  X,
 } from 'lucide-react';
 import { apiRequest } from '../../utils/api';
 import { toast } from 'react-toastify';
 import AttendanceCheckInModal from '../Attendance/AttendanceCheckInModal';
 import { motion } from 'framer-motion';
+import sha256 from 'js-sha256';
 
 // Define blinking animation
 const blinkBorder = keyframes`
@@ -41,6 +48,7 @@ export default function AttendanceCheckInWidget({ displayMode = 'button' }) {
   const [isFirstLoad, setIsFirstLoad] = useState(false);
   const [timer, setTimer] = useState(0);
   const timerInterval = useRef(null);
+  const [deviceErrorDialog, setDeviceErrorDialog] = useState({ open: false, message: '' });
 
   // First check if this is the first load after login
   useEffect(() => {
@@ -300,70 +308,97 @@ export default function AttendanceCheckInWidget({ displayMode = 'button' }) {
 
   // We've removed the verifyCampusLocation function since we're handling verification directly in handleCheckIn
 
+  // Function to generate a unique and stable device fingerprint (works on HTTP)
+  const generateDeviceFingerprint = () => {
+    const deviceString = [
+      navigator.userAgent,
+      navigator.platform,
+      window.screen.width,
+      window.screen.height,
+      window.screen.colorDepth
+    ].join('::');
+    // Use js-sha256 for hashing (works on HTTP and HTTPS)
+    return sha256(deviceString);
+  };
+
   const handleCheckIn = async () => {
     try {
       setCheckInLoading(true);
-
-      // --- DISABLED: Geolocation and WiFi checks for now ---
-      // let locationData;
-      // try {
-      //   locationData = await getGeolocation();
-      //   console.log('Location data obtained:', locationData);
-      // } catch (error) {
-      //   console.error('Error getting geolocation:', error);
-      //   toast.error('Location access denied. Please enable location services to verify you are within campus boundaries.', { ... });
-      //   setCheckInLoading(false);
-      //   return;
-      // }
-
-      // --- DISABLED: Verification request ---
-      // const verificationResponse = await apiRequest('/verify-campus-location', { ... });
-      // if (verificationResponse.status !== 'success') { ... return; }
-
-      // Proceed directly to check-in
-      const requestBody = {
-        laptop_id: navigator.userAgent,
-        location_verified: false // Mark as false since we skip verification
-      };
-
+      
+      // Generate device fingerprint
+      const deviceFingerprint = generateDeviceFingerprint();
+      
       const response = await apiRequest('/student-attendance/check-in', {
         method: 'POST',
-        body: requestBody,
+        body: {
+          device_fingerprint: deviceFingerprint,
+          device_info: {
+            userAgent: navigator.userAgent,
+            platform: navigator.platform,
+            screen: {
+              width: window.screen.width,
+              height: window.screen.height
+            }
+          },
+          device_type: 'browser',
+          device_name: `${navigator.platform} - ${navigator.userAgent.split(' ')[0]}`
+        },
         skipCache: true
       });
 
-      toast.success(response.message || 'Successfully checked in!', {
-        position: 'top-center',
-        autoClose: 3000,
-        hideProgressBar: false,
-        closeOnClick: true,
-        pauseOnHover: true,
-        draggable: true,
-        progress: undefined,
-        style: {
-          background: '#4caf50',
-          color: '#fff',
-          borderRadius: '10px',
-          boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)'
-        }
-      });
+      if (response.success) {
+        toast.success(response.message || 'Successfully checked in!', {
+          position: 'top-center',
+          autoClose: 3000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+          progress: undefined,
+          style: {
+            background: '#4caf50',
+            color: '#fff',
+            borderRadius: '10px',
+            boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)'
+          }
+        });
 
-      const today = new Date().toISOString().split('T')[0];
-      const updatedStatus = {
-        ...attendanceStatus,
-        is_checked_in: true,
-        is_checked_out: false,
-        check_in_time: new Date().toTimeString().split(' ')[0],
-        check_out_time: null,
-        date: today
-      };
-      setAttendanceStatus(updatedStatus);
-      localStorage.setItem('attendanceStatus', JSON.stringify(updatedStatus));
-      setHasAccess(true);
-      setShowModal(false);
-      fetchAttendanceStatus();
+        const today = new Date().toISOString().split('T')[0];
+        const updatedStatus = {
+          ...attendanceStatus,
+          is_checked_in: true,
+          is_checked_out: false,
+          check_in_time: new Date().toTimeString().split(' ')[0],
+          check_out_time: null,
+          date: today
+        };
+        setAttendanceStatus(updatedStatus);
+        localStorage.setItem('attendanceStatus', JSON.stringify(updatedStatus));
+        setHasAccess(true);
+        setShowModal(false);
+        fetchAttendanceStatus();
+      } else {
+        if (response.show_dialog) {
+          setDeviceErrorDialog({
+            open: true,
+            message: response.dialog_message,
+            title: response.dialog_title || 'Device Error'
+          });
+        } else {
+          toast.error(response.message);
+        }
+      }
     } catch (error) {
-      const errorMessage = error.response?.data?.message || error.message || 'Error checking in. Please try again.';
+      const errorData = error.response?.data;
+      if (errorData?.show_dialog) {
+        setDeviceErrorDialog({
+          open: true,
+          message: errorData.dialog_message,
+          title: errorData.dialog_title || 'Device Error'
+        });
+      }
+      // Always show a toast for any error
+      const errorMessage = errorData?.message || error.message || 'Check-in failed';
       toast.error(errorMessage);
     } finally {
       setCheckInLoading(false);
@@ -493,13 +528,15 @@ export default function AttendanceCheckInWidget({ displayMode = 'button' }) {
 
     return (
       <Card sx={{
-        height: '100%',
+        width: '100%', // Fill parent width
+        minWidth: 0,
+        height: '100%', // Make card stretch to parent height
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'center',
-        borderRadius: '40px',
+        borderRadius: '20px', // Reduced border radius
         background: 'linear-gradient(135deg, #1e3c72 0%, #2a5298 100%)',
-        boxShadow: '0 4px 24px 0 rgba(30,60,114,0.10)',
+        boxShadow: '0 2px 12px 0 rgba(30,60,114,0.10)',
         p: 0,
         border: 'none',
         position: 'relative',
@@ -511,26 +548,26 @@ export default function AttendanceCheckInWidget({ displayMode = 'button' }) {
           alignItems: 'center',
           justifyContent: 'center',
           width: '100%',
-          height: '100%',
-          pt: 7,
-          pb: 4,
+          height: '100%', // Ensure CardContent fills Card height
+          pt: 3, // Reduced padding top
+          pb: 2, // Reduced padding bottom
         }}>
           {/* Attendance Label */}
-          <Typography variant="h6" sx={{ color: '#eb6707', fontWeight: 900, letterSpacing: 1.5, fontSize: '1.4rem', mb: 2 }}>
+          <Typography variant="h6" sx={{ color: '#eb6707', fontWeight: 900, letterSpacing: 1.5, fontSize: '1.1rem', mb: 1 }}>
             ATTENDANCE
           </Typography>
           {/* Date */}
-          <Typography sx={{ color: '#fff', fontWeight: 700, fontSize: '1.5rem', mb: 3, mt: 2, letterSpacing: 1 }}>
+          <Typography sx={{ color: '#fff', fontWeight: 700, fontSize: '1.1rem', mb: 2, mt: 1, letterSpacing: 1 }}>
             {today.toLocaleDateString('en-GB', { day: '2-digit', month: 'long', year: 'numeric' })}
           </Typography>
           {/* Timer - reduced size */}
-          <Typography sx={{ color: '#fff', fontWeight: 900, fontSize: '2rem', mb: 4, letterSpacing: 2 }}>
+          <Typography sx={{ color: '#fff', fontWeight: 900, fontSize: '1.3rem', mb: 2, letterSpacing: 2 }}>
             {attendanceStatus?.is_checked_out ? (
               <Box sx={{ textAlign: 'center' }}>
-                <Typography sx={{ color: '#fff', fontWeight: 600, fontSize: '1.2rem', mb: 1, letterSpacing: 1 }}>
+                <Typography sx={{ color: '#fff', fontWeight: 600, fontSize: '1rem', mb: 1, letterSpacing: 1 }}>
                   Checkout Time
                 </Typography>
-                <Typography sx={{ color: '#fff', fontWeight: 700, fontSize: '1.5rem', letterSpacing: 1.5 }}>
+                <Typography sx={{ color: '#fff', fontWeight: 700, fontSize: '1.1rem', letterSpacing: 1.5 }}>
                   {attendanceStatus.check_out_time || 'N/A'}
                 </Typography>
               </Box>
@@ -545,8 +582,8 @@ export default function AttendanceCheckInWidget({ displayMode = 'button' }) {
               WebkitBackgroundClip: 'text',
               WebkitTextFillColor: 'transparent',
               fontWeight: 'bold',
-              fontSize: '1.5rem',
-              mb: 2,
+              fontSize: '1.1rem',
+              mb: 1,
               letterSpacing: 1,
             }}>
               CHECKOUT DONE
@@ -563,10 +600,10 @@ export default function AttendanceCheckInWidget({ displayMode = 'button' }) {
                 background: 'linear-gradient(270deg, #eb6707 0%, #e42b12 100%)',
                 color: '#fff',
                 fontWeight: 'bold',
-                fontSize: '1.2rem',
-                borderRadius: '12px',
-                px: 6,
-                py: 1.5,
+                fontSize: '0.9rem',
+                borderRadius: '8px',
+                px: 4,
+                py: 1,
                 boxShadow: '0 4px 16px 0 rgba(30,60,114,0.18)',
                 textTransform: 'none',
                 letterSpacing: 1,
@@ -590,10 +627,10 @@ export default function AttendanceCheckInWidget({ displayMode = 'button' }) {
                 background: 'linear-gradient(270deg, #eb6707 0%, #e42b12 100%)',
                 color: '#fff',
                 fontWeight: 'bold',
-                fontSize: '1.2rem',
-                borderRadius: '12px',
-                px: 6,
-                py: 1.5,
+                fontSize: '0.9rem',
+                borderRadius: '8px',
+                px: 4,
+                py: 1,
                 boxShadow: '0 4px 16px 0 rgba(30,60,114,0.18)',
                 textTransform: 'none',
                 letterSpacing: 1,
@@ -759,6 +796,55 @@ export default function AttendanceCheckInWidget({ displayMode = 'button' }) {
         onClose={handleModalClose}
         onSuccess={handleModalSuccess}
       />
+
+      {/* Device Error Dialog */}
+      <Dialog
+        open={deviceErrorDialog.open}
+        onClose={() => setDeviceErrorDialog({ open: false, message: '', title: '' })}
+        PaperProps={{
+          sx: {
+            borderRadius: 2,
+            boxShadow: '0 4px 20px rgba(0, 0, 0, 0.15)',
+            minWidth: '400px'
+          }
+        }}
+      >
+        <DialogTitle sx={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          bgcolor: '#f44336',
+          color: 'white',
+          py: 2
+        }}>
+          {deviceErrorDialog.title || 'Device Error'}
+          <IconButton
+            onClick={() => setDeviceErrorDialog({ open: false, message: '', title: '' })}
+            sx={{ color: 'white' }}
+          >
+            <X size={20} />
+          </IconButton>
+        </DialogTitle>
+        <DialogContent sx={{ py: 3 }}>
+          <Typography variant="body1" sx={{ color: '#333', fontWeight: 500 }}>
+            {deviceErrorDialog.message}
+          </Typography>
+        </DialogContent>
+        <DialogActions sx={{ px: 3, pb: 2 }}>
+          <Button
+            onClick={() => setDeviceErrorDialog({ open: false, message: '', title: '' })}
+            variant="contained"
+            sx={{
+              bgcolor: '#f44336',
+              '&:hover': { bgcolor: '#d32f2f' },
+              textTransform: 'none',
+              px: 3
+            }}
+          >
+            Close
+          </Button>
+        </DialogActions>
+      </Dialog>
     </>
   );
 }

@@ -49,7 +49,7 @@ class CourseResource extends Resource
 
     public static function getLabel(): string
     {
-        return "My Courses";
+        return "Curriculum";
     }
 
     public static function form(Form $form): Form

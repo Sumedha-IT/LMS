@@ -427,4 +427,6 @@ Route::middleware(['auth:sanctum'])->group(function () {
         Route::get('/tutor-report', [StudentAttendanceController::class, 'getTutorReport']);
         Route::get('/batches', [StudentAttendanceController::class, 'getBatches']);
     });
+
+    Route::post('/student/register-device', [StudentAttendanceController::class, 'registerDevice']);
 });

@@ -6,7 +6,7 @@ use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
 class TeachingMaterialResource extends JsonResource
-{
+{ 
     /**
      * Transform the resource into an array.
      *
@@ -30,6 +30,7 @@ class TeachingMaterialResource extends JsonResource
             'sort' => $this->sort,
             'start_submission' => $this->start_submission ? $this->start_submission->format('Y-m-d H:i:s') : null,
             'stop_submission' => $this->stop_submission ? $this->stop_submission->format('Y-m-d H:i:s') : null,
+            'batch_id' => $request->query('batch_id') ?? null,
         ];
     }
 }

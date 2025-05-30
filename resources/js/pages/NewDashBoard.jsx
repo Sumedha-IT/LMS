@@ -302,7 +302,7 @@ const NewDashBoard = () => {
             <>
               {/* Stats Card */}
               <section className="w-full p-2 mb-10">
-                <div className="relative min-h-[15.75rem] rounded-2xl flex items-center px-10 w-full" style={{ background: 'linear-gradient(135deg, #1e3c72 0%, #2a5298 100%)' }}>
+                <div className="relative min-h-[15.75rem] rounded-2xl flex items-center px-10 w-full" style={{ background: 'linear-gradient(135deg, #0f1f3d 0%, #1e3c72 100%)' }}>
                   <div className="flex gap-2 w-3/4 justify-evenly">
                     <div 
                       onClick={() => window.location.href = '/administrator/1/student-attendance'}
@@ -410,9 +410,9 @@ const NewDashBoard = () => {
       ) : (
         // For subsequent loads or if already checked in, show all content with attendance widget in normal position
         <>
-          <section className="w-full p-2 mb-10 flex gap-2">
+          <section className="w-full p-2 mb-10 flex gap-2 items-stretch min-h-[13rem] h-[17rem]">
             {/* Stats Card - Show loading state or actual data */}
-            <div className={`relative min-h-[15.75rem] ${loading ? 'bg-gray-100 animate-pulse' : ''} rounded-2xl flex items-center px-10 w-3/4`} style={!loading ? { background: 'linear-gradient(135deg, #1e3c72 0%, #2a5298 100%)' } : {}}>
+            <div className={`relative ${loading ? 'bg-gray-100 animate-pulse' : ''} rounded-2xl flex items-center px-10 w-3/4 h-full`} style={!loading ? { background: 'linear-gradient(135deg, #0f1f3d 0%, #1e3c72 100%)' } : {}}>
               {loading ? (
                 <div className="flex gap-2 w-3/4 justify-evenly">
                   <div className="h-36 w-36 rounded-full bg-gray-200"></div>
@@ -489,7 +489,7 @@ const NewDashBoard = () => {
             </div>
 
             {/* Attendance Check-In Widget */}
-            <div className="w-1/4">
+            <div className="w-1/4 h-full">
               <AttendanceCheckInWidget
                 displayMode="card"
                 key={`attendance-widget-${new Date().toISOString().split('T')[0]}`} // Force re-render on date change

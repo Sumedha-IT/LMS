@@ -30,7 +30,7 @@ const UserDashboard = () => {
                     {/* Upcoming Exams Card */}
                     <div className="w-8/12 text-white pl-10 py-2 rounded-xl flex justify-between items-center border border-white/30 shadow-lg"
                         style={{
-                            background: 'linear-gradient(135deg, #1e3c72 0%, #2a5298 100%)',
+                            background: 'linear-gradient(135deg, #0f1f3d 0%, #1e3c72 100%)',
                         }}
                     >
                         <div className="space-y-4 max-w-[70%]">

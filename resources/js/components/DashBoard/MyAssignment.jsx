@@ -13,22 +13,17 @@ import {
 } from '@mui/material';
 
 export default function MyAssignment({ assignments = [] }) {
-  const sampleAssignments = [
-    { task: "Physics Chapter", grade: "--/100", completed: false },
-    { task: "Maths Chapter", grade: "80/100", completed: true },
-    { task: "Chemistry Chapter", grade: "75/100", completed: true }
-  ];
-
-  const data = assignments.length > 0 ? assignments : sampleAssignments;
   const [Assignment, setAssignment] = useState([]);
 
   useEffect(() => {
     const fetchAssignment = async () => {
       try {
-        const data = await apiRequest("/getUserAssignments");
-        setAssignment(data.data);
+        const response = await apiRequest("/getUserAssignments");
+        if (response.success && response.data) {
+          setAssignment(response.data);
+        }
       } catch (err) {
-        console.error("Error fetching announcements:", err);
+        console.error("Error fetching assignments:", err);
       }
     };
     fetchAssignment();
@@ -39,7 +34,14 @@ export default function MyAssignment({ assignments = [] }) {
       <Paper sx={{ width: '100%', borderRadius: 2, boxShadow: 1, p: 2 }}>
         {/* Header */}
         <Box className="flex justify-between items-center mb-4">
-          <Typography variant="h6" sx={{ fontWeight: 600, color: '#404040' }}>My Assignments</Typography>
+          <Typography variant="h6" sx={{
+            fontWeight: 700,
+            background: 'linear-gradient(270deg, #0f1f3d 0%, #1e3c72 100%)',
+            WebkitBackgroundClip: 'text',
+            WebkitTextFillColor: 'transparent',
+            fontSize: '1.5rem',
+            mb: 0
+          }}>My Assignments</Typography>
         </Box>
         <TableContainer>
           <Table>
@@ -49,48 +51,49 @@ export default function MyAssignment({ assignments = [] }) {
               }}>
                 <TableCell sx={{ color: '#fff', fontWeight: 600 }}>Task</TableCell>
                 <TableCell sx={{ color: '#fff', fontWeight: 600, textAlign: 'center' }}>Grade</TableCell>
-                <TableCell sx={{ color: '#fff', fontWeight: 600, textAlign: 'center' }}>Update</TableCell>
+                <TableCell sx={{ color: '#fff', fontWeight: 600, textAlign: 'center' }}>Status</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
-              {(Assignment.length > 0 ? Assignment : data).map((assignment, index) => {
-                // Support both API and sample data
-                const name = assignment.assignments?.[0]?.name || assignment.task || '--';
-                const marks_scored = assignment.assignments?.[0]?.marks_scored;
-                const total_marks = assignment.assignments?.[0]?.total_marks;
-                const grade = marks_scored !== undefined && total_marks !== undefined ? `${marks_scored}/${total_marks}` : assignment.grade || '--';
-                const completed = assignment.assignments?.[0]?.completed ?? assignment.completed;
-                return (
-                  <TableRow
-                    key={index}
-                    sx={{
-                      backgroundColor: index % 2 === 0 ? '#ffffff' : '#F5FAFF',
-                      '&:hover': {
-                        backgroundColor: index % 2 === 0 ? '#F0F8FF' : '#E6F4FF'
-                      }
-                    }}
-                  >
-                    <TableCell sx={{ color: '#495057', fontWeight: 500 }}>{name}</TableCell>
-                    <TableCell sx={{ color: '#495057', textAlign: 'center', fontWeight: 500 }}>{grade}</TableCell>
-                    <TableCell sx={{ textAlign: 'center' }}>
-                      <span
-                        style={{
-                          display: 'inline-block',
-                          padding: '4px 16px',
-                          borderRadius: '16px',
-                          fontSize: 13,
-                          fontWeight: 600,
-                          background: completed ? '#CAFFE2' : '#FFCACB',
-                          color: completed ? '#137333' : '#B91C1C',
-                        }}
-                      >
-                        {completed ? 'Completed' : 'Not Completed'}
-                      </span>
-                    </TableCell>
-                  </TableRow>
-                );
-              })}
-              {(Assignment.length === 0 && data.length === 0) && (
+              {Assignment.length > 0 ? (
+                Assignment.map((topic, topicIndex) => (
+                  topic.assignments.map((assignment, index) => (
+                    <TableRow
+                      key={`${topicIndex}-${index}`}
+                      sx={{
+                        backgroundColor: index % 2 === 0 ? '#ffffff' : '#F5FAFF',
+                        '&:hover': {
+                          backgroundColor: index % 2 === 0 ? '#F0F8FF' : '#E6F4FF'
+                        }
+                      }}
+                    >
+                      <TableCell sx={{ color: '#495057', fontWeight: 500 }}>
+                        {assignment.name || '--'}
+                      </TableCell>
+                      <TableCell sx={{ color: '#495057', textAlign: 'center', fontWeight: 500 }}>
+                        {assignment.marks_scored !== null && assignment.total_marks !== null 
+                          ? `${assignment.marks_scored}/${assignment.total_marks}`
+                          : '--/--'}
+                      </TableCell>
+                      <TableCell sx={{ textAlign: 'center' }}>
+                        <span
+                          style={{
+                            display: 'inline-block',
+                            padding: '4px 16px',
+                            borderRadius: '16px',
+                            fontSize: 13,
+                            fontWeight: 600,
+                            background: assignment.is_submitted ? '#CAFFE2' : '#FFCACB',
+                            color: assignment.is_submitted ? '#137333' : '#B91C1C',
+                          }}
+                        >
+                          {assignment.is_submitted ? 'Completed' : 'Not Completed'}
+                        </span>
+                      </TableCell>
+                    </TableRow>
+                  ))
+                ))
+              ) : (
                 <TableRow>
                   <TableCell colSpan={3} sx={{ textAlign: 'center', color: '#888', py: 3 }}>
                     No assignments available

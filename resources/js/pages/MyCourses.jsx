@@ -7,9 +7,9 @@ import 'react-toastify/dist/ReactToastify.css';
 import NoCourses from '../components/NoCourses';
 import { FaFilePdf, FaFileImage, FaYoutube, FaFileWord, FaFileExcel, FaFilePowerpoint, FaFile, FaLink } from 'react-icons/fa';
 import { Worker, Viewer } from '@react-pdf-viewer/core';
-import { defaultLayoutPlugin } from '@react-pdf-viewer/default-layout';
+import { toolbarPlugin } from '@react-pdf-viewer/toolbar';
 import '@react-pdf-viewer/core/lib/styles/index.css';
-import '@react-pdf-viewer/default-layout/lib/styles/index.css';
+import '@react-pdf-viewer/toolbar/lib/styles/index.css';
 
 const API_URL = import.meta.env.REACT_APP_API_URL;
 
@@ -92,10 +92,11 @@ const MyCourses = () => {
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [submissions, setSubmissions] = useState({});
     const [showSuccessModal, setShowSuccessModal] = useState(false);
+    const [viewSubmissionFile, setViewSubmissionFile] = useState(null);
     const viewerRef = useRef(null);
 
     // Add this near the top of your component
-    const defaultLayoutPluginInstance = defaultLayoutPlugin();
+    const toolbarPluginInstance = toolbarPlugin();
 
     useEffect(() => {
         fetchCourses();
@@ -105,6 +106,10 @@ const MyCourses = () => {
         const handleFullScreenChange = () => {
             const fsElement = document.fullscreenElement || document.webkitFullscreenElement || document.mozFullScreenElement || document.msFullscreenElement;
             setIsFullScreen(!!fsElement && fsElement.id === 'teaching-material-viewer');
+            // If exited full screen, hide the material
+            if (!fsElement) {
+                setSelectedMaterial(null);
+            }
         };
         document.addEventListener('fullscreenchange', handleFullScreenChange);
         document.addEventListener('webkitfullscreenchange', handleFullScreenChange);
@@ -117,6 +122,17 @@ const MyCourses = () => {
             document.removeEventListener('MSFullscreenChange', handleFullScreenChange);
         };
     }, []);
+
+    useEffect(() => {
+        if (isFullScreen && selectedMaterial) {
+            setTimeout(() => {
+                const viewer = document.getElementById('teaching-material-viewer');
+                if (viewer && !document.fullscreenElement) {
+                    viewer.requestFullscreen().catch(() => {});
+                }
+            }, 100);
+        }
+    }, [isFullScreen, selectedMaterial]);
 
     const fetchCourses = async () => {
         try {
@@ -451,16 +467,22 @@ const MyCourses = () => {
             return;
         }
 
+        // Use batch_id from selectedAssignment if available
+        const batchId = selectedAssignment.batch_id;
+        if (!batchId) {
+            toast.error('Batch ID is missing for this assignment.');
+            return;
+        }
+
         try {
             setIsSubmitting(true);
             const userInfo = getCookie("user_info");
             const userData = JSON.parse(userInfo);
-            const correctBatchId = 27;
 
             const formData = new FormData();
             formData.append('file', submissionFile);
             formData.append('teaching_material_id', selectedAssignment.id);
-            formData.append('batch_id', correctBatchId);
+            formData.append('batch_id', batchId);
 
             const response = await axios.post('/api/submit-assignment', formData, {
                 headers: {
@@ -543,15 +565,10 @@ const MyCourses = () => {
             });
 
             if (response.data) {
-                const materialsData = response.data.data || [];
+                const materialsData = (response.data.data || []).filter(m => m.doc_type === 1); // Only teaching materials
                 setMaterials(materialsData);
-                if (materialsData.length > 0) {
-                    setSelectedMaterial(materialsData[0]);
-                    setCurrentMaterialIndex(0);
-                } else {
-                    setSelectedMaterial(null);
-                    setCurrentMaterialIndex(0);
-                }
+                setSelectedMaterial(null);
+                setCurrentMaterialIndex(0);
             }
         } catch (error) {
             // Don't show error toast to avoid disrupting UX
@@ -564,7 +581,12 @@ const MyCourses = () => {
             const userInfo = getCookie("user_info");
             const userData = JSON.parse(userInfo);
 
-            const response = await axios.get(`/api/teaching-materials/${topicId}`, {
+            // HARD-CODED for testing: Replace 27 with a real batch ID for your user if needed
+            const batchId = 27;
+            const url = `/api/teaching-materials/${topicId}?batch_id=${batchId}`;
+            console.log('Assignments API URL:', url); // Debug log
+
+            const response = await axios.get(url, {
                 headers: {
                     'Accept': 'application/json',
                     'Authorization': userData.token,
@@ -582,7 +604,6 @@ const MyCourses = () => {
                     .map(assignment => {
                         const start = assignment.start_submission ? new Date(assignment.start_submission) : null;
                         const stop = assignment.stop_submission ? new Date(assignment.stop_submission) : null;
-
                         return {
                             ...assignment,
                             start_submission: start ? start.toISOString() : null,
@@ -592,11 +613,11 @@ const MyCourses = () => {
 
                 setAssignments(assignmentsData);
 
-                // Fetch submission status for each assignment
+                // Fetch submission status for each assignment, passing batch_id
                 for (const assignment of assignmentsData) {
-                    if (assignment.id) {
-                        console.log('Fetching submission status for assignment:', assignment.id);
-                        await fetchSubmissionStatus(assignment.id);
+                    if (assignment.id && assignment.batch_id) {
+                        console.log('Fetching submission status for assignment:', assignment.id, 'batch:', assignment.batch_id);
+                        await fetchSubmissionStatus(assignment.id, assignment.batch_id);
                     }
                 }
             } else {
@@ -610,14 +631,14 @@ const MyCourses = () => {
         }
     };
 
-    const fetchSubmissionStatus = async (assignmentId) => {
-        if (!assignmentId) return;
+    const fetchSubmissionStatus = async (assignmentId, batchId) => {
+        if (!assignmentId || !batchId) return;
 
         try {
             const userInfo = getCookie("user_info");
             const userData = JSON.parse(userInfo);
 
-            const response = await axios.get(`/api/assignment-submission/${assignmentId}`, {
+            const response = await axios.get(`/api/assignment-submission/${assignmentId}?batch_id=${batchId}`, {
                 headers: {
                     'Accept': 'application/json',
                     'Authorization': userData.token,
@@ -627,7 +648,7 @@ const MyCourses = () => {
                 withCredentials: true
             });
 
-            console.log('Submission status API response for', assignmentId, ':', response.data);
+            console.log('Submission status API response for', assignmentId, 'batch', batchId, ':', response.data);
 
             if (response.data?.submission) {
                 setSubmissions(prev => {
@@ -665,11 +686,40 @@ const MyCourses = () => {
             switch (fileExtension) {
                 case 'pdf':
                     return (
-                        <div style={{ height: '80vh' }}>
+                        <div
+                            style={{
+                                position: isFullScreen ? 'fixed' : 'relative',
+                                top: isFullScreen ? 0 : undefined,
+                                left: isFullScreen ? 0 : undefined,
+                                width: isFullScreen ? '100vw' : '100%',
+                                height: isFullScreen ? '100vh' : '80vh',
+                                background: '#fff',
+                                zIndex: isFullScreen ? 9999 : 'auto',
+                                minHeight: '400px',
+                            }}
+                        >
                             <Worker workerUrl={`https://unpkg.com/pdfjs-dist@3.11.174/build/pdf.worker.min.js`}>
                                 <Viewer
                                     fileUrl={fileUrl}
-                                    plugins={[defaultLayoutPluginInstance]}
+                                    plugins={[toolbarPluginInstance]}
+                                    renderToolbar={(ToolbarSlot) => (
+                                        <div style={{ display: 'flex', gap: 8, padding: 8, borderBottom: '1px solid #eee', background: '#fafafa' }}>
+                                            <ToolbarSlot.ToggleSidebarButton />
+                                            <ToolbarSlot.SearchPopover />
+                                            <ToolbarSlot.SwitchTheme />
+                                            <ToolbarSlot.ZoomOutButton />
+                                            <ToolbarSlot.ZoomPopover />
+                                            <ToolbarSlot.ZoomInButton />
+                                            <ToolbarSlot.GoToPreviousPage />
+                                            <ToolbarSlot.CurrentPageInput />
+                                            <ToolbarSlot.NumberOfPages />
+                                            <ToolbarSlot.GoToNextPage />
+                                            <ToolbarSlot.EnterFullScreen />
+                                            <ToolbarSlot.ShowProperties />
+                                            <ToolbarSlot.MoreActionsPopover />
+                                            {/* No Open, Download, or Print buttons */}
+                                        </div>
+                                    )}
                                 />
                             </Worker>
                         </div>
@@ -1042,13 +1092,42 @@ const MyCourses = () => {
                                                 >
                                                     {/* PDF Viewer */}
                                                     {selectedMaterial.material_source === 'file' && selectedMaterial.file?.toLowerCase().endsWith('.pdf') ? (
-                                                        <div className="relative w-full h-full" style={isFullScreen ? { height: '100vh' } : {}}>
-                                                            <iframe
-                                                                src={`${selectedMaterial.file}#toolbar=0&navpanes=0&scrollbar=0`}
-                                                                className="w-full h-full border border-gray-200 rounded"
-                                                                style={isFullScreen ? { height: '100vh', width: '100vw', border: 'none', background: '#fff' } : { height: 'calc(75vh - 2rem)' }}
-                                                                title={selectedMaterial.material_name}
-                                                            />
+                                                        <div
+                                                            style={{
+                                                                position: isFullScreen ? 'fixed' : 'relative',
+                                                                top: isFullScreen ? 0 : undefined,
+                                                                left: isFullScreen ? 0 : undefined,
+                                                                width: isFullScreen ? '100vw' : '100%',
+                                                                height: isFullScreen ? '100vh' : '80vh',
+                                                                background: '#fff',
+                                                                zIndex: isFullScreen ? 9999 : 'auto',
+                                                                minHeight: '400px',
+                                                            }}
+                                                        >
+                                                            <Worker workerUrl={`https://unpkg.com/pdfjs-dist@3.11.174/build/pdf.worker.min.js`}>
+                                                                <Viewer
+                                                                    fileUrl={selectedMaterial.file}
+                                                                    plugins={[toolbarPluginInstance]}
+                                                                    renderToolbar={(ToolbarSlot) => (
+                                                                        <div style={{ display: 'flex', gap: 8, padding: 8, borderBottom: '1px solid #eee', background: '#fafafa' }}>
+                                                                            <ToolbarSlot.ToggleSidebarButton />
+                                                                            <ToolbarSlot.SearchPopover />
+                                                                            <ToolbarSlot.SwitchTheme />
+                                                                            <ToolbarSlot.ZoomOutButton />
+                                                                            <ToolbarSlot.ZoomPopover />
+                                                                            <ToolbarSlot.ZoomInButton />
+                                                                            <ToolbarSlot.GoToPreviousPage />
+                                                                            <ToolbarSlot.CurrentPageInput />
+                                                                            <ToolbarSlot.NumberOfPages />
+                                                                            <ToolbarSlot.GoToNextPage />
+                                                                            <ToolbarSlot.EnterFullScreen />
+                                                                            <ToolbarSlot.ShowProperties />
+                                                                            <ToolbarSlot.MoreActionsPopover />
+                                                                            {/* No Open, Download, or Print buttons */}
+                                                                        </div>
+                                                                    )}
+                                                                />
+                                                            </Worker>
                                                         </div>
                                                     ) : (
                                                         <div className="w-full h-full">
@@ -1057,31 +1136,55 @@ const MyCourses = () => {
                                                     )}
                                                 </div>
                                             ) : (
-                                                <div className="flex flex-col items-center justify-center h-64 bg-white rounded-lg border-2 border-dashed border-gray-300">
-                                                    <div className="bg-gray-100 rounded-full p-4 mb-4">
-                                                        <svg
-                                                            className="w-12 h-12 text-gray-400"
-                                                            fill="none"
-                                                            stroke="currentColor"
-                                                            viewBox="0 0 24 24"
-                                                        >
-                                                            <path
-                                                                strokeLinecap="round"
-                                                                strokeLinejoin="round"
-                                                                strokeWidth={1.5}
-                                                                d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-                                                            />
-                                                        </svg>
+                                                materials.length > 0 ? (
+                                                    <div className="grid grid-cols-1 gap-6 max-w-4xl mx-auto">
+                                                        {materials.map((material, idx) => (
+                                                            <div
+                                                                key={material.id}
+                                                                className="cursor-pointer bg-gradient-to-r from-[#1e3c72] to-[#2a5298] hover:from-[#2a5298] hover:to-[#1e3c72] text-white rounded-lg p-6 shadow-lg transition-all duration-300 transform hover:scale-[1.02]"
+                                                                onClick={() => {
+                                                                    setSelectedMaterial(material);
+                                                                    setCurrentMaterialIndex(idx);
+                                                                    setIsFullScreen(true);
+                                                                }}
+                                                            >
+                                                                <div className="flex items-center space-x-4">
+                                                                    <div className="flex-shrink-0">
+                                                                        {getMaterialIcon(material)}
+                                                                    </div>
+                                                                    <div className="flex-grow">
+                                                                        <h3 className="text-xl font-semibold">{material.material_name}</h3>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        ))}
                                                     </div>
-                                                    <h3 className="text-xl font-semibold text-gray-700 mb-2">No Materials Available</h3>
-                                                    <p className="text-gray-500 text-center max-w-md">
-                                                        There are currently no learning materials available for this topic.
-                                                    </p>
-                                                </div>
+                                                ) : (
+                                                    <div className="flex flex-col items-center justify-center h-64 bg-white rounded-lg border-2 border-dashed border-gray-300">
+                                                        <div className="bg-gray-100 rounded-full p-4 mb-4">
+                                                            <svg
+                                                                className="w-12 h-12 text-gray-400"
+                                                                fill="none"
+                                                                stroke="currentColor"
+                                                                viewBox="0 0 24 24"
+                                                            >
+                                                                <path
+                                                                    strokeLinecap="round"
+                                                                    strokeLinejoin="round"
+                                                                    strokeWidth={1.5}
+                                                                    d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                                                                />
+                                                            </svg>
+                                                        </div>
+                                                        <h3 className="text-xl font-semibold text-gray-700 mb-2">No Materials Available</h3>
+                                                        <p className="text-gray-500 text-center max-w-md">
+                                                            There are currently no learning materials available for this topic.
+                                                        </p>
+                                                    </div>
+                                                )
                                             )}
-
                                             {/* Navigation Buttons with consistent styling */}
-                                            {materials.length > 1 && (
+                                            {selectedMaterial && materials.length > 1 && (
                                                 <div className="mt-4 flex justify-between">
                                                     <button
                                                         onClick={() => {
@@ -1294,8 +1397,12 @@ const MyCourses = () => {
                                                                     </div>
                                                                     <button
                                                                         onClick={() => {
-                                                                            // Add functionality to view submission details
-                                                                            console.log('View submission:', submissions[selectedAssignment.id]);
+                                                                            const fileUrl = submissions[selectedAssignment.id]?.file;
+                                                                            if (fileUrl) {
+                                                                                setViewSubmissionFile(fileUrl);
+                                                                            } else {
+                                                                                toast.error('No submission file found');
+                                                                            }
                                                                         }}
                                                                         className="w-full mt-4 px-4 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors duration-200 flex items-center justify-center"
                                                                     >
@@ -1426,6 +1533,34 @@ const MyCourses = () => {
                         setActiveTab('assignments');
                     }}
                 />
+            )}
+
+            {/* View Submission Modal */}
+            {viewSubmissionFile && (
+                <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50">
+                    <div className="bg-white rounded-lg shadow-lg p-6 max-w-2xl w-full relative">
+                        <button
+                            onClick={() => setViewSubmissionFile(null)}
+                            className="absolute top-2 right-2 text-gray-500 hover:text-gray-700"
+                        >
+                            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                        </button>
+                        <div className="w-full h-[70vh] flex items-center justify-center">
+                            {console.log('Submission file URL:', viewSubmissionFile)}
+                            {viewSubmissionFile ? (
+                                viewSubmissionFile.toLowerCase().endsWith('.pdf') ? (
+                                    <iframe src={viewSubmissionFile} className="w-full h-full" title="Submission" />
+                                ) : (
+                                    <img src={viewSubmissionFile} alt="Submission" className="max-w-full max-h-full mx-auto" />
+                                )
+                            ) : (
+                                <span className="text-gray-500">No submission file found or file type not supported.</span>
+                            )}
+                        </div>
+                    </div>
+                </div>
             )}
 
             {/* Add fullscreen CSS for .fullscreen class */}

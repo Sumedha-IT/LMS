@@ -4,7 +4,7 @@ import {
     Box, Button, Card, CardContent, Typography, Table, TableBody, TableCell,
     TableContainer, TableHead, TableRow, Paper, CircularProgress, Skeleton,
     Alert, Select, MenuItem, FormControl, Grid, Dialog, DialogTitle,
-    DialogContent, DialogActions, IconButton
+    DialogContent, DialogActions, IconButton, Tooltip
 } from '@mui/material';
 import { format, isSameDay, isWeekend } from 'date-fns';
 import { motion } from 'framer-motion';
@@ -13,6 +13,8 @@ import { toast } from 'react-toastify';
 import { useLocation } from 'react-router-dom';
 import { DateCalendar, LocalizationProvider, PickersDay } from '@mui/x-date-pickers';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
+import axios from 'axios';
+import sha256 from 'js-sha256';
 
 export default function StudentAttendance() {
     const [attendanceStatus, setAttendanceStatus] = useState(null);
@@ -27,8 +29,22 @@ export default function StudentAttendance() {
     const location = useLocation();
     const [deviceErrorDialog, setDeviceErrorDialog] = useState({
         open: false,
-        message: ''
+        message: '',
+        title: ''
     });
+
+    // Function to generate a unique and stable device fingerprint (works on HTTP)
+    const generateDeviceFingerprint = () => {
+        const deviceString = [
+            navigator.userAgent,
+            navigator.platform,
+            window.screen.width,
+            window.screen.height,
+            window.screen.colorDepth
+        ].join('::');
+        // Use js-sha256 for hashing (works on HTTP and HTTPS)
+        return sha256(deviceString);
+    };
 
     // Function to check if a date is present in the attendance records
     const isDatePresent = (date) => {
@@ -46,29 +62,22 @@ export default function StudentAttendance() {
         });
     };
 
-    // Function to check if a date is a holiday (weekend or from database)
-    const isDateHoliday = (date) => {
-        // Check if it's a weekend (Saturday or Sunday)
-        if (isWeekend(date)) {
-            return true;
-        }
-
-        // Check against the holidays array from database
-        const isHoliday = holidays.some(holiday => {
+    // Returns the holiday object if the date is a holiday from the holidays array,
+    // or a special object for weekends (Saturday/Sunday)
+    const getHolidayForDate = (date) => {
+        const found = holidays.find(holiday => {
             try {
-                const holidayDate = new Date(holiday.start);
-                const isSame = isSameDay(holidayDate, date);
-                if (isSame) {
-                    console.log('Found holiday match:', holiday, 'for date:', date);
-                }
-                return isSame;
-            } catch (error) {
-                console.error('Error checking holiday date:', error, holiday);
+                return isSameDay(new Date(holiday.start), date);
+            } catch {
                 return false;
             }
         });
-
-        return isHoliday;
+        if (found) return found;
+        if (isWeekend(date)) {
+            // Optionally, you can use 'Saturday Holiday'/'Sunday Holiday' here
+            return { title: 'Weekend Holiday' };
+        }
+        return null;
     };
 
     // Custom day component for the calendar
@@ -76,13 +85,15 @@ export default function StudentAttendance() {
         const { day, ...other } = props;
         const isPresent = isDatePresent(day);
         const isAbsent = isDateAbsent(day);
-        const isHoliday = isDateHoliday(day);
+        const holidayObj = getHolidayForDate(day);
+        const isHoliday = !!holidayObj;
 
-        if (isHoliday) {
-            console.log('Rendering holiday for date:', day);
+        let holidayReason = '';
+        if (holidayObj) {
+            holidayReason = holidayObj.title || holidayObj.description || 'Holiday';
         }
 
-        return (
+        const dayNode = (
             <PickersDay
                 {...other}
                 day={day}
@@ -131,6 +142,49 @@ export default function StudentAttendance() {
                 }}
             />
         );
+        if (isHoliday) {
+            return (
+                <Tooltip
+                    title={
+                        <span style={{
+                            fontSize: '1.1rem',
+                            fontWeight: 700,
+                            color: '#fff',
+                            display: 'inline-block',
+                            padding: 0
+                        }}>{holidayReason}</span>
+                    }
+                    arrow
+                    PopperProps={{
+                        modifiers: [
+                            {
+                                name: 'offset',
+                                options: {
+                                    offset: [0, 8],
+                                },
+                            },
+                        ],
+                        sx: {
+                            '& .MuiTooltip-tooltip': {
+                                background: 'linear-gradient(270deg, #0f1f3d 0%, #1e3c72 100%)',
+                                color: '#fff',
+                                fontWeight: 700,
+                                fontSize: '1.1rem',
+                                borderRadius: '8px',
+                                boxShadow: '0 4px 16px 0 rgba(30,60,114,0.18)',
+                                padding: '10px 16px',
+                            },
+                            '& .MuiTooltip-arrow': {
+                                color: '#1e3c72',
+                            },
+                        },
+                    }}
+                >
+                    <span>{dayNode}</span>
+                </Tooltip>
+            );
+        }
+        return dayNode;
     };
 
     // Memoize fetch functions to prevent unnecessary re-renders
@@ -288,114 +342,53 @@ export default function StudentAttendance() {
     const handleCheckIn = async () => {
         try {
             setCheckInLoading(true);
+            
+            // Generate device fingerprint
+            const deviceFingerprint = generateDeviceFingerprint();
 
-            // Send verification request to server
-            try {
-                console.log('Sending verification request with data:', { ip_address: null });
-                const verificationResponse = await apiRequest('/verify-campus-location', {
-                    method: 'POST',
-                    body: {
-                        ip_address: null
-                    },
-                    skipCache: true
-                });
-
-                console.log('Verification response:', verificationResponse);
-
-                // Only proceed with check-in if verification was successful
-                if (verificationResponse.status !== 'success') {
-                    // Show a more prominent error message
-                    toast.error(verificationResponse.message || 'Out of the campus. Not able to check in. Please be present within campus boundaries.', {
-                        position: "top-center",
-                        autoClose: 8000,
-                        style: {
-                            background: "#f44336",
-                            color: "#fff",
-                            fontWeight: "bold",
-                            fontSize: "16px",
-                            borderRadius: "10px",
-                            boxShadow: "0 4px 12px rgba(0, 0, 0, 0.3)"
-                        }
-                    });
-                    setCheckInLoading(false);
-                    return;
-                }
-
-                const requestBody = {
-                    laptop_id: navigator.userAgent,
-                    location_verified: true
-                };
-
-                // Optimistic update - update UI before API call completes
-                const optimisticStatus = {
-                    is_checked_in: true,
-                    is_checked_out: false,
-                    check_in_time: new Date().toTimeString().split(' ')[0],
-                    check_out_time: null,
-                    can_check_in: false,
-                    check_in_deadline: '-',
-                    check_in_start: '-'
-                };
-                setAttendanceStatus(optimisticStatus);
-
-                const response = await apiRequest('/student-attendance/check-in', {
-                    method: 'POST',
-                    body: requestBody,
-                    skipCache: true
-                });
-
-                toast.success(response.message || 'Successfully checked in!', {
-                    position: "top-center",
-                    autoClose: 3000,
-                    hideProgressBar: false,
-                    closeOnClick: true,
-                    pauseOnHover: true,
-                    draggable: true,
-                    progress: undefined,
-                    style: {
-                        background: "#4caf50",
-                        color: "#fff",
-                        borderRadius: "10px",
-                        boxShadow: "0 4px 12px rgba(0, 0, 0, 0.15)"
+            // Ensure CSRF cookie is set (for Laravel Sanctum)
+            await axios.get('/sanctum/csrf-cookie', { withCredentials: true });
+            
+            const response = await axios.post('/api/student-attendance/check-in', {
+                device_fingerprint: deviceFingerprint,
+                device_info: {
+                    userAgent: navigator.userAgent,
+                    platform: navigator.platform,
+                    screen: {
+                        width: window.screen.width,
+                        height: window.screen.height
                     }
-                });
+                },
+                device_type: 'browser',
+                device_name: `${navigator.platform} - ${navigator.userAgent.split(' ')[0]}`
+            }, { withCredentials: true });
 
-                // Refresh data in background
-                Promise.all([
-                    fetchAttendanceStatus(),
-                    fetchAttendanceReport()
-                ]).catch(error => {
-                    console.error('Error refreshing data:', error);
-                });
-            } catch (error) {
-                console.error('Error during verification or check-in:', error);
-                // Revert optimistic update on error
+            if (response.data.success) {
+                toast.success('Check-in successful');
                 fetchAttendanceStatus();
-
-                // Check if it's a device mismatch error
-                if (error.response?.data?.show_dialog) {
+            } else {
+                if (response.data.show_dialog) {
                     setDeviceErrorDialog({
                         open: true,
-                        message: error.response.data.dialog_message || error.response.data.message
+                        message: response.data.dialog_message,
+                        title: response.data.dialog_title || 'Device Error'
                     });
-                    // Do NOT show a toast for this error
-                    return;
-                } else if (error.response?.status === 403 && error.response?.data?.message) {
-                    toast.error(error.response.data.message, {
-                        position: "top-center",
-                        autoClose: 5000
-                    });
-                } else {
-                    const errorMessage = error.response?.data?.message || error.message || 'Error checking in. Please try again.';
-                    toast.error(errorMessage);
                 }
+                // Always show a toast for any error
+                const errorMessage = response.data?.message || 'Check-in failed';
+                toast.error(errorMessage);
             }
         } catch (error) {
-            console.error('Unexpected error during check-in:', error);
-            // Revert optimistic update on error
-            fetchAttendanceStatus();
-
-            const errorMessage = error.response?.data?.message || error.message || 'Error checking in. Please try again.';
+            const errorData = error.response?.data;
+            if (errorData?.show_dialog) {
+                setDeviceErrorDialog({
+                    open: true,
+                    message: errorData.dialog_message,
+                    title: errorData.dialog_title || 'Device Error'
+                });
+            }
+            // Always show a toast for any error
+            const errorMessage = errorData?.message || error.message || 'Check-in failed';
             toast.error(errorMessage);
         } finally {
             setCheckInLoading(false);
@@ -488,7 +481,7 @@ export default function StudentAttendance() {
         <Box sx={{ p: 4, maxWidth: '1200px', margin: '0 auto' }}>
             {/* <Typography variant="h4" sx={{ mb: 4, fontWeight: 600, color: '#1a237e' }}>
                 Student Attendance
-            </Typography> */}
+            </Typographya> */}
 
             {redirectMessage && (
                 <Alert
@@ -502,7 +495,7 @@ export default function StudentAttendance() {
             {/* Device Error Dialog */}
             <Dialog
                 open={deviceErrorDialog.open}
-                onClose={() => setDeviceErrorDialog({ open: false, message: '' })}
+                onClose={() => setDeviceErrorDialog({ open: false, message: '', title: '' })}
                 PaperProps={{
                     sx: {
                         borderRadius: 2,
@@ -511,17 +504,17 @@ export default function StudentAttendance() {
                     }
                 }}
             >
-                <DialogTitle sx={{ 
-                    display: 'flex', 
-                    justifyContent: 'space-between', 
+                <DialogTitle sx={{
+                    display: 'flex',
+                    justifyContent: 'space-between',
                     alignItems: 'center',
                     bgcolor: '#f44336',
                     color: 'white',
                     py: 2
                 }}>
-                    Device Mismatch
+                    {deviceErrorDialog.title || 'Device Error'}
                     <IconButton
-                        onClick={() => setDeviceErrorDialog({ open: false, message: '' })}
+                        onClick={() => setDeviceErrorDialog({ open: false, message: '', title: '' })}
                         sx={{ color: 'white' }}
                     >
                         <X size={20} />
@@ -529,12 +522,12 @@ export default function StudentAttendance() {
                 </DialogTitle>
                 <DialogContent sx={{ py: 3 }}>
                     <Typography variant="body1" sx={{ color: '#333', fontWeight: 500 }}>
-                        {deviceErrorDialog.message}  
+                        {deviceErrorDialog.message}
                     </Typography>
                 </DialogContent>
                 <DialogActions sx={{ px: 3, pb: 2 }}>
                     <Button
-                        onClick={() => setDeviceErrorDialog({ open: false, message: '' })}
+                        onClick={() => setDeviceErrorDialog({ open: false, message: '', title: '' })}
                         variant="contained"
                         sx={{
                             bgcolor: '#f44336',
@@ -557,7 +550,7 @@ export default function StudentAttendance() {
                 <Card sx={{
                     mb: 4,
                     borderRadius: 4,
-                    background: 'linear-gradient(135deg, #1e3c72 0%, #2a5298 100%)',
+                    background: 'linear-gradient(135deg, #0f1f3d 0%, #1e3c72 100%)',
                     boxShadow: '0 4px 24px 0 rgba(30,60,114,0.10)',
                 }}>
                     <CardContent>
@@ -717,137 +710,101 @@ export default function StudentAttendance() {
                         </Box>
 
                         {/* Calendar View */}
-                        <Box sx={{ mb: 4, display: 'flex', justifyContent: 'center' }}>
-                            <Paper sx={{
-                                p: 3,
-                                borderRadius: 2,
-                                boxShadow: '0 4px 8px rgba(0, 0, 0, 0.08)',
-                                width: 'fit-content',
-                                overflow: 'hidden',
-                                border: '1px solid rgba(240, 58, 23, 0.2)'
+                        <Box sx={{ mb: 4, width: '100%', bgcolor: '#f6f8fa', borderRadius: 3, p: { xs: 1, sm: 2 }, boxShadow: '0 1px 4px rgba(30,60,114,0.04)' }}>
+                            <Box sx={{
+                                mb: 2,
+                                display: 'flex',
+                                flexDirection: 'column',
+                                alignItems: 'center',
+                                width: '100%'
                             }}>
-                                <Box sx={{
-                                    mb: 2,
-                                    display: 'flex',
-                                    flexDirection: 'column',
-                                    alignItems: 'center'
-                                }}>
-                                    <Typography
-                                        variant="h6"
-                                        sx={{
-                                            mb: 1,
-                                            color: '#1a237e',
-                                            fontWeight: 500,
-                                            textAlign: 'center'
-                                        }}
-                                    >
-                                        Attendance Calendar
-                                    </Typography>
+                                <Typography
+                                    variant="h6"
+                                    sx={{
+                                        mb: 1,
+                                        color: '#1a237e',
+                                        fontWeight: 500,
+                                        textAlign: 'center'
+                                    }}
+                                >
+                                    Attendance Calendar
+                                </Typography>
 
-                                    {/* Legend with improved visuals */}
-                                    <Box sx={{
-                                        display: 'flex',
-                                        flexWrap: 'wrap',
-                                        gap: 2,
-                                        alignItems: 'center',
-                                        justifyContent: 'center',
-                                        p: 1.5,
-                                        borderRadius: 1,
-                                        bgcolor: 'rgba(0, 0, 0, 0.02)'
-                                    }}>
-                                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                                            <Box sx={{
-                                                width: 16,
-                                                height: 16,
-                                                borderRadius: '4px',
-                                                bgcolor: 'rgba(76, 175, 80, 0.2)',
-                                                border: '1px solid #4caf50',
-                                                display: 'flex',
-                                                alignItems: 'center',
-                                                justifyContent: 'center'
-                                            }}>
-                                                <Box sx={{
-                                                    width: 6,
-                                                    height: 6,
-                                                    borderRadius: '50%',
-                                                    bgcolor: '#4caf50'
-                                                }} />
-                                            </Box>
-                                            <Typography variant="body2" fontWeight={500}>Present</Typography>
-                                        </Box>
-                                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                                            <Box sx={{
-                                                width: 16,
-                                                height: 16,
-                                                borderRadius: '4px',
-                                                bgcolor: 'rgba(244, 67, 54, 0.2)',
-                                                border: '1px solid #f44336',
-                                                display: 'flex',
-                                                alignItems: 'center',
-                                                justifyContent: 'center'
-                                            }}>
-                                                <Box sx={{
-                                                    width: 6,
-                                                    height: 6,
-                                                    borderRadius: '50%',
-                                                    bgcolor: '#f44336'
-                                                }} />
-                                            </Box>
-                                            <Typography variant="body2" fontWeight={500}>Absent</Typography>
-                                        </Box>
-                                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                                            <Box sx={{
-                                                width: 16,
-                                                height: 16,
-                                                borderRadius: '4px',
-                                                background: 'linear-gradient(135deg, rgba(25, 118, 210, 0.1) 0%, rgba(66, 165, 245, 0.2) 100%)',
-                                                border: '1px solid #1976d2',
-                                                display: 'flex',
-                                                alignItems: 'center',
-                                                justifyContent: 'center'
-                                            }}>
-                                                <Box sx={{
-                                                    width: 6,
-                                                    height: 6,
-                                                    borderRadius: '50%',
-                                                    bgcolor: '#1976d2'
-                                                }} />
-                                            </Box>
-                                            <Typography variant="body2" fontWeight={500}>Holiday</Typography>
-                                        </Box>
+                                {/* Legend with improved visuals */}
+                                <Box sx={{
+                                    display: 'flex',
+                                    flexWrap: 'wrap',
+                                    gap: 2,
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    p: 1.5,
+                                    borderRadius: 2,
+                                    bgcolor: 'transparent',
+                                }}>
+                                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, bgcolor: 'rgba(76,175,80,0.12)', borderRadius: 99, px: 1.5, py: 0.5 }}>
+                                        <Box sx={{ width: 10, height: 10, borderRadius: '50%', bgcolor: '#4caf50', mr: 0.5 }} />
+                                        <Typography variant="body2" fontWeight={600} color="#388e3c">Present</Typography>
+                                    </Box>
+                                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, bgcolor: 'rgba(244,67,54,0.12)', borderRadius: 99, px: 1.5, py: 0.5 }}>
+                                        <Box sx={{ width: 10, height: 10, borderRadius: '50%', bgcolor: '#f44336', mr: 0.5 }} />
+                                        <Typography variant="body2" fontWeight={600} color="#d32f2f">Absent</Typography>
+                                    </Box>
+                                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, bgcolor: 'rgba(25,118,210,0.10)', borderRadius: 99, px: 1.5, py: 0.5 }}>
+                                        <Box sx={{ width: 10, height: 10, borderRadius: '50%', bgcolor: '#1976d2', mr: 0.5 }} />
+                                        <Typography variant="body2" fontWeight={600} color="#1976d2">Holiday</Typography>
                                     </Box>
                                 </Box>
-                                <LocalizationProvider dateAdapter={AdapterDateFns}>
-                                    <DateCalendar
-                                        value={selectedDate}
-                                        onChange={(newDate) => {
-                                            setSelectedDate(newDate);
-                                            // Fetch attendance for the selected date
-                                            fetchAttendanceReport();
-                                        }}
-                                        slots={{
-                                            day: CustomDay
-                                        }}
-                                        sx={{
-                                            '& .MuiPickersDay-root': {
-                                                fontWeight: 500,
-                                                borderRadius: '8px',
-                                                transition: 'all 0.2s ease',
+                            </Box>
+                            <LocalizationProvider dateAdapter={AdapterDateFns}>
+                                <DateCalendar
+                                    value={selectedDate}
+                                    onChange={(newDate) => {
+                                        setSelectedDate(newDate);
+                                        fetchAttendanceReport();
+                                    }}
+                                    slots={{
+                                        day: CustomDay
+                                    }}
+                                    sx={{
+                                        width: '100%',
+                                        minWidth: 0,
+                                        maxWidth: '100%',
+                                        '& .MuiPickersDay-root': {
+                                            fontWeight: 800,
+                                            fontSize: '1.15rem',
+                                            borderRadius: '8px',
+                                            transition: 'all 0.2s ease',
+                                            border: '2px solid #e0e7ef',
+                                            boxSizing: 'border-box',
+                                            backgroundClip: 'padding-box',
+                                            '&:hover': {
+                                                boxShadow: '0 0 0 2px #1976d233',
+                                                borderColor: '#1976d2',
+                                                backgroundColor: 'rgba(25, 118, 210, 0.08)',
                                             },
-                                            '& .MuiDayCalendar-header': {
-                                                '& .MuiTypography-root': {
-                                                    fontWeight: 600,
-                                                    color: '#1a237e'
-                                                }
+                                            '&.Mui-selected': {
+                                                border: '3px solid #F03A17',
+                                                backgroundColor: '#F03A17 !important',
+                                                color: '#fff',
+                                                fontWeight: 900,
+                                                boxShadow: '0 0 0 2px #F03A1744',
                                             },
-                                            '& .MuiPickersCalendarHeader-label': {
-                                                fontWeight: 600,
-                                                color: '#F03A17'
+                                        },
+                                        '& .MuiDayCalendar-header': {
+                                            '& .MuiTypography-root': {
+                                                fontWeight: 900,
+                                                fontSize: '1.1rem',
+                                                color: '#1a237e'
                                             }
-                                        }}
-                                    />
-                                </LocalizationProvider>
-                            </Paper>
+                                        },
+                                        '& .MuiPickersCalendarHeader-label': {
+                                            fontWeight: 900,
+                                            fontSize: '1.35rem',
+                                            color: '#F03A17'
+                                        }
+                                    }}
+                                />
+                            </LocalizationProvider>
                         </Box>
                     </CardContent>
                 </Card>

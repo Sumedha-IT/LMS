@@ -130,7 +130,7 @@ class TeachingMaterialController extends Controller
         }
 
         // Store the file
-        $path = $request->file('file')->store('uploads');
+        $path = $request->file('file')->store('uploads', 'public');
 
         // Create new submission
         $submission = TeachingMaterialStatus::create([
@@ -177,9 +177,16 @@ class TeachingMaterialController extends Controller
 
     public function getByTopic($topic_id)
     {
+        $batch_id = request()->query('batch_id');
         $materials = TeachingMaterial::where('topic_id', $topic_id)
             ->orderBy('sort', 'asc')
             ->get();
+
+        \Log::info('getByTopic called', [
+            'topic_id' => $topic_id,
+            'batch_id' => $batch_id,
+            'materials_count' => $materials->count(),
+        ]);
 
         if ($materials->isEmpty()) {
             return response()->json(['message' => 'No materials found for this topic.'], 200);
@@ -260,7 +267,12 @@ class TeachingMaterialController extends Controller
         ]);
 
         if ($submission) {
-            return response()->json(['submission' => $submission]);
+            return response()->json([
+                'submission' => [
+                    ...$submission->toArray(),
+                    'file' => $submission->file ? url('storage/' . $submission->file) : null,
+                ]
+            ]);
         } else {
             return response()->json(['message' => 'No submission found.'], 404);
         }
