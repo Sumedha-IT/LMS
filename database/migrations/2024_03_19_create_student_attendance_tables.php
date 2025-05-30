@@ -11,8 +11,6 @@ return new class extends Migration
         Schema::create('student_attendances', function (Blueprint $table) {
             $table->id();
             $table->foreignId('user_id')->constrained()->onDelete('cascade');
-            $table->string('laptop_id')->nullable();
-            $table->string('ip_address')->nullable();
             $table->dateTime('check_in_datetime');
             $table->dateTime('check_out_datetime')->nullable();
             $table->timestamps();
