@@ -5,6 +5,8 @@ import CalculateOutlinedIcon from '@mui/icons-material/CalculateOutlined';
 import { useUploadExamQuestionsMutation } from '../../store/service/user/UserService';
 import { useParams } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
+import CalculatorModal from './CalculatorModal';
+import LoadingFallback from '../DashBoard/LoadingFallback';
 
 const QuestionPanel = ({ question, onAnswer, onNext, onMarkForReview, onClearResponse, questions, getSection, isReviewMode, partIds, buttonDisable, handleReviewQuestion, activePartId }) => {
     const [selectedOption, setSelectedOption] = useState('');
@@ -12,6 +14,7 @@ const QuestionPanel = ({ question, onAnswer, onNext, onMarkForReview, onClearRes
     const [UploadExamQuestions] = useUploadExamQuestionsMutation();
     const { userId, examAttemptId, examId } = useParams();
     const [activePart, setActivePart] = useState(null);
+    const [calculatorOpen, setCalculatorOpen] = useState(false);
 
     // Effect to handle setting the active part based on partIds or activePartId
     useEffect(() => {
@@ -82,7 +85,13 @@ const QuestionPanel = ({ question, onAnswer, onNext, onMarkForReview, onClearRes
         } else {
             statusCode = 2; // Not Answered
         }
-        onNext(question?.id + 1)
+        
+        // Find current question index and get next question
+        const currentIndex = questions.findIndex(q => q.id === question?.id);
+        const nextQuestion = questions[currentIndex + 1];
+        if (nextQuestion) {
+            onNext(nextQuestion.id);
+        }
 
         const payloadData = {
             data: {
@@ -200,43 +209,18 @@ const QuestionPanel = ({ question, onAnswer, onNext, onMarkForReview, onClearRes
 
     return (
         <>
-            {loading ? <Box>
+            {loading ? (
                 <Box sx={{
-                    display: 'flex', justifyContent: 'center', alignItems: 'center', height: `calc(100vh - 60px)`
+                    display: 'flex',
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                    height: `calc(100vh - 60px)`
                 }}>
-                    <CircularProgress />
+                    <LoadingFallback />
                 </Box>
-            </Box> :
+            ) : (
                 <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', }} >
                     <Box>
-                        <Box sx={{ bgcolor: '#d5d5d599', p: 1, mb: 3, display: 'flex', alignItems: "center", justifyContent: 'space-between' }}>
-                            <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                                <Typography variant="h8" sx={{ fontWeight: 'bold', fontSize: { xs: '12px', sm: '13px', md: '14px', xl: '16px' } }}>SECTIONS: </Typography>
-                                {partIds?.map((partId, index) => (
-
-                                    <Box
-                                        key={index}
-                                        onClick={() => handlePartClick(partId)}
-                                        sx={{
-                                            fontSize: { xs: '9px', sm: '10px', md: '12px', xl: '14px' },
-                                            bgcolor: activePart === partId ? '#f97316' : "#4dc4ff",
-                                            color: activePart === partId ? 'white' : 'black',
-                                            p: 1,
-                                            ml: 2,
-                                            borderRadius: 2,
-                                            cursor: 'pointer',
-                                            '&:hover': {
-                                                bgcolor: activePart === partId ? '#f97316' : '#76c7ff'
-                                            }
-                                        }}
-                                    >
-                                         {partId}
-                                    </Box>
-                                ))}
-                            </Box>
-                            <Box><RefreshIcon onClick={handleRefresh} sx={{ fontSize: '30px', cursor: 'pointer' }} /> <CalculateOutlinedIcon sx={{ fontSize: '30px', cursor: 'pointer' }} /></Box>
-                        </Box>
-
                         <Box sx={{ p: 2, height: 'calc(100vh - 289px)', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', overflow: 'auto' }}>
                             <FormControl component="fieldset" sx={{ borderBottom: 2, borderColor: "#c0bfbf", pb: 4 }}>
                                 <RadioGroup value={String(selectedOption)} onChange={handleOptionChange}>
@@ -286,7 +270,11 @@ const QuestionPanel = ({ question, onAnswer, onNext, onMarkForReview, onClearRes
                                             </Box>
                                         </Box>
                                     )}
-                                    <Typography sx={{ fontSize: { xs: '16px', md: '18px', lg: '19px' }, mb: 3 }}>  {<div dangerouslySetInnerHTML={{ __html: question?.question }} />}</Typography>
+                                    <Typography 
+                                        component="div"
+                                        sx={{ fontSize: { xs: '16px', md: '18px', lg: '19px' }, mb: 3 }}
+                                        dangerouslySetInnerHTML={{ __html: question?.question }}
+                                    />
                                     {question?.meta.map((option, index) => (
                                         <FormControlLabel
                                             key={index}
@@ -343,6 +331,26 @@ const QuestionPanel = ({ question, onAnswer, onNext, onMarkForReview, onClearRes
                     </Box>
 
                     <Box sx={{ display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap', gap: 1, p: 2 }}>
+                        {/* Calculator Button - moved to the left for better visibility */}
+                        {!isReviewMode && (
+                            <Button
+                                variant="outlined"
+                                sx={{
+                                    color: '#f97316',
+                                    borderColor: '#f97316',
+                                    fontSize: '12px',
+                                    borderRadius: '20px',
+                                    px: 3,
+                                    '&:hover': { backgroundColor: '#f97316', color: '#fff' },
+                                    mr: 2
+                                }}
+                                onClick={() => setCalculatorOpen(true)}
+                            >
+                                <CalculateOutlinedIcon />
+                            </Button>
+                        )}
+                        <CalculatorModal open={calculatorOpen} onClose={() => setCalculatorOpen(false)} />
+                        <Box sx={{ display: 'flex', flex: 1, justifyContent: 'space-between', gap: 1 }}>
                         {isReviewMode ? (
                             <>
                                 <Button
@@ -356,29 +364,57 @@ const QuestionPanel = ({ question, onAnswer, onNext, onMarkForReview, onClearRes
                                         mr: 5,
                                         '&:hover': { backgroundColor: '#f97316', color: '#fff' },
                                     }}
-                                    onClick={() => onNext(question?.id - 1)}
-                                    disabled={question?.id === questions[0]?.id}  // Disable for the first question
+                                    onClick={() => {
+                                        const currentIndex = questions.findIndex(q => q.id === question.id);
+                                        if (currentIndex > 0) {
+                                            onNext(questions[currentIndex - 1].id);
+                                        }
+                                    }}
+                                    disabled={questions.findIndex(q => q.id === question.id) === 0}
                                 >
                                     Previous
                                 </Button>
-
                                 <Button
                                     variant="outlined"
                                     sx={{
                                         color: '#f97316',
+                                        fontSize: '12px',
                                         borderColor: '#f97316',
                                         borderRadius: '20px',
                                         px: 3,
                                         '&:hover': { backgroundColor: '#f97316', color: '#fff' },
                                     }}
-                                    onClick={() => onNext(question?.id + 1)}
-                                    disabled={buttonDisable}
+                                    onClick={() => {
+                                        const currentIndex = questions.findIndex(q => q.id === question.id);
+                                        if (currentIndex < questions.length - 1) {
+                                            onNext(questions[currentIndex + 1].id);
+                                        }
+                                    }}
+                                    disabled={questions.findIndex(q => q.id === question.id) === questions.length - 1}
                                 >
                                     Next
                                 </Button>
                             </>
                         ) : (
                             <>
+                                {/* Save and Next Button */}
+                                <Button
+                                    variant="outlined"
+                                    sx={{
+                                        color: '#f97316',
+                                        fontSize: '12px',
+                                        borderColor: '#f97316',
+                                        borderRadius: '20px',
+                                        px: 3,
+                                        mr: 2,
+                                        '&:hover': { backgroundColor: '#f97316', color: '#fff' },
+                                    }}
+                                    disabled={question?.id === questions[questions.length - 1]?.id && question?.saved}
+                                    onClick={() => { handleSave({ markedForReview: false }); }}
+                                >
+                                    Save and Next
+                                </Button>
+                                {/* Mark for Review & Next Button */}
                                 {!question?.saved && <Button
                                     variant="outlined"
                                     sx={{
@@ -387,7 +423,7 @@ const QuestionPanel = ({ question, onAnswer, onNext, onMarkForReview, onClearRes
                                         borderColor: '#f97316',
                                         borderRadius: '20px',
                                         px: 3,
-                                        mr: 5,
+                                        mr: 2,
                                         '&:hover': { backgroundColor: '#f97316', color: '#fff' },
                                     }}
                                     disabled={question?.id === questions[questions.length - 1]?.id && question?.saved}
@@ -404,6 +440,7 @@ const QuestionPanel = ({ question, onAnswer, onNext, onMarkForReview, onClearRes
                                         fontSize: '12px',
                                         borderRadius: '20px',
                                         px: 3,
+                                        mr: 2,
                                         '&:hover': { backgroundColor: '#f97316', color: '#fff' },
                                     }}
                                     disabled={question?.id === questions[questions.length - 1]?.id && question?.saved}
@@ -412,42 +449,27 @@ const QuestionPanel = ({ question, onAnswer, onNext, onMarkForReview, onClearRes
                                     Clear Response
                                 </Button>
 
-                                {question?.saved ? <Button
-                                    variant="contained"
+                                <Button
+                                    variant="outlined"
                                     sx={{
-                                        bgcolor: '#f97316',
-                                        color: '#fff',
-                                        borderRadius: '20px',
+                                        color: '#f97316',
+                                        borderColor: '#f97316',
                                         fontSize: '12px',
-                                        px: 4,
-                                        '&:hover': { bgcolor: '#f97316' },
+                                        borderRadius: '20px',
+                                        px: 3,
+                                        '&:hover': { backgroundColor: '#f97316', color: '#fff' },
                                     }}
-                                    disabled={question?.id === questions[questions.length - 1]?.id}
-                                    onClick={() => onNext(question.id + 1)}
-
+                                    onClick={handleRefresh}
+                                    disabled={loading}
                                 >
-                                    Next
+                                    {loading ? <CircularProgress size={20} /> : <RefreshIcon />}
                                 </Button>
-                                    : (<Button
-                                        variant="contained"
-                                        sx={{
-                                            bgcolor: '#f97316',
-                                            color: '#fff',
-                                            borderRadius: '20px',
-                                            fontSize: '12px',
-                                            px: 4,
-                                            '&:hover': { bgcolor: '#f97316' },
-                                        }}
-                                        onClick={handleSave}
-                                        disabled={question?.id === questions[questions.length - 1]?.id && question?.saved}
-                                    >
-                                        {question?.id === questions[questions.length - 1]?.id && !question?.saved ? "Save" : "Save & Next"}
-                                    </Button>)}
                             </>
                         )}
+                        </Box>
                     </Box>
                 </Box >
-            }
+            )}
         </>
     );
 };

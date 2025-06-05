@@ -5,10 +5,7 @@ export default function Leaderboard() {
     const [leaderboardData, setLeaderboardData] = useState([]);
     const [currentStudentId, setCurrentStudentId] = useState(null);
 
-
-
     useEffect(() => {
-
         // Read cookie
         const studentIdFromCookie = Cookies.get("x_path_id");
         if (studentIdFromCookie) {
@@ -17,16 +14,15 @@ export default function Leaderboard() {
         const fetchData = async () => {
             try {
                 const response = await apiRequest("/leaderboard");
-                setLeaderboardData(response[0]);
+                // Sort the data by score in descending order
+                const sortedData = response[0].sort((a, b) => (b.Score || 0) - (a.Score || 0));
+                setLeaderboardData(sortedData);
             } catch (error) {
                 console.error("Error fetching data:", error);
             }
         }
         fetchData();
-
-
     }, []);
-
 
     // console.log(currentStudentId)n
 

@@ -13,6 +13,7 @@ import SubmissionPage from '../common/SubmissionPage';
 import QuitConfirmation from '../common/QuitConfirmation';
 import { useDispatch, useSelector } from 'react-redux';
 import { getQuestionsData } from '../store/slices/userSlice/UserExamSlice'
+import LoadingFallback from './DashBoard/LoadingFallback';
 
 const UserExamModule = () => {
     const dispatch = useDispatch();
@@ -38,12 +39,11 @@ const UserExamModule = () => {
     const { userId, examId, examAttemptId } = useParams();
     const [getReviewExamQuestion] = useGetReviewExamQuestionMutation();
     const examDetails = JSON.parse(localStorage.getItem('examDetails'));
-
+    const [loading, setLoading] = useState(true);
 
     useEffect(() => {
         getData();
     }, [page]);
-
 
     useEffect(() => {
         if (activeQuestion) {
@@ -84,12 +84,11 @@ const UserExamModule = () => {
                 }
             } catch (e) {
                 console.error('Error fetching questions:', e);
+            } finally {
+                setLoading(false);
             }
         }
     }
-
-
-
 
     useEffect(() => {
         const handleBeforeUnload = (event) => {
@@ -267,6 +266,19 @@ const UserExamModule = () => {
     const toggleStatusPanel = (open) => () => {
         setOpenStatusPanel(open);
     };
+
+    if (loading) {
+        return (
+            <Box sx={{
+                display: 'flex',
+                justifyContent: 'center',
+                alignItems: 'center',
+                height: `calc(100vh - 60px)`
+            }}>
+                <LoadingFallback />
+            </Box>
+        );
+    }
 
     return (
         <>

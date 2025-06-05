@@ -14,7 +14,7 @@ class StudentExamResource extends JsonResource
      */
     public function toArray(Request $request): array
     {
-     
+        $totalQuestions = $this->examQuestions()->count();
         return [
             'id' =>$this->id,
             'title' => $this->title,
@@ -35,6 +35,7 @@ class StudentExamResource extends JsonResource
             'status' =>$this->status ?? null,
             'totalMarksObtained' => $this->totalMarksObtained ?? 0,
             'attemptId' => $this->attemptId ?? null,
+            'totalQuestions' => $totalQuestions,
         ];
     }
 }

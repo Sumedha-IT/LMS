@@ -27,12 +27,18 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         DatePicker::configureUsing(function (DatePicker $datePicker) {
-            $datePicker->native(false);
-            $datePicker->displayFormat('d/m/Y');
+            $datePicker->native(false)
+                ->displayFormat('d/m/Y')
+                ->format('d/m/Y')
+                ->firstDayOfWeek(1)
+                ->closeOnDateSelection(true);
         });
         DateTimePicker::configureUsing(function (DateTimePicker $datePicker) {
-            $datePicker->native(false);
-            $datePicker->displayFormat('d/m/Y H:i');
+            $datePicker->native(false)
+                ->displayFormat('d/m/Y H:i')
+                ->format('d/m/Y H:i')
+                ->firstDayOfWeek(1)
+                ->closeOnDateSelection(true);
         });
         Filament::serving(function () {
             Filament::registerUserMenuItems([

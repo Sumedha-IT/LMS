@@ -422,22 +422,40 @@ export default function AttendanceCheckInWidget({ displayMode = 'button' }) {
         skipCache: true
       });
 
-      // Show success animation and message
-      toast.success(response.message || 'Successfully checked out!', {
-        position: "top-center",
-        autoClose: 3000,
-        hideProgressBar: false,
-        closeOnClick: true,
-        pauseOnHover: true,
-        draggable: true,
-        progress: undefined,
-        style: {
-          background: "#E53510", // App's orange color
-          color: "#fff",
-          borderRadius: "10px",
-          boxShadow: "0 4px 12px rgba(0, 0, 0, 0.15)"
-        }
-      });
+      // Show appropriate message based on attendance status
+      if (response.attendance_status === 'Present') {
+        toast.success('Successfully checked out! Your attendance has been marked as Present.', {
+          position: "top-center",
+          autoClose: 3000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+          progress: undefined,
+          style: {
+            background: "#4caf50",
+            color: "#fff",
+            borderRadius: "10px",
+            boxShadow: "0 4px 12px rgba(0, 0, 0, 0.15)"
+          }
+        });
+      } else {
+        toast.warning('Check-out successful, but your attendance has been marked as Absent due to insufficient duration (minimum 3 hours required).', {
+          position: "top-center",
+          autoClose: 5000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+          progress: undefined,
+          style: {
+            background: "#ff9800",
+            color: "#fff",
+            borderRadius: "10px",
+            boxShadow: "0 4px 12px rgba(0, 0, 0, 0.15)"
+          }
+        });
+      }
 
       // Fetch fresh data from the server
       fetchAttendanceStatus();
@@ -535,7 +553,7 @@ export default function AttendanceCheckInWidget({ displayMode = 'button' }) {
         flexDirection: 'column',
         alignItems: 'center',
         borderRadius: '20px', // Reduced border radius
-        background: 'linear-gradient(135deg, #1e3c72 0%, #2a5298 100%)',
+        background: 'linear-gradient(135deg, #0f1f3d 0%, #1e3c72 100%)',
         boxShadow: '0 2px 12px 0 rgba(30,60,114,0.10)',
         p: 0,
         border: 'none',

@@ -8,6 +8,7 @@ import CancelIcon from '@mui/icons-material/Cancel';
 import { useGetExamReportMutation, useGetExamResultMutation } from '../../store/service/user/UserService';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import LoadingFallback from '../DashBoard/LoadingFallback';
 
 const ResultComponent = ({ userId, examId, examAttemptId, handleReviewQuestion, result }) => {
     const [examResultData, setExamResultData] = useState(null);
@@ -34,15 +35,25 @@ const ResultComponent = ({ userId, examId, examAttemptId, handleReviewQuestion, 
             } else {
                 resultData = await getExamReport({ userId, examId });
             }
-            const { data, error } = resultData;
+            
             if (resultData?.data?.success === true) {
-                setExamResultData(resultData?.data?.data);
+                setExamResultData(resultData.data.data);
             } else {
-                setErrorMessage(resultData.data.message); // Handle 400 error
+                // Handle specific error cases
+                const errorMessage = resultData?.data?.message || 'Failed to load exam data';
+                if (errorMessage.includes('Exam not completed')) {
+                    setErrorMessage('The exam has not been completed yet. Please complete the exam first.');
+                } else if (errorMessage.includes('Exam not attempted')) {
+                    setErrorMessage('You have not attempted this exam yet.');
+                } else if (errorMessage.includes('Exam review will be available')) {
+                    setErrorMessage('The exam review will be available after the exam duration is completed.');
+                } else {
+                    setErrorMessage(errorMessage);
+                }
             }
         } catch (e) {
-
-            console.log(e);
+            console.error('Error fetching exam data:', e);
+            setErrorMessage('Failed to load exam data. Please try again later.');
         }
     };
 
@@ -69,7 +80,16 @@ const ResultComponent = ({ userId, examId, examAttemptId, handleReviewQuestion, 
                         Close
                     </Button>
                 </Box>
-            ) : examResultData ?
+            ) : !examResultData ? (
+                <Box sx={{
+                    display: 'flex',
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                    height: `calc(100vh - 60px)`
+                }}>
+                    <LoadingFallback />
+                </Box>
+            ) :
                 <Box sx={{ width: '100%', height: { xl: '94vh', lg: '94vh', md: '93vh', xs: '93vh' }, overflow: 'auto', mx: 'auto', px: 2.5, py: { xs: 1, md: '22px' }, bgcolor: 'white', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
                     <Box sx={{ width: '100%', maxWidth: { xs: '100%', md: '80%' }, height: '100%' }}>
 
@@ -153,7 +173,7 @@ const ResultComponent = ({ userId, examId, examAttemptId, handleReviewQuestion, 
                                 <Box key={index} sx={{ border: '1px solid #e0e0e0', mb: 2 }}>
                                     <Box sx={{ textAlign: 'center', borderBottom: '1px solid #e0e0e0', }}>
                                         <Typography variant="h7" sx={{ fontWeight: '700', color: 'gray', fontSize: { xs: 13 } }}>Section Name</Typography>
-                                        <Typography sx={{ fontSize: { md: 25, xs: 14 }, fontWeight: '600' }}>{item.partId}</Typography>
+                                        <Typography sx={{ fontSize: { md: 25, xs: 14 }, fontWeight: '600' }}>Section {index + 1}</Typography>
                                     </Box>
                                     <Box sx={{ display: 'flex', justifyContent: 'space-around', mb: 3, py: 2, px: 4, flexWrap: 'wrap', gap: '13px' }}>
 
@@ -204,11 +224,7 @@ const ResultComponent = ({ userId, examId, examAttemptId, handleReviewQuestion, 
                         </Box>
 
                     </Box>
-                </Box > : <Box sx={{
-                    display: 'flex', justifyContent: 'center', alignItems: 'center', height: `calc(100vh - 60px)`
-                }}>
-                    <CircularProgress />
-                </Box>}
+                </Box >}
         </>
     );
 };

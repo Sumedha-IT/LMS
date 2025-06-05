@@ -15,12 +15,20 @@ class UserProfileController extends Controller
     {
         $user = $request->user();
         // Add more detailed user information
-        $user->load('state'); // Load state relationship if it exists
+        $user->load(['state', 'batches']); // Load state and batches relationships
+
+        // Get the first batch for the user
+        $batch = $user->batches->first();
 
         // Return a more detailed response
         return response()->json([
             'success' => true,
-            'user' => $user,
+            'user' => array_merge($user->toArray(), [
+                'batch' => $batch ? [
+                    'id' => $batch->id,
+                    'name' => $batch->name
+                ] : null
+            ]),
             'message' => 'User profile retrieved successfully'
         ]);
     }

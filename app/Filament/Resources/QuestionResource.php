@@ -123,46 +123,174 @@ class QuestionResource extends Resource
                             ->columnSpanFull()
                             ->hidden(fn(Forms\Get $get): bool => $get('question_type') != 6),
 
-                        TableRepeater::make('questions_options')
-                            ->addActionLabel('Add New Option')
-                            ->relationship()
-                            ->headers([
-                                Header::make('option')->label('Options'),
-                                Header::make('is_correct')->label('Correct Answer'),
-                            ])
+                        Forms\Components\Section::make('Options')
                             ->schema([
-                                Forms\Components\RichEditor::make('option'),
-                                Forms\Components\Checkbox::make('is_correct')
-                                    ->label('Correct Answer')
+                                Forms\Components\Repeater::make('questions_options')
+                                    ->schema([
+                                        Forms\Components\RichEditor::make('option')
+                                            ->label('Option Text')
+                                            ->required()
+                                            ->columnSpan(2),
+                                        Forms\Components\Toggle::make('is_correct')
+                                            ->label('Mark as Correct')
+                                            ->helperText('Toggle to mark this as a correct answer')
+                                            ->columnSpan(2)
+                                            ->inline(false)
+                                            ->onIcon('heroicon-m-check-circle')
+                                            ->offIcon('heroicon-m-x-circle')
+                                            ->onColor('success')
+                                            ->offColor('danger')
+                                            ->default(false)
+                                            ->required()
+                                            ->validationAttribute('correct answer')
+                                    ])
+                                    ->columns(2)
+                                    ->defaultItems(4)
+                                    ->minItems(2)
+                                    ->maxItems(8)
+                                    ->reorderable()
+                                    ->reorderableWithButtons()
+                                    ->reorderableWithDragAndDrop()
+                                    ->hidden(fn(Forms\Get $get): bool => !in_array($get('question_type'), [1,2]))
+                                    ->validationMessages([
+                                        'min' => 'Please add at least 2 options',
+                                        'max' => 'Maximum 8 options allowed',
+                                    ])
+                                    ->afterStateUpdated(function ($state, callable $set, callable $get) {
+                                        // For single correct MCQ, ensure only one option is correct
+                                        if ($get('question_type') == 1 && is_array($state)) {
+                                            $correctCount = 0;
+                                            $lastCorrectKey = null;
+                                            
+                                            foreach ($state as $key => $option) {
+                                                if (isset($option['is_correct']) && $option['is_correct']) {
+                                                    $correctCount++;
+                                                    $lastCorrectKey = $key;
+                                                }
+                                            }
+                                            
+                                            // If more than one correct answer, keep only the last one
+                                            if ($correctCount > 1) {
+                                                foreach ($state as $key => $option) {
+                                                    if ($key !== $lastCorrectKey) {
+                                                        $set("questions_options.{$key}.is_correct", false);
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    })
+                                    ->saveRelationshipsUsing(function (Model $record, $state) {
+                                        // Validate that at least one option is marked as correct
+                                        $hasCorrectAnswer = false;
+                                        foreach ($state as $option) {
+                                            if ($option['is_correct']) {
+                                                $hasCorrectAnswer = true;
+                                                break;
+                                            }
+                                        }
+                                        
+                                        if (!$hasCorrectAnswer) {
+                                            throw new \Exception('At least one option must be marked as correct.');
+                                        }
+                                        
+                                        // Delete existing options
+                                        $record->questions_options()->delete();
+                                        
+                                        // Create new options
+                                        foreach ($state as $option) {
+                                            $record->questions_options()->create([
+                                                'option' => $option['option'],
+                                                'is_correct' => $option['is_correct'],
+                                            ]);
+                                        }
+                                    }),
                             ])
-                            ->columnSpanFull()
-                            ->reorderable()
-                            ->reorderableWithButtons()
-                            ->reorderableWithDragAndDrop()
-                            ->defaultItems(2)
-                            ->hidden(fn(Forms\Get $get): bool => !in_array($get('question_type'), [1,2])),
+                            ->collapsible()
+                            ->collapsed(),
 
-                        TableRepeater::make('questions_options')
-                            //->addActionLabel('Add New Option')
-                            ->relationship()
-                            ->headers([
-                                Header::make('option')->label('Options'),
-                                Header::make('is_correct')->label('Correct Answer'),
-                            ])
+                        Forms\Components\Section::make('True/False Options')
                             ->schema([
-                                Forms\Components\RichEditor::make('option'),
-                                Forms\Components\Checkbox::make('is_correct')
-                                    ->inlineLabel('Correct Answer')
+                                Forms\Components\Repeater::make('questions_options')
+                                    ->schema([
+                                        Forms\Components\RichEditor::make('option')
+                                            ->label('Option Text')
+                                            ->required()
+                                            ->columnSpan(2),
+                                        Forms\Components\Toggle::make('is_correct')
+                                            ->label('Mark as Correct')
+                                            ->helperText('Toggle to mark this as a correct answer')
+                                            ->columnSpan(2)
+                                            ->inline(false)
+                                            ->onIcon('heroicon-m-check-circle')
+                                            ->offIcon('heroicon-m-x-circle')
+                                            ->onColor('success')
+                                            ->offColor('danger')
+                                            ->default(false)
+                                            ->required()
+                                            ->validationAttribute('correct answer')
+                                    ])
+                                    ->columns(2)
+                                    ->defaultItems(2)
+                                    ->minItems(2)
+                                    ->maxItems(2)
+                                    ->reorderable()
+                                    ->reorderableWithButtons()
+                                    ->reorderableWithDragAndDrop()
+                                    ->hidden(fn(Forms\Get $get): bool => $get('question_type') != 5)
+                                    ->validationMessages([
+                                        'min' => 'Please add exactly 2 options for True/False questions',
+                                        'max' => 'Please add exactly 2 options for True/False questions',
+                                    ])
+                                    ->afterStateUpdated(function ($state, callable $set, callable $get) {
+                                        // For True/False, ensure exactly one option is correct
+                                        if (is_array($state)) {
+                                            $correctCount = 0;
+                                            $lastCorrectKey = null;
+                                            
+                                            foreach ($state as $key => $option) {
+                                                if (isset($option['is_correct']) && $option['is_correct']) {
+                                                    $correctCount++;
+                                                    $lastCorrectKey = $key;
+                                                }
+                                            }
+                                            
+                                            // If more than one correct answer, keep only the last one
+                                            if ($correctCount > 1) {
+                                                foreach ($state as $key => $option) {
+                                                    if ($key !== $lastCorrectKey) {
+                                                        $set("questions_options.{$key}.is_correct", false);
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    })
+                                    ->saveRelationshipsUsing(function (Model $record, $state) {
+                                        // Validate that exactly one option is marked as correct for True/False
+                                        $correctCount = 0;
+                                        foreach ($state as $option) {
+                                            if ($option['is_correct']) {
+                                                $correctCount++;
+                                            }
+                                        }
+                                        
+                                        if ($correctCount !== 1) {
+                                            throw new \Exception('True/False questions must have exactly one correct answer.');
+                                        }
+                                        
+                                        // Delete existing options
+                                        $record->questions_options()->delete();
+                                        
+                                        // Create new options
+                                        foreach ($state as $option) {
+                                            $record->questions_options()->create([
+                                                'option' => $option['option'],
+                                                'is_correct' => $option['is_correct'],
+                                            ]);
+                                        }
+                                    }),
                             ])
-                            ->columnSpanFull()
-                            ->reorderable()
-                            ->reorderableWithButtons()
-                            ->reorderableWithDragAndDrop()
-                            ->defaultItems(2)
-                            ->maxItems(2)
-                            ->minItems(2)
-                            ->hidden(fn(Forms\Get $get): bool => $get('question_type') != 5),
-
+                            ->collapsible()
+                            ->collapsed(),
 
                         Forms\Components\Section::make('Hint and Explanation')
                             ->schema([

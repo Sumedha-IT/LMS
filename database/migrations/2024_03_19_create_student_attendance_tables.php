@@ -13,6 +13,7 @@ return new class extends Migration
             $table->foreignId('user_id')->constrained()->onDelete('cascade');
             $table->dateTime('check_in_datetime');
             $table->dateTime('check_out_datetime')->nullable();
+            $table->enum('status', ['Present', 'Absent'])->default('Absent');
             $table->timestamps();
         });
 

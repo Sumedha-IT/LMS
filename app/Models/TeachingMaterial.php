@@ -43,4 +43,15 @@ class TeachingMaterial extends Model
     {
         return $this->belongsToMany(Batch::class, 'batch_teaching_materials');
     }
+
+    protected static function booted()
+    {
+        static::saving(function ($model) {
+            \Log::info('Saving TeachingMaterial', [
+                'start_submission' => $model->start_submission,
+                'stop_submission' => $model->stop_submission,
+                'attributes' => $model->getAttributes(),
+            ]);
+        });
+    }
 }

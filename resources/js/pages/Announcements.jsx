@@ -4,6 +4,7 @@ import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import { Avatar, Button, Select, MenuItem, Card, CardContent, CircularProgress, Alert, Pagination, Typography, Box } from '@mui/material';
 import { Event, School, BeachAccess, Flag, CalendarMonth } from '@mui/icons-material';
 import { apiRequest } from '../utils/api';
+import LoadingFallback from '../components/DashBoard/LoadingFallback';
 
 const Announcements = () => {
   const [announcements, setAnnouncements] = useState([]);
@@ -128,8 +129,8 @@ const Announcements = () => {
 
   if (loading) {
     return (
-      <div className="flex justify-center items-center min-h-screen">
-        <CircularProgress />
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <LoadingFallback />
       </div>
     );
   }

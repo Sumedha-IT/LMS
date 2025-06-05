@@ -3,13 +3,27 @@ import { Card, CardContent, CircularProgress, Button, Pagination, Select, MenuIt
 import { useEffect, useState } from "react";
 import Circularprogress from "./Ui/Circularprogress";
 import { apiRequest } from "../../utils/api";
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
+import Cookies from 'js-cookie';
+
+function getCookie(name) {
+  let cookies = document.cookie.split("; ");
+  for (let cookie of cookies) {
+    let [key, value] = cookie.split("=");
+    if (key === name) {
+      return decodeURIComponent(value);
+    }
+  }
+  return null;
+}
+
 export default function LearningJourney({onCloseLearning}) {
   const [journey, setJourney] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [expandedCurriculums, setExpandedCurriculums] = useState([]);
   const location = useLocation();
+  const navigate = useNavigate();
   const trimmedPath = location.pathname
   .split('/')
   .slice(0, -1)
@@ -129,14 +143,18 @@ export default function LearningJourney({onCloseLearning}) {
         <div key={cycle.id} className="mb-12 relative">
           <div 
             className="flex justify-between items-center mb-4 cursor-pointer hover:bg-gray-50 p-2 rounded-lg"
-            onClick={() => toggleCurriculum(cycle.id)}
+            onClick={() => {
+              navigate(`/administrator/1/topics/${cycle.id}`);
+            }}
           >
             <div className="flex items-center">
               <h2 className="text-xl font-semibold text-amber-500">
-                {cycle.title}
-                <span className="ml-3 text-gray-500 text-sm">
-                  ({cycle.duration}) - {cycle.days}
-                </span>
+                <a href={`${trimmedPath}my-courses?curriculum=${cycle.id}`} className="hover:text-amber-600">
+                  {cycle.title}
+                  <span className="ml-3 text-gray-500 text-sm">
+                    ({cycle.duration}) - {cycle.days}
+                  </span>
+                </a>
               </h2>
             </div>
             <div className="flex items-center gap-4">
@@ -178,7 +196,10 @@ export default function LearningJourney({onCloseLearning}) {
                       key={i}
                       className="bg-white rounded-lg border border-gray-200 p-4 flex justify-between items-center shadow-sm"
                     >
-                      <a href={`${trimmedPath}my-courses`} className="flex flex-col flex-grow">
+                      <a 
+                        href={`${trimmedPath}topics/${cycle.id}?batch_id=${getCookie("x_path_id")}&topic=${item.id}`} 
+                        className="flex flex-col flex-grow"
+                      >
                         <span className="font-medium text-gray-700 mb-2">{item.title}</span>
                       </a>
 

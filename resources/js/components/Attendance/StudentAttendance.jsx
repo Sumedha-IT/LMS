@@ -15,6 +15,7 @@ import { DateCalendar, LocalizationProvider, PickersDay } from '@mui/x-date-pick
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import axios from 'axios';
 import sha256 from 'js-sha256';
+import LoadingFallback from '../DashBoard/LoadingFallback';
 
 export default function StudentAttendance() {
     const [attendanceStatus, setAttendanceStatus] = useState(null);
@@ -345,38 +346,64 @@ export default function StudentAttendance() {
             
             // Generate device fingerprint
             const deviceFingerprint = generateDeviceFingerprint();
-
-            // Ensure CSRF cookie is set (for Laravel Sanctum)
-            await axios.get('/sanctum/csrf-cookie', { withCredentials: true });
             
-            const response = await axios.post('/api/student-attendance/check-in', {
-                device_fingerprint: deviceFingerprint,
-                device_info: {
-                    userAgent: navigator.userAgent,
-                    platform: navigator.platform,
-                    screen: {
-                        width: window.screen.width,
-                        height: window.screen.height
-                    }
+            const response = await apiRequest('/student-attendance/check-in', {
+                method: 'POST',
+                body: {
+                    device_fingerprint: deviceFingerprint,
+                    device_info: {
+                        userAgent: navigator.userAgent,
+                        platform: navigator.platform,
+                        screen: {
+                            width: window.screen.width,
+                            height: window.screen.height
+                        }
+                    },
+                    device_type: 'browser',
+                    device_name: `${navigator.platform} - ${navigator.userAgent.split(' ')[0]}`
                 },
-                device_type: 'browser',
-                device_name: `${navigator.platform} - ${navigator.userAgent.split(' ')[0]}`
-            }, { withCredentials: true });
+                skipCache: true
+            });
 
-            if (response.data.success) {
-                toast.success('Check-in successful');
+            if (response.success) {
+                toast.success(response.message || 'Successfully checked in!', {
+                    position: 'top-center',
+                    autoClose: 3000,
+                    hideProgressBar: false,
+                    closeOnClick: true,
+                    pauseOnHover: true,
+                    draggable: true,
+                    progress: undefined,
+                    style: {
+                        background: '#4caf50',
+                        color: '#fff',
+                        borderRadius: '10px',
+                        boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)'
+                    }
+                });
+
+                const today = new Date().toISOString().split('T')[0];
+                const updatedStatus = {
+                    ...attendanceStatus,
+                    is_checked_in: true,
+                    is_checked_out: false,
+                    check_in_time: new Date().toTimeString().split(' ')[0],
+                    check_out_time: null,
+                    date: today
+                };
+                setAttendanceStatus(updatedStatus);
+                localStorage.setItem('attendanceStatus', JSON.stringify(updatedStatus));
                 fetchAttendanceStatus();
             } else {
-                if (response.data.show_dialog) {
+                if (response.show_dialog) {
                     setDeviceErrorDialog({
                         open: true,
-                        message: response.data.dialog_message,
-                        title: response.data.dialog_title || 'Device Error'
+                        message: response.dialog_message,
+                        title: response.dialog_title || 'Device Error'
                     });
+                } else {
+                    toast.error(response.message);
                 }
-                // Always show a toast for any error
-                const errorMessage = response.data?.message || 'Check-in failed';
-                toast.error(errorMessage);
             }
         } catch (error) {
             const errorData = error.response?.data;
@@ -412,7 +439,12 @@ export default function StudentAttendance() {
                 skipCache: true
             });
 
-            toast.success(response.message || 'Successfully checked out!');
+            // Show appropriate message based on attendance status
+            if (response.attendance_status === 'Present') {
+                toast.success('Successfully checked out! Your attendance has been marked as Present.');
+            } else {
+                toast.warning('Check-out successful, but your attendance has been marked as Absent due to insufficient duration (minimum 3 hours required).');
+            }
 
             // Fetch fresh data from the server
             fetchAttendanceStatus();
@@ -476,6 +508,19 @@ export default function StudentAttendance() {
             </TableContainer>
         </Box>
     );
+
+    if (loading) {
+        return (
+            <Box sx={{
+                display: 'flex',
+                justifyContent: 'center',
+                alignItems: 'center',
+                minHeight: '400px'
+            }}>
+                <LoadingFallback />
+            </Box>
+        );
+    }
 
     return (
         <Box sx={{ p: 4, maxWidth: '1200px', margin: '0 auto' }}>
@@ -573,14 +618,28 @@ export default function StudentAttendance() {
                                     {attendanceStatus?.is_checked_in && attendanceStatus?.is_checked_out && (
                                         <Typography variant="body2" color="#4caf50" sx={{ display: 'flex', alignItems: 'center', gap: 1, fontWeight: 500 }}>
                                             <CheckCircle size={16} />
-                                            <span style={{ color: '#fff' }}>Checked out at {attendanceStatus.check_out_time ? format(new Date(`1970-01-01T${attendanceStatus.check_out_time}`), 'HH:mm:ss') : ''}</span>
+                                            <span style={{ color: '#fff' }}>
+                                                Checked out at {attendanceStatus.check_out_time ? format(new Date(`1970-01-01T${attendanceStatus.check_out_time}`), 'HH:mm:ss') : ''}
+                                                {attendanceStatus.duration && (
+                                                    <span style={{ marginLeft: '8px' }}>
+                                                        (Duration: {Math.floor(attendanceStatus.duration)}h {Math.round((attendanceStatus.duration % 1) * 60)}m)
+                                                    </span>
+                                                )}
+                                            </span>
                                         </Typography>
                                     )}
 
                                     {attendanceStatus?.is_checked_in && !attendanceStatus?.is_checked_out && (
                                         <Typography variant="body2" color="#ff9800" sx={{ display: 'flex', alignItems: 'center', gap: 1, fontWeight: 500 }}>
                                             <Clock size={16} />
-                                            <span style={{ color: '#fff' }}>Please remember to check out before leaving</span>
+                                            <span style={{ color: '#fff' }}>
+                                                Please remember to check out before leaving
+                                                {attendanceStatus.duration && (
+                                                    <span style={{ marginLeft: '8px' }}>
+                                                        (Current duration: {Math.floor(attendanceStatus.duration)}h {Math.round((attendanceStatus.duration % 1) * 60)}m)
+                                                    </span>
+                                                )}
+                                            </span>
                                         </Typography>
                                     )}
 
@@ -943,6 +1002,7 @@ export default function StudentAttendance() {
                                             <TableCell sx={{ fontWeight: 600 }}>Date</TableCell>
                                             <TableCell sx={{ fontWeight: 600 }}>Check In</TableCell>
                                             <TableCell sx={{ fontWeight: 600 }}>Check Out</TableCell>
+                                            <TableCell sx={{ fontWeight: 600 }}>Duration</TableCell>
                                             <TableCell sx={{ fontWeight: 600 }}>Status</TableCell>
                                         </TableRow>
                                     </TableHead>
@@ -953,7 +1013,12 @@ export default function StudentAttendance() {
                                                 <TableCell>{record.check_in || '-'}</TableCell>
                                                 <TableCell>{record.check_out || '-'}</TableCell>
                                                 <TableCell>
-                                                    {record.status === 'Complete' ? (
+                                                    {record.duration !== null && record.duration !== undefined
+                                                        ? `${Math.floor(record.duration / 60)}h ${record.duration % 60}m`
+                                                        : '-'}
+                                                </TableCell>
+                                                <TableCell>
+                                                    {record.status === 'Present' ? (
                                                         <Box sx={{
                                                             display: 'flex',
                                                             alignItems: 'center',
@@ -962,7 +1027,7 @@ export default function StudentAttendance() {
                                                         }}>
                                                             <CheckCircle size={16} />
                                                             <Typography variant="body2" sx={{ fontWeight: 500 }}>
-                                                                Complete
+                                                                Present
                                                             </Typography>
                                                         </Box>
                                                     ) : record.status === 'Incomplete' ? (

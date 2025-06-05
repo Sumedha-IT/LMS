@@ -1,7 +1,14 @@
 import React, { useEffect, useState } from 'react';
 import { Box, Button, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, Typography, CircularProgress } from '@mui/material';
-import { useGetExamStatisticMutation } from '../store/service/user/UserService';
+import { useGetExamStatisticMutation, useGetExamResultMutation } from '../store/service/user/UserService';
 import { useNavigate } from 'react-router-dom';
+import CalculatorModal from '../components/exam/CalculatorModal';
+import Snackbar from '@mui/material/Snackbar';
+import MuiAlert from '@mui/material/Alert';
+import Dialog from '@mui/material/Dialog';
+import DialogTitle from '@mui/material/DialogTitle';
+import DialogContent from '@mui/material/DialogContent';
+import DialogActions from '@mui/material/DialogActions';
 
 const tableHeaders = [
     { label: 'Section Name', accessor: 'partId', isPart: true },
@@ -16,9 +23,13 @@ const SubmissionPage = ({
     userId, examId, examAttemptId, setIsSubmission, setIsSubmit, setTimeLeft, setIsTimeOver
 }) => {
     const [getExamStatistic] = useGetExamStatisticMutation();
+    const [getExamResult, { isLoading: isSubmitting }] = useGetExamResultMutation();
     const [examStatisticData, setExamStatisticData] = useState();
     const [errorMessage, setErrorMessage] = useState(null); // For handling error messages
     const navigate = useNavigate();
+    const [calculatorOpen, setCalculatorOpen] = useState(false);
+    const [openSnackbar, setOpenSnackbar] = useState(false);
+    const [openDialog, setOpenDialog] = useState(false);
 
     useEffect(() => {
         getData();
@@ -37,14 +48,36 @@ const SubmissionPage = ({
         }
     };
 
-    const handleSubmitQuiz = () => {
-        setTimeLeft(0); // Reset countdown to 00:00
-        setIsTimeOver(true); // Mark exam as over
-        setIsSubmit(true);
-        setIsSubmission(false);
-        localStorage.setItem('isTimeOver', true); // Persist the state in localStorage
-        localStorage.removeItem('examStartTime');
-        localStorage.removeItem('timeLeft'); // Clear timeLeft from localStorage
+    const handleSubmitQuiz = async () => {
+        try {
+            // Remove beforeunload handler immediately
+            window.onbeforeunload = null;
+
+            // Call your API to submit the exam and await it
+            const result = await getExamResult({ userId, examId, examAttemptId });
+            if (result?.data?.status === 200) {
+                // Set exam as completed
+                setTimeLeft(0);
+                setIsTimeOver(true);
+                localStorage.setItem('isTimeOver', true);
+                localStorage.removeItem('examStartTime');
+                localStorage.removeItem('timeLeft');
+
+                // Show completion dialog
+                setOpenDialog(true);
+
+                // Wait for 3 seconds before closing the window
+                setTimeout(() => {
+                    window.close();
+                }, 5000);
+            } else {
+                // Show error if submission failed
+                setErrorMessage(result?.data?.message || 'Failed to submit exam.');
+            }
+        } catch (error) {
+            setErrorMessage('Error submitting exam.');
+            console.error('Error submitting exam:', error);
+        }
     };
 
     const handleQuitClick = () => {
@@ -55,12 +88,6 @@ const SubmissionPage = ({
         navigate('/user'); // Navigate back to the user page
     };
 
-    const handleClose = () => {
-        // Remove any event listeners that might show confirmation
-        window.onbeforeunload = null;
-        window.close(); // Close the window
-    };
-//style={"display:flex; justify-content:center; align-items: center;"}
     return (
         <>
             {errorMessage ? ( // Display error message if 400 error occurs
@@ -70,7 +97,7 @@ const SubmissionPage = ({
                     <Typography variant="h6" sx={{ color: '#f97316', mb: 2 }}>
                         {errorMessage}
                     </Typography>
-                    <Button variant="contained" onClick={handleClose} sx={{ bgcolor: '#f97316' }}>
+                    <Button variant="contained" onClick={handleGoBack} sx={{ bgcolor: '#f97316' }}>
                         Close
                     </Button>
                 </Box>
@@ -122,9 +149,43 @@ const SubmissionPage = ({
                 </Box>
             ) : (
                 <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: `calc(100vh - 60px)` }}>
-                    <CircularProgress />
+                    {isSubmitting ? <CircularProgress /> : <CircularProgress />}
                 </Box>
             )}
+            <Dialog
+                open={openDialog}
+                onClose={null}
+                aria-labelledby="exam-completed-dialog-title"
+                aria-describedby="exam-completed-dialog-description"
+                PaperProps={{
+                    sx: {
+                        borderRadius: 4,
+                        boxShadow: 8,
+                        background: 'rgba(255, 255, 255, 0.85)',
+                        backdropFilter: 'blur(10px)',
+                        minWidth: { xs: 280, sm: 400 },
+                        textAlign: 'center',
+                    }
+                }}
+                sx={{
+                    '& .MuiDialog-container': {
+                        background: 'linear-gradient(135deg, #f97316 0%, #6366f1 100%)',
+                        backdropFilter: 'blur(8px)',
+                    }
+                }}
+            >
+                <DialogTitle id="exam-completed-dialog-title" sx={{ fontWeight: 'bold', fontSize: 24, color: '#f97316' }}>
+                    Exam Completed Successfully!
+                </DialogTitle>
+                <DialogContent id="exam-completed-dialog-description" sx={{ fontSize: 18, color: '#333', py: 2 }}>
+                    <Typography sx={{ mb: 2 }}>
+                        Your exam has been submitted successfully.
+                    </Typography>
+                    <Typography sx={{ fontSize: 16, color: '#666' }}>
+                        This window will close automatically in 3 seconds...
+                    </Typography>
+                </DialogContent>
+            </Dialog>
         </>
     );
 };

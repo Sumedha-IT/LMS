@@ -9,26 +9,33 @@ use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use App\Models\StudentDeviceRegistration;
+use App\Services\IpVerificationService;
 
 class StudentAttendanceController extends Controller
 {
+    protected $ipVerificationService;
+
+    public function __construct(IpVerificationService $ipVerificationService)
+    {
+        $this->ipVerificationService = $ipVerificationService;
+    }
+
     public function registerDevice(Request $request)
     {
         try {
             $user = auth()->user();
             $deviceFingerprint = $request->device_fingerprint;
             $deviceInfo = $request->device_info ?? null;
-            $incomingIp = $request->ip();
-            $allowedIps = ['103.41.98.114', '183.82.3.130', '122.175.11.103']; // Updated campus IPs
 
-            // Verify IP address
-            if (!in_array($incomingIp, $allowedIps)) {
+            // Use the IP verification service
+            $ipVerification = $this->ipVerificationService->verifyIp('register device');
+            if (!$ipVerification['success']) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'You must be connected to the campus WiFi network to register a device',
+                    'message' => $ipVerification['message'],
                     'show_dialog' => true,
                     'dialog_title' => 'Campus Network Required',
-                    'dialog_message' => 'Please connect to the campus WiFi network to register your device. Your current IP: ' . $incomingIp
+                    'dialog_message' => 'Please connect to the campus WiFi network to register your device.'
                 ], 403);
             }
 
@@ -93,22 +100,16 @@ class StudentAttendanceController extends Controller
             }
 
             $deviceFingerprint = $request->device_fingerprint;
-            $incomingIp = $request->ip();
-            $allowedIps = ['103.41.98.114', '183.82.3.130', '122.175.11.103']; // Updated campus IPs
 
-            // Verify IP address
-            if (!in_array($incomingIp, $allowedIps)) {
-                \Log::warning('IP address not matching allowed IP', [
-                    'user_id' => $user->id,
-                    'incoming_ip' => $incomingIp,
-                    'allowed_ips' => $allowedIps
-                ]);
+            // Use the IP verification service
+            $ipVerification = $this->ipVerificationService->verifyIp('check in');
+            if (!$ipVerification['success']) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'You must be connected to the campus WiFi network to check in',
+                    'message' => $ipVerification['message'],
                     'show_dialog' => true,
                     'dialog_title' => 'Campus Network Required',
-                    'dialog_message' => 'Please connect to the campus WiFi network to check in. Your current IP: ' . $incomingIp
+                    'dialog_message' => 'Please connect to the campus WiFi network to check in.'
                 ], 403);
             }
 
@@ -226,154 +227,195 @@ class StudentAttendanceController extends Controller
             ], 400);
         }
 
+        // Calculate duration in hours
+        $checkInTime = Carbon::parse($attendance->check_in_datetime);
+        $checkOutTime = Carbon::now();
+        $duration = $checkOutTime->diffInHours($checkInTime);
+        
+        // Update check-out time and status based on duration
         $attendance->update([
-            'check_out_datetime' => Carbon::now()
+            'check_out_datetime' => $checkOutTime,
+            'status' => $duration >= 3 ? 'Present' : 'Absent'
         ]);
 
         return response()->json([
             'message' => 'Check-out successful',
             'data' => $attendance,
-            'status' => 'success'
+            'status' => 'success',
+            'duration' => $duration,
+            'attendance_status' => $duration >= 3 ? 'Present' : 'Absent'
         ]);
     }
 
     public function getAttendanceReport(Request $request)
     {
-        $user = Auth::user();
+        try {
+            $user = Auth::user();
 
-        // Get filter parameters
-        $filterType = $request->filter_type ?? 'all'; // 'all', 'week', 'month'
+            // Get filter parameters
+            $filterType = $request->filter_type ?? 'all'; // 'all', 'week', 'month'
 
-        // Get the user's batch
-        $userBatch = \App\Models\BatchUser::where('user_id', $user->id)->first();
+            // Get the user's batch
+            $userBatch = \App\Models\BatchUser::where('user_id', $user->id)->first();
 
-        if (!$userBatch) {
-            return response()->json([
-                'message' => 'User not assigned to any batch',
-                'status' => 'error'
-            ], 404);
-        }
-
-        // Get the batch details
-        $batch = \App\Models\Batch::find($userBatch->batch_id);
-
-        if (!$batch) {
-            return response()->json([
-                'message' => 'Batch not found',
-                'status' => 'error'
-            ], 404);
-        }
-
-        // Use batch start date as the default start date for 'all' filter
-        $batchStartDate = Carbon::parse($batch->start_date)->startOfDay();
-
-        // Determine date range based on filter type
-        $startDate = null;
-        $endDate = Carbon::now()->endOfDay();
-
-        switch ($filterType) {
-            case 'week':
-                $startDate = Carbon::now()->startOfWeek();
-                break;
-            case 'month':
-                $startDate = Carbon::now()->startOfMonth();
-                break;
-            case 'custom':
-                $startDate = $request->start_date ? Carbon::parse($request->start_date)->startOfDay() : Carbon::now()->subDays(30)->startOfDay();
-                $endDate = $request->end_date ? Carbon::parse($request->end_date)->endOfDay() : Carbon::now()->endOfDay();
-                break;
-            default:
-                // For 'all', use the batch start date
-                $startDate = $batchStartDate;
-                break;
-        }
-
-        // Ensure start date is not before batch start date
-        if ($startDate->lt($batchStartDate)) {
-            $startDate = $batchStartDate;
-        }
-
-        // Get attendance records for the user within the date range
-        $query = StudentAttendance::where('user_id', $user->id);
-
-        // Apply date range filter if not 'all'
-        if ($filterType !== 'all') {
-            $query->whereBetween('check_in_datetime', [$startDate, $endDate]);
-        }
-
-        $attendance = $query->orderBy('check_in_datetime', 'desc')->get();
-
-        // Generate a collection of all dates in the range (excluding weekends)
-        $dateRange = collect();
-        $currentDate = clone $startDate;
-
-        while ($currentDate <= $endDate) {
-            // Skip weekends (Saturday = 6, Sunday = 0)
-            $dayOfWeek = $currentDate->dayOfWeek;
-            if ($dayOfWeek !== 0 && $dayOfWeek !== 6) {
-                $dateRange->push($currentDate->format('Y-m-d'));
+            if (!$userBatch) {
+                // Return empty report instead of error for new users
+                return response()->json([
+                    'total_days' => 0,
+                    'present_days' => 0,
+                    'complete_days' => 0,
+                    'absent_days' => 0,
+                    'attendance_details' => []
+                ]);
             }
-            $currentDate->addDay();
-        }
 
-        // Create a map of dates with attendance records
-        $attendanceDates = $attendance->pluck('check_in_datetime')
-            ->map(function ($datetime) {
-                return Carbon::parse($datetime)->format('Y-m-d');
-            })
-            ->flip()
-            ->map(function ($_, $date) use ($attendance) {
-                $record = $attendance->first(function ($item) use ($date) {
-                    return Carbon::parse($item->check_in_datetime)->format('Y-m-d') === $date;
+            // Get the batch details
+            $batch = \App\Models\Batch::find($userBatch->batch_id);
+
+            if (!$batch) {
+                // Return empty report instead of error
+                return response()->json([
+                    'total_days' => 0,
+                    'present_days' => 0,
+                    'complete_days' => 0,
+                    'absent_days' => 0,
+                    'attendance_details' => []
+                ]);
+            }
+
+            // Use batch start date as the default start date for 'all' filter
+            $batchStartDate = Carbon::parse($batch->start_date)->startOfDay();
+
+            // Determine date range based on filter type
+            $startDate = null;
+            $endDate = Carbon::now()->endOfDay();
+
+            switch ($filterType) {
+                case 'week':
+                    $startDate = Carbon::now()->startOfWeek();
+                    break;
+                case 'month':
+                    $startDate = Carbon::now()->startOfMonth();
+                    break;
+                case 'custom':
+                    $startDate = $request->start_date ? Carbon::parse($request->start_date)->startOfDay() : Carbon::now()->subDays(30)->startOfDay();
+                    $endDate = $request->end_date ? Carbon::parse($request->end_date)->endOfDay() : Carbon::now()->endOfDay();
+                    break;
+                default:
+                    // For 'all', use the batch start date
+                    $startDate = $batchStartDate;
+                    break;
+            }
+
+            // Ensure start date is not before batch start date
+            if ($startDate->lt($batchStartDate)) {
+                $startDate = $batchStartDate;
+            }
+
+            // Get attendance records for the user within the date range using chunking
+            $totalDays = 0;
+            $presentDays = 0;
+            $completeDays = 0;
+            $attendanceDetails = collect();
+
+            // Process attendance records in chunks to avoid memory issues
+            StudentAttendance::where('user_id', $user->id)
+                ->when($filterType !== 'all', function($query) use ($startDate, $endDate) {
+                    return $query->whereBetween('check_in_datetime', [$startDate, $endDate]);
+                })
+                ->orderBy('check_in_datetime', 'desc')
+                ->chunk(100, function($records) use (&$totalDays, &$presentDays, &$completeDays, &$attendanceDetails) {
+                    foreach ($records as $record) {
+                        $totalDays++;
+                        $duration = null;
+                        $status = 'Absent';
+                        if ($record->check_out_datetime) {
+                            $duration = Carbon::parse($record->check_out_datetime)->diffInMinutes(Carbon::parse($record->check_in_datetime));
+                            if ($duration >= 180) {
+                                $presentDays++;
+                                $completeDays++;
+                                $status = 'Present';
+                            } else {
+                                $status = 'Absent';
+                            }
+                        }
+                        $attendanceDetails->push([
+                            'date' => $record->check_in_datetime->format('Y-m-d'),
+                            'check_in' => $record->check_in_datetime->format('H:i:s'),
+                            'check_out' => $record->check_out_datetime ? $record->check_out_datetime->format('H:i:s') : null,
+                            'duration' => $duration,
+                            'status' => $status
+                        ]);
+                    }
                 });
 
+            // If no attendance records found, return empty report
+            if ($totalDays === 0) {
+                return response()->json([
+                    'total_days' => 0,
+                    'present_days' => 0,
+                    'complete_days' => 0,
+                    'absent_days' => 0,
+                    'attendance_details' => []
+                ]);
+            }
+
+            // Generate a collection of all dates in the range (excluding weekends)
+            $dateRange = collect();
+            $currentDate = clone $startDate;
+
+            while ($currentDate <= $endDate) {
+                // Skip weekends (Saturday = 6, Sunday = 0)
+                $dayOfWeek = $currentDate->dayOfWeek;
+                if ($dayOfWeek !== 0 && $dayOfWeek !== 6) {
+                    $dateRange->push($currentDate->format('Y-m-d'));
+                }
+                $currentDate->addDay();
+            }
+
+            // Add absent days for dates without attendance records
+            $existingDates = $attendanceDetails->pluck('date')->toArray();
+            $absentDays = $dateRange->filter(function($date) use ($existingDates) {
+                return !in_array($date, $existingDates);
+            })->map(function($date) {
                 return [
                     'date' => $date,
-                    'check_in' => $record->check_in_datetime->format('H:i:s'),
-                    'check_out' => $record->check_out_datetime ? $record->check_out_datetime->format('H:i:s') : null,
-                    'status' => $record->check_out_datetime ? 'Complete' : 'Incomplete'
+                    'check_in' => null,
+                    'check_out' => null,
+                    'duration' => null,
+                    'status' => 'Absent'
                 ];
             });
 
-        // Add absent days (days without check-in records)
-        $allDaysDetails = $dateRange->map(function ($date) use ($attendanceDates) {
-            if (isset($attendanceDates[$date])) {
-                return $attendanceDates[$date];
-            }
+            // Merge attendance details with absent days
+            $allDaysDetails = $attendanceDetails->concat($absentDays)->sortByDesc('date')->values();
 
-            // Check if the date is a weekend
-            $dayDate = Carbon::parse($date);
-            $dayOfWeek = $dayDate->dayOfWeek;
-
-            // If it's a weekend, don't mark as absent
-            if ($dayOfWeek === 0 || $dayOfWeek === 6) {
-                return null;
-            }
-
-            return [
-                'date' => $date,
-                'check_in' => null,
-                'check_out' => null,
-                'status' => 'Absent'
+            $report = [
+                'total_days' => $totalDays,
+                'present_days' => $presentDays,
+                'complete_days' => $completeDays,
+                'absent_days' => $totalDays - $presentDays,
+                'attendance_details' => $allDaysDetails
             ];
-        })
-        ->filter() // Remove null values (weekends)
-        ->values();
 
-        // Calculate statistics
-        $totalDays = $allDaysDetails->count();
-        $presentDays = $allDaysDetails->where('status', '!=', 'Absent')->count();
-        $completeDays = $allDaysDetails->where('status', '==', 'Complete')->count();
+            return response()->json($report);
 
-        $report = [
-            'total_days' => $totalDays,
-            'present_days' => $presentDays,
-            'complete_days' => $completeDays,
-            'absent_days' => $totalDays - $presentDays,
-            'attendance_details' => $allDaysDetails
-        ];
-
-        return response()->json($report);
+        } catch (\Exception $e) {
+            \Log::error('Attendance report error', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+                'user_id' => Auth::id()
+            ]);
+            
+            // Return empty report instead of error
+            return response()->json([
+                'total_days' => 0,
+                'present_days' => 0,
+                'complete_days' => 0,
+                'absent_days' => 0,
+                'attendance_details' => []
+            ]);
+        }
     }
 
     public function getAdminReport(Request $request)
@@ -556,6 +598,7 @@ class StudentAttendanceController extends Controller
             'is_checked_out' => false,
             'check_in_time' => null,
             'check_out_time' => null,
+            'duration' => null,
             'can_check_in' => true,
             'check_in_deadline' => '-',
             'check_in_start' => '-'
@@ -564,9 +607,16 @@ class StudentAttendanceController extends Controller
         if ($todayAttendance) {
             $status['is_checked_in'] = true;
             $status['check_in_time'] = $todayAttendance->check_in_datetime->format('H:i:s');
+            
             if ($todayAttendance->check_out_datetime) {
                 $status['is_checked_out'] = true;
                 $status['check_out_time'] = $todayAttendance->check_out_datetime->format('H:i:s');
+                $status['duration'] = Carbon::parse($todayAttendance->check_out_datetime)
+                    ->diffInHours(Carbon::parse($todayAttendance->check_in_datetime));
+            } else {
+                // Calculate current duration if not checked out
+                $status['duration'] = Carbon::now()
+                    ->diffInHours(Carbon::parse($todayAttendance->check_in_datetime));
             }
         }
 

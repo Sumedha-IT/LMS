@@ -15,6 +15,12 @@ class BatchController extends Controller
     {
         try {
             $user = Auth::user();
+            \Log::info('BatchController@index called', [
+                'user_id' => $user ? $user->id : null,
+                'user_email' => $user ? $user->email : null,
+                'user_role_id' => $user ? $user->role_id : null,
+                'user_roles' => $user ? $user->getRoleNames() : null,
+            ]);
             $batches = $user->batches()->with('course_package')->get();
             
             return response()->json([

@@ -14,6 +14,10 @@ import './MyProfile.css';
 import { FiPlus, FiTrash2, FiEdit2 } from 'react-icons/fi';
 import { Document, Page, Text, View, StyleSheet, PDFDownloadLink } from '@react-pdf/renderer';
 import { AiOutlineFilePdf } from 'react-icons/ai';
+import DatePicker from 'react-datepicker';
+import 'react-datepicker/dist/react-datepicker.css';
+import { format, parseISO } from 'date-fns';
+import LoadingFallback from './DashBoard/LoadingFallback';
 
 // Make sure we're using the correct API URL
 const API_URL = import.meta.env.VITE_APP_API_URL || 'http://localhost:8000';
@@ -202,6 +206,7 @@ const MyProfile = () => {
   const [degreeTypes, setDegreeTypes] = useState([]);
   const [specializations, setSpecializations] = useState([]);
   const [showOtherSpecialization, setShowOtherSpecialization] = useState(false);
+  const [states, setStates] = useState([]); // Add states state
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -235,7 +240,8 @@ const MyProfile = () => {
     projects: [],
     certifications: [],
     achievements: [],
-    social_links: { linkedin: '', github: '' }
+    social_links: { linkedin: '', github: '' },
+    batch: { name: '' }
   });
   const [photoPreview, setPhotoPreview] = useState(null);
   const [deleteConfirmations, setDeleteConfirmations] = useState({});
@@ -273,12 +279,22 @@ const MyProfile = () => {
       let userData;
 
       try {
-        userData = userInfo ? JSON.parse(userInfo) : null;
-        if (!userData?.token) {
-          toast.error('Authentication required');
-          setLoading(false);
+        if (userInfo) {
+          userData = JSON.parse(userInfo);
+        } else {
+          console.error("No user info found in cookies");
           return;
         }
+
+        // Fetch states
+        const statesResponse = await axios.get(`${API_ENDPOINT}/states`, {
+          headers: {
+            'Accept': 'application/json',
+            'Authorization': `Bearer ${userData.token}`,
+          },
+          baseURL: API_URL
+        });
+        setStates(statesResponse.data.data || []);
 
         console.log('Fetching profile with token:', userData.token);
 
@@ -577,6 +593,11 @@ const MyProfile = () => {
               // Directly use the date from the date input which should be in YYYY-MM-DD format
               transformedValue = value;
               break;
+            case 'institute_name':
+            case 'location':
+              // Allow spaces in institute name and location
+              transformedValue = value;
+              break;
             default:
               transformedValue = value.toString().trim();
           }
@@ -775,7 +796,6 @@ const MyProfile = () => {
   const validateParentDetails = (data) => {
     const errors = [];
     if (!data.parent_name?.trim()) errors.push('Parent name is required');
-    if (!data.parent_email?.trim()) errors.push('Parent email is required');
     if (!data.parent_aadhar?.trim()) errors.push('Parent Aadhaar is required');
     if (!data.parent_occupation?.trim()) errors.push('Parent occupation is required');
     if (!data.residential_address?.trim()) errors.push('Residential address is required');
@@ -853,9 +873,9 @@ const MyProfile = () => {
     if (files && files[0]) {
       const file = files[0];
 
-      // Add file size validation for passport photo
-      if (name === 'passport_photo' && file.size > 20 * 1024 * 1024) { // 20MB limit
-        toast.error('Passport photo must be less than 20MB');
+      // Add file size validation for avatar and passport photo
+      if ((name === 'avatar_url' || name === 'passport_photo') && file.size > 2 * 1024 * 1024) { // 2MB limit
+        toast.error(`${name === 'avatar_url' ? 'Profile picture' : 'Passport photo'} must be less than 2MB`);
         return;
       }
 
@@ -1415,12 +1435,20 @@ const MyProfile = () => {
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Birthday<span className="text-red-500">*</span>
                 </label>
-                <input
-                  type="date"
-                  name="birthday"
-                  value={formData.birthday || ''}
-                  onChange={handleChange}
+                <DatePicker
+                  selected={formData.birthday ? parseISO(formData.birthday) : null}
+                  onChange={date => {
+                    setFormData(prev => ({
+                      ...prev,
+                      birthday: date ? format(date, 'yyyy-MM-dd') : ''
+                    }));
+                  }}
+                  dateFormat="dd/MM/yyyy"
+                  placeholderText="DD/MM/YYYY"
                   className="w-full p-2 border rounded-lg focus:ring-orange-500 focus:border-orange-500"
+                  showMonthDropdown
+                  showYearDropdown
+                  dropdownMode="select"
                   required
                 />
               </div>
@@ -1488,8 +1516,9 @@ const MyProfile = () => {
                   required
                 >
                   <option value="">Select State</option>
-                  <option value="1">State 1</option>
-                  <option value="2">State 2</option>
+                  {states.map(state => (
+                    <option key={state.id} value={state.id}>{state.name}</option>
+                  ))}
                 </select>
               </div>
               <div>
@@ -1754,7 +1783,7 @@ const MyProfile = () => {
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Parent Email<span className="text-red-500">*</span>
+                  Parent Email
                 </label>
                 <input
                   type="email"
@@ -1762,7 +1791,6 @@ const MyProfile = () => {
                   value={formData.parent_email || ''}
                   onChange={handleChange}
                   className="w-full p-2 border rounded-lg focus:ring-orange-500 focus:border-orange-500"
-                  required
                 />
               </div>
               <div>
@@ -2004,11 +2032,17 @@ const MyProfile = () => {
                       <label className="block text-sm font-medium text-gray-700 mb-2">
                         Duration From<span className="text-red-500">*</span>
                       </label>
-                      <input
-                        type="date"
-                        value={edu.duration_from || ''}
-                        onChange={(e) => handleItemChange('education', index, 'duration_from', e.target.value)}
+                      <DatePicker
+                        selected={edu.duration_from ? parseISO(edu.duration_from) : null}
+                        onChange={date => {
+                          handleItemChange('education', index, 'duration_from', date ? format(date, 'yyyy-MM-dd') : '');
+                        }}
+                        dateFormat="dd/MM/yyyy"
+                        placeholderText="DD/MM/YYYY"
                         className="w-full p-2 border rounded-lg focus:ring-orange-500 focus:border-orange-500"
+                        showMonthDropdown
+                        showYearDropdown
+                        dropdownMode="select"
                         required
                       />
                     </div>
@@ -2017,11 +2051,17 @@ const MyProfile = () => {
                       <label className="block text-sm font-medium text-gray-700 mb-2">
                         Duration To<span className="text-red-500">*</span>
                       </label>
-                      <input
-                        type="date"
-                        value={edu.duration_to || ''}
-                        onChange={(e) => handleItemChange('education', index, 'duration_to', e.target.value)}
+                      <DatePicker
+                        selected={edu.duration_to ? parseISO(edu.duration_to) : null}
+                        onChange={date => {
+                          handleItemChange('education', index, 'duration_to', date ? format(date, 'yyyy-MM-dd') : '');
+                        }}
+                        dateFormat="dd/MM/yyyy"
+                        placeholderText="DD/MM/YYYY"
                         className="w-full p-2 border rounded-lg focus:ring-orange-500 focus:border-orange-500"
+                        showMonthDropdown
+                        showYearDropdown
+                        dropdownMode="select"
                         required
                       />
                     </div>
@@ -3543,6 +3583,14 @@ const MyProfile = () => {
     });
   };
 
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <LoadingFallback />
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Delete Confirmation Dialog */}
@@ -3635,7 +3683,7 @@ const MyProfile = () => {
               <div>
                 <h1 className="text-2xl font-bold">{formData.name || 'User Name'}</h1>
                 <span className="inline-block mt-1 px-3 py-1 bg-pink-50 text-gray-700 rounded-full text-sm">
-                  {formData.designation || 'Software Engineer'}
+                  {formData.batch?.name || 'No Batch Assigned'}
                 </span>
 
                 {/* Contact Info */}

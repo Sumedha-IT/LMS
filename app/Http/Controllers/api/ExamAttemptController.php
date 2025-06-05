@@ -14,8 +14,17 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 use App\Services\ExamService;
+use App\Services\IpVerificationService;
+
 class ExamAttemptController extends Controller
 {
+    protected $ipVerificationService;
+
+    public function __construct(IpVerificationService $ipVerificationService)
+    {
+        $this->ipVerificationService = $ipVerificationService;
+    }
+
     public function startExam(Request $request){
         $data=$request->data;
         $data['id'] = $request->id;
@@ -52,7 +61,6 @@ class ExamAttemptController extends Controller
     }
 
     public function validateExamAttempt($data){
-
         $validator = Validator::make($data, [
             'id' => 'nullable|integer|exists:users,id',
             'examId' => 'required|integer|exists:exams,id',
@@ -63,6 +71,18 @@ class ExamAttemptController extends Controller
         }
         $data = $validator->validate();
 
+        // Use the IP verification service
+        $ipVerification = $this->ipVerificationService->verifyIp('take exam');
+        if (!$ipVerification['success']) {
+            return [
+                'message' => $ipVerification['message'],
+                'status' => 403,
+                'success' => false,
+                'show_dialog' => true,
+                'dialog_title' => 'Campus Network Required',
+                'dialog_message' => 'You must be connected to the campus WiFi network to take the exam. Please connect to the campus WiFi and try again.'
+            ];
+        }
         
         // Check if the user belongs to that particular exam or not.
         $data['user']= User::find($data['id']);
@@ -122,13 +142,11 @@ class ExamAttemptController extends Controller
         return response()->json(['message' => 'Exam submitted succesfully', 'data' => $examAttempLog->report, 'status' => 200, 'success' => true], 200);
     }
 
-    public function reviewExam($id,$examId,Request $request) {
-
+    public function reviewExam($id, $examId, Request $request) {
         $size = $request->get('size') == 0 ? 25 : $request->get('size');
         $pageNo = $request->get('page', 1);
         $offset = ($pageNo - 1) * $size;
         $review = filter_var($request->review, FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE);
-
 
         $data = [
             'id' => $id,
@@ -144,13 +162,41 @@ class ExamAttemptController extends Controller
         if (!empty($validator->errors()->messages())) {
             return response()->json(['message' => $validator->errors()->all()[0], 'status' => 404, 'success' => false], 404);
         }
-        $examAttempLog = ExamAttempt::where('exam_id',$examId)->where('student_id',$id)->first();
 
-        if(empty($examAttempLog))
+        // Get the exam and attempt details
+        $exam = Exam::find($examId);
+        $examAttempLog = ExamAttempt::where('exam_id', $examId)->where('student_id', $id)->first();
+
+        if(empty($examAttempLog)) {
             return response()->json(['message' => "Exam was not attempted", 'status' => 404, 'success' => false], 404);
+        }
 
-        if($examAttempLog->status != 'completed')
+        if($examAttempLog->status != 'completed') {
             return response()->json(['message' => "Kindly please submit the exam", 'status' => 404, 'success' => false], 400);
+        }
+
+        // Check if exam duration has completed
+        $currentTime = date('Y-m-d H:i:s');
+        $examEndsAt = date('Y-m-d') . ' ' . $exam->ends_at . ':00';
+        
+        if ($currentTime < $examEndsAt) {
+            $timeUntilReview = strtotime($examEndsAt) - strtotime($currentTime);
+            $minutes = (int)floor($timeUntilReview / 60);
+            $seconds = (int)($timeUntilReview % 60);
+            
+            return response()->json([
+                'message' => "Exam review will be available after the exam duration is completed",
+                'status' => 403,
+                'success' => false,
+                'show_dialog' => true,
+                'dialog_title' => 'Review Not Available',
+                'dialog_message' => "The exam review will be available in {$minutes} minutes and {$seconds} seconds. Please try again after the exam duration is completed.",
+                'time_remaining' => [
+                    'minutes' => $minutes,
+                    'seconds' => $seconds
+                ]
+            ], 403);
+        }
 
         $totalRecords = ExamQuestion::with([
             'questionAttempts' => function ($query) use ($examAttempLog) {

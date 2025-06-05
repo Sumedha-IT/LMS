@@ -14,6 +14,8 @@ class ExamResource extends JsonResource
      */
     public function toArray(Request $request): array
     {
+        // Get total number of questions for this exam
+        $totalQuestions = $this->examQuestions()->count();
 
         return [
             'id' =>$this->id,
@@ -29,7 +31,8 @@ class ExamResource extends JsonResource
             'instructions' => $this->instructions ?? null,
             'invigilators' => $this->invigilators,
             'meta' => $this->meta,
-            'curriculum' =>$this->curriculums
+            'curriculum' =>$this->curriculums,
+            'totalQuestions' => $totalQuestions
         ];
     }
 }

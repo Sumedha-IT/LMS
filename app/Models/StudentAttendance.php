@@ -12,7 +12,8 @@ class StudentAttendance extends Model
     protected $fillable = [
         'user_id',
         'check_in_datetime',
-        'check_out_datetime'
+        'check_out_datetime',
+        'status'
     ];
 
     protected $casts = [

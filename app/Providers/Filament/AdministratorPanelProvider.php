@@ -52,7 +52,7 @@ class AdministratorPanelProvider extends PanelProvider
             ->userMenuItems([
                 'account' => MenuItem::make()
                     ->label(fn () => auth()->user()->name)
-                    ->url('/profile') // Redirect to your React profile page
+                    ->url('/administrator/my-profile') // Redirect to the actual Filament profile page
                     ->icon('heroicon-o-user'),
             ])
             ->passwordReset()
@@ -71,7 +71,7 @@ class AdministratorPanelProvider extends PanelProvider
                 \BezhanSalleh\FilamentShield\FilamentShieldPlugin::make(),
                 BreezyCore::make()
                     ->myProfile(
-                        shouldRegisterUserMenu: true,
+                        shouldRegisterUserMenu: false,
                         shouldRegisterNavigation: false,
                         navigationGroup: 'Settings',
                         hasAvatars: true,

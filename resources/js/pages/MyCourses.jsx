@@ -10,6 +10,7 @@ import { Worker, Viewer } from '@react-pdf-viewer/core';
 import { toolbarPlugin } from '@react-pdf-viewer/toolbar';
 import '@react-pdf-viewer/core/lib/styles/index.css';
 import '@react-pdf-viewer/toolbar/lib/styles/index.css';
+import LoadingFallback from '../components/DashBoard/LoadingFallback';
 
 const API_URL = import.meta.env.REACT_APP_API_URL;
 
@@ -467,24 +468,50 @@ const MyCourses = () => {
             return;
         }
 
-        // Use batch_id from selectedAssignment if available
-        const batchId = selectedAssignment.batch_id;
-        if (!batchId) {
-            toast.error('Batch ID is missing for this assignment.');
-            return;
-        }
-
         try {
             setIsSubmitting(true);
             const userInfo = getCookie("user_info");
             const userData = JSON.parse(userInfo);
+
+            // Get the user's batch ID from the enrollment
+            let batchResponse;
+            try {
+                batchResponse = await axios.get('/api/batches', {
+                    headers: {
+                        'Accept': 'application/json',
+                        'Authorization': userData.token,
+                        'Content-Type': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest'
+                    },
+                    withCredentials: true
+                });
+                console.log('DEBUG /api/batches response:', batchResponse);
+            } catch (err) {
+                console.error('DEBUG /api/batches error:', err);
+                toast.error('Error fetching batches. Check console for details.');
+                return;
+            }
+
+            // Support both .batches and .data
+            const batches = batchResponse.data.batches || batchResponse.data.data;
+            if (!batches || batches.length === 0) {
+                console.error('DEBUG /api/batches empty or missing batches:', batchResponse.data);
+                toast.error('No batch found for this user');
+                return;
+            }
+
+            // Support both batch_id and id
+            const batchId = batches[0].batch_id || batches[0].id;
 
             const formData = new FormData();
             formData.append('file', submissionFile);
             formData.append('teaching_material_id', selectedAssignment.id);
             formData.append('batch_id', batchId);
 
-            const response = await axios.post('/api/submit-assignment', formData, {
+            const url = `/api/submit-assignment`;
+            console.log('Assignments API URL:', url); // Debug log
+
+            const response = await axios.post(url, formData, {
                 headers: {
                     'Accept': 'application/json',
                     'Authorization': userData.token,
@@ -581,8 +608,35 @@ const MyCourses = () => {
             const userInfo = getCookie("user_info");
             const userData = JSON.parse(userInfo);
 
-            // HARD-CODED for testing: Replace 27 with a real batch ID for your user if needed
-            const batchId = 27;
+            // Get the user's batch ID from the enrollment
+            let batchResponse;
+            try {
+                batchResponse = await axios.get('/api/batches', {
+                    headers: {
+                        'Accept': 'application/json',
+                        'Authorization': userData.token,
+                        'Content-Type': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest'
+                    },
+                    withCredentials: true
+                });
+                console.log('DEBUG /api/batches response:', batchResponse);
+            } catch (err) {
+                console.error('DEBUG /api/batches error:', err);
+                toast.error('Error fetching batches. Check console for details.');
+                return;
+            }
+
+            // Support both .batches and .data
+            const batches = batchResponse.data.batches || batchResponse.data.data;
+            if (!batches || batches.length === 0) {
+                console.error('DEBUG /api/batches empty or missing batches:', batchResponse.data);
+                toast.error('No batch found for this user');
+                return;
+            }
+
+            // Support both batch_id and id
+            const batchId = batches[0].batch_id || batches[0].id;
             const url = `/api/teaching-materials/${topicId}?batch_id=${batchId}`;
             console.log('Assignments API URL:', url); // Debug log
 
@@ -648,22 +702,21 @@ const MyCourses = () => {
                 withCredentials: true
             });
 
-            console.log('Submission status API response for', assignmentId, 'batch', batchId, ':', response.data);
-
             if (response.data?.submission) {
                 setSubmissions(prev => {
-                    console.log('Setting submission for', assignmentId, response.data.submission);
                     return {
                         ...prev,
                         [assignmentId]: response.data.submission
                     };
                 });
-            } else {
-                console.log('No submission found for assignment', assignmentId);
             }
         } catch (error) {
-            console.log('Error fetching submission status for', assignmentId, error);
-            // Silently handle submission status errors
+            if (error.response && error.response.status === 404) {
+                // No submission found, this is normal, do not log as error
+                return;
+            }
+            // Only log unexpected errors
+            console.error('Error fetching submission status for', assignmentId, error);
         }
     };
 
@@ -851,8 +904,8 @@ const MyCourses = () => {
 
     if (loading) {
         return (
-            <div className="flex justify-center items-center min-h-screen">
-                <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+            <div className="flex justify-center items-center min-h-[60vh]">
+                <LoadingFallback />
             </div>
         );
     }

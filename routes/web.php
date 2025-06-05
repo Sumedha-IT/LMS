@@ -124,3 +124,13 @@ Route::middleware(['auth', 'checkStudentAttendance'])->group(function () {
 Route::get('/administrator/{path}', function () {
     return view('my-courses');
 })->where('path', '.*');
+
+// Force /profile to redirect to the correct Filament profile page
+Route::get('/profile', function () {
+    return redirect('/administrator/1/my-profile');
+});
+
+// Redirect /administrator/{adminId}/my-profile to the correct profile page
+Route::get('/administrator/1/my-profile', function () {
+    return redirect('/administrator/1/my-profile');
+});

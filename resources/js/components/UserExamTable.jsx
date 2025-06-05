@@ -9,20 +9,21 @@ import VisibilityOutlinedIcon from '@mui/icons-material/VisibilityOutlined';
 import EmptyExamState from './EmptyExamState';
 import { keyframes } from '@mui/system';
 import { useNavigate } from 'react-router-dom';
+import LoadingFallback from './DashBoard/LoadingFallback';
 
 
 // Define the blinking animation for text
 const blinkAnimation = keyframes`
-  0% { color: #333333; }
+  0% { color: inherit; }
   50% { color: #FF0000; }
-  100% { color: #333333; }
+  100% { color: inherit; }
 `;
 
 // Define the blinking animation for background
 const blinkBackgroundAnimation = keyframes`
-  0% { background-color: transparent; }
+  0% { background-color: inherit; }
   50% { background-color: rgba(255, 0, 0, 0.1); }
-  100% { background-color: transparent; }
+  100% { background-color: inherit; }
 `;
 
 const UserExamTable = ({ Value, userId }) => {
@@ -31,6 +32,7 @@ const UserExamTable = ({ Value, userId }) => {
     const [rowsPerPage, setRowsPerPage] = useState(5);
     const [totalCount, setTotalCount] = useState(0);
     const navigate = useNavigate();
+    const [now, setNow] = useState(new Date());
 
     // Helper function to calculate time taken based on duration
     const calculateTimeTaken = (duration) => {
@@ -124,6 +126,11 @@ const UserExamTable = ({ Value, userId }) => {
         }
     }, [data, Value]);
 
+    useEffect(() => {
+        const interval = setInterval(() => setNow(new Date()), 1000);
+        return () => clearInterval(interval);
+    }, []);
+
     const handleViewScore = (exam) => {
         // Prepare exam data for the review page
         const reviewDetails = {
@@ -158,7 +165,7 @@ const UserExamTable = ({ Value, userId }) => {
                 alignItems: 'center',
                 minHeight: '400px'
             }}>
-                <Typography>Loading...</Typography>
+                <LoadingFallback />
             </Box>
         );
     }
@@ -184,42 +191,60 @@ const UserExamTable = ({ Value, userId }) => {
                             </TableRow>
                         </TableHead>
                         <TableBody>
-                            {userExamData.map((exam, index) => (
-                                <TableRow
-                                    key={exam.id}
-                                    sx={{
-                                        backgroundColor: index % 2 === 0 ? '#fff' : '#E8F4FF',
-                                        color: '#404040',
-                                        fontWeight: 500,
-                                        fontSize: '1rem',
-                                        borderBottom: '1px solid #e5e7eb',
-                                        '&:hover': {
-                                            backgroundColor: '#f9fafb'
-                                        }
-                                    }}
-                                >
-                                    <TableCell sx={{ color: '#404040', padding: '16px', borderBottom: '1px solid #e5e7eb' }}>{exam.title || 'N/A'}</TableCell>
-                                    <TableCell sx={{ color: '#404040', padding: '16px', borderBottom: '1px solid #e5e7eb' }}>{exam.examDate || 'N/A'}</TableCell>
-                                    <TableCell sx={{ color: '#404040', padding: '16px', borderBottom: '1px solid #e5e7eb' }}>{exam.duration || 'N/A'}</TableCell>
-                                    <TableCell sx={{ color: '#404040', padding: '16px', borderBottom: '1px solid #e5e7eb' }}>{exam.totalQuestions}</TableCell>
-                                    <TableCell sx={{ color: '#404040', padding: '16px', borderBottom: '1px solid #e5e7eb' }}>{exam.obtainedMarks || '0'}/{exam.totalMarks || '0'}</TableCell>
-                                    <TableCell sx={{ color: '#404040', padding: '16px', borderBottom: '1px solid #e5e7eb' }}>{exam.timeTaken || 'N/A'}</TableCell>
-                                    <TableCell sx={{ padding: '16px', textAlign: 'center', borderBottom: '1px solid #e5e7eb' }}>
-                                        <IconButton
-                                            onClick={() => handleViewScore(exam)}
-                                            sx={{
-                                                color: '#E84C0F',
-                                                '&:hover': {
-                                                    backgroundColor: 'rgba(232, 76, 15, 0.04)'
-                                                }
-                                            }}
-                                            size="small"
-                                        >
-                                            <VisibilityOutlinedIcon />
-                                        </IconButton>
-                                    </TableCell>
-                                </TableRow>
-                            ))}
+                            {userExamData.map((exam, index) => {
+                                const [hours, minutes] = exam.ends_at.split(':').map(Number);
+                                const examEndTime = new Date();
+                                examEndTime.setHours(hours, minutes, 0, 0);
+                                const isExamCompleted = now >= examEndTime;
+                                const timeUntilReview = examEndTime - now;
+
+                                // Only show total questions
+                                const totalQuestions = exam.actualQuestionCount || exam.totalQuestions || 'N/A';
+                                // Show real time taken if available and not same as duration
+                                const showTimeTaken = (exam.timeTaken && exam.timeTaken !== exam.duration) ? exam.timeTaken : 'N/A';
+
+                                return (
+                                    <TableRow key={index} sx={{ '&:hover': { backgroundColor: '#f8f9fa' } }}>
+                                        <TableCell sx={{ padding: '16px', borderBottom: '1px solid #e5e7eb' }}>{exam.title}</TableCell>
+                                        <TableCell sx={{ padding: '16px', borderBottom: '1px solid #e5e7eb' }}>{exam.examDate}</TableCell>
+                                        <TableCell sx={{ padding: '16px', borderBottom: '1px solid #e5e7eb' }}>{exam.duration}</TableCell>
+                                        <TableCell sx={{ padding: '16px', borderBottom: '1px solid #e5e7eb' }}>{totalQuestions}</TableCell>
+                                        <TableCell sx={{ padding: '16px', borderBottom: '1px solid #e5e7eb' }}>
+                                            {isExamCompleted ? exam.obtainedMarks : (
+                                                <Typography sx={{ color: '#666', fontStyle: 'italic' }}>
+                                                    Pending
+                                                </Typography>
+                                            )}
+                                        </TableCell>
+                                        <TableCell sx={{ padding: '16px', borderBottom: '1px solid #e5e7eb' }}>{showTimeTaken}</TableCell>
+                                        <TableCell sx={{ padding: '16px', textAlign: 'center', borderBottom: '1px solid #e5e7eb' }}>
+                                            {isExamCompleted ? (
+                                                <IconButton
+                                                    onClick={() => handleViewScore(exam)}
+                                                    sx={{
+                                                        color: '#f97316',
+                                                        '&:hover': {
+                                                            backgroundColor: 'rgba(249, 115, 22, 0.1)'
+                                                        }
+                                                    }}
+                                                >
+                                                    <VisibilityOutlinedIcon />
+                                                </IconButton>
+                                            ) : (
+                                                <Typography
+                                                    sx={{
+                                                        color: '#666',
+                                                        fontSize: '14px',
+                                                        animation: `${blinkAnimation} 1s ease-in-out infinite`
+                                                    }}
+                                                >
+                                                    Review available in: {Math.max(0, Math.floor(timeUntilReview / (1000 * 60)))}m {Math.max(0, Math.floor((timeUntilReview % (1000 * 60)) / 1000))}s
+                                                </Typography>
+                                            )}
+                                        </TableCell>
+                                    </TableRow>
+                                );
+                            })}
                         </TableBody>
                     </Table>
                 </TableContainer>
@@ -478,27 +503,23 @@ const UserExamTable = ({ Value, userId }) => {
                     // Update the timer every second
                     const timer = setInterval(() => {
                         const currentTime = new Date();
-                        const remainingMs = examDate.getTime() - currentTime.getTime();
+                        const timeDiff = examDate.getTime() - currentTime.getTime();
+                        const minutes = Math.floor(timeDiff / 60000);
+                        const seconds = Math.floor((timeDiff % 60000) / 1000);
 
-                        if (remainingMs <= 0) {
-                            clearInterval(timer);
+                        if (timeDiff <= 0) {
                             setExamStarted(true);
                             setTimeRemaining(null);
                             setShowBlinkingTimer(false);
+                            clearInterval(timer);
                         } else {
-                            const remainingMinutes = Math.floor(remainingMs / 60000);
-                            const remainingSeconds = Math.floor((remainingMs % 60000) / 1000);
-
-                            setTimeRemaining({ minutes: remainingMinutes, seconds: remainingSeconds });
-                            setShowBlinkingTimer(remainingMinutes <= 1);
+                            setTimeRemaining({ minutes, seconds });
+                            setShowBlinkingTimer(minutes <= 1);
                         }
                     }, 1000);
 
                     return () => clearInterval(timer);
                 }
-            } else {
-                setExamStarted(true); // Default to enabled if no start time
-                setTimeRemaining(null);
             }
         }, [exam.starts_at]);
 
@@ -516,7 +537,7 @@ const UserExamTable = ({ Value, userId }) => {
             if (index % 2 === 0) {
                 return "/images/physics-icon.png"; // Physics icon for even indexes
             } else {
-                return "/images/chemistry-icon.png"; // Chemistry icon for odd indexes
+                return "/images/chemistry-icon.jpg"; // Chemistry icon for odd indexes
             }
         };
 
@@ -540,6 +561,7 @@ const UserExamTable = ({ Value, userId }) => {
                         display: 'flex',
                         justifyContent: 'space-between',
                         alignItems: 'center',
+                        animation: showBlinkingTimer ? `${blinkBackgroundAnimation} 1s infinite` : 'none',
                     }}
                 >
                     <Box>
@@ -549,7 +571,8 @@ const UserExamTable = ({ Value, userId }) => {
                                 fontWeight: 700,
                                 color: '#000000',
                                 fontSize: '24px',
-                                mb: 0.5
+                                mb: 0.5,
+                                animation: showBlinkingTimer ? `${blinkAnimation} 1s infinite` : 'none',
                             }}
                         >
                             {exam.title}
