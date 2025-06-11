@@ -13,7 +13,7 @@ class CurriculumPolicy
      */
     public function viewAny(User $user): bool
     {
-        return $user->is_admin || $user->is_tutor;
+        return $user->is_admin || $user->is_coordinator || $user->is_tutor;
     }
 
     /**
@@ -21,7 +21,7 @@ class CurriculumPolicy
      */
     public function view(User $user, Curriculum $curriculum): bool
     {
-        return $user->is_admin || $user->is_tutor;
+        return $user->is_admin || $user->is_coordinator || $user->is_tutor;
     }
 
     /**
@@ -29,7 +29,7 @@ class CurriculumPolicy
      */
     public function create(User $user): bool
     {
-        return $user->is_admin;
+        return $user->is_admin || $user->is_coordinator;
     }
 
     /**
@@ -37,7 +37,7 @@ class CurriculumPolicy
      */
     public function update(User $user, Curriculum $curriculum): bool
     {
-        return $user->is_admin;
+        return $user->is_admin || $user->is_coordinator;
     }
 
     /**
@@ -45,7 +45,7 @@ class CurriculumPolicy
      */
     public function delete(User $user, Curriculum $curriculum): bool
     {
-        return $user->is_admin;
+        return $user->is_admin || $user->is_coordinator;
     }
 
     /**
@@ -53,7 +53,7 @@ class CurriculumPolicy
      */
     public function restore(User $user, Curriculum $curriculum): bool
     {
-        return $user->is_admin;
+        return $user->is_admin || $user->is_coordinator;
     }
 
     /**
@@ -61,6 +61,6 @@ class CurriculumPolicy
      */
     public function forceDelete(User $user, Curriculum $curriculum): bool
     {
-        return $user->is_admin;
+        return $user->is_admin || $user->is_coordinator;
     }
 }

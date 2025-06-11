@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Box, Button, Typography, Card, Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, IconButton } from '@mui/material';
+import { Box, Button, Typography, Card, Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, IconButton, FormControl, InputLabel, Select, MenuItem, Menu } from '@mui/material';
 import { useGetUserExamDataQuery } from '../store/service/user/UserService';
 import CalendarTodayOutlinedIcon from '@mui/icons-material/CalendarTodayOutlined';
 import AccessTimeOutlinedIcon from '@mui/icons-material/AccessTimeOutlined';
@@ -10,6 +10,7 @@ import EmptyExamState from './EmptyExamState';
 import { keyframes } from '@mui/system';
 import { useNavigate } from 'react-router-dom';
 import LoadingFallback from './DashBoard/LoadingFallback';
+import ArrowDropDownIcon from '@mui/icons-material/ArrowDropDown';
 
 
 // Define the blinking animation for text
@@ -26,8 +27,9 @@ const blinkBackgroundAnimation = keyframes`
   100% { background-color: inherit; }
 `;
 
-const UserExamTable = ({ Value, userId }) => {
+const UserExamTable = ({ Value, userId, filter }) => {
     const [userExamData, setUserExamData] = useState([]);
+    const [filteredExamData, setFilteredExamData] = useState([]);
     const [page, setPage] = useState(0);
     const [rowsPerPage, setRowsPerPage] = useState(5);
     const [totalCount, setTotalCount] = useState(0);
@@ -117,14 +119,27 @@ const UserExamTable = ({ Value, userId }) => {
 
 
             setUserExamData(processedData);
+            setFilteredExamData(processedData);
             // Use totalRecords from API response for total count
             setTotalCount(data.totalRecords || data.data.length);
         } else if (Value === 1 && (!data?.data || data.data.length === 0)) {
             // If no data is available, set empty array
             setUserExamData([]);
+            setFilteredExamData([]);
             setTotalCount(0);
         }
     }, [data, Value]);
+
+    // Filter exams based on filter prop
+    useEffect(() => {
+        if (filter === 'all') {
+            setFilteredExamData(userExamData);
+        } else if (filter === 'attempted') {
+            setFilteredExamData(userExamData.filter(exam => exam.status === 'Completed'));
+        } else if (filter === 'not-attempted') {
+            setFilteredExamData(userExamData.filter(exam => exam.status === 'Expired' || exam.status === 'Available'));
+        }
+    }, [filter, userExamData]);
 
     useEffect(() => {
         const interval = setInterval(() => setNow(new Date()), 1000);
@@ -177,6 +192,11 @@ const UserExamTable = ({ Value, userId }) => {
     if (Value === 1) { // Attempted Exams Table View
         return (
             <Box>
+                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+                    <Typography variant="h6" sx={{ fontWeight: 600, color: '#1F2937' }}>
+                        Attempted Exams
+                    </Typography>
+                </Box>
                 <TableContainer component={Paper} sx={{ borderRadius: '12px', boxShadow: '0 4px 20px rgba(0,0,0,0.08)', overflow: 'hidden' }}>
                     <Table>
                         <TableHead>
@@ -191,7 +211,7 @@ const UserExamTable = ({ Value, userId }) => {
                             </TableRow>
                         </TableHead>
                         <TableBody>
-                            {userExamData.map((exam, index) => {
+                            {filteredExamData.map((exam, index) => {
                                 const [hours, minutes] = exam.ends_at.split(':').map(Number);
                                 const examEndTime = new Date();
                                 examEndTime.setHours(hours, minutes, 0, 0);
@@ -203,6 +223,7 @@ const UserExamTable = ({ Value, userId }) => {
                                 // Show real time taken if available and not same as duration
                                 const showTimeTaken = (exam.timeTaken && exam.timeTaken !== exam.duration) ? exam.timeTaken : 'N/A';
 
+                                const isAttempted = exam.status === 'Completed';
                                 return (
                                     <TableRow key={index} sx={{ '&:hover': { backgroundColor: '#f8f9fa' } }}>
                                         <TableCell sx={{ padding: '16px', borderBottom: '1px solid #e5e7eb' }}>{exam.title}</TableCell>
@@ -210,15 +231,15 @@ const UserExamTable = ({ Value, userId }) => {
                                         <TableCell sx={{ padding: '16px', borderBottom: '1px solid #e5e7eb' }}>{exam.duration}</TableCell>
                                         <TableCell sx={{ padding: '16px', borderBottom: '1px solid #e5e7eb' }}>{totalQuestions}</TableCell>
                                         <TableCell sx={{ padding: '16px', borderBottom: '1px solid #e5e7eb' }}>
-                                            {isExamCompleted ? exam.obtainedMarks : (
-                                                <Typography sx={{ color: '#666', fontStyle: 'italic' }}>
-                                                    Pending
+                                            {isAttempted ? (exam.obtainedMarks ?? '-') : (
+                                                <Typography sx={{ color: '#c11e1b', fontStyle: 'italic' }}>
+                                                    Not Attempted
                                                 </Typography>
                                             )}
                                         </TableCell>
-                                        <TableCell sx={{ padding: '16px', borderBottom: '1px solid #e5e7eb' }}>{showTimeTaken}</TableCell>
+                                        <TableCell sx={{ padding: '16px', borderBottom: '1px solid #e5e7eb' }}>{isAttempted ? showTimeTaken : '-'}</TableCell>
                                         <TableCell sx={{ padding: '16px', textAlign: 'center', borderBottom: '1px solid #e5e7eb' }}>
-                                            {isExamCompleted ? (
+                                            {isAttempted ? (
                                                 <IconButton
                                                     onClick={() => handleViewScore(exam)}
                                                     sx={{
@@ -231,14 +252,8 @@ const UserExamTable = ({ Value, userId }) => {
                                                     <VisibilityOutlinedIcon />
                                                 </IconButton>
                                             ) : (
-                                                <Typography
-                                                    sx={{
-                                                        color: '#666',
-                                                        fontSize: '14px',
-                                                        animation: `${blinkAnimation} 1s ease-in-out infinite`
-                                                    }}
-                                                >
-                                                    Review available in: {Math.max(0, Math.floor(timeUntilReview / (1000 * 60)))}m {Math.max(0, Math.floor((timeUntilReview % (1000 * 60)) / 1000))}s
+                                                <Typography sx={{ color: '#666', fontSize: '14px' }}>
+                                                    -
                                                 </Typography>
                                             )}
                                         </TableCell>

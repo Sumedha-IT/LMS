@@ -60,15 +60,30 @@ const NewDashBoard = () => {
       setLoading(true);
 
       try {
-        const [profile, assignments, exams, attendance] = await Promise.all([
-          apiRequest("/profile", { skipCache: true }),
-          apiRequest("/getUserAssignments", { skipCache: true }),
+        // First get the profile to get the user ID
+        const profile = await apiRequest("/profile", { skipCache: true });
+        setProfileData(profile);
+
+        // Then use the user ID for the assignments request
+        const [assignments, exams, attendance] = await Promise.all([
+          apiRequest("/getUserAssignments", { 
+            skipCache: true,
+            params: { student_id: profile.user.id }
+          }),
           apiRequest("/exam-chart", { skipCache: true }),
           apiRequest("/student-attendance/report?filter_type=all", { skipCache: true }),
         ]);
 
-        setProfileData(profile);
-        setAssignmentData(assignments?.data || []);
+        // Log the assignments data to help debug
+        console.log('Assignments data:', assignments);
+
+        if (assignments?.success && assignments?.data) {
+          setAssignmentData(assignments.data);
+        } else {
+          console.error('Invalid assignments data:', assignments);
+          setAssignmentData([]);
+        }
+
         setExamData(exams?.data || []);
 
         const presentDays = attendance?.present_days || 0;

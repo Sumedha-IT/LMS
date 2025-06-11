@@ -56,6 +56,7 @@ class ExamQuestionController extends Controller
                         })->toArray();
 
         $questionToAdd = [];
+        $hasSelectedQuestions = false; // Flag to track if any questions are selected
         // Add custom validation to check if questions exist in the database
         foreach ($data as &$part) {
             foreach ($part['banks'] as &$bank) {
@@ -85,15 +86,21 @@ class ExamQuestionController extends Controller
  
                     $existedQuestionIds =  $questionToAdd[$part['partId']] ?? [];
                     $questionToAdd[$part['partId']] =  array_merge($questionsIds,$existedQuestionIds);
+                    $hasSelectedQuestions = true; // Questions were selected
 
                 } else {
                     // Assign existing question IDs from the bank
                     $questionToAdd[$part['partId']] =  array_merge($questionToAdd[$part['partId']] ?? [],$questionsByBank[$bankId]);
+                    $hasSelectedQuestions = true; // Questions were selected
                 }
                 
             }
         }
         
+        // Check if any questions were selected
+        if (!$hasSelectedQuestions) {
+            return ['message' => 'At least one question must be selected for the exam', 'status' => 400, 'success' => false];
+        }
 
         if (!empty($validator->errors()->messages())) {
             return ['message' => $validator->errors()->all()[0], 'status' => 400, 'success' => false];

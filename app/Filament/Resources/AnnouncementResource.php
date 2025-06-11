@@ -31,8 +31,8 @@ class AnnouncementResource extends Resource
 
     public static function shouldRegisterNavigation(): bool
     {
-        // Only show in navigation for admin users
-        return auth()->check() && auth()->user()->is_admin;
+        // Show in navigation for admin, academic coordinator and tutor users
+        return auth()->check() && (auth()->user()->is_admin || auth()->user()->is_coordinator || auth()->user()->is_tutor);
     }
 
 
@@ -47,50 +47,69 @@ class AnnouncementResource extends Resource
                             ->maxLength(255),
                         Forms\Components\DateTimePicker::make('schedule_at')
                             ->native(false)
-                            ->default(now())
+                            ->displayFormat('Y-m-d H:i:s')
+                            ->format('Y-m-d H:i:s')
                             ->required(),
                         Forms\Components\Textarea::make('description')
                             ->required()
                             ->columnSpanFull(),
                         Forms\Components\FileUpload::make('image')
-                            ->image()
+                            ->acceptedFileTypes(['image/*'])
                             ->columnSpanFull(),
-                        //                        Forms\Components\Radio::make('urgency')
-                        //                            ->options(['Low' => 'Low', 'Medium' => 'Medium', 'High' => 'High'])
-                        //                            ->required(),
                         Forms\Components\Radio::make('visibility')
                             ->label('Announcement visibility')
-                            ->hidden(!auth()->user()->is_admin)
+                            ->hidden(!(auth()->user()->is_admin || auth()->user()->is_coordinator || auth()->user()->is_tutor))
                             ->options([
                                 'existing_user' => 'Visible to existing users only',
                                 'both' => 'Visible to both existing and new users in future'
                             ])
                             ->required(),
                         Forms\Components\Radio::make('audience')
+                            ->label('Announcement audience')
                             ->options([
                                 'all' => 'All Students',
                                 'course_wise' => 'Course Wise'
                             ])
                             ->reactive()
-                            ->hidden(!auth()->user()->is_admin)
+                            ->hidden(!(auth()->user()->is_admin || auth()->user()->is_coordinator || auth()->user()->is_tutor))
                             ->required(),
                         Forms\Components\Select::make('course_id')
                             ->label('Course')
-                            ->options(\App\Models\Course::all()->pluck('name', 'id'))
+                            ->options(function () {
+                                if (auth()->user()->is_admin || auth()->user()->is_coordinator) {
+                                    return \App\Models\Course::all()->pluck('name', 'id');
+                                } else if (auth()->user()->is_tutor) {
+                                    // Only show courses assigned to the tutor's batches
+                                    $batchCourseIds = auth()->user()->batches->pluck('course_id')->unique();
+                                    return \App\Models\Course::whereIn('id', $batchCourseIds)->pluck('name', 'id');
+                                }
+                                return [];
+                            })
                             ->preload()
-                            ->hidden(fn(Forms\Get $get): bool => $get('audience') != 'course_wise' || !auth()->user()->is_admin)
+                            ->hidden(fn(Forms\Get $get): bool => $get('audience') != 'course_wise' || !(auth()->user()->is_admin || auth()->user()->is_coordinator || auth()->user()->is_tutor))
                             ->required(),
                         Forms\Components\Select::make('batch_ids')
+                            ->label('Batches')
                             ->options(function (callable $get) {
                                 $courseId = $get('course_id');
-                                if ($courseId) {
-                                    return \App\Models\Course::with('batches')->find($courseId)->batches->pluck('name', 'id');
+                                if (auth()->user()->is_admin || auth()->user()->is_coordinator) {
+                                    if ($courseId) {
+                                        return \App\Models\Course::with('batches')->find($courseId)?->batches->pluck('name', 'id') ?? [];
+                                    }
+                                    return \App\Models\Batch::all()->pluck('name', 'id');
+                                } else if (auth()->user()->is_tutor) {
+                                    // Only show batches assigned to the tutor
+                                    $batches = auth()->user()->batches;
+                                    if ($courseId) {
+                                        $batches = $batches->where('course_id', $courseId);
+                                    }
+                                    return $batches->pluck('name', 'id');
                                 }
-                                return \App\Models\Batch::all()->pluck('name', 'id');
+                                return [];
                             })
                             ->preload()
                             ->multiple()
-                            ->hidden(fn(Forms\Get $get): bool => $get('audience') != 'course_wise' || !auth()->user()->is_admin)
+                            ->hidden(fn(Forms\Get $get): bool => $get('audience') != 'course_wise' || !(auth()->user()->is_admin || auth()->user()->is_coordinator || auth()->user()->is_tutor))
                             ->required()
                     ])->columns(2)
             ]);
@@ -104,23 +123,16 @@ class AnnouncementResource extends Resource
                 Tables\Columns\TextColumn::make('title')
                     ->description(fn(Announcement $record) => new HtmlString($record->description
                     . '<br>' .
-                        (auth()->user()->is_admin ?
-                        Carbon::parse($record->schedule_at)
-                            ->format('d M Y h:i')
-                        : Carbon::parse($record->schedule_at)
-                            ->format('d M Y'))))
+                        (auth()->user()->is_admin || auth()->user()->is_coordinator || auth()->user()->is_tutor ?
+                            ($record->schedule_at ?
+                                (\Carbon\Carbon::parse($record->schedule_at)->format('d M Y h:i'))
+                                : 'Not scheduled')
+                            : ($record->schedule_at ?
+                                (\Carbon\Carbon::parse($record->schedule_at)->format('d M Y'))
+                                : 'Not scheduled')
+                        )
+                    ))
                     ->searchable(),
-                //Tables\Columns\TextColumn::make('urgency'),
-                //Tables\Columns\TextColumn::make('visibility'),
-                //Tables\Columns\TextColumn::make('audience'),
-                /*Tables\Columns\TextColumn::make('created_at')
-                    ->dateTime()
-                    ->sortable()
-                    ->toggleable(isToggledHiddenByDefault: true),
-                Tables\Columns\TextColumn::make('updated_at')
-                    ->dateTime()
-                    ->sortable()
-                    ->toggleable(isToggledHiddenByDefault: true),*/
             ])
             ->filters([
                 //
@@ -128,6 +140,7 @@ class AnnouncementResource extends Resource
             ->actions([
                 Tables\Actions\ViewAction::make(),
                 Tables\Actions\EditAction::make(),
+                Tables\Actions\DeleteAction::make(),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
@@ -152,9 +165,9 @@ class AnnouncementResource extends Resource
                 Infolists\Components\TextEntry::make('schedule_at')
                     ->label(false)
                     ->formatStateUsing(function (Announcement $record) {
-                        // Convert the schedule_at string to a Carbon instance and then format it
-                        return Carbon::parse($record->schedule_at)
-                            ->format('d M Y');
+                        return $record->schedule_at ?
+                            \Carbon\Carbon::parse($record->schedule_at)->format('d M Y') :
+                            'Not scheduled';
                     })
                     ->columnSpanFull(),
                 Infolists\Components\TextEntry::make('description')
@@ -174,8 +187,8 @@ class AnnouncementResource extends Resource
     {
         return [
             'index' => Pages\ListAnnouncements::route('/'),
-            //'create' => Pages\CreateAnnouncement::route('/create'),
-            //'edit' => Pages\EditAnnouncement::route('/{record}/edit'),
+            'create' => Pages\CreateAnnouncement::route('/create'),
+            'edit' => Pages\EditAnnouncement::route('/{record}/edit'),
         ];
     }
 }

@@ -1,34 +1,6 @@
-import { useEffect, useState } from "react";
-import { apiRequest } from "../../utils/api";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  Paper,
-  Box,
-  Typography
-} from '@mui/material';
+import { Box, Typography, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper } from '@mui/material';
 
 export default function MyAssignment({ assignments = [] }) {
-  const [Assignment, setAssignment] = useState([]);
-
-  useEffect(() => {
-    const fetchAssignment = async () => {
-      try {
-        const response = await apiRequest("/getUserAssignments");
-        if (response.success && response.data) {
-          setAssignment(response.data);
-        }
-      } catch (err) {
-        console.error("Error fetching assignments:", err);
-      }
-    };
-    fetchAssignment();
-  }, []);
-
   return (
     <Box sx={{ width: '100%' }}>
       <Paper sx={{ width: '100%', borderRadius: 2, boxShadow: 1, p: 2 }}>
@@ -55,8 +27,8 @@ export default function MyAssignment({ assignments = [] }) {
               </TableRow>
             </TableHead>
             <TableBody>
-              {Assignment.length > 0 ? (
-                Assignment.map((topic, topicIndex) => (
+              {assignments.length > 0 ? (
+                assignments.map((topic, topicIndex) => (
                   topic.assignments.map((assignment, index) => (
                     <TableRow
                       key={`${topicIndex}-${index}`}

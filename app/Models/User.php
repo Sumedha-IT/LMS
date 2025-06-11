@@ -336,4 +336,36 @@ class User extends Authenticatable implements HasTenants, FilamentUser, HasAvata
     {
         return $this->hasMany(Certification::class);
     }
+
+    /**
+     * Check if the user has any of the given roles
+     *
+     * @param array $roles
+     * @return bool
+     */
+    public function hasAnyRole(array $roles): bool
+    {
+        return in_array($this->role, $roles);
+    }
+
+    /**
+     * Check if the user has a specific role
+     *
+     * @param string $role
+     * @return bool
+     */
+    public function hasRole(string $role): bool
+    {
+        return $this->role === $role;
+    }
+
+    /**
+     * Get the user's role
+     *
+     * @return string|null
+     */
+    public function getRole(): ?string
+    {
+        return $this->role;
+    }
 }

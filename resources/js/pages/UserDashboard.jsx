@@ -7,11 +7,16 @@ import PerformanceChart from '../components/DashBoard/PerformanceChart';
 
 import Leaderboard from '../components/DashBoard/Leaderboard';
 import AssignmentsReport from '../components/DashBoard/AssignmentsReport';
+import ArrowDropDownIcon from '@mui/icons-material/ArrowDropDown';
+import { Menu, MenuItem } from '@mui/material';
 
 const UserDashboard = () => {
     const [mainTab, setMainTab] = useState(0);
     const [showExams, setShowExams] = useState(false);
     const { data } = useGetStudentDataQuery({ userId: userId });
+    const [filter, setFilter] = useState('all');
+    const [anchorEl, setAnchorEl] = useState(null);
+    const [filterActive, setFilterActive] = useState(false);
 
     useEffect(() => {
         if (data) {
@@ -21,7 +26,25 @@ const UserDashboard = () => {
 
     const handleMainTabChange = (event, newValue) => {
         setMainTab(newValue);
+        if (newValue === 0) {
+            setFilterActive(false);
+        }
     }
+
+    const handleFilterChange = (newFilter) => {
+        setFilter(newFilter);
+        setAnchorEl(null);
+    };
+    const handleMenuOpen = (event) => {
+        setAnchorEl(event.currentTarget);
+    };
+    const handleMenuClose = () => {
+        setAnchorEl(null);
+    };
+    const handleAllExamsClick = () => {
+        setFilterActive(true);
+        setMainTab(1);
+    };
 
     if (!showExams) {
         return (
@@ -155,20 +178,66 @@ const UserDashboard = () => {
                         {...a11yProps(0)}
                         sx={{ minWidth: '180px' }}
                     />
-                    <Tab
-                        label="Attempted Exams"
-                        {...a11yProps(1)}
-                        sx={{ minWidth: '180px' }}
-                    />
+                    {!filterActive ? (
+                        <Button
+                            variant="contained"
+                            onClick={handleAllExamsClick}
+                            sx={{
+                                minWidth: '180px',
+                                ml: 2,
+                                background: 'linear-gradient(270deg, #eb6707 0%, #e42b12 100%)',
+                                color: 'white',
+                                borderRadius: '8px',
+                                textTransform: 'none',
+                                fontSize: '16px',
+                                fontWeight: 500,
+                                '&:hover': {
+                                    background: 'linear-gradient(270deg, #e42b12 0%, #eb6707 100%)',
+                                },
+                            }}
+                        >
+                            All Exams
+                        </Button>
+                    ) : (
+                        <Button
+                            variant="contained"
+                            onClick={handleMenuOpen}
+                            endIcon={<ArrowDropDownIcon />}
+                            sx={{
+                                minWidth: '180px',
+                                ml: 2,
+                                background: 'linear-gradient(270deg, #eb6707 0%, #e42b12 100%)',
+                                color: 'white',
+                                borderRadius: '8px',
+                                textTransform: 'none',
+                                fontSize: '16px',
+                                fontWeight: 500,
+                                '&:hover': {
+                                    background: 'linear-gradient(270deg, #e42b12 0%, #eb6707 100%)',
+                                },
+                            }}
+                        >
+                            {filter === 'all' ? 'All Exams' : filter === 'attempted' ? 'Attempted Exams' : 'Not Attempted Exams'}
+                        </Button>
+                    )}
+                    <Menu
+                        anchorEl={anchorEl}
+                        open={Boolean(anchorEl)}
+                        onClose={handleMenuClose}
+                    >
+                        <MenuItem onClick={() => handleFilterChange('all')}>All Exams</MenuItem>
+                        <MenuItem onClick={() => handleFilterChange('attempted')}>Attempted Exams</MenuItem>
+                        <MenuItem onClick={() => handleFilterChange('not-attempted')}>Not Attempted Exams</MenuItem>
+                    </Menu>
                 </Tabs>
             </Box>
 
             <TabPanel value={mainTab} index={0}>
-                <UserExamTable Value={mainTab} userId={userId} />
+                <UserExamTable Value={mainTab} userId={userId} filter={filter} />
             </TabPanel>
 
             <TabPanel value={mainTab} index={1}>
-                <UserExamTable Value={mainTab} userId={userId} />
+                <UserExamTable Value={mainTab} userId={userId} filter={filter} />
             </TabPanel>
         </Box>
     );

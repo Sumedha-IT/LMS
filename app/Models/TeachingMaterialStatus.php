@@ -16,11 +16,11 @@ class TeachingMaterialStatus extends Model
     protected static function booted(): void
     {
         $tenant = Filament::getTenant();
-        static::addGlobalScope('limited', function (Builder $query)  use($tenant){
+        static::addGlobalScope('limited', function (Builder $query) use ($tenant) {
             if (auth()->check() && auth()->user()->is_student) {
                 $query->where('user_id', auth()->user()->id);
             }
-            if (auth()->check() && auth()->user()->is_tutor) {
+            if (auth()->check() && auth()->user()->is_tutor && $tenant) {
                 $query->select('teaching_material_statuses.*','batches.branch_id')
                     ->join('batch_user', 'teaching_material_statuses.user_id', '=', 'batch_user.user_id')
                     ->join('batch_curriculum', 'batch_user.batch_id', '=', 'batch_curriculum.batch_id')
@@ -51,8 +51,11 @@ class TeachingMaterialStatus extends Model
     public function batch()
     {
         $tenant = Filament::getTenant();
-        return $this->belongsTo(Batch::class)
-            ->where('batches.branch_id', $tenant->id);
+        $query = $this->belongsTo(Batch::class);
+        if ($tenant) {
+            $query->where('batches.branch_id', $tenant->id);
+        }
+        return $query;
     }
 
     public function getFormattedObtainedMarksAttribute()

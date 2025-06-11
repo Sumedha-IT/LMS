@@ -37,8 +37,16 @@ class BatchController extends Controller
     {
         try {
             $user = Auth::user();
-            $batch = $user->batches()->with('course_package')->findOrFail($id);
-            
+            // If tutor, check if assigned to this batch
+            if ($user->is_tutor) {
+                $assigned = \App\Models\BatchCurriculum::where('batch_id', $id)
+                    ->where('tutor_id', $user->id)
+                    ->exists();
+                if (!$assigned) {
+                    return response()->json(['message' => 'Unauthorized batch access'], 403);
+                }
+            }
+            $batch = Batch::with(['course_package', 'students'])->findOrFail($id);
             return response()->json([
                 'batch' => $batch
             ]);

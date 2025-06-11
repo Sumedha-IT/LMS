@@ -198,11 +198,9 @@ class ExamController extends Controller
     }
 
     public function validateExam($data){
-
         $validator = Validator::make($data, [
             'id' => 'nullable|integer',
             'batchId' => 'required|integer|exists:batches,id',
-
             'curriculumId' => 'required|array|exists:curriculum,id',
             'title' => ['required','string','max:50'],
             'instructions' => 'nullable|string|max:1000',
@@ -220,11 +218,6 @@ class ExamController extends Controller
             'endsAt' => 'required|date_format:H:i|after:startsAt',
             'immediateResult' => 'boolean',
             'maxAttempts' => 'integer|max:10',
-            'invigilators' => 'array',
-            'invigilators.*.name' => 'required|string|max:255', 
-            'invigilators.*.id' => 'required|integer|exists:users,id',
-            'invigilators.*.phone' => 'required|string',
-            'invigilators.*.email' => 'nullable|email',
         ]);
         
         if (!empty($validator->errors()->messages())) {
@@ -439,38 +432,64 @@ class ExamController extends Controller
     }
     public function getUserAssignments(Request $request)
     {
-        // Ensure the user is authenticated
+        \Log::info('getUserAssignments called', [
+            'user_id' => optional($request->user())->id,
+            'headers' => $request->headers->all(),
+            'token' => $request->bearerToken(),
+            'full_user' => $request->user(),
+        ]);
         $user = $request->user();
-        if (!$user || !$user->is_student) {
-            return response()->json(['message' => 'Unauthorized'], 401);
+        // Always use student_id from request
+        $studentId = $request->input('student_id');
+        $status = $request->input('status', 'all');
+
+        $student = \App\Models\User::where('id', $studentId)->first();
+        if (!$student) {
+            \Log::warning('Student not found in getUserAssignments', ['student_id' => $studentId]);
+            return response()->json(['message' => 'Student not found'], 404);
         }
 
-        // Get the batch_id from the batch_user pivot table
-        $batchUser = $user->batches()->first();
+        // Only allow:
+        // - Admins: any student
+        // - Tutors: only students in their batches
+        // - Coordinators: any student
+        // - Others: only themselves
+        if ($user->is_admin || $user->is_coordinator) {
+            // allow
+        } elseif ($user->is_tutor) {
+            $studentBatch = \App\Models\BatchUser::where('user_id', $studentId)->first();
+            $tutorBatchIds = \App\Models\BatchCurriculum::where('tutor_id', $user->id)->pluck('batch_id')->toArray();
+            if (!$studentBatch || !in_array($studentBatch->batch_id, $tutorBatchIds)) {
+                return response()->json(['message' => 'Unauthorized: Student not in your batch'], 403);
+            }
+        } elseif ($user->id != $studentId) {
+            return response()->json(['message' => 'Unauthorized'], 403);
+        }
+
+        $batchUser = $student->batches()->first();
         if (!$batchUser) {
             return response()->json(['message' => 'No batch assigned to user'], 404);
         }
-
-        // Fetch batch with eager-loaded relationships
         $batch = Batch::with([
+            'curriculums.curriculum',
             'curriculums.topics.topic',
-            'curriculums.topics.assignments' => function ($query) use ($user) {
-                $query->with(['teachingMaterialStatuses' => function ($statusQuery) use ($user) {
-                    $statusQuery->where('user_id', $user->id); // Global scope already applies this for students
+            'curriculums.topics.assignments' => function ($query) use ($student) {
+                $query->with(['teachingMaterialStatuses' => function ($statusQuery) use ($student) {
+                    $statusQuery->where('user_id', $student->id);
                 }]);
             }
         ])->findOrFail($batchUser->id);
-
-        // Prepare the response
         $assignmentsByTopic = [];
-
-        // Iterate through curriculums and topics
         foreach ($batch->curriculums as $curriculum) {
             foreach ($curriculum->topics as $topic) {
                 $topicData = [
                     'topic_id' => $topic->topic_id,
                     'topic_name' => $topic->topic->name,
-                    'assignments' => $topic->assignments->map(function ($assignment) use ($user) {
+                    'curriculum' => [
+                        'id' => $curriculum->curriculum->id,
+                        'name' => $curriculum->curriculum->name
+                    ],
+                    'assignments' => $topic->assignments->map(function ($assignment) use ($student) {
                         $status = $assignment->teachingMaterialStatuses->first();
                         return [
                             'id' => $assignment->id,
@@ -478,18 +497,26 @@ class ExamController extends Controller
                             'description' => $assignment->description,
                             'file' => $assignment->file ? asset('storage/' . $assignment->file) : null,
                             'marks_scored' => $status ? (int) $status->obtained_marks : null,
-                            'total_marks' => $assignment->maximum_marks ? (int) $assignment->maximum_marks : null, // Adjust if total_marks is elsewhere
+                            'total_marks' => $assignment->maximum_marks ? (int) $assignment->maximum_marks : null,
                             'is_submitted' => $status !== null,
                         ];
-                    })->all(),
+                    })->filter(function ($assignment) use ($status) {
+                        // Filter assignments based on status
+                        if ($status === 'all') {
+                            return true;
+                        } elseif ($status === 'submitted') {
+                            return $assignment['is_submitted'] === true;
+                        } elseif ($status === 'pending') {
+                            return $assignment['is_submitted'] === false;
+                        }
+                        return true;
+                    })->values()->all(),
                 ];
-
                 if (!empty($topicData['assignments'])) {
                     $assignmentsByTopic[] = $topicData;
                 }
             }
         }
-
         return response()->json([
             'success' => true,
             'data' => $assignmentsByTopic,

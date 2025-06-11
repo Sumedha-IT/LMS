@@ -262,27 +262,18 @@ class CourseMasterResource extends Resource
     {
         return [
             'index' => \App\Filament\Clusters\CourseMaster\Resources\CourseMasterResource\Pages\ListCourseMaster::route('/'),
-            //'create' => \App\Filament\Clusters\CourseMaster\Resources\CourseMasterResource\Pages\CreateCourseMaster::route('/create'),
-            //'edit' => \App\Filament\Clusters\CourseMaster\Resources\CourseMasterResource\Pages\EditCourseMaster::route('/{record}/edit'),
-            //'curriculums' => \App\Filament\Clusters\CourseMaster\Resources\CourseMasterResource\Pages\ManageCurriculumns::route('/{record}/curriculums'),
-
-            /*'index' => Pages\ListCourses::route('/'),
-            'curriculums' => Pages\ManageCurriculumns::route('/{record}/curriculums'),
-            //'branches' => Pages\ManageBranches::route('/{record}/branches'),
-            //  'create' => Pages\CreateCourse::route('/create'),
-            'edit' => Pages\EditCourse::route('/{record}/edit'),
-            'view' => Pages\ViewCourse::route('/{record}'),*/
+            'create' => \App\Filament\Clusters\CourseMaster\Resources\CourseMasterResource\Pages\CreateCourseMaster::route('/create'),
+            'edit' => \App\Filament\Clusters\CourseMaster\Resources\CourseMasterResource\Pages\EditCourseMaster::route('/{record}/edit'),
+            'curriculums' => \App\Filament\Clusters\CourseMaster\Resources\CourseMasterResource\Pages\ManageCurriculumns::route('/{record}/curriculums'),
         ];
     }
 
-    /*public static function getRecordSubNavigation(Page $page): array
+    public static function getRecordSubNavigation(Page $page): array
     {
         return $page->generateNavigationItems([
-            Pages\ManageCurriculumns::class,
-            Pages\ViewCourse::class,
-            Pages\EditCourse::class,
-
-            //Pages\ManageBranches::class,
+            \App\Filament\Clusters\CourseMaster\Resources\CourseMasterResource\Pages\ManageCurriculumns::class,
+            \App\Filament\Clusters\CourseMaster\Resources\CourseMasterResource\Pages\ViewCourseMaster::class,
+            \App\Filament\Clusters\CourseMaster\Resources\CourseMasterResource\Pages\EditCourseMaster::class,
         ]);
-    }*/
+    }
 }

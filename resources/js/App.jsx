@@ -14,9 +14,6 @@ import AdminDashboard from './pages/AdminDashboard';
 import UserDashboard from './pages/UserDashboard';
 import PermissionUserExam from './components/PermissionUserExam';
 import UserExamModuel from './components/UserExamModuel';
-import FeedbackPanel from './components/FeedbackPanel';
-
-
 import ReviewPage from './pages/ReviewPage';
 import ResultComponent from './components/exam/ResultComponent';
 // import PlacementCoordinator from './components/placement/PlacementCoordinator.jsx';
@@ -32,8 +29,10 @@ import Topics from './pages/Topics';
 import Announcements from './pages/Announcements';
 import StudentJourney from './pages/StudentJourney';
 import StudentAttendance from './components/Attendance/StudentAttendance';
-import AdminAttendance from './components/Attendance/AdminAttendance';
-import TutorAttendance from './components/Attendance/TutorAttendance';
+import StudentManagement from './pages/StudentManagement';
+
+// Export StudentManagement for use in the Filament page
+window.StudentManagement = StudentManagement;
 
 function App() {
   return (
@@ -61,9 +60,6 @@ function App() {
         <Route path="/user/:userId/exam/:examId/result" element={<ResultComponent />} />
 
         {/* <Route path='/administrator/:id/placement' element={<PlacementCoordinator />} /> */}
-        <Route path="/administrator/:id/feedback" element={<FeedbackPanel />} />
-
-
         <Route path='/administrator/:id/job-boards' element={<JobBoard />} />
         <Route path='/administrator/:id/my-job-profiles' element={<JobProfile />} />
         <Route path='/administrator/:id/my-jobs' element={<ApplyJob />} />
@@ -89,11 +85,13 @@ function App() {
 
         {/* Attendance Routes */}
         <Route path="/administrator/:id/student-attendance" element={<StudentAttendance />} />
-        <Route path="/administrator/:id/admin-attendance" element={<AdminAttendance />} />
-        <Route path="/administrator/:id/tutor-attendance" element={<TutorAttendance />} />
+        {/* Remove admin attendance route */}
 
         {/* Remove Topics route as functionality is now in MyCourses */}
         {/* <Route path="/administrator/:id/topics/:curriculumId" element={<Topics />} /> */}
+
+        <Route path="/administrator/:id/student-management" element={<StudentManagement />} />
+        <Route path="*" element={<div>Not Found</div>} />
       </Routes>
 
 

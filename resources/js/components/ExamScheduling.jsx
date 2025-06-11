@@ -1,5 +1,3 @@
-
-
 import AddIcon from '@mui/icons-material/Add';
 import DeleteIcon from '@mui/icons-material/Delete';
 import Button from '@mui/material/Button';
@@ -72,10 +70,8 @@ const validationSchema = Yup.object({
       Yup.object().shape({
         invigilator: Yup.object()
           .nullable()
-          .required('At least one invigilator is required.')
       })
     )
-    .min(1, 'At least one invigilator is required.')
 });
 
 
@@ -433,72 +429,6 @@ const ExamScheduling = ({ ExamData }) => {
                 multiline
                 rows={4}
               />
-            </div>
-
-            {/* Invigilator Section */}
-            <div className="flex items-center gap-4">
-              <label className="w-1/3">Invigilators <span className="text-[red]">*</span></label>
-              <div className="w-full">
-                {invigilators.map((item, index) => (
-                  <div key={index} className="flex items-center gap-2 mb-2">
-                    <TextField
-                      fullWidth
-                      select
-                      label="Name"
-                      name="name"
-                      value={item.invigilator?.name || ''}
-                      onChange={(e) => handleInvigilatorChange(index, e)}
-                      InputProps={{
-                        readOnly: isReadOnly,
-                      }}
-                      error={formik.touched.invigilators?.[index]?.invigilator && Boolean(formik.errors.invigilators?.[index]?.invigilator)}
-                      helperText={formik.touched.invigilators?.[index]?.invigilator && formik.errors.invigilators?.[index]?.invigilator?.message}
-                      disabled={isInvigilatorLoading}
-                    >
-                      {invigilatorList?.data.length > 0 ? (
-                        invigilatorList.data.map((inv) => (
-                          <MenuItem key={inv.id} value={inv.name}>
-                            {inv.name}
-                          </MenuItem>
-                        ))
-                      ) : (
-                        <MenuItem disabled>No Invigilators Available</MenuItem>
-                      )}
-                    </TextField>
-
-                    <TextField
-                      fullWidth
-                      label="Contact"
-                      name="contact"
-                      value={item.invigilator?.phone || ''}
-                      InputProps={{
-                        readOnly: true, // Contact is auto-filled based on the selected invigilator
-                      }}
-                    />
-                    <div className="w-10">
-                      {invigilators.length > 1 && (
-                        <IconButton
-                          color="secondary"
-                          onClick={() => removeInvigilatorFields(index)}
-                          disabled={isReadOnly}
-                        >
-                          <DeleteIcon />
-                        </IconButton>
-                      )}
-                    </div>
-                  </div>
-                ))}
-                {!isReadOnly && (
-                  <Button
-                    variant="outlined"
-                    color="primary"
-                    onClick={addInvigilatorFields}
-                    startIcon={<AddIcon />}
-                  >
-                    Add Invigilator
-                  </Button>
-                )}
-              </div>
             </div>
 
             <div className="flex justify-end">

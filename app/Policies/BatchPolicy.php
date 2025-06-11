@@ -29,7 +29,7 @@ class BatchPolicy
      */
     public function create(User $user): bool
     {
-        return $user->is_admin;
+        return $user->is_admin || $user->is_coordinator;
     }
 
     /**
@@ -37,7 +37,7 @@ class BatchPolicy
      */
     public function update(User $user, Batch $batch): bool
     {
-        return $user->is_student || $user->is_admin;
+        return $user->is_admin || $user->is_coordinator || $user->is_tutor;
     }
 
     /**
@@ -45,7 +45,7 @@ class BatchPolicy
      */
     public function delete(User $user, Batch $batch): bool
     {
-        return $user->is_admin;
+        return $user->is_admin || $user->is_coordinator;
     }
 
     /**
@@ -53,7 +53,7 @@ class BatchPolicy
      */
     public function restore(User $user, Batch $batch): bool
     {
-        return $user->is_admin;
+        return $user->is_admin || $user->is_coordinator;
     }
 
     /**
@@ -61,6 +61,6 @@ class BatchPolicy
      */
     public function forceDelete(User $user, Batch $batch): bool
     {
-        return $user->is_admin;
+        return $user->is_admin || $user->is_coordinator;
     }
 }

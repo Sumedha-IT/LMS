@@ -15,9 +15,17 @@ class BatchController extends Controller
     {
         $user = $request->user();
 
-        $batches = $user->batches()
-            ->with('course_package')
-            ->get();
+        // Allow admin and academic coordinator to see all batches
+        if (
+            (isset($user->role) && ($user->role === 'admin' || $user->is_admin ?? false)) ||
+            ($user->role && ($user->role->name === 'Academic Coordinator' || $user->is_coordinator ?? false))
+        ) {
+            // Return all batches for admin and academic coordinator
+            $batches = Batch::with('course_package')->get();
+        } else {
+            // Return only assigned batches for others
+            $batches = $user->batches()->with('course_package')->get();
+        }
 
         return BatchResource::collection($batches);
     }
@@ -31,7 +39,7 @@ class BatchController extends Controller
         return new BatchResource($batches);
     }
 
-    public function show($id){
+    public function show($id, Request $request){
         $validator = Validator::make(['id' => $id], [
             'id' => 'required|integer'
         ]);
@@ -39,11 +47,49 @@ class BatchController extends Controller
         if ($validator->fails()) {
             return response()->json(['message' => 'Batch Id must be Integer', 'hasError'=>true], 404);
         }
-        $batch = Batch::find($id);
+
+        $user = $request->user();
+        
+        // Add logging for debugging
+        \Log::info('Batch show method called', [
+            'user_id' => $user->id,
+            'user_role' => $user->role->name ?? 'unknown',
+            'batch_id' => $id,
+            'is_tutor' => $user->is_tutor,
+            'is_admin' => $user->is_admin,
+            'is_coordinator' => $user->is_coordinator
+        ]);
+
+        // If tutor, check if assigned to this batch
+        if ($user->is_tutor) {
+            $assigned = \App\Models\BatchCurriculum::where('batch_id', $id)
+                ->where('tutor_id', $user->id)
+                ->exists();
+            if (!$assigned) {
+                return response()->json(['message' => 'Unauthorized batch access', 'hasError'=>true], 403);
+            }
+        }
+
+        $batch = Batch::with('students')->find($id);
 
         if (empty($batch)) {
+            \Log::warning('Batch not found', ['batch_id' => $id]);
             return response()->json(['message' => 'Batch id not found', 'hasError'=>false], 404);
-        }            
+        }
+
+        // Log the batch data being returned
+        \Log::info('Batch data being returned', [
+            'batch_id' => $batch->id,
+            'batch_name' => $batch->name,
+            'student_count' => $batch->students->count(),
+            'students' => $batch->students->map(function($student) {
+                return [
+                    'id' => $student->id,
+                    'name' => $student->name
+                ];
+            })
+        ]);
+            
         return new BatchResource($batch);
     }
 

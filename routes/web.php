@@ -134,3 +134,10 @@ Route::get('/profile', function () {
 Route::get('/administrator/1/my-profile', function () {
     return redirect('/administrator/1/my-profile');
 });
+
+Route::middleware(['auth'])->group(function () {
+    // Student Management Routes
+    Route::get('/student-management', function () {
+        return view('student-management');
+    })->name('student.management')->middleware(['role:tutor,academic_coordinator,admin']);
+});

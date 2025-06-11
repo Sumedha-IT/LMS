@@ -252,11 +252,34 @@ class StudentAttendanceController extends Controller
         try {
             $user = Auth::user();
 
+            // Allow admin, tutor, or coordinator to use student_id, else use own ID
+            $studentId = ($request->has('student_id') && $user && ($user->is_admin || $user->is_tutor || $user->is_coordinator))
+                ? $request->input('student_id')
+                : $user->id;
+
+            // If tutor, check that the student is in a batch assigned to the tutor
+            if ($user->is_tutor && $studentId != $user->id) {
+                $studentBatch = \App\Models\BatchUser::where('user_id', $studentId)->first();
+                if (!$studentBatch) {
+                    return response()->json([
+                        'total_days' => 0,
+                        'present_days' => 0,
+                        'complete_days' => 0,
+                        'absent_days' => 0,
+                        'attendance_details' => []
+                    ]);
+                }
+                $tutorBatchIds = \App\Models\BatchCurriculum::where('tutor_id', $user->id)->pluck('batch_id')->toArray();
+                if (!in_array($studentBatch->batch_id, $tutorBatchIds)) {
+                    return response()->json(['message' => 'Unauthorized: Student not in your batch'], 403);
+                }
+            }
+
             // Get filter parameters
             $filterType = $request->filter_type ?? 'all'; // 'all', 'week', 'month'
 
-            // Get the user's batch
-            $userBatch = \App\Models\BatchUser::where('user_id', $user->id)->first();
+            // Get the student's batch
+            $userBatch = \App\Models\BatchUser::where('user_id', $studentId)->first();
 
             if (!$userBatch) {
                 // Return empty report instead of error for new users
@@ -312,14 +335,14 @@ class StudentAttendanceController extends Controller
                 $startDate = $batchStartDate;
             }
 
-            // Get attendance records for the user within the date range using chunking
+            // Get attendance records for the student within the date range using chunking
             $totalDays = 0;
             $presentDays = 0;
             $completeDays = 0;
             $attendanceDetails = collect();
 
             // Process attendance records in chunks to avoid memory issues
-            StudentAttendance::where('user_id', $user->id)
+            StudentAttendance::where('user_id', $studentId)
                 ->when($filterType !== 'all', function($query) use ($startDate, $endDate) {
                     return $query->whereBetween('check_in_datetime', [$startDate, $endDate]);
                 })

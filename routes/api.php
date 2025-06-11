@@ -43,6 +43,7 @@ use App\Http\Controllers\api\BatchController as ApiBatchController;
 use App\Http\Controllers\api\CurriculumController as ApiCurriculumController;
 use App\Http\Controllers\api\TopicController;
 use App\Http\Controllers\StudentAttendanceController;
+use App\Http\Controllers\StudentExportController;
 
 /*
 |--------------------------------------------------------------------------
@@ -184,6 +185,11 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
     Route::get('/student-attendance/status', [StudentAttendanceController::class, 'getAttendanceStatus']);
     Route::post('/student-attendance/check-in', [StudentAttendanceController::class, 'checkIn']);
     Route::post('/student-attendance/check-out', [StudentAttendanceController::class, 'checkOut']);
+
+    // Student Export Routes
+    Route::get('/students/{id}/attendance', [StudentExportController::class, 'getAttendance']);
+    Route::get('/students/{id}/assignments', [StudentExportController::class, 'getAssignments']);
+    Route::get('/students/{id}/exam-results', [StudentExportController::class, 'getExamResults']);
 
     //Api for annoucements
     Route::get('/announcements', [\App\Http\Controllers\AnnouncementController::class, 'index']);

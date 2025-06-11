@@ -35,7 +35,8 @@ class BatchResource extends Resource implements HasShieldPermissions
 
     public static function shouldRegisterNavigation(): bool
     {
-        return auth()->user()->is_student ? false : true;
+        $user = auth()->user();
+        return !$user->is_student && ($user->is_admin || $user->is_coordinator || $user->is_tutor);
     }
 
     public static function getPermissionPrefixes(): array
@@ -158,11 +159,15 @@ class BatchResource extends Resource implements HasShieldPermissions
                                             ->required(),
                                         Forms\Components\DatePicker::make('start_date')
                                             ->displayFormat('d/m/Y')
-                                            ->required(),
+                                            ->format('Y-m-d')
+                                            ->required()
+                                            ->disabled(fn () => auth()->user()->is_tutor),
                                         Forms\Components\DatePicker::make('end_date')
                                             ->label('End Date')
                                             ->displayFormat('d/m/Y')
-                                            ->required(),
+                                            ->format('Y-m-d')
+                                            ->required()
+                                            ->disabled(fn () => auth()->user()->is_tutor),
                                     ])->columns(2),
                             ]),
                         Tabs\Tab::make('Advance Setting')
@@ -262,7 +267,7 @@ class BatchResource extends Resource implements HasShieldPermissions
             'view' => Pages\ViewBatch::route('/{record}'),
         ];
 
-        if(auth()->check() && !auth()->user()->is_admin)
+        if(auth()->check() && auth()->user()->is_student)
         {
             unset($pages['edit']);
         }

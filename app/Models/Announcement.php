@@ -13,11 +13,7 @@ class Announcement extends Model
 
     protected static function booted(): void
     {
-        static::addGlobalScope('limited', function (Builder $query) {
-            if (auth()->check() && auth()->user()->is_student) {
-                $query->where('schedule_at', '<=', Carbon::now()->format('Y-m-d H:i:s'));
-            }
-        });
+        // Removed global scope so students can see all announcements, including future ones.
     }
 
     protected $guarded = [];
@@ -30,6 +26,7 @@ class Announcement extends Model
     // Add a cast for batch_ids
     protected $casts = [
         'batch_ids' => 'array',
+        'schedule_at' => 'datetime',
     ];
 
     // Getter for batch_ids
