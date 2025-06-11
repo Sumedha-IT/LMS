@@ -90,7 +90,7 @@ const UserDashboard = () => {
                     {/* Attempted Exams Card */}
                     <div className="w-4/12 border border-white/30 shadow-lg p-1 flex-col rounded-xl flex justify-between items-center backdrop-blur-md"
                         style={{
-                            background: 'linear-gradient(135deg, #1e3c72 0%, #2a5298 100%)',
+                            background: 'linear-gradient(135deg, #0f1f3d 0%, #1e3c72 100%)',
                         }}
                     >
                         <div className="flex">

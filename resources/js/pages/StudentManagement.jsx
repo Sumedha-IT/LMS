@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
-import AttendancePanel from '../Components/AttendancePanel';
-import AssignmentsPanel from '../Components/AssignmentsPanel';
-import ExamResultsPanel from '../Components/ExamResultsPanel';
-import PaymentPanel from '../Components/PaymentPanel';
+import AttendancePanel from '../components/AttendancePanel';
+import AssignmentsPanel from '../components/AssignmentsPanel';
+import ExamResultsPanel from '../components/ExamResultsPanel';
+import PaymentPanel from '../components/PaymentPanel';
 import LoadingFallback from '../components/DashBoard/LoadingFallback';
 import axios from 'axios';
 import Lottie from 'lottie-react';
@@ -93,30 +93,15 @@ const StudentManagement = () => {
 
     useEffect(() => {
         let typingInterval;
-        let isDeleting = false;
         let localText = "";
         let charIndex = 0;
         function typeLoop() {
-            if (!isDeleting) {
-                if (charIndex < fullText.length) {
-                    localText += fullText[charIndex];
-                    setTypedText(localText);
-                    charIndex++;
-                } else {
-                    isDeleting = true;
-                    setTimeout(typeLoop, 1200); // Pause before deleting
-                    return;
-                }
-            } else {
-                if (charIndex > 0) {
-                    localText = localText.slice(0, -1);
-                    setTypedText(localText);
-                    charIndex--;
-                } else {
-                    isDeleting = false;
-                }
+            if (charIndex < fullText.length) {
+                localText += fullText[charIndex];
+                setTypedText(localText);
+                charIndex++;
+                typingInterval = setTimeout(typeLoop, 30);
             }
-            setTimeout(typeLoop, isDeleting ? 18 : 30);
         }
         typeLoop();
         return () => clearTimeout(typingInterval);
@@ -446,7 +431,11 @@ const StudentManagement = () => {
         <div className={`transition-all duration-[1500ms] ${showContent ? 'opacity-100 translate-y-0 scale-100' : 'opacity-0 translate-y-20 scale-95'} container mx-auto px-4 py-8`}>
             {/* Header/Banner: Only show if batch or student is NOT selected */}
             {!(selectedBatch && selectedStudent) && (
-                <div className="flex items-center mb-12 animate-fade-in bg-gradient-to-r from-blue-900 to-indigo-900 rounded-3xl p-8 shadow-2xl">
+                <div className="flex items-center mb-12 animate-fade-in rounded-3xl p-8 shadow-2xl"
+                    style={{
+                        background: 'linear-gradient(135deg, #0f1f3d 0%, #1e3c72 100%)',
+                    }}
+                >
                     <div className="mr-8">
                         <div className="w-40 h-40 bg-white/10 rounded-2xl p-4 backdrop-blur-sm">
                             <Lottie animationData={studentAnimation} loop={true} />
@@ -666,7 +655,11 @@ const StudentManagement = () => {
                                             <p className="text-gray-600 text-sm mb-4">Export detailed attendance history and status reports</p>
                                             <button
                                                 onClick={handleAttendanceExport}
-                                                className="w-full inline-flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-lg text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all duration-200"
+                                                className="w-full inline-flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-lg text-white"
+                                                style={{
+                                                    background: 'linear-gradient(270deg, #eb6707 0%, #e42b12 100%)',
+                                                    boxShadow: '0 2px 8px 0 rgba(235,103,7,0.10)'
+                                                }}
                                             >
                                                 <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
@@ -686,7 +679,11 @@ const StudentManagement = () => {
                                             <p className="text-gray-600 text-sm mb-4">Export assignment submissions, grades, and feedback</p>
                                             <button
                                                 onClick={handleAssignmentsExport}
-                                                className="w-full inline-flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-lg text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all duration-200"
+                                                className="w-full inline-flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-lg text-white"
+                                                style={{
+                                                    background: 'linear-gradient(270deg, #eb6707 0%, #e42b12 100%)',
+                                                    boxShadow: '0 2px 8px 0 rgba(235,103,7,0.10)'
+                                                }}
                                             >
                                                 <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
@@ -706,7 +703,11 @@ const StudentManagement = () => {
                                             <p className="text-gray-600 text-sm mb-4">Export exam scores, performance analysis, and grade reports</p>
                                             <button
                                                 onClick={handleExamResultsExport}
-                                                className="w-full inline-flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-lg text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all duration-200"
+                                                className="w-full inline-flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-lg text-white"
+                                                style={{
+                                                    background: 'linear-gradient(270deg, #eb6707 0%, #e42b12 100%)',
+                                                    boxShadow: '0 2px 8px 0 rgba(235,103,7,0.10)'
+                                                }}
                                             >
                                                 <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
@@ -719,7 +720,11 @@ const StudentManagement = () => {
                                     {/* Export All Button */}
                                     <button
                                         onClick={handleExportAll}
-                                        className="mt-8 inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-xl shadow-sm text-white bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all duration-200"
+                                        className="mt-8 inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-xl shadow-sm text-white"
+                                        style={{
+                                            background: 'linear-gradient(270deg, #eb6707 0%, #e42b12 100%)',
+                                            boxShadow: '0 2px 8px 0 rgba(235,103,7,0.10)'
+                                        }}
                                     >
                                         <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />

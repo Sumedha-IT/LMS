@@ -995,67 +995,29 @@ export default function StudentAttendance() {
                         </Box>
 
                         {report && report.attendance_details && report.attendance_details.length > 0 ? (
-                            <TableContainer component={Paper} sx={{ boxShadow: 'none', border: '1px solid rgba(0, 0, 0, 0.05)' }}>
+                            <TableContainer component={Paper} sx={{ borderRadius: '12px', boxShadow: '0 4px 20px rgba(0,0,0,0.08)', overflow: 'hidden' }}>
                                 <Table>
                                     <TableHead>
-                                        <TableRow sx={{ bgcolor: 'rgba(0, 0, 0, 0.02)' }}>
-                                            <TableCell sx={{ fontWeight: 600 }}>Date</TableCell>
-                                            <TableCell sx={{ fontWeight: 600 }}>Check In</TableCell>
-                                            <TableCell sx={{ fontWeight: 600 }}>Check Out</TableCell>
-                                            <TableCell sx={{ fontWeight: 600 }}>Duration</TableCell>
-                                            <TableCell sx={{ fontWeight: 600 }}>Status</TableCell>
+                                        <TableRow style={{background: 'linear-gradient(270deg, #eb6707 0%, #e42b12 100%)', color: 'white'}}>
+                                            <TableCell sx={{ fontWeight: 600, color: '#FFFFFF', padding: '16px', borderBottom: '1px solid #e5e7eb' }}>Date</TableCell>
+                                            <TableCell sx={{ fontWeight: 600, color: '#FFFFFF', padding: '16px', borderBottom: '1px solid #e5e7eb' }}>Check In</TableCell>
+                                            <TableCell sx={{ fontWeight: 600, color: '#FFFFFF', padding: '16px', borderBottom: '1px solid #e5e7eb' }}>Check Out</TableCell>
+                                            <TableCell sx={{ fontWeight: 600, color: '#FFFFFF', padding: '16px', borderBottom: '1px solid #e5e7eb' }}>Duration</TableCell>
+                                            <TableCell sx={{ fontWeight: 600, color: '#FFFFFF', padding: '16px', borderBottom: '1px solid #e5e7eb' }}>Status</TableCell>
                                         </TableRow>
                                     </TableHead>
                                     <TableBody>
                                         {report.attendance_details.map((record, index) => (
-                                            <TableRow key={index}>
-                                                <TableCell>{record.date}</TableCell>
-                                                <TableCell>{record.check_in || '-'}</TableCell>
-                                                <TableCell>{record.check_out || '-'}</TableCell>
-                                                <TableCell>
+                                            <TableRow key={index} sx={{ '&:hover': { backgroundColor: '#f8f9fa' } }}>
+                                                <TableCell sx={{ padding: '16px', borderBottom: '1px solid #e5e7eb' }}>{record.date}</TableCell>
+                                                <TableCell sx={{ padding: '16px', borderBottom: '1px solid #e5e7eb' }}>{record.check_in || '-'}</TableCell>
+                                                <TableCell sx={{ padding: '16px', borderBottom: '1px solid #e5e7eb' }}>{record.check_out || '-'}</TableCell>
+                                                <TableCell sx={{ padding: '16px', borderBottom: '1px solid #e5e7eb' }}>
                                                     {record.duration !== null && record.duration !== undefined
                                                         ? `${Math.floor(record.duration / 60)}h ${record.duration % 60}m`
                                                         : '-'}
                                                 </TableCell>
-                                                <TableCell>
-                                                    {record.status === 'Present' ? (
-                                                        <Box sx={{
-                                                            display: 'flex',
-                                                            alignItems: 'center',
-                                                            gap: 0.5,
-                                                            color: '#4caf50'
-                                                        }}>
-                                                            <CheckCircle size={16} />
-                                                            <Typography variant="body2" sx={{ fontWeight: 500 }}>
-                                                                Present
-                                                            </Typography>
-                                                        </Box>
-                                                    ) : record.status === 'Incomplete' ? (
-                                                        <Box sx={{
-                                                            display: 'flex',
-                                                            alignItems: 'center',
-                                                            gap: 0.5,
-                                                            color: '#ff9800'
-                                                        }}>
-                                                            <Clock size={16} />
-                                                            <Typography variant="body2" sx={{ fontWeight: 500 }}>
-                                                                Incomplete
-                                                            </Typography>
-                                                        </Box>
-                                                    ) : (
-                                                        <Box sx={{
-                                                            display: 'flex',
-                                                            alignItems: 'center',
-                                                            gap: 0.5,
-                                                            color: '#f44336'
-                                                        }}>
-                                                            <AlertCircle size={16} />
-                                                            <Typography variant="body2" sx={{ fontWeight: 500 }}>
-                                                                Absent
-                                                            </Typography>
-                                                        </Box>
-                                                    )}
-                                                </TableCell>
+                                                <TableCell sx={{ padding: '16px', borderBottom: '1px solid #e5e7eb' }}>{record.status}</TableCell>
                                             </TableRow>
                                         ))}
                                     </TableBody>
