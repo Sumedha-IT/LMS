@@ -10,12 +10,11 @@ import DialogTitle from '@mui/material/DialogTitle';
 import DialogContent from '@mui/material/DialogContent';
 import DialogActions from '@mui/material/DialogActions';
 
+// Only show these columns in the confirmation table
 const tableHeaders = [
-    { label: 'Section Name', accessor: 'partId', isPart: true },
     { label: 'No. of Questions', accessor: 'noOfQuestions' },
     { label: 'Answered', accessor: 'answered' },
     { label: 'Not Answered', accessor: 'notAnswered' },
-    { label: 'Marked for Review', accessor: 'markForReview' },
     { label: 'Not Visited', accessor: 'notVisited' },
 ];
 
@@ -46,6 +45,22 @@ const SubmissionPage = ({
         } catch (e) {
             console.log(e);
         }
+    };
+
+    // Helper to process examStatisticData according to new rules and correct field names
+    const processExamStats = (data) => {
+        if (!Array.isArray(data)) return [];
+        return data.map(row => {
+            // Use the correct field names from the API
+            const answered = (row.answered ?? 0) + (row.answeredAndMarkForReview ?? 0);
+            const notAnswered = (row.notAnswered ?? 0) + (row.markForReview ?? 0);
+            // Not Visited remains as is
+            return {
+                ...row,
+                answered,
+                notAnswered,
+            };
+        });
     };
 
     const handleSubmitQuiz = async () => {
@@ -88,6 +103,11 @@ const SubmissionPage = ({
         navigate('/user'); // Navigate back to the user page
     };
 
+    // Determine if time is over (from prop or localStorage)
+    const isTimeOverFromProp = typeof window !== 'undefined' && typeof window.isTimeOver !== 'undefined' ? window.isTimeOver : false;
+    const isTimeOverFromLocalStorage = localStorage.getItem('isTimeOver') === 'true';
+    const timeOver = (typeof isTimeOver !== 'undefined' && isTimeOver === true) || isTimeOverFromProp || isTimeOverFromLocalStorage;
+
     return (
         <>
             {errorMessage ? ( // Display error message if 400 error occurs
@@ -111,6 +131,12 @@ const SubmissionPage = ({
                     height: '100vh',
                  // Full viewport height for centering
                 }}  >
+                    {/* Exam Name (if available) */}
+                    {examStatisticData[0]?.examTitle && (
+                        <Typography variant="h6" sx={{ fontWeight: 'bold', mb: 2, textAlign: 'center' }}>
+                            {examStatisticData[0]?.examTitle}
+                        </Typography>
+                    )}
                     <TableContainer sx={{  border: '1px solid rgba(0, 0, 0, 0.12)', mx: { xl: '50px', md: '40px', sm: '30px', xs: '20px' }, width: "95%" }}>
                         <Table aria-label="quiz details table">
                             <TableHead>
@@ -121,11 +147,11 @@ const SubmissionPage = ({
                                 </TableRow>
                             </TableHead>
                             <TableBody>
-                                {examStatisticData?.map((row, rowIndex) => (
+                                {processExamStats(examStatisticData)?.map((row, rowIndex) => (
                                     <TableRow key={rowIndex}>
                                         {tableHeaders.map((header, colIndex) => (
                                             <TableCell key={colIndex} sx={{ borderRight: '1px solid rgba(0, 0, 0, 0.12)',  textAlign: 'center',fontSize: { xs: '9px', sm: '10px', md: '12px', xl: '14px' }, padding: '10px' }}>
-                                                {header.isPart ? row.partId : row[header.accessor]}
+                                                {row[header.accessor]}
                                             </TableCell>
                                         ))}
                                     </TableRow>
@@ -139,10 +165,34 @@ const SubmissionPage = ({
                     </Typography>
 
                     <Box sx={{ display: 'flex', justifyContent: 'center', gap: 1, marginTop: 2 }}>
-                        <Button variant="contained" sx={{ fontSize: { xs: '9px', sm: '10px', md: '12px', xl: '14px' } }} color="warning" onClick={handleSubmitQuiz}>
+                        <Button
+                            variant="contained"
+                            sx={{
+                                fontSize: { xs: '9px', sm: '10px', md: '12px', xl: '14px' },
+                                background: 'linear-gradient(270deg, #eb6707 0%, #e42b12 100%)',
+                                color: 'white',
+                                fontWeight: 600,
+                                borderRadius: '8px',
+                                boxShadow: 'none',
+                                textTransform: 'none',
+                                px: 3,
+                                '&:hover': {
+                                    background: 'linear-gradient(270deg, #e42b12 0%, #eb6707 100%)',
+                                    color: '#fff',
+                                    boxShadow: 'none',
+                                },
+                            }}
+                            onClick={handleSubmitQuiz}
+                        >
                             Submit
                         </Button>
-                        <Button variant="outlined" sx={{ fontSize: { xs: '9px', sm: '10px', md: '12px', xl: '14px' } }} color="primary" onClick={handleQuitClick}>
+                        <Button
+                            variant="outlined"
+                            sx={{ fontSize: { xs: '9px', sm: '10px', md: '12px', xl: '14px' } }}
+                            color="primary"
+                            onClick={handleQuitClick}
+                            disabled={timeOver}
+                        >
                             No, Go Back To Quiz
                         </Button>
                     </Box>

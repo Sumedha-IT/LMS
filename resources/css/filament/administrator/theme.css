@@ -174,17 +174,63 @@ thead .dark\:text-white:is(.dark *) {
     color: rgba(69, 69, 69, 1) !important;
 }
 
-.fi-topbar nav{
-    /*box-shadow:none !important;
-    background: none;*/
-    width: 400px;
-    float: right;
-    border-radius: 15px;
-    margin: 10px 10px 0px 0px;
+/* Sidebar: increase width for full menu item visibility */
+.fi-sidebar,
+.fi-sidebar-collapsed,
+body .fi-sidebar-collapsed {
+    width: 17rem !important;
+    min-width: 17rem !important;
+    max-width: 17rem !important;
+    transform: none !important;
 }
-.ring-1 {
-    box-shadow: 0px 0px 20px 0px rgba(0, 0, 0, 0.1) !important;
+
+/* Topbar: compact icon area */
+.fi-topbar {
+    height: 3.5rem !important;
+    min-height: 3.5rem !important;
+    max-height: 3.5rem !important;
+    padding: 0 1.2rem !important;
+    border-radius: 2rem !important;
+    width: auto !important;
+    right: 0 !important;
+    top: 0 !important;
+    left: auto !important;
+    box-shadow: 0 4px 24px 0 rgba(30,60,114,0.18) !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: flex-end !important;
+    background: linear-gradient(90deg, #1e3c72 0%, #2a5298 100%) !important;
+    position: fixed !important;
+    z-index: 9999 !important;
 }
+
+.fi-topbar > * {
+    margin: 0 !important;
+    padding: 0 !important;
+    background: none !important;
+    border: none !important;
+    box-shadow: none !important;
+}
+
+.fi-topbar-notifications,
+.fi-topbar-user-menu {
+    display: flex !important;
+    align-items: center !important;
+    gap: 0.75rem !important;
+    margin: 0 !important;
+    padding: 0 !important;
+}
+
+/* Ensure hidden elements do not take up space */
+.fi-topbar [style*="display: none"],
+.fi-topbar [hidden] {
+    width: 0 !important;
+    height: 0 !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    border: 0 !important;
+}
+
 .fi-btn{
     background: var(--orange-gradient, linear-gradient(135.51deg, rgba(235, 103, 7, 1) 0%, rgba(228, 43, 18, 1) 100%));
     color: #ffffff;
@@ -345,4 +391,22 @@ input:checked+.\[input\:checked\+\&\]\:hover\:bg-custom-500{
 .active:not(.fi-sidebar-item) {
     background-color: #fff0ea!important;
     border: 1px solid rgba(var(--primary-600), var(--tw-text-opacity));
+}
+
+/* Hide all sidebar expand/collapse/toggle buttons in topbar and sidebar */
+button[aria-label="Expand sidebar"],
+button[aria-label="Collapse sidebar"],
+.fi-topbar button[aria-label="Expand sidebar"],
+.fi-topbar button[aria-label="Collapse sidebar"],
+.fi-topbar .fi-sidebar-toggle,
+.fi-topbar [data-testid="sidebar-toggle"],
+.fi-topbar [title="Expand sidebar"],
+.fi-topbar [title="Collapse sidebar"] {
+    display: none !important;
+}
+
+/* Remove top margin/padding from main content if present */
+main, .fi-main, .fi-content {
+    margin-top: 0 !important;
+    padding-top: 0 !important;
 }

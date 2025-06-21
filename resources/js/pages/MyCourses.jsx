@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import axios from 'axios';
 import Cookies from 'js-cookie';
 import { toast } from 'react-toastify';
@@ -12,7 +12,7 @@ import '@react-pdf-viewer/core/lib/styles/index.css';
 import '@react-pdf-viewer/toolbar/lib/styles/index.css';
 import LoadingFallback from '../components/DashBoard/LoadingFallback';
 
-const API_URL = import.meta.env.REACT_APP_API_URL;
+const API_URL = import.meta.env.VITE_APP_API_URL;
 
 // CircularProgress Component
 const CircularProgress = ({ percentage, size = 40, strokeWidth = 4, white = false }) => {
@@ -70,6 +70,7 @@ const getDefaultCurriculumImage = () => {
 
 const MyCourses = () => {
     const navigate = useNavigate();
+    const location = useLocation();
     const [courses, setCourses] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
@@ -102,6 +103,40 @@ const MyCourses = () => {
     useEffect(() => {
         fetchCourses();
     }, []);
+
+    // Auto-expand curriculum if curriculum param is present in URL
+    useEffect(() => {
+        if (!loading && courses.length > 0) {
+            const params = new URLSearchParams(location.search);
+            const curriculumId = params.get('curriculum');
+            if (curriculumId) {
+                // Debug: log all loaded curriculum IDs and the URL curriculumId
+                console.log(
+                  'Loaded curriculum IDs:',
+                  courses.flatMap(course => course.curriculums).map(curr => curr.id),
+                  'URL curriculumId:',
+                  curriculumId
+                );
+                // Make sure both are strings for comparison
+                const found = courses
+                    .flatMap(course => course.curriculums)
+                    .find(curr => String(curr.id) === String(curriculumId));
+                if (found) {
+                    setExpandedCurriculums({ [curriculumId]: true });
+                    setSelectedCurriculum(found);
+                    if (topicsMap[curriculumId]) {
+                        setTopics(topicsMap[curriculumId]);
+                    } else {
+                        fetchTopics(curriculumId);
+                    }
+                    // Debug
+                    console.log('Auto-expanding curriculum:', curriculumId, found);
+                } else {
+                    console.log('Curriculum not found for ID:', curriculumId);
+                }
+            }
+        }
+    }, [loading, courses, location.search, topicsMap]);
 
     useEffect(() => {
         const handleFullScreenChange = () => {

@@ -57,7 +57,6 @@ class AdministratorPanelProvider extends PanelProvider
                     ->icon('heroicon-o-user'),
             ])
             ->passwordReset()
-            ->sidebarCollapsibleOnDesktop()
             ->databaseNotifications()
             ->font('Poppins')
             ->plugins([

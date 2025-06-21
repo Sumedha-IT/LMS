@@ -5,6 +5,8 @@ import Circularprogress from "./Ui/Circularprogress";
 import { useEffect,useState } from "react";
 import { apiRequest } from "../../utils/api";
 import { useLocation } from "react-router-dom";
+import axios from 'axios';
+import Cookies from 'js-cookie';
 
 // Custom styled components
 const StyledLinearProgress = styled(LinearProgress)(({ theme }) => ({
@@ -26,94 +28,42 @@ const ModuleCard = styled(Paper)(({ theme }) => ({
   borderRadius: 8,
 }))
 
-export default function StudentJourney({onStartLearning}) {
-  const [journey, setJourney] = useState({
-    batch: { course: { name: "" } },
-    curriculums: []
-  });
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+export default function StudentJourney({onStartLearning, curriculums = [], courseName = '', loading = false}) {
   const location = useLocation();
   const trimmedPath = location.pathname
-  .split('/')
-  .slice(0, -1)
-  .join('/') + '/';
-
-
-  useEffect(() => {
-    const fetchJourneyData = async () => {
-      try {
-        setLoading(true);
-        const data = await apiRequest("/student/journey");
-        setJourney(data);
-      } catch (err) {
-        console.error('Error fetching journey data:', err);
-        setError(err.message || 'Failed to load journey data');
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchJourneyData();
-  }, []);
+    .split('/')
+    .slice(0, -1)
+    .join('/') + '/';
 
   // Calculate overall completion percentage
   const calculateOverallCompletion = () => {
-    if (!journey.curriculums || journey.curriculums.length === 0) return 0;
-    
+    if (!curriculums || curriculums.length === 0) return 0;
     let totalTopics = 0;
     let completedTopics = 0;
-    
-    journey.curriculums.forEach(curriculum => {
+    curriculums.forEach(curriculum => {
       if (curriculum.topics && curriculum.topics.length > 0) {
         totalTopics += curriculum.topics.length;
-        completedTopics += curriculum.topics.filter(topic => topic.is_topic_completed).length;
+        completedTopics += curriculum.topics.filter(topic => topic.is_completed).length;
       }
     });
-    
     return totalTopics > 0 ? Math.round((completedTopics / totalTopics) * 100) : 0;
   };
 
   // Calculate completion percentage for a specific curriculum
   const calculateCurriculumCompletion = (topics) => {
     if (!topics || topics.length === 0) return 0;
-    
-    const completedTopics = topics.filter(topic => topic.is_topic_completed).length;
+    const completedTopics = topics.filter(topic => topic.is_completed).length;
     return Math.round((completedTopics / topics.length) * 100);
   };
 
- // Show loading state
-    if (loading) {
-      return (
-        <div className="flex justify-center items-center h-screen">
-          <CircularProgress sx={{ color: '#f97316' }} />
-          <span className="ml-3 text-gray-600">Loading...</span>
-        </div>
-      );
-    }
-  
-    // Show error state
-    if (error) {
-      return (
-        <div className="flex justify-center items-center h-screen">
-          <div className="text-center">
-            <div className="text-red-500 text-xl mb-2">Error</div>
-            <p className="text-gray-600">{error}</p>
-            <Button
-              onClick={() => window.location.reload()}
-              className="mt-4 bg-orange-500 hover:bg-orange-600 text-white"
-              sx={{
-                backgroundColor: '#f97316',
-                '&:hover': { backgroundColor: '#ea580c' },
-                marginTop: '16px'
-              }}
-            >
-              Try Again
-            </Button>
-          </div>
-        </div>
-      );
-    }
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center h-screen">
+        <CircularProgress sx={{ color: '#f97316' }} />
+        <span className="ml-3 text-gray-600">Loading...</span>
+      </div>
+    );
+  }
 
   const overallCompletion = calculateOverallCompletion();
 
@@ -122,9 +72,7 @@ export default function StudentJourney({onStartLearning}) {
       {/* Header */}
       <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 3 }}>
         <Typography  variant="h5" sx={{ fontWeight: 500, color: "#424242" }}>
-         
          <a href={`${trimmedPath}my-courses`}> Student Journey</a>
-         
         </Typography>
         <Button
           onClick={onStartLearning}
@@ -146,21 +94,16 @@ export default function StudentJourney({onStartLearning}) {
           Ongoing Assignments
         </Button>
       </Box>
-
       <div className="flex justify-between w-full">
-        {/* Physical Design Section */}
         <Typography variant="h6" sx={{ fontWeight: 500, color: "#424242", mb: 1 }}>
-          {journey?.batch?.course?.name}
+          {courseName}
         </Typography>
-
         <Typography variant="h6" sx={{ fontWeight: 500, color: "#424242", mb: 1 }}>
-          Total Modules {journey.curriculums.length}
+          Total Modules {curriculums.length}
         </Typography>
       </div>
-
       {/* Progress Section */}
       <Box sx={{ mb: 8, mt: 6 }}>
-        {/* Only show percentage in the floating card above the progress bar */}
         <Paper
           elevation={1}
           sx={{
@@ -181,26 +124,20 @@ export default function StudentJourney({onStartLearning}) {
             </div>
           </Typography>
         </Paper>
-
-        {/* Progress Bar - Now below the percentage card */}
         <StyledLinearProgress variant="determinate" value={overallCompletion} sx={{ mt: 2 }} />
       </Box>
-
       {/* Module Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 px-5">
-        {journey.curriculums.map((curriculum, index) => {
+        {curriculums.map((curriculum, index) => {
           const completionPercentage = calculateCurriculumCompletion(curriculum.topics);
           return (
             <div key={index} className="flex bg-[#F5F5F5] rounded-lg shadow-sm w-full relative p-3">
-              {/* Icon Section - Positioned to touch left edge */}
               <div className="absolute -left-3 top-1/2 transform -translate-y-1/2 bg-white border-[#E53510] border-l-2 rounded-full w-12 h-12 flex items-center justify-center">
                 <FileText color="black" size={20} />
               </div>
-
-              {/* Content Section */}
-              <a href={`${trimmedPath}my-courses`} className="flex flex-1 pl-12 justify-between items-center">
+              <a href={`${trimmedPath}my-courses?curriculum=${curriculum.id}`} className="flex flex-1 pl-12 justify-between items-center">
                 <span className="text-gray-800 font-medium">
-                  {curriculum.curriculum.name}
+                  {curriculum.name}
                 </span>
                 <Circularprogress value={completionPercentage}  color={completionPercentage === 100 ? "#E53510" : "#E53510"}/>
               </a>

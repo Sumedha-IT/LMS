@@ -12,6 +12,8 @@ import StudentPlacedCard from "../components/DashBoard/StudentPlacementslider";
 import StudentJourney from "../components/DashBoard/StudentJourney";
 import AttendanceTracker from "../components/DashBoard/AttendanceTracker";
 import MyAssignment from "../components/DashBoard/MyAssignment";
+import axios from 'axios';
+import Cookies from 'js-cookie';
 
 // Key for storing login status in localStorage
 const LOGIN_STATUS_KEY = 'dashboard_login_status';
@@ -25,6 +27,8 @@ const NewDashBoard = () => {
   const [error, setError] = useState("");
   const [isFirstLoad, setIsFirstLoad] = useState(true);
   const [isCheckedIn, setIsCheckedIn] = useState(false);
+  const [curriculums, setCurriculums] = useState([]);
+  const [courseName, setCourseName] = useState('');
 
   const navigate = useNavigate();
   const location = useLocation();
@@ -63,6 +67,49 @@ const NewDashBoard = () => {
         // First get the profile to get the user ID
         const profile = await apiRequest("/profile", { skipCache: true });
         setProfileData(profile);
+
+        // Fetch courses and topics for StudentJourney
+        const userInfo = Cookies.get("user_info");
+        const userData = userInfo ? JSON.parse(userInfo) : null;
+        if (!userData?.token) throw new Error('Authentication required');
+        const userId = Cookies.get("x_path_id");
+        if (!userId) throw new Error('User ID not found');
+        const response = await axios.get(`/api/courses/my/${userId}`, {
+          headers: {
+            'Accept': 'application/json',
+            'Authorization': userData.token,
+            'Content-Type': 'application/json',
+            'X-Requested-With': 'XMLHttpRequest'
+          },
+          withCredentials: true
+        });
+        if (response.data.courses && response.data.courses.length > 0) {
+          setCourseName(response.data.courses[0].name);
+          // Fetch topics for each curriculum
+          const curriculumsRaw = response.data.courses[0].curriculums || [];
+          const updatedCurriculums = await Promise.all(curriculumsRaw.map(async (curriculum) => {
+            try {
+              const topicsRes = await axios.get(`/api/courses/curriculums/${curriculum.id}/topics`, {
+                headers: {
+                  'Accept': 'application/json',
+                  'Authorization': userData.token,
+                  'Content-Type': 'application/json',
+                  'X-Requested-With': 'XMLHttpRequest'
+                },
+                withCredentials: true
+              });
+              return {
+                ...curriculum,
+                topics: topicsRes.data.topics || []
+              };
+            } catch {
+              return curriculum;
+            }
+          }));
+          setCurriculums(updatedCurriculums);
+        } else {
+          setCurriculums([]);
+        }
 
         // Then use the user ID for the assignments request
         const [assignments, exams, attendance] = await Promise.all([
@@ -237,10 +284,15 @@ const NewDashBoard = () => {
             </div>
           </div>
 
-          <StudentJourney onStartLearning={() => {
-            const path = location.pathname.split('/').slice(0, -1).join('/');
-            window.location.href = `${path}/my-courses`;
-          }} />
+          <StudentJourney 
+            onStartLearning={() => {
+              const path = location.pathname.split('/').slice(0, -1).join('/');
+              window.location.href = `${path}/my-courses`;
+            }}
+            curriculums={curriculums}
+            courseName={courseName}
+            loading={loading}
+          />
 
           <div className="flex justify-between w-full px-1 my-10">
             <div className="w-2/5">
@@ -342,10 +394,15 @@ const NewDashBoard = () => {
             </div>
           </div>
 
-          <StudentJourney onStartLearning={() => {
-            const path = location.pathname.split('/').slice(0, -1).join('/');
-            window.location.href = `${path}/my-courses`;
-          }} />
+          <StudentJourney 
+            onStartLearning={() => {
+              const path = location.pathname.split('/').slice(0, -1).join('/');
+              window.location.href = `${path}/my-courses`;
+            }}
+            curriculums={curriculums}
+            courseName={courseName}
+            loading={loading}
+          />
 
           <div className="flex justify-between w-full px-1 my-10">
             <div className="w-full">

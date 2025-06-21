@@ -7,7 +7,12 @@ import {
     Avatar,
     Divider,
     Button,
-    CircularProgress
+    CircularProgress,
+    Dialog,
+    DialogTitle,
+    DialogContent,
+    DialogContentText,
+    DialogActions
 } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import { useNavigate, useParams } from 'react-router-dom';
@@ -15,11 +20,76 @@ import { useGetAttemptedIdQuery } from '../store/service/user/UserService';
 
 const PermissionUserExam = () => {
     const [isChecked, setIsChecked] = useState(false);
+    const [isGettingLocation, setIsGettingLocation] = useState(true); // Start with true
+    const [locationError, setLocationError] = useState(null);
+    const [location, setLocation] = useState(null);
     const navigate = useNavigate();
     const { userId, examId } = useParams();
+    const [showErrorDialog, setShowErrorDialog] = useState(false);
 
-    // Fetch the exam attempt details
-    const { data, isLoading, isError, error } = useGetAttemptedIdQuery({ userId, examId });
+    // Get user's location on component mount
+    useEffect(() => {
+        const getLocation = async () => {
+            try {
+                setIsGettingLocation(true);
+                setLocationError(null);
+                
+                if (!navigator.geolocation) {
+                    throw new Error('Geolocation is not supported by your browser');
+                }
+
+                const position = await new Promise((resolve, reject) => {
+                    navigator.geolocation.getCurrentPosition(
+                        resolve,
+                        reject,
+                        {
+                            enableHighAccuracy: true,
+                            timeout: 10000,
+                            maximumAge: 0
+                        }
+                    );
+                });
+
+                const locationData = {
+                    latitude: position.coords.latitude,
+                    longitude: position.coords.longitude,
+                    accuracy: position.coords.accuracy
+                };
+                
+                setLocation(locationData);
+                localStorage.setItem('examLocation', JSON.stringify(locationData));
+            } catch (error) {
+                let errorMessage;
+                switch (error.code) {
+                    case error.PERMISSION_DENIED:
+                        errorMessage = 'Please enable location services to start the exam';
+                        break;
+                    case error.POSITION_UNAVAILABLE:
+                        errorMessage = 'Location information is unavailable';
+                        break;
+                    case error.TIMEOUT:
+                        errorMessage = 'Location request timed out';
+                        break;
+                    default:
+                        errorMessage = 'An unknown error occurred';
+                }
+                setLocationError(errorMessage);
+            } finally {
+                setIsGettingLocation(false);
+            }
+        };
+
+        getLocation();
+    }, []); // Run only on mount
+
+    // Fetch the exam attempt details with location data
+    const { data, isLoading, isError, error } = useGetAttemptedIdQuery({ 
+        userId, 
+        examId,
+        location: location
+    }, {
+        skip: isGettingLocation // Skip the query while getting location
+    });
 
     // States for storing fetched data
     const [examDetails, setExamDetails] = useState({});
@@ -36,6 +106,13 @@ const PermissionUserExam = () => {
         }
     }, [data]);
 
+    // Show dialog if error
+    useEffect(() => {
+        if (locationError || isError) {
+            setShowErrorDialog(true);
+        }
+    }, [locationError, isError]);
+
     const getInitials = (name) => {
         return name
             ? name.split(' ').map((word) => word[0]).join('').toUpperCase()
@@ -48,176 +125,214 @@ const PermissionUserExam = () => {
     };
 
     // Handle exam start
-    const handleStartExam = () => {
-        if (isChecked && data.data) {
-            navigate(`${window.location.pathname}/assessment/${data.data.examAttemptId}`);
-            // localStorage.setItem('timeLeft', data.data.timeLeft);
+    const handleStartExam = async () => {
+        if (!isChecked || !data.data) return;
+
+        try {
+            setIsGettingLocation(true);
+            setLocationError(null);
+            
+            // Get fresh location
+            if (!navigator.geolocation) {
+                throw new Error('Geolocation is not supported by your browser');
+            }
+
+            const position = await new Promise((resolve, reject) => {
+                navigator.geolocation.getCurrentPosition(
+                    resolve,
+                    reject,
+                    {
+                        enableHighAccuracy: true,
+                        timeout: 10000,
+                        maximumAge: 0
+                    }
+                );
+            });
+
+            const locationData = {
+                latitude: position.coords.latitude,
+                longitude: position.coords.longitude,
+                accuracy: position.coords.accuracy
+            };
+            
+            setLocation(locationData);
+            localStorage.setItem('examLocation', JSON.stringify(locationData));
+            
+            // Navigate to exam with location data
+            navigate(`${window.location.pathname}/assessment/${data.data.examAttemptId}`, {
+                state: {
+                    location: locationData
+                }
+            });
+        } catch (error) {
+            let errorMessage;
+            switch (error.code) {
+                case error.PERMISSION_DENIED:
+                    errorMessage = 'Please enable location services to start the exam';
+                    break;
+                case error.POSITION_UNAVAILABLE:
+                    errorMessage = 'Location information is unavailable';
+                    break;
+                case error.TIMEOUT:
+                    errorMessage = 'Location request timed out';
+                    break;
+                default:
+                    errorMessage = 'An unknown error occurred';
+            }
+            setLocationError(errorMessage);
+        } finally {
+            setIsGettingLocation(false);
         }
     };
 
     // Handle going back to "/user"
     const handleGoBack = () => {
-        navigate('/user'); // Redirect to "/user"
+        navigate('/user');
     };
+
+    if (isLoading || isGettingLocation) {
+        return (
+            <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
+                <CircularProgress />
+            </Box>
+        );
+    }
 
     return (
         <>
-            {isLoading && (
-                <Box sx={{
-                    display: 'flex', justifyContent: 'center', alignItems: 'center', height: `calc(100vh - 60px)`
-                }}>
-                    <CircularProgress />
-                </Box>
-            )}
+            {/* Error Dialog */}
+            <Dialog
+                open={showErrorDialog}
+                onClose={() => { window.close(); }}
+                aria-labelledby="error-dialog-title"
+                aria-describedby="error-dialog-description"
+            >
+                <DialogTitle id="error-dialog-title" sx={{ color: '#b91c1c', fontWeight: 'bold' }}>
+                    Error
+                </DialogTitle>
+                <DialogContent>
+                    <DialogContentText id="error-dialog-description" sx={{ color: '#b91c1c' }}>
+                        {locationError || error?.data?.message || 'You must be either connected to the campus WiFi network or physically present on campus to take the exam.'}
+                    </DialogContentText>
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={() => window.close()} variant="contained" sx={{ bgcolor: '#f97316' }}>
+                        Close
+                    </Button>
+                </DialogActions>
+            </Dialog>
 
-            {isError && error?.status === 400 && (
-                <Box sx={{
-                    display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', height: `calc(100vh - 60px)`
-                }}>
-                    <Typography variant="h6" sx={{ color: '#f97316', textAlign: 'center' }}>
-                        {error.data.message}
+            {/* Main Content */}
+            <Box sx={{ p: 3 }}>
+                {/* Header */}
+                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+                    <Typography variant="h5" sx={{ fontWeight: 'bold' }}>
+                        Exam Instructions
                     </Typography>
-                    <Button variant="contained" onClick={handleGoBack} sx={{ mt: 3, bgcolor: '#f97316' }}>
+                    <Button
+                        onClick={handleGoBack}
+                        startIcon={<CloseIcon />}
+                        sx={{ color: 'gray' }}
+                    >
+                        Close
+                    </Button>
+                </Box>
+
+                {/* User Info */}
+                <Box sx={{ display: 'flex', alignItems: 'center', mb: 3 }}>
+                    <Avatar sx={{ bgcolor: '#f97316', mr: 2 }}>
+                        {getInitials(userDetails?.name)}
+                    </Avatar>
+                    <Box>
+                        <Typography variant="subtitle1" sx={{ fontWeight: 'bold' }}>
+                            {userDetails?.name}
+                        </Typography>
+                        <Typography variant="body2" color="text.secondary">
+                            {userDetails?.email}
+                        </Typography>
+                    </Box>
+                </Box>
+
+                <Divider sx={{ my: 3 }} />
+
+                {/* Exam Details */}
+                <Box sx={{ mb: 3 }}>
+                    <Typography variant="h6" sx={{ fontWeight: 'bold', mb: 2 }}>
+                        {examDetails?.title}
+                    </Typography>
+                    <Typography variant="body1" sx={{ whiteSpace: 'pre-line' }}>
+                        {examDetails?.instructions}
+                    </Typography>
+                </Box>
+
+                {/* Declaration */}
+                <Box sx={{ mb: 3 }}>
+                    <FormControlLabel
+                        control={
+                            <Checkbox
+                                checked={isChecked}
+                                onChange={handleCheckboxChange}
+                                sx={{
+                                    color: '#f97316',
+                                    '&.Mui-checked': {
+                                        color: '#f97316',
+                                    },
+                                }}
+                            />
+                        }
+                        label="I have read all the instructions carefully and have understood them. I agree not to cheat or use unfair means in this examination. I understand that using unfair means of any sort for my own or someone else's advantage will lead to my immediate disqualification. The decision of the administrator will be final in these matters and cannot be appealed."
+                    />
+                </Box>
+
+                {/* Footer buttons */}
+                <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                    <Button
+                        variant="contained"
+                        disabled={!isChecked || isGettingLocation}
+                        sx={{
+                            bgcolor: isChecked ? '#f97316' : '#fbbf24',
+                            color: 'white',
+                            textTransform: 'none',
+                            borderRadius: '20px',
+                            px: 3,
+                            py: 1.5,
+                            fontWeight: 'bold',
+                            '&:hover': {
+                                bgcolor: isChecked ? '#f97316' : '#fbbf24',
+                            },
+                        }}
+                        onClick={handleStartExam}
+                    >
+                        {isGettingLocation ? 'Getting Location...' : 'I am ready to begin'}
+                    </Button>
+
+                    {locationError && (
+                        <Typography color="error" sx={{ mt: 1 }}>
+                            {locationError}
+                        </Typography>
+                    )}
+
+                    {/* Go Back button */}
+                    <Button
+                        variant="outlined"
+                        onClick={handleGoBack}
+                        sx={{
+                            borderColor: '#f97316',
+                            color: '#f97316',
+                            textTransform: 'none',
+                            borderRadius: '20px',
+                            px: 3,
+                            py: 1.5,
+                            '&:hover': {
+                                borderColor: '#f97316',
+                                bgcolor: 'rgba(249, 115, 22, 0.04)',
+                            },
+                        }}
+                    >
                         Go Back
                     </Button>
                 </Box>
-            )}
-
-            {data && !isError && !isLoading && (
-                <>
-                    <Box sx={{ bgcolor: '#f97316', display: 'flex', justifyContent: 'space-between', alignItems: 'center', p: 1 }}>
-                        <Typography variant="h7" sx={{ color: "white", fontWeight: 'bold' }}>
-                            {examDetails.title}
-                        </Typography>
-                        <Button onClick={() => navigate(-1)}>
-                            <CloseIcon sx={{ color: 'white' }} />
-                        </Button>
-                    </Box>
-                    <Box sx={{ width: '100%', bgcolor: '#f4f5f7', height: `calc(100vh - 52px)`, p: 2 }}>
-                        <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
-                            <Typography variant="h5" sx={{ fontWeight: 'bold' }}>
-                                {examDetails.title}
-                            </Typography>
-                        </Box>
-
-                        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', p: 2, borderBottom: 1 }}>
-                            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 1 }}>
-                                <Typography variant="subtitle1" sx={{ fontWeight: 'bold' }}>
-                                    Total Duration:
-                                </Typography>
-                                <Typography sx={{ color: '#f97316', fontWeight: 'bold' }}>
-                                    {examDetails.duration}
-                                </Typography>
-                            </Box>
-                            <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                                {userDetails.img ? (
-                                    <Avatar src={userDetails.img} sx={{ width: 60, height: 60 }} />
-                                ) : (
-                                    <Avatar sx={{ width: 60, height: 60, backgroundColor: '#f97316', fontWeight: 'bold' }}>
-                                        {getInitials(userDetails.name)}
-                                    </Avatar>
-                                )}
-                                <Box className='text-black text-start ml-2 hidden sm:block'>
-                                    <Typography className="text-[12px] xl:text-[14px] font-semibold 2xl:text-[16px]">
-                                        {userDetails.name}
-                                    </Typography>
-                                    <Typography className="text-[10px] xl:text-[12px] 2xl:text-[12px] font-light">
-                                        {userDetails.email}
-                                    </Typography>
-                                </Box>
-                            </Box>
-                        </Box>
-
-                        {/* Main Content */}
-                        <Box sx={{ p: 3 }}>
-                            <Box sx={{ display: 'flex', justifyContent: 'start', alignItems: 'center', mb: 2 }}>
-                                <Typography variant="subtitle1" sx={{ fontWeight: 'bold' }}>
-                                    Instructions:
-                                </Typography>
-                            </Box>
-
-                            <Typography
-                                sx={{
-                                    textAlign: examDetails?.instructions ? 'start' : 'center',
-                                    color: examDetails?.instructions ? 'black' : '#777',
-                                    minHeight: '340px',
-                                    border: '1px dashed #ddd',
-                                    p: 2,
-                                    mb: 3
-                                }}
-                            >
-                                {examDetails?.instructions || "Exam Instructions and Guidelines will go here."}
-                            </Typography>
-
-                            {/* Declaration checkbox */}
-                            <Box sx={{ mt: 4 }}>
-                                <Typography variant="subtitle1" sx={{ fontWeight: 'bold', mb: 2 }}>
-                                    Declaration:
-                                </Typography>
-                                <FormControlLabel
-                                    control={
-                                        <Checkbox
-                                            checked={isChecked}
-                                            onChange={handleCheckboxChange}
-                                            name="declaration"
-                                            sx={{
-                                                color: '#f97316',
-                                                '&.Mui-checked': { color: '#f97316' },
-                                            }}
-                                        />
-                                    }
-                                    label="I have read all the instructions carefully and have understood them. I agree not to cheat or use unfair means in this examination. I understand that using unfair means of any sort for my own or someone else’s advantage will lead to my immediate disqualification. The decision of the administrator will be final in these matters and cannot be appealed."
-                                />
-                            </Box>
-
-                            <Divider sx={{ my: 3 }} />
-
-                            {/* Footer buttons */}
-                            <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                                <Button
-                                    variant="contained"
-                                    disabled={!isChecked} // Disable the button until the checkbox is checked
-                                    sx={{
-                                        bgcolor: isChecked ? '#f97316' : '#fbbf24',
-                                        color: 'white',
-                                        textTransform: 'none',
-                                        borderRadius: '20px',
-                                        px: 3,
-                                        py: 1.5,
-                                        fontWeight: 'bold',
-                                        '&:hover': {
-                                            bgcolor: isChecked ? '#f97316' : '#fbbf24',
-                                        },
-                                    }}
-                                    onClick={handleStartExam}
-                                >
-                                    I am ready to begin
-                                </Button>
-
-                                {/* Go Back button */}
-                                <Button
-                                    variant="contained"
-                                    sx={{
-                                        bgcolor: '#808080',
-                                        color: 'white',
-                                        textTransform: 'none',
-                                        borderRadius: '20px',
-                                        px: 3,
-                                        py: 1.5,
-                                        fontWeight: 'bold',
-                                        '&:hover': {
-                                            bgcolor: '#666666',
-                                        },
-                                    }}
-                                    onClick={handleGoBack} // Go back to /user
-                                >
-                                    Go Back
-                                </Button>
-                            </Box>
-                        </Box>
-                    </Box>
-                </>
-            )}
+            </Box>
         </>
     );
 };

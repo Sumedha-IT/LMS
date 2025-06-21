@@ -22,7 +22,7 @@ const PRIORITY_ENDPOINTS = [
 ];
 
 // Function to decode and parse the cookie
-const getDecodedCookie = (cookieName) => {
+export const getDecodedCookie = (cookieName) => {
   try {
     const cookieValue = Cookies.get(cookieName);
     if (!cookieValue) return null;
@@ -34,8 +34,8 @@ const getDecodedCookie = (cookieName) => {
   }
 };
 
-// Check for both VITE_API_URL and REACT_APP_API_URL environment variables
-const baseUrl = import.meta.env.VITE_API_URL || import.meta.env.REACT_APP_API_URL || 'http://localhost:8000/api';
+// Check for both VITE_APP_API_URL and REACT_APP_API_URL environment variables
+const baseUrl = import.meta.env.VITE_APP_API_URL;
 console.log('API Base URL:', baseUrl);
 
 export const apiRequest = async (endpoint, options = {}) => {

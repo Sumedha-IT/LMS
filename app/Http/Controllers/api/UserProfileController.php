@@ -20,10 +20,16 @@ class UserProfileController extends Controller
         // Get the first batch for the user
         $batch = $user->batches->first();
 
+        // Format the avatar URL properly
+        $userData = $user->toArray();
+        if ($user->avatar_url) {
+            $userData['avatar_url'] = Storage::disk('public')->url($user->avatar_url);
+        }
+
         // Return a more detailed response
         return response()->json([
             'success' => true,
-            'user' => array_merge($user->toArray(), [
+            'user' => array_merge($userData, [
                 'batch' => $batch ? [
                     'id' => $batch->id,
                     'name' => $batch->name
@@ -85,10 +91,16 @@ class UserProfileController extends Controller
             $user->fill($data);
             $user->save();
 
+            // Format the avatar URL in the response
+            $userData = $user->toArray();
+            if ($user->avatar_url) {
+                $userData['avatar_url'] = Storage::disk('public')->url($user->avatar_url);
+            }
+
             return response()->json([
                 'success' => true,
                 'message' => 'Profile Updated Successfully',
-                'user' => $user
+                'user' => $userData
             ]);
 
         } catch (\Exception $e) {

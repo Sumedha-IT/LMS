@@ -1,7 +1,7 @@
 import axios from 'axios';
 
-// Get the API URL from environment variables or use a default
-const API_URL = import.meta.env.VITE_APP_API_URL || 'http://localhost:8000';
+// Get the API URL from environment variables
+const API_URL = import.meta.env.VITE_APP_API_URL;
 
 // Helper function to get cookies
 function getCookie(name) {

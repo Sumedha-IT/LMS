@@ -79,6 +79,37 @@ class BatchResource extends Resource implements HasShieldPermissions
                                             ->required()
                                             ->maxLength(255),
 
+                                        Forms\Components\Select::make('clone_from_batch_id')
+                                            ->label('Clone Curriculum from Batch')
+                                            ->options(Batch::all()->pluck('name', 'id'))
+                                            ->searchable()
+                                            ->live()
+                                            ->dehydrated(false)
+                                            ->afterStateUpdated(function ($state, callable $set) {
+                                                if ($state) {
+                                                    $batch = Batch::with('curriculums.topics')->find($state);
+                                                    if ($batch) {
+                                                        $curriculums = [];
+                                                        foreach ($batch->curriculums as $curriculum) {
+                                                            $topics = [];
+                                                            foreach ($curriculum->topics as $topic) {
+                                                                $topics[] = [
+                                                                    'topic_id' => $topic->topic_id,
+                                                                    'is_topic_completed' => false,
+                                                                    'topic_completed_at' => null,
+                                                                ];
+                                                            }
+                                                            $curriculums[] = [
+                                                                'curriculum_id' => $curriculum->curriculum_id,
+                                                                'tutor_id' => $curriculum->tutor_id,
+                                                                'topics' => $topics,
+                                                            ];
+                                                        }
+                                                        $set('curriculums', $curriculums);
+                                                    }
+                                                }
+                                            }),
+
                                         TableRepeater::make('curriculums')
                                             ->relationship()
                                             ->headers([
@@ -133,6 +164,7 @@ class BatchResource extends Resource implements HasShieldPermissions
                                                                         Forms\Components\DatePicker::make('topic_completed_at')
                                                                             ->label('Completed At')
                                                                             ->displayFormat('d/m/Y H:i')
+                                                                            ->format('Y-m-d H:i:s')
                                                                             // Removed disabled() and dehydrated(false)
                                                                             ->dehydrated() // Ensure the value is included in the form submission
                                                                             ->extraAttributes(['class' => 'mt-2']),
@@ -203,8 +235,6 @@ class BatchResource extends Resource implements HasShieldPermissions
                 Tables\Columns\TextColumn::make('curriculums.curriculum.name')
                     ->listWithLineBreaks()
                     ->bulleted()
-                    ->limitList(2)
-                    ->expandableLimitedList()
                     ->searchable(),
                 Tables\Columns\TextColumn::make('start_end_date')
                     ->label('Start/End')

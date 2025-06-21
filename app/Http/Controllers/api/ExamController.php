@@ -92,44 +92,53 @@ class ExamController extends Controller
     }
     
     public function index(Request $request){
-        $data = request()->query();
+        try {
+            $data = request()->query();
 
-        $size = $request->get('size') == 0 ? 25 : $request->get('size');
-        $pageNo = $request->get('page', 1);
-        $offset = ($pageNo - 1) * $size;
-        $totalRecords = Exam::count();
+            $size = $request->get('size') == 0 ? 25 : $request->get('size');
+            $pageNo = $request->get('page', 1);
+            $offset = ($pageNo - 1) * $size;
+            $totalRecords = Exam::count();
 
-        $exams = Exam::with('batch')
-            // Apply batchId filter only if it exists
-            ->when(!empty($data['batchId']), function ($query) use ($data) {
-                return $query->where('batch_id', $data['batchId']);
-            })
-            // Apply date filter based on the criteria ('past' or 'upcoming')
-            ->when(isset($data['dateCriteria']) && in_array($data['dateCriteria'], ['past', 'upcoming']), function ($query) use ($data) {
-                $operator = $data['dateCriteria'] === 'past' ? '<' : '>';
-                return $query->where('exam_date', $operator, now());
-            })
-            // Order by 'created_by' either ascending or descending based on the direction provided
-            ->when(true, function ($query) use ($data) {
-                $data['sortOrder'] = (!empty($data['sortOrder']) && (in_array($data['sortOrder'], ['asc', 'desc']))) ?  $data['sortOrder'] : 'desc';
-                return $query->orderBy('created_at', $data['sortOrder']);
-            })
-        ->offset($offset)
-        ->limit($size)
-        ->get();
-        
-        $data = [
-            "data" => empty($exams) ? [] : ExamResource::collection($exams,[]),
-            "totalRecords" => $totalRecords,
-            "totalPages" => ceil($totalRecords / $size)
-        ];
-        return response()->json($data,200);
+            $exams = Exam::with('batches')
+                // Apply batchId filter only if it exists and is not empty
+                ->when(!empty($data['batchId']) && $data['batchId'] !== '', function ($query) use ($data) {
+                    return $query->whereHas('batches', function($q) use ($data) {
+                        $q->where('batches.id', $data['batchId']);
+                    });
+                })
+                // Apply date filter based on the criteria ('past' or 'upcoming')
+                ->when(isset($data['dateCriteria']) && in_array($data['dateCriteria'], ['past', 'upcoming']), function ($query) use ($data) {
+                    $operator = $data['dateCriteria'] === 'past' ? '<' : '>';
+                    return $query->where('exam_date', $operator, now());
+                })
+                // Order by 'created_by' either ascending or descending based on the direction provided
+                ->when(true, function ($query) use ($data) {
+                    $data['sortOrder'] = (!empty($data['sortOrder']) && (in_array($data['sortOrder'], ['asc', 'desc']))) ?  $data['sortOrder'] : 'desc';
+                    return $query->orderBy('created_at', $data['sortOrder']);
+                })
+                ->offset($offset)
+                ->limit($size)
+                ->get();
+            
+            $data = [
+                "data" => empty($exams) ? [] : ExamResource::collection($exams),
+                "totalRecords" => $totalRecords,
+                "totalPages" => ceil($totalRecords / $size)
+            ];
+            return response()->json($data, 200);
+        } catch (\Exception $e) {
+            \Log::error('Exam index error: ' . $e->getMessage());
+            return response()->json([
+                'message' => 'An error occurred while fetching exams',
+                'error' => $e->getMessage()
+            ], 500);
+        }
     }
 
     public function create(Request $request){
         $data = $request->data;
         
-
         $data = $this->validateExam($data);
 
         if (!empty($data['message'])) {
@@ -137,12 +146,18 @@ class ExamController extends Controller
         }
 
         try {
-            $exam =  Exam::create($data);
-            $data =  new ExamResource($exam);
+            DB::beginTransaction();
+            
+            $exam = Exam::create($data);
+            $exam->batches()->attach($data['batchIds']);
+            
+            DB::commit();
+            $data = new ExamResource($exam);
         } catch (QueryException $e) {
+            DB::rollBack();
             if ($e->getCode() === '23000') {
                 return response()->json([
-                    'message' => 'Duplicate entry for name and batch_id combination',
+                    'message' => 'Duplicate entry for name and batch combination',
                     'success' => false,
                     'status' =>  409
                 ], 409); // 409 Conflict
@@ -162,13 +177,13 @@ class ExamController extends Controller
         return response()->json(['message' => 'Exam not found',"hasError"=>false], 404);   
     }
 
-    public function update($id,Request $request){
+    public function update($id, Request $request){
         $data = $request->data;
         if (empty($data)) {
             return response()->json(['message' => "Data key required", "hasError" => true], 400);
         }
 
-        $exam =Exam::find($id);
+        $exam = Exam::find($id);
         if (empty($exam)) {
             return response()->json(['message' => "Exam Not Found","hasError"=>false], 404);
         }
@@ -179,28 +194,34 @@ class ExamController extends Controller
             return response()->json($data, 400);
         }
 
-        if($exam->name == $data['title']){
+        if($exam->title == $data['title']){
             unset($data['title']);
         }
 
         try {
+            DB::beginTransaction();
+            
             $exam->update($data);
+            $exam->batches()->sync($data['batchIds']);
+            
+            DB::commit();
+            $data = new ExamResource($exam);
         } catch (QueryException $e) {
+            DB::rollBack();
             if ($e->getCode() === '23000') {
                 return response()->json([
-                    'message' => 'Duplicate entry for name and batch_id combination',
+                    'message' => 'Duplicate entry for name and batch combination',
                     'hasError' => true
                 ], 409); // 409 Conflict
             }
         }
-        $data =  new ExamResource($exam);
         return response()->json(["data" => $data, 'message' => "Exam Updated", "success" => true,'status' => 200], 200);
     }
 
     public function validateExam($data){
         $validator = Validator::make($data, [
             'id' => 'nullable|integer',
-            'batchId' => 'required|integer|exists:batches,id',
+            'batchIds' => 'required|array|exists:batches,id',
             'curriculumId' => 'required|array|exists:curriculum,id',
             'title' => ['required','string','max:50'],
             'instructions' => 'nullable|string|max:1000',
@@ -237,9 +258,8 @@ class ExamController extends Controller
         $data["starts_at"] = $data['startsAt'];
         $data['ends_at'] = $data['endsAt'];
         $data['max_attempts'] = $data['maxAttempts'] ?? 1;
-        $data['batch_id'] = $data['batchId'];
         $data['immediate_result'] = $data['immediateResult'] ?? 1;
-        $data['exam_date'] =$data['examDate'];
+        $data['exam_date'] = $data['examDate'];
         return $data;   
     }
 
@@ -263,7 +283,12 @@ class ExamController extends Controller
         if(empty($batchIds))
             return  response()->json(['message' => "User is not enrolled to any batch", 'status' => 400,'success' =>false],400);
 
-        $exams = Exam::with('subject')->whereIn('batch_id', $batchIds)->orderBy('exam_date', 'desc');
+        $exams = Exam::with(['subject', 'batches'])
+            ->whereHas('batches', function($query) use ($batchIds) {
+                $query->whereIn('batches.id', $batchIds);
+            })
+            ->orderBy('exam_date', 'desc')
+            ->get();
         $attemptedExams = ExamAttempt::where('student_id', $id)->get();
         $attemptedExamIds = $attemptedExams->pluck('exam_id')->toArray();
         $exams->each(function ($exam) use (&$data, $attemptedExamIds, $attemptedExams, $today, $user) {
@@ -330,17 +355,23 @@ class ExamController extends Controller
     }
 
     public function getMarkList($examId){
-        $exam = Exam::find($examId);
+        $exam = Exam::with('batches')->find($examId);
         if(empty($exam))
             return response()->json(['message' => "Exam not found", "hasError" => true], 400);
-        $batchId = $exam->batch_id;
-        $batch = Batch::where('id',$batchId)->first();
-        $batchUsers = $batch->students()->get()->select('id', 'name', 'email');
+        
+        // Get all students from all batches associated with this exam
+        $batchIds = $exam->batches->pluck('id');
+        $batchUsers = User::whereHas('batches', function($query) use ($batchIds) {
+            $query->whereIn('batches.id', $batchIds);
+        })->select('id', 'name', 'email')->get();
 
         $attemptedExamUsers = ExamAttempt::with(['student' => function($query) {
             $query->select('id', 'name', 'email');
-
-        }])->select("*", DB::raw("UPPER(status) as status"))->where('exam_id', $examId)->orderBy('score','desc')->get()->toArray();
+        }])->select("*", DB::raw("UPPER(status) as status"))
+           ->where('exam_id', $examId)
+           ->orderBy('score','desc')
+           ->get()
+           ->toArray();
       
         $userIds = collect($attemptedExamUsers)->pluck('student.id')->toArray();
 
@@ -354,16 +385,14 @@ class ExamController extends Controller
     }
     public function GetExamChart(Request $request)
     {
-        // $userId = Auth::id();
-        $user=$request->user();
-        $userId=$user->id;
+        $user = $request->user();
+        $userId = $user->id;
         $fiveDaysAgo = Carbon::now()->subDays(5)->startOfDay();
 
-        $exams = Exam::with(['batch.curriculums'])
+        $exams = Exam::with(['batches'])
             ->whereHas('examAttempts', function ($query) use ($userId) {
                 $query->where('student_id', $userId);
             })
-            // ->whereDate('exam_date', '>=', $fiveDaysAgo) // Fetch only last 5 days' records
             ->orderBy('exam_date', 'desc')
             ->get()
             ->map(function ($exam) use ($userId) {
@@ -376,9 +405,7 @@ class ExamController extends Controller
                     'id' => $exam->id,
                     'title' => $exam->title,
                     'date' => $exam->exam_date ? Carbon::parse($exam->exam_date) : 'N/A',
-                    // 'curriculums' => $exam->batch->curriculums->pluck('name')->implode(','),
-                    'curriculums'=>$exam->curriculums,
-                    // 'curriculum' => $exam->batch->course_package->name,
+                    'curriculums' => $exam->curriculums,
                     'max_marks' => $exam->total_marks,
                     'obtained_marks' => $latestAttempt ? (int) $latestAttempt->score : 0,
                 ];
@@ -394,7 +421,9 @@ class ExamController extends Controller
 
         $user=$request->user();
         $batch_id=$user->batchesstudents->pluck('id')->first();
-        $exams_id=Exam::where('batch_id',$batch_id)->latest('exam_date')->first()->id;
+        $exams_id = Exam::whereHas('batches', function($query) use ($batch_id) {
+            $query->where('batches.id', $batch_id);
+        })->latest('exam_date')->first()->id;
         $examAttempts=ExamAttempt::with('student','getExams')->where('exam_id',$exams_id)->orderByDesc('score')->take(5)->get();
         $leaderboard=[];
         foreach($examAttempts as $examAttempt){
@@ -521,5 +550,49 @@ class ExamController extends Controller
             'success' => true,
             'data' => $assignmentsByTopic,
         ], 200);
+    }
+
+    public function getLatestExam(Request $request)
+    {
+        $user = $request->user();
+        $batchIds = $user->batches()->pluck('id')->toArray();
+        
+        if(empty($batchIds)) {
+            return response()->json(['message' => "User is not enrolled to any batch", 'status' => 400, 'success' => false], 400);
+        }
+
+        $exams = Exam::with(['subject', 'batches'])
+            ->whereHas('batches', function($query) use ($batchIds) {
+                $query->whereIn('batches.id', $batchIds);
+            })
+            ->orderBy('exam_date', 'desc')
+            ->get();
+
+        return response()->json([
+            'success' => true,
+            'data' => $exams
+        ]);
+    }
+
+    public function getTutorExams(Request $request)
+    {
+        $user = $request->user();
+        $tutorBatchIds = \App\Models\BatchCurriculum::where('tutor_id', $user->id)->pluck('batch_id')->toArray();
+        
+        if(empty($tutorBatchIds)) {
+            return response()->json(['message' => "Tutor is not assigned to any batch", 'status' => 400, 'success' => false], 400);
+        }
+
+        $exams = Exam::with(['subject', 'batches'])
+            ->whereHas('batches', function($query) use ($tutorBatchIds) {
+                $query->whereIn('batches.id', $tutorBatchIds);
+            })
+            ->orderBy('exam_date', 'desc')
+            ->get();
+
+        return response()->json([
+            'success' => true,
+            'data' => $exams
+        ]);
     }
 }

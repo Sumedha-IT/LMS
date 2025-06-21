@@ -33,11 +33,14 @@ const validationSchema = Yup.object({
     .required('Exam date is required'),
 
   title: Yup.string().required('Title is required'),
-  curriculumId:  Yup.array()
+  curriculumId: Yup.array()
     .of(Yup.string().required('Each curriculum name is required'))
     .required('Curriculum array is required')
     .min(1, 'At least one curriculum is required'),
-  batchId: Yup.string().required('Batch name is required'),
+  batchIds: Yup.array()
+    .of(Yup.string().required('Each batch is required'))
+    .required('At least one batch is required')
+    .min(1, 'At least one batch is required'),
 
   startsAtHours: Yup.string()
     .required('Start hour is required')
@@ -109,7 +112,7 @@ const ExamScheduling = ({ ExamData }) => {
       examDate: ExamData?.examDate || '',
       title: ExamData?.title || '',
       curriculumId: ExamData?.curriculum?.map(c => c.id) || [],   //mapping the curriculum data and set it
-      batchId: ExamData?.batchId || '',
+      batchIds: ExamData?.batchIds || [],
       startsAtHours: ExamData?.starts_at ? ExamData.starts_at.split(':')[0] : '',
       startsAtMinutes: ExamData?.starts_at ? ExamData.starts_at.split(':')[1] : '',
       endsAtHours: ExamData?.ends_at ? ExamData.ends_at.split(':')[0] : '',
@@ -276,18 +279,27 @@ const ExamScheduling = ({ ExamData }) => {
 
             {/* Batch */}
             <div className="flex items-center gap-4">
-              <label className="w-1/3">Batch <span className="text-[red]">*</span></label>
+              <label className="w-1/3">Batches <span className="text-[red]">*</span></label>
               <TextField
                 fullWidth
-                id="batchId"
-                name="batchId"
+                id="batchIds"
+                name="batchIds"
                 select
-                value={formik.values.batchId}
+                value={formik.values.batchIds}
                 onChange={formik.handleChange}
-                error={formik.touched.batchId && Boolean(formik.errors.batchId)}
-                helperText={formik.touched.batchId && formik.errors.batchId}
+                error={formik.touched.batchIds && Boolean(formik.errors.batchIds)}
+                helperText={formik.touched.batchIds && formik.errors.batchIds}
                 InputProps={{
                   readOnly: isReadOnly,
+                }}
+                SelectProps={{
+                  multiple: true, // Enable multi-select
+                  renderValue: (selected) => {
+                    const selectedNames = (courseList?.data || [])
+                        .filter(option => selected.includes(option.batch_id))
+                        .map(option => option.batch_name);
+                    return selectedNames.join(', ');
+                  },
                 }}
                 disabled={!courseList || courseList.length === 0}
               >

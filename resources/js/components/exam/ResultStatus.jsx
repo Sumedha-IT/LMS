@@ -114,18 +114,20 @@ const ResultStatus = ({ onSubmitQuiz, userId, examId, setIsSubmit, showReport, s
                     </Box>
                     {showReport && <Box sx={{ mb: 2, px: 2 }}>
                         <Button onClick={handleReport} sx={{
-                            border: '1px solid #f97316',
                             textAlign: 'center',
                             fontWeight: 'bold',
                             fontSize: '10px',
-                            backgroundColor: '#f97316',
+                            background: 'linear-gradient(270deg, #eb6707 0%, #e42b12 100%)',
                             color: 'white',
+                            border: 'none',
+                            boxShadow: 'none',
                             '&:hover': {
-                                backgroundColor: '#ff690087',
+                                background: 'linear-gradient(270deg, #e42b12 0%, #eb6707 100%)',
                                 color: '#fff',
                             },
-
-                        }} >Show Report</Button>
+                        }}>
+                            Show Report
+                        </Button>
                     </Box>}
                 </Box>
 

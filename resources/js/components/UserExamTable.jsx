@@ -6,6 +6,7 @@ import AccessTimeOutlinedIcon from '@mui/icons-material/AccessTimeOutlined';
 import AssignmentOutlinedIcon from '@mui/icons-material/AssignmentOutlined';
 import HelpOutlineOutlinedIcon from '@mui/icons-material/HelpOutlineOutlined';
 import VisibilityOutlinedIcon from '@mui/icons-material/VisibilityOutlined';
+import VisibilityOffOutlinedIcon from '@mui/icons-material/VisibilityOffOutlined';
 import EmptyExamState from './EmptyExamState';
 import { keyframes } from '@mui/system';
 import { useNavigate } from 'react-router-dom';
@@ -56,6 +57,38 @@ const UserExamTable = ({ Value, userId, filter }) => {
         return duration;
     };
 
+    // Helper to parse exam date and time into a Date object
+    const getExamEndDateTime = (exam) => {
+        if (!exam.examDate || !exam.ends_at) return null;
+        // exam.examDate should be in 'YYYY-MM-DD' format
+        // exam.ends_at should be in 'HH:mm' format
+        const [year, month, day] = exam.examDate.split('-').map(Number);
+        const [hours, minutes] = exam.ends_at.split(':').map(Number);
+        return new Date(year, month - 1, day, hours, minutes, 0, 0);
+    };
+
+    const isExamExpired = (exam) => {
+        const examEndDateTime = getExamEndDateTime(exam);
+        if (!examEndDateTime) return false;
+        return now > examEndDateTime && exam.status !== 'Completed';
+    };
+
+    const isExamDurationOver = (exam) => {
+        const examEndDateTime = getExamEndDateTime(exam);
+        if (!examEndDateTime) return true;
+        return now >= examEndDateTime;
+    };
+
+    const getRemainingTime = (exam) => {
+        const examEndDateTime = getExamEndDateTime(exam);
+        if (!examEndDateTime) return null;
+        const timeUntilEnd = examEndDateTime - now;
+        if (timeUntilEnd <= 0) return null;
+        const remainingMinutes = Math.floor(timeUntilEnd / 60000);
+        const remainingSeconds = Math.floor((timeUntilEnd % 60000) / 1000);
+        return `${remainingMinutes.toString().padStart(2, '0')}:${remainingSeconds.toString().padStart(2, '0')}`;
+    };
+
     const { data, isLoading } = useGetUserExamDataQuery({
         page: page + 1,
         rowsPerPage: rowsPerPage,
@@ -98,12 +131,12 @@ const UserExamTable = ({ Value, userId, filter }) => {
                     ...exam,
                     // Format questions display - use actual count from database if available
                     totalQuestions: actualQuestionCount > 0
-                        ? `${exam.correctAnswers || 0}/${actualQuestionCount}`
+                        ? actualQuestionCount.toString()
                         : (exam.totalQuestions
                             ? (exam.totalQuestions.toString().includes('/')
-                                ? exam.totalQuestions
-                                : `${exam.totalQuestions}/30`)
-                            : '0/30'),
+                                ? exam.totalQuestions.split('/')[1]
+                                : exam.totalQuestions)
+                            : '0'),
                     // Store the actual question count separately
                     actualQuestionCount: actualQuestionCount,
                     // Format marks display
@@ -212,48 +245,55 @@ const UserExamTable = ({ Value, userId, filter }) => {
                         </TableHead>
                         <TableBody>
                             {filteredExamData.map((exam, index) => {
-                                const [hours, minutes] = exam.ends_at.split(':').map(Number);
-                                const examEndTime = new Date();
-                                examEndTime.setHours(hours, minutes, 0, 0);
-                                const isExamCompleted = now >= examEndTime;
-                                const timeUntilReview = examEndTime - now;
-
-                                // Only show total questions
-                                const totalQuestions = exam.actualQuestionCount || exam.totalQuestions || 'N/A';
-                                // Show real time taken if available and not same as duration
-                                const showTimeTaken = (exam.timeTaken && exam.timeTaken !== exam.duration) ? exam.timeTaken : 'N/A';
-
                                 const isAttempted = exam.status === 'Completed';
+                                const expired = isExamExpired(exam);
+                                const durationOver = isExamDurationOver(exam);
+                                const remainingTime = getRemainingTime(exam);
+                                const showScore = isAttempted && durationOver;
+
                                 return (
                                     <TableRow key={index} sx={{ '&:hover': { backgroundColor: '#f8f9fa' } }}>
                                         <TableCell sx={{ padding: '16px', borderBottom: '1px solid #e5e7eb' }}>{exam.title}</TableCell>
                                         <TableCell sx={{ padding: '16px', borderBottom: '1px solid #e5e7eb' }}>{exam.examDate}</TableCell>
                                         <TableCell sx={{ padding: '16px', borderBottom: '1px solid #e5e7eb' }}>{exam.duration}</TableCell>
-                                        <TableCell sx={{ padding: '16px', borderBottom: '1px solid #e5e7eb' }}>{totalQuestions}</TableCell>
+                                        <TableCell sx={{ padding: '16px', borderBottom: '1px solid #e5e7eb' }}>{exam.totalQuestions}</TableCell>
                                         <TableCell sx={{ padding: '16px', borderBottom: '1px solid #e5e7eb' }}>
-                                            {isAttempted ? (exam.obtainedMarks ?? '-') : (
+                                            {expired && !isAttempted ? (
+                                                <Typography sx={{ color: '#c11e1b', fontStyle: 'italic' }}>Not Attempted</Typography>
+                                            ) : showScore ? (exam.obtainedMarks ?? '-') : (
                                                 <Typography sx={{ color: '#c11e1b', fontStyle: 'italic' }}>
-                                                    Not Attempted
+                                                    {isAttempted ? (
+                                                        <>
+                                                            Score will be available after{' '}
+                                                            <span style={{ fontWeight: 'bold' }}>
+                                                                {getRemainingTime(exam)}
+                                                            </span>
+                                                        </>
+                                                    ) : 'Not Attempted'}
                                                 </Typography>
                                             )}
                                         </TableCell>
-                                        <TableCell sx={{ padding: '16px', borderBottom: '1px solid #e5e7eb' }}>{isAttempted ? showTimeTaken : '-'}</TableCell>
+                                        <TableCell sx={{ padding: '16px', borderBottom: '1px solid #e5e7eb' }}>{isAttempted ? exam.timeTaken : '-'}</TableCell>
                                         <TableCell sx={{ padding: '16px', textAlign: 'center', borderBottom: '1px solid #e5e7eb' }}>
                                             {isAttempted ? (
                                                 <IconButton
                                                     onClick={() => handleViewScore(exam)}
+                                                    disabled={!durationOver}
                                                     sx={{
-                                                        color: '#f97316',
+                                                        color: durationOver ? '#f97316' : '#666666',
                                                         '&:hover': {
-                                                            backgroundColor: 'rgba(249, 115, 22, 0.1)'
+                                                            backgroundColor: durationOver ? 'rgba(249, 115, 22, 0.1)' : 'none'
+                                                        },
+                                                        '&:disabled': {
+                                                            color: '#666666'
                                                         }
                                                     }}
                                                 >
-                                                    <VisibilityOutlinedIcon />
+                                                    {durationOver ? <VisibilityOutlinedIcon /> : <VisibilityOffOutlinedIcon />}
                                                 </IconButton>
                                             ) : (
                                                 <Typography sx={{ color: '#666', fontSize: '14px' }}>
-                                                    -
+                                                    {expired ? '-' : '-'}
                                                 </Typography>
                                             )}
                                         </TableCell>
@@ -492,51 +532,61 @@ const UserExamTable = ({ Value, userId, filter }) => {
         const [examStarted, setExamStarted] = useState(false);
         const [timeRemaining, setTimeRemaining] = useState(null);
         const [showBlinkingTimer, setShowBlinkingTimer] = useState(false);
+        const [isExpired, setIsExpired] = useState(false);
 
         useEffect(() => {
-            // Check if exam has already started based on start time
-            const now = new Date();
-            if (exam.starts_at) {
-                const [hours, minutes] = exam.starts_at.split(':').map(Number);
-                const examDate = new Date();
-                examDate.setHours(hours, minutes, 0, 0);
+            // Use exam.examDate and exam.ends_at to get the real end time
+            if (exam.examDate && exam.ends_at) {
+                const [year, month, day] = exam.examDate.split('-').map(Number);
+                const [endHours, endMinutes] = exam.ends_at.split(':').map(Number);
+                const examEndDateTime = new Date(year, month - 1, day, endHours, endMinutes, 0, 0);
+                const now = new Date();
 
-                if (now >= examDate) {
-                    setExamStarted(true);
+                if (now > examEndDateTime) {
+                    setIsExpired(true);
+                    setExamStarted(false);
                     setTimeRemaining(null);
-                } else {
-                    // Calculate time remaining in minutes
-                    const diffMs = examDate.getTime() - now.getTime();
-                    const diffMinutes = Math.floor(diffMs / 60000);
-                    const diffSeconds = Math.floor((diffMs % 60000) / 1000);
+                    return;
+                }
 
-                    setTimeRemaining({ minutes: diffMinutes, seconds: diffSeconds });
+                // If not expired, handle start time logic as before
+                if (exam.starts_at) {
+                    const [startHours, startMinutes] = exam.starts_at.split(':').map(Number);
+                    const examStartDateTime = new Date(year, month - 1, day, startHours, startMinutes, 0, 0);
 
-                    // Set blinking timer if less than or equal to 1 minute remaining
-                    setShowBlinkingTimer(diffMinutes <= 1);
+                    if (now >= examStartDateTime) {
+                        setExamStarted(true);
+                        setTimeRemaining(null);
+                    } else {
+                        const diffMs = examStartDateTime.getTime() - now.getTime();
+                        const diffMinutes = Math.floor(diffMs / 60000);
+                        const diffSeconds = Math.floor((diffMs % 60000) / 1000);
 
-                    // Update the timer every second
-                    const timer = setInterval(() => {
-                        const currentTime = new Date();
-                        const timeDiff = examDate.getTime() - currentTime.getTime();
-                        const minutes = Math.floor(timeDiff / 60000);
-                        const seconds = Math.floor((timeDiff % 60000) / 1000);
+                        setTimeRemaining({ minutes: diffMinutes, seconds: diffSeconds });
+                        setShowBlinkingTimer(diffMinutes <= 1);
 
-                        if (timeDiff <= 0) {
-                            setExamStarted(true);
-                            setTimeRemaining(null);
-                            setShowBlinkingTimer(false);
-                            clearInterval(timer);
-                        } else {
-                            setTimeRemaining({ minutes, seconds });
-                            setShowBlinkingTimer(minutes <= 1);
-                        }
-                    }, 1000);
+                        const timer = setInterval(() => {
+                            const currentTime = new Date();
+                            const timeDiff = examStartDateTime.getTime() - currentTime.getTime();
+                            const minutes = Math.floor(timeDiff / 60000);
+                            const seconds = Math.floor((timeDiff % 60000) / 1000);
 
-                    return () => clearInterval(timer);
+                            if (timeDiff <= 0) {
+                                setExamStarted(true);
+                                setTimeRemaining(null);
+                                setShowBlinkingTimer(false);
+                                clearInterval(timer);
+                            } else {
+                                setTimeRemaining({ minutes, seconds });
+                                setShowBlinkingTimer(minutes <= 1);
+                            }
+                        }, 1000);
+
+                        return () => clearInterval(timer);
+                    }
                 }
             }
-        }, [exam.starts_at]);
+        }, [exam.examDate, exam.starts_at, exam.ends_at]);
 
         // Determine background color based on index
         const getBgColor = () => {
@@ -731,35 +781,29 @@ const UserExamTable = ({ Value, userId, filter }) => {
                     <Box>
                         <Typography
                             sx={{
-                                color: showBlinkingTimer ? '#FF0000' : '#666666',
+                                color: isExpired ? '#FF0000' : (showBlinkingTimer ? '#FF0000' : '#666666'),
                                 fontSize: '14px',
                                 mb: 0.5,
-                                fontWeight: showBlinkingTimer ? 600 : 400,
+                                fontWeight: (isExpired || showBlinkingTimer) ? 600 : 400,
                                 display: 'flex',
                                 alignItems: 'center',
                                 gap: '4px'
                             }}
                         >
-                            {timeRemaining ? (
-                                <>
-                                    {showBlinkingTimer && (
-                                        <Box
-                                            component="span"
-                                            sx={{
-                                                display: 'inline-block',
-                                                width: '8px',
-                                                height: '8px',
-                                                borderRadius: '50%',
-                                                backgroundColor: '#FF0000',
-                                                animation: `${blinkAnimation} 1s ease-in-out infinite`
-                                            }}
-                                        />
-                                    )}
-                                    Time Remaining
-                                </>
-                            ) : 'Check-in Time'}
+                            {isExpired ? 'Status' : (timeRemaining ? 'Time Remaining' : 'Check-in Time')}
                         </Typography>
-                        {timeRemaining ? (
+                        {isExpired ? (
+                            <Typography sx={{ 
+                                fontWeight: 600, 
+                                color: '#FF0000', 
+                                fontSize: '16px',
+                                padding: '4px 8px',
+                                borderRadius: '4px',
+                                backgroundColor: 'rgba(255, 0, 0, 0.1)'
+                            }}>
+                                Time Expired
+                            </Typography>
+                        ) : timeRemaining ? (
                             <Box
                                 sx={{
                                     padding: '4px 8px',
@@ -789,30 +833,30 @@ const UserExamTable = ({ Value, userId, filter }) => {
                     </Box>
                     <Button
                         variant="contained"
-                        href={isUpcoming && examStarted ? `/user/${userId}/exam/${exam.id}` : '#'}
-                        target={isUpcoming && examStarted ? "_blank" : undefined}
+                        href={isUpcoming && examStarted && !isExpired ? `/user/${userId}/exam/${exam.id}` : '#'}
+                        target={isUpcoming && examStarted && !isExpired ? "_blank" : undefined}
                         sx={{
-                            background: 'linear-gradient(270deg, #eb6707 0%, #e42b12 100%)',
-                            color: '#FFFFFF',
+                            background: isExpired ? '#E2E8F0' : 'linear-gradient(270deg, #eb6707 0%, #e42b12 100%)',
+                            color: isExpired ? '#A0AEC0' : '#FFFFFF',
                             borderRadius: '50px',
                             px: 4,
                             py: 1,
                             fontSize: '16px',
                             fontWeight: 600,
                             textTransform: 'none',
-                            boxShadow: '0 2px 8px 0 rgba(235,103,7,0.10)',
+                            boxShadow: isExpired ? 'none' : '0 2px 8px 0 rgba(235,103,7,0.10)',
                             '&:hover': {
-                                background: 'linear-gradient(270deg, #e42b12 0%, #eb6707 100%)',
-                                boxShadow: '0 4px 12px 0 rgba(235,103,7,0.18)'
+                                background: isExpired ? '#E2E8F0' : 'linear-gradient(270deg, #e42b12 0%, #eb6707 100%)',
+                                boxShadow: isExpired ? 'none' : '0 4px 12px 0 rgba(235,103,7,0.18)'
                             },
                             '&:disabled': {
                                 background: '#E2E8F0',
                                 color: '#A0AEC0'
                             }
                         }}
-                        disabled={!examStarted && isUpcoming}
+                        disabled={!examStarted || isExpired}
                     >
-                        Start
+                        {isExpired ? 'Expired' : 'Start'}
                     </Button>
                 </Box>
             </Card>

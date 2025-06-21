@@ -10,14 +10,20 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use App\Models\StudentDeviceRegistration;
 use App\Services\IpVerificationService;
+use App\Services\GeolocationVerificationService;
+use Illuminate\Support\Facades\Log;
 
 class StudentAttendanceController extends Controller
 {
     protected $ipVerificationService;
+    protected $geolocationVerificationService;
 
-    public function __construct(IpVerificationService $ipVerificationService)
-    {
+    public function __construct(
+        IpVerificationService $ipVerificationService,
+        GeolocationVerificationService $geolocationVerificationService
+    ) {
         $this->ipVerificationService = $ipVerificationService;
+        $this->geolocationVerificationService = $geolocationVerificationService;
     }
 
     public function registerDevice(Request $request)
@@ -86,126 +92,119 @@ class StudentAttendanceController extends Controller
     public function checkIn(Request $request)
     {
         try {
-            $user = auth()->user();
-            
-            // Validate required fields
-            if (!$request->has('device_fingerprint') || empty($request->device_fingerprint)) {
+            $student = auth()->user();
+            $ipAddress = $request->ip();
+            $deviceFingerprint = $request->input('device_fingerprint');
+            $deviceInfo = $request->input('device_info');
+            $deviceType = $request->input('device_type');
+            $deviceName = $request->input('device_name');
+            $latitude = $request->input('latitude');
+            $longitude = $request->input('longitude');
+            $accuracy = $request->input('accuracy');
+
+            // Check if already checked in today
+            $today = now()->format('Y-m-d');
+            $existingAttendance = StudentAttendance::where('user_id', $student->id)
+                ->whereDate('check_in_datetime', $today)
+                ->first();
+
+            if ($existingAttendance) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Device fingerprint is required',
-                    'show_dialog' => true,
-                    'dialog_title' => 'Device Error',
-                    'dialog_message' => 'Unable to identify your device. Please try again or contact support.'
+                    'message' => 'You have already checked in today'
                 ], 400);
             }
 
-            $deviceFingerprint = $request->device_fingerprint;
-
-            // Use the IP verification service
+            // Verify IP first
             $ipVerification = $this->ipVerificationService->verifyIp('check in');
-            if (!$ipVerification['success']) {
+            
+            // Only check location if IP verification fails
+            $locationVerification = false;
+            if (!$ipVerification['success'] && $latitude && $longitude) {
+                $locationVerification = $this->geolocationVerificationService->verifyLocation($latitude, $longitude, $accuracy);
+            }
+
+            // Allow if either IP or location verification passes
+            if (!$ipVerification['success'] && !$locationVerification) {
                 return response()->json([
                     'success' => false,
-                    'message' => $ipVerification['message'],
+                    'message' => 'You must be on campus to check in. Please connect to the campus network or enable location services.',
                     'show_dialog' => true,
-                    'dialog_title' => 'Campus Network Required',
-                    'dialog_message' => 'Please connect to the campus WiFi network to check in.'
+                    'dialog_title' => 'Location Verification Failed',
+                    'dialog_message' => 'You must be on campus to check in. Please connect to the campus network or enable location services.'
                 ], 403);
             }
 
-            // Check if user has any registered devices
-            $hasRegisteredDevices = StudentDeviceRegistration::where('user_id', $user->id)
+            // Enforce device registration: user must always use their registered device
+            $registeredDevice = \App\Models\StudentDeviceRegistration::where('user_id', $student->id)
                 ->where('is_active', true)
-                ->exists();
+                ->first();
 
-            if ($hasRegisteredDevices) {
-                // If user has registered devices, verify this device is registered
-                $deviceRegistration = StudentDeviceRegistration::where('user_id', $user->id)
-                    ->where('device_fingerprint', $deviceFingerprint)
-                    ->where('is_active', true)
-                    ->first();
-
-                if (!$deviceRegistration) {
+            // If user has a registered device, they must use it
+            if ($registeredDevice) {
+                if ($registeredDevice->device_fingerprint !== $deviceFingerprint) {
                     return response()->json([
                         'success' => false,
-                        'message' => 'This device is not registered',
+                        'message' => 'You must use your registered device to check in.',
                         'show_dialog' => true,
                         'dialog_title' => 'Device Not Registered',
-                        'dialog_message' => 'You must use your registered device to check in. Please use the device you registered with.'
+                        'dialog_message' => 'Please use your registered device to check in.'
                     ], 403);
                 }
-
-                // Update last used timestamp for registered device
-                $deviceRegistration->update(['last_used_at' => now()]);
             } else {
-                // First time user - automatically register their device
-                // Check if device is already registered for any user
-                $existingDevice = StudentDeviceRegistration::where('device_fingerprint', $deviceFingerprint)
+                // If no device registered, check if this device is already registered to another user
+                $existingDevice = \App\Models\StudentDeviceRegistration::where('device_fingerprint', $deviceFingerprint)
                     ->where('is_active', true)
                     ->first();
                 if ($existingDevice) {
                     return response()->json([
                         'success' => false,
-                        'message' => ' Please check in with your registered device only.',
+                        'message' => 'This device is already registered to another user.',
                         'show_dialog' => true,
-                        'dialog_title' => 'Device Not Registered To You',
-                        'dialog_message' => 'Please check in with your registered device only.'
+                        'dialog_title' => 'Device Already Registered',
+                        'dialog_message' => 'This device is already registered to another user. Please use your registered device.'
                     ], 403);
                 }
-                try {
-                    $deviceRegistration = StudentDeviceRegistration::create([
-                        'user_id' => $user->id,
-                        'device_fingerprint' => $deviceFingerprint,
-                        'device_info' => $request->device_info ?? null,
-                        'device_type' => $request->device_type ?? 'Unknown',
-                        'device_name' => $request->device_name ?? 'Unknown Device',
-                        'is_active' => true,
-                        'last_used_at' => now()
-                    ]);
-
-                    \Log::info('First-time device registration during check-in', [
-                        'user_id' => $user->id,
-                        'device_fingerprint' => $deviceFingerprint
-                    ]);
-                } catch (\Exception $e) {
-                    \Log::error('Device registration failed', [
-                        'user_id' => $user->id,
-                        'error' => $e->getMessage(),
-                        'device_fingerprint' => $deviceFingerprint
-                    ]);
-                    return response()->json([
-                        'success' => false,
-                        'message' => 'Failed to register device',
-                        'show_dialog' => true,
-                        'dialog_title' => 'Registration Error',
-                        'dialog_message' => 'Unable to register your device. Please try again or contact support.'
-                    ], 500);
-                }
+                // Register this device for the user
+                \App\Models\StudentDeviceRegistration::create([
+                    'user_id' => $student->id,
+                    'device_fingerprint' => $deviceFingerprint,
+                    'device_info' => $deviceInfo,
+                    'device_type' => $deviceType,
+                    'device_name' => $deviceName,
+                    'is_active' => true,
+                    'last_used_at' => now()
+                ]);
             }
 
             // Create attendance record
             $attendance = StudentAttendance::create([
-                'user_id' => $user->id,
-                'check_in_datetime' => now()
+                'user_id' => $student->id,
+                'check_in_datetime' => now(),
+                'check_out_datetime' => null,
+                'status' => 'Present',
+                'ip_address' => $ipAddress,
+                'device_fingerprint' => $deviceFingerprint,
+                'device_info' => $deviceInfo,
+                'device_type' => $deviceType,
+                'device_name' => $deviceName
             ]);
 
             return response()->json([
                 'success' => true,
-                'message' => 'Check-in successful',
-                'data' => $attendance,
-                'is_first_time' => !$hasRegisteredDevices
+                'message' => 'Successfully checked in',
+                'data' => $attendance
             ]);
 
         } catch (\Exception $e) {
-            \Log::error('Check-in error', [
+            Log::error('Attendance check-in failed', [
                 'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString(),
-                'user_id' => $user->id ?? null,
-                'device_fingerprint' => $deviceFingerprint ?? null
+                'student_id' => auth()->id()
             ]);
+
             return response()->json([
                 'success' => false,
-                'message' => 'Check-in failed: ' . $e->getMessage()
+                'message' => 'Failed to check in. Please try again.'
             ], 500);
         }
     }

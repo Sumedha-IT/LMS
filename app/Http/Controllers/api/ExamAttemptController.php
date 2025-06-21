@@ -15,14 +15,19 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 use App\Services\ExamService;
 use App\Services\IpVerificationService;
+use App\Services\GeolocationVerificationService;
 
 class ExamAttemptController extends Controller
 {
     protected $ipVerificationService;
+    protected $geolocationVerificationService;
 
-    public function __construct(IpVerificationService $ipVerificationService)
-    {
+    public function __construct(
+        IpVerificationService $ipVerificationService,
+        GeolocationVerificationService $geolocationVerificationService
+    ) {
         $this->ipVerificationService = $ipVerificationService;
+        $this->geolocationVerificationService = $geolocationVerificationService;
     }
 
     public function startExam(Request $request){
@@ -34,6 +39,48 @@ class ExamAttemptController extends Controller
         if (!empty($data['message'])) {
             return response()->json($data, 400);
         }
+
+        // Log IP address and geolocation
+        $ipAddress = $request->ip();
+        $locationData = [
+            'ip' => $ipAddress,
+            'latitude' => $request->latitude ?? null,
+            'longitude' => $request->longitude ?? null,
+            'accuracy' => $request->accuracy ?? null,
+            'timestamp' => now()->toDateTimeString()
+        ];
+        
+        \Log::info('Exam Attempt Started', [
+            'user_id' => $data['id'],
+            'exam_id' => $data['examId'],
+            'location_data' => $locationData
+        ]);
+
+        // For exam, we'll check location only if IP verification fails
+        $ipVerification = $this->ipVerificationService->verifyIp('take exam');
+        $locationVerification = null;
+
+        if (!$ipVerification['success'] && $request->has('latitude') && $request->has('longitude')) {
+            // If IP verification fails, try location verification
+            $locationVerification = $this->geolocationVerificationService->verifyLocation(
+                $request->latitude,
+                $request->longitude,
+                $request->accuracy
+            );
+        }
+
+        // If both IP and location verification fail, reject the attempt
+        if (!$ipVerification['success'] && (!$locationVerification || !$locationVerification['success'])) {
+            return response()->json([
+                'message' => 'You must be either connected to the campus WiFi network or physically present on campus to take the exam.',
+                'status' => 403,
+                'success' => false,
+                'show_dialog' => true,
+                'dialog_title' => 'Verification Failed',
+                'dialog_message' => 'You must be either connected to the campus WiFi network or physically present on campus to take the exam.'
+            ], 403);
+        }
+
         if(empty($data['examAttemptLog'])){
             $payload = [
                 'student_id' => $data['id'],
@@ -44,9 +91,8 @@ class ExamAttemptController extends Controller
             ];
             $data['examAttemptLog'] = ExamAttempt::create($payload);
         }else{
-
             $data['examAttemptLog']->update([
-                'attempt_count' => $data['examAttemptLog']->attempt_count + 1,
+                'attempt_count' => $data['examAttemptLog']->attempt_count + 1
             ]);
         }
 
@@ -57,7 +103,6 @@ class ExamAttemptController extends Controller
                 "success" => true, 
                 'status' => 200
             ], 200);
-    
     }
 
     public function validateExamAttempt($data){
@@ -70,24 +115,16 @@ class ExamAttemptController extends Controller
             return ['message' => $validator->errors()->all()[0], 'status' => 400,'success' =>false];
         }
         $data = $validator->validate();
-
-        // Use the IP verification service
-        $ipVerification = $this->ipVerificationService->verifyIp('take exam');
-        if (!$ipVerification['success']) {
-            return [
-                'message' => $ipVerification['message'],
-                'status' => 403,
-                'success' => false,
-                'show_dialog' => true,
-                'dialog_title' => 'Campus Network Required',
-                'dialog_message' => 'You must be connected to the campus WiFi network to take the exam. Please connect to the campus WiFi and try again.'
-            ];
-        }
         
         // Check if the user belongs to that particular exam or not.
         $data['user']= User::find($data['id']);
         $batchIds = $data['user']->batches()->get()->pluck('id')->toArray();
-        $exam = Exam::with('subject')->whereIn('batch_id', $batchIds)->where('id',$data['examId'])->first();
+        $exam = Exam::with('subject')
+            ->whereHas('batches', function($query) use ($batchIds) {
+                $query->whereIn('batches.id', $batchIds);
+            })
+            ->where('id', $data['examId'])
+            ->first();
 
         if(empty($exam))
             return ['message' => "Invalid Exam", 'status' => 400, 'success' => false];
@@ -102,7 +139,9 @@ class ExamAttemptController extends Controller
         if ($currentTime > $examEndsAt)
             return ['message' => "Exam is already ended ", 'status' => 400, 'success' => false];
 
-        $examAttemptLog = ExamAttempt::where('exam_id',$data['examId'])->where('student_id',$data['id'])->first();
+        $examAttemptLog = ExamAttempt::where('student_id', $data['id'])
+            ->where('exam_id', $data['examId'])
+            ->first();
 
         if (!empty($examAttemptLog)) {
             $data['examAttemptLog'] = $examAttemptLog;
@@ -177,7 +216,7 @@ class ExamAttemptController extends Controller
 
         // Check if exam duration has completed
         $currentTime = date('Y-m-d H:i:s');
-        $examEndsAt = date('Y-m-d') . ' ' . $exam->ends_at . ':00';
+        $examEndsAt = $exam->exam_date . ' ' . $exam->ends_at . ':00';
         
         if ($currentTime < $examEndsAt) {
             $timeUntilReview = strtotime($examEndsAt) - strtotime($currentTime);

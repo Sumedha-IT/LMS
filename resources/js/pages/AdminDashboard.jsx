@@ -1,5 +1,3 @@
-
-
 import React, { useState, useEffect } from 'react';
 import CommonTable from '../common/CommonTable';
 import { useNavigate, useParams } from 'react-router-dom';
@@ -135,7 +133,7 @@ function AdminDashboard() {
                     { label: 'Exam Date', accessor: 'examDate' },
                     { label: 'Time', accessor: (row) => `${row.starts_at} to ${row.ends_at}` },
                     { label: 'Exam Name', accessor: 'title' },
-                    { label: 'Batch Name', accessor: 'batch' },
+                    { label: 'Batch Name', accessor: (row) => row.batches && row.batches.length > 0 ? row.batches.map(b => b.name).join(', ') : '--' },
                     { label: 'Total Marks', accessor: 'totalMarks' },
                     { label: 'Status', accessor: 'status' },
                     { label: 'Attendance', accessor: 'maxAttempts' },

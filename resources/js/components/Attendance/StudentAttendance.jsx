@@ -340,9 +340,34 @@ export default function StudentAttendance() {
         return () => clearInterval(refreshInterval);
     }, [fetchAttendanceStatus, fetchAttendanceReport, fetchHolidays, location]);
 
+    // Add this helper function near the top of the file
+    const getUserLocation = () => {
+        return new Promise((resolve, reject) => {
+            if (!navigator.geolocation) {
+                reject(new Error('Geolocation is not supported by your browser'));
+            }
+            navigator.geolocation.getCurrentPosition(
+                (position) => {
+                    resolve({
+                        latitude: position.coords.latitude,
+                        longitude: position.coords.longitude,
+                        accuracy: position.coords.accuracy
+                    });
+                },
+                (error) => {
+                    reject(new Error('Unable to get your location'));
+                },
+                { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+            );
+        });
+    };
+
     const handleCheckIn = async () => {
         try {
             setCheckInLoading(true);
+            
+            // Get location
+            const location = await getUserLocation();
             
             // Generate device fingerprint
             const deviceFingerprint = generateDeviceFingerprint();
@@ -360,7 +385,10 @@ export default function StudentAttendance() {
                         }
                     },
                     device_type: 'browser',
-                    device_name: `${navigator.platform} - ${navigator.userAgent.split(' ')[0]}`
+                    device_name: `${navigator.platform} - ${navigator.userAgent.split(' ')[0]}`,
+                    latitude: location.latitude,
+                    longitude: location.longitude,
+                    accuracy: location.accuracy
                 },
                 skipCache: true
             });

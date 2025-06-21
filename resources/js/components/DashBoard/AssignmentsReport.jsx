@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { apiRequest } from "../../utils/api";
+import Cookies from "js-cookie";
 
 export default function AssignmentsReport() {
   const [Assignment, setAssignment] = useState([]);
@@ -7,7 +8,15 @@ export default function AssignmentsReport() {
   useEffect(() => {
     const FetchUserdata = async () => {
       try {
-        const data1 = await apiRequest("/getUserAssignments");
+        const userId = Cookies.get("x_path_id");
+        if (!userId) {
+          throw new Error("No user ID found");
+        }
+        const data1 = await apiRequest("/getUserAssignments", {
+          params: {
+            student_id: userId
+          }
+        });
         setAssignment(data1.data);
       } catch (err) {
         console.error("Error fetching profile data:", err);

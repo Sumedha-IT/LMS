@@ -267,6 +267,56 @@ const UserExamModule = () => {
         setOpenStatusPanel(open);
     };
 
+    // Add a compact timer for the top bar
+    const TopBarTimer = ({ endTime, onTimeOver }) => {
+        const [timeLeft, setTimeLeft] = useState(() => {
+            const now = new Date();
+            return Math.max(0, endTime - now.getTime());
+        });
+
+        useEffect(() => {
+            const interval = setInterval(() => {
+                const now = new Date();
+                const newTimeLeft = Math.max(0, endTime - now.getTime());
+                setTimeLeft(newTimeLeft);
+                if (newTimeLeft === 0 && onTimeOver) {
+                    onTimeOver();
+                }
+            }, 1000);
+            return () => clearInterval(interval);
+        }, [endTime, onTimeOver]);
+
+        const hours = Math.floor(timeLeft / (1000 * 60 * 60));
+        const minutes = Math.floor((timeLeft % (1000 * 60 * 60)) / (1000 * 60));
+        const seconds = Math.floor((timeLeft % (1000 * 60)) / 1000);
+        const isCritical = timeLeft <= 5 * 60 * 1000; // less than 5 minutes
+
+        return (
+            <span
+                style={{
+                    fontWeight: 700,
+                    fontSize: '1.2rem',
+                    marginLeft: 16,
+                    letterSpacing: 1,
+                    background: 'rgba(255,255,255,0.10)',
+                    borderRadius: 6,
+                    padding: '4px 16px',
+                    color: isCritical ? 'red' : 'white',
+                    display: 'inline-block',
+                }}
+            >
+                Time Left: {`${hours.toString().padStart(2, '0')}:${minutes
+                    .toString()
+                    .padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`}
+            </span>
+        );
+    };
+
+    // Handler to auto-submit when time is over
+    const handleTimeOver = () => {
+        setIsSubmission(true);
+    };
+
     if (loading) {
         return (
             <Box sx={{
@@ -287,26 +337,24 @@ const UserExamModule = () => {
                 width: '100%', bgcolor: '#f4f5f7',
             }}>
                 {/* Header Section */}
-                <Box sx={{ bgcolor: '#f97316' }}>
-                    <Box sx={{
-                        bgcolor: '#f97316', display: {
-                            sm: 'flex',
-                        }, alignItems: 'center', p: 1, justifyContent: "space-between", width: "60%",
-                    }}>
-                        <Typography sx={{ fontSize: { xs: '15px', md: '17px', lg: '20px' }, color: 'white', ml: '1.5px', fontWeight: 'bold' }}>
-                            {examDetails?.title}
-                        </Typography>
-                        <Typography sx={{ fontSize: { xs: '15px', md: '17px', lg: '20px' }, color: 'white', fontWeight: 'bold' }}>
-                            Time Left:
-                            {startTime && (
-                                <Countdown
-                                    date={getExamEndTime()}
-                                    renderer={renderer}
-                                    onComplete={handleSubmitQuiz}
-                                />
-                            )}
-                        </Typography>
-                    </Box>
+                <Box sx={{
+                    background: 'linear-gradient(135deg, #0f1f3d 0%, #1e3c72 100%)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center', // center everything
+                    p: 1,
+                    width: '100%',
+                    minHeight: '48px',
+                    borderRadius: '0 0 12px 12px',
+                    position: 'relative',
+                }}>
+                    <Typography sx={{ fontSize: { xs: '15px', md: '17px', lg: '20px' }, color: 'white', ml: '1.5px', fontWeight: 'bold', position: 'absolute', left: 24 }}>
+                        {examDetails?.title}
+                    </Typography>
+                    {/* Timer centered */}
+                    {startTime && (
+                        <TopBarTimer endTime={getExamEndTime()} onTimeOver={handleTimeOver} />
+                    )}
                     <Button onClick={() => {
                         if (isSubmit) {
                             window.close()
@@ -343,6 +391,7 @@ const UserExamModule = () => {
                                         getSection={getData}
                                         buttonDisable={buttonDisable}
                                         activePartId={activePartId}
+                                        examEndTime={getExamEndTime()}
                                     />
                                 )}
                         </>}

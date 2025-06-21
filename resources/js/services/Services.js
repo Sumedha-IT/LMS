@@ -1,9 +1,15 @@
 import axios from 'axios';
-const apiUrl = (import.meta.env.VITE_APP_URL || 'http://localhost') + '/api';
+
+const apiUrl = import.meta.env.VITE_APP_API_URL;
+
 const api = axios.create({
-    baseURL: apiUrl, // Make sure to set this in your .env file
-    timeout: 10000, // Set a timeout of 10 seconds
+    baseURL: apiUrl,
+    headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json'
+    }
 });
+
 const getCommonHeaders = (isFormData = false) => {
     // const authToken = localStorage.getItem('token');
     const authToken = "350|CJjJQ4Dpytdkkm6Bn5qtigAEiIFsFsNe2MAJLGYxb5936e16";

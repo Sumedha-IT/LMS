@@ -31,9 +31,9 @@ class Exam extends Model
 
     protected $appends = ['duration'];
 
-    public function batch()
+    public function batches()
     {
-        return $this->belongsTo(Batch::class);
+        return $this->belongsToMany(Batch::class, 'exam_batches');
     }
 
     public function examAttempts()
@@ -49,7 +49,6 @@ class Exam extends Model
     public function subject()
     {
         return $this->belongsTo(Subject::class);
-
     }
 
     /**

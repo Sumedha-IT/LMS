@@ -151,61 +151,56 @@ const UserDashboard = () => {
 
     return (
         <Box sx={{ width: '100%', p: 3, backgroundColor: '#f8f9fa' }}>
-            <Box sx={{ mb: 4 }}>
-                <Tabs
-                    value={mainTab}
-                    onChange={handleMainTabChange}
-                    aria-label="exam tabs"
+            <Box sx={{ mb: 4, display: 'flex', gap: 2, alignItems: 'center' }}>
+                <Button
+                    onClick={() => setMainTab(0)}
                     sx={{
-                        '& .MuiTabs-indicator': { display: 'none' },
-                        '& .MuiTab-root': {
-                            color: '#666',
-                            backgroundColor: '#e9ecef',
-                            borderRadius: '8px',
-                            mx: 1,
-                            textTransform: 'none',
-                            fontSize: '16px',
-                            fontWeight: 500,
-                            '&.Mui-selected': {
-                                color: '#fff',
-                                background: 'linear-gradient(270deg, #eb6707 0%, #e42b12 100%)',
-                            },
+                        minWidth: '180px',
+                        background: mainTab === 0
+                            ? 'linear-gradient(270deg, #eb6707 0%, #e42b12 100%)'
+                            : '#E2E8F0',
+                        color: mainTab === 0 ? '#fff' : '#666',
+                        borderRadius: '8px',
+                        textTransform: 'none',
+                        fontSize: '16px',
+                        fontWeight: 500,
+                        boxShadow: mainTab === 0 ? '0 2px 8px 0 rgba(235,103,7,0.10)' : 'none',
+                        '&:hover': {
+                            background: mainTab === 0
+                                ? 'linear-gradient(270deg, #e42b12 0%, #eb6707 100%)'
+                                : '#E2E8F0',
                         },
                     }}
                 >
-                    <Tab
-                        label="Upcoming Exams"
-                        {...a11yProps(0)}
-                        sx={{ minWidth: '180px' }}
-                    />
-                    {!filterActive ? (
-                        <Button
-                            variant="contained"
-                            onClick={handleAllExamsClick}
-                            sx={{
-                                minWidth: '180px',
-                                ml: 2,
-                                background: 'linear-gradient(270deg, #eb6707 0%, #e42b12 100%)',
-                                color: 'white',
-                                borderRadius: '8px',
-                                textTransform: 'none',
-                                fontSize: '16px',
-                                fontWeight: 500,
-                                '&:hover': {
-                                    background: 'linear-gradient(270deg, #e42b12 0%, #eb6707 100%)',
-                                },
-                            }}
-                        >
-                            All Exams
-                        </Button>
-                    ) : (
+                    Upcoming Exams
+                </Button>
+                {mainTab === 0 ? (
+                    <Button
+                        onClick={() => setMainTab(1)}
+                        sx={{
+                            minWidth: '180px',
+                            background: '#E2E8F0',
+                            color: '#666',
+                            borderRadius: '8px',
+                            textTransform: 'none',
+                            fontSize: '16px',
+                            fontWeight: 500,
+                            boxShadow: 'none',
+                            '&:hover': {
+                                background: '#E2E8F0',
+                            },
+                        }}
+                    >
+                        All Exams
+                    </Button>
+                ) : (
+                    <>
                         <Button
                             variant="contained"
                             onClick={handleMenuOpen}
                             endIcon={<ArrowDropDownIcon />}
                             sx={{
                                 minWidth: '180px',
-                                ml: 2,
                                 background: 'linear-gradient(270deg, #eb6707 0%, #e42b12 100%)',
                                 color: 'white',
                                 borderRadius: '8px',
@@ -217,19 +212,23 @@ const UserDashboard = () => {
                                 },
                             }}
                         >
-                            {filter === 'all' ? 'All Exams' : filter === 'attempted' ? 'Attempted Exams' : 'Not Attempted Exams'}
+                            {filter === 'all'
+                                ? 'All Exams'
+                                : filter === 'attempted'
+                                ? 'Attempted Exams'
+                                : 'Not Attempted Exams'}
                         </Button>
-                    )}
-                    <Menu
-                        anchorEl={anchorEl}
-                        open={Boolean(anchorEl)}
-                        onClose={handleMenuClose}
-                    >
-                        <MenuItem onClick={() => handleFilterChange('all')}>All Exams</MenuItem>
-                        <MenuItem onClick={() => handleFilterChange('attempted')}>Attempted Exams</MenuItem>
-                        <MenuItem onClick={() => handleFilterChange('not-attempted')}>Not Attempted Exams</MenuItem>
-                    </Menu>
-                </Tabs>
+                        <Menu
+                            anchorEl={anchorEl}
+                            open={Boolean(anchorEl)}
+                            onClose={handleMenuClose}
+                        >
+                            <MenuItem onClick={() => handleFilterChange('all')}>All Exams</MenuItem>
+                            <MenuItem onClick={() => handleFilterChange('attempted')}>Attempted Exams</MenuItem>
+                            <MenuItem onClick={() => handleFilterChange('not-attempted')}>Not Attempted Exams</MenuItem>
+                        </Menu>
+                    </>
+                )}
             </Box>
 
             <TabPanel value={mainTab} index={0}>

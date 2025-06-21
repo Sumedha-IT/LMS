@@ -42,13 +42,14 @@ const LOGIN_STATUS_KEY = 'dashboard_login_status';
 export default function AttendanceCheckInModal({ open, onClose, onSuccess }) {
   const [loading, setLoading] = useState(false);
   const [attendanceStatus, setAttendanceStatus] = useState(null);
-  // Add state to track if this is the first load after login
   const [isFirstLoad, setIsFirstLoad] = useState(false);
   const [deviceErrorDialog, setDeviceErrorDialog] = useState({
     open: false,
     title: '',
     message: ''
   });
+  const [locationData, setLocationData] = useState(null);
+  const [locationError, setLocationError] = useState(null);
 
   // Location verification states
   const [showLocationVerification, setShowLocationVerification] = useState(false);
@@ -61,7 +62,6 @@ export default function AttendanceCheckInModal({ open, onClose, onSuccess }) {
     overall: null
   });
   const [verificationLoading, setVerificationLoading] = useState(false);
-  const [locationError, setLocationError] = useState(null);
   const [wifiInfo, setWifiInfo] = useState(null);
 
   // Check if this is the first load after login
@@ -251,20 +251,131 @@ export default function AttendanceCheckInModal({ open, onClose, onSuccess }) {
     }
   };
 
+  // Function to get user's location
+  const getUserLocation = () => {
+    return new Promise((resolve, reject) => {
+      if (!navigator.geolocation) {
+        reject(new Error('Geolocation is not supported by your browser'));
+        return;
+      }
+
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          const location = {
+            latitude: position.coords.latitude,
+            longitude: position.coords.longitude,
+            accuracy: position.coords.accuracy
+          };
+          setLocationData(location);
+          resolve(location);
+        },
+        (error) => {
+          let errorMessage = 'Unable to get your location';
+          switch (error.code) {
+            case error.PERMISSION_DENIED:
+              errorMessage = 'Please enable location services to check in';
+              break;
+            case error.POSITION_UNAVAILABLE:
+              errorMessage = 'Location information is unavailable';
+              break;
+            case error.TIMEOUT:
+              errorMessage = 'Location request timed out';
+              break;
+            default:
+              errorMessage = 'An unknown error occurred';
+          }
+          setLocationError(errorMessage);
+          reject(new Error(errorMessage));
+        },
+        {
+          enableHighAccuracy: true,
+          timeout: 10000,
+          maximumAge: 0
+        }
+      );
+    });
+  };
+
   const handleCheckIn = async () => {
     try {
-      const response = await axios.post('/api/student/attendance/check-in', {
-        device_fingerprint: deviceFingerprint
+      setLoading(true);
+      setLocationError(null);
+
+      // Get user's location first
+      const location = await getUserLocation();
+
+      // Generate device fingerprint
+      const deviceFingerprint = await generateDeviceFingerprint();
+      
+      const response = await apiRequest('/student-attendance/check-in', {
+        method: 'POST',
+        body: {
+          device_fingerprint: deviceFingerprint,
+          device_info: {
+            userAgent: navigator.userAgent,
+            platform: navigator.platform,
+            screen: {
+              width: window.screen.width,
+              height: window.screen.height
+            }
+          },
+          device_type: 'browser',
+          device_name: `${navigator.platform} - ${navigator.userAgent.split(' ')[0]}`,
+          latitude: location.latitude,
+          longitude: location.longitude,
+          accuracy: location.accuracy
+        },
+        skipCache: true
       });
 
-      if (response.data.success) {
-        toast.success('Check-in successful');
-        onClose();
-      } else {
-        toast.error(response.data.message);
+      if (response.success) {
+        toast.success(response.message || 'Successfully checked in!', {
+          position: 'top-center',
+          autoClose: 3000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+          progress: undefined,
+          style: {
+            background: '#4caf50',
+            color: '#fff',
+            borderRadius: '10px',
+            boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)'
+          }
+        });
+
+        const today = new Date().toISOString().split('T')[0];
+        const updatedStatus = {
+          ...attendanceStatus,
+          is_checked_in: true,
+          is_checked_out: false,
+          check_in_time: new Date().toTimeString().split(' ')[0],
+          check_out_time: null,
+          date: today
+        };
+        setAttendanceStatus(updatedStatus);
+        localStorage.setItem('attendanceStatus', JSON.stringify(updatedStatus));
+        setShowLocationVerification(false);
+        fetchAttendanceStatus();
       }
     } catch (error) {
-      toast.error(error.response?.data?.message || 'Check-in failed');
+      if (error.message.includes('location')) {
+        setLocationError(error.message);
+      } else {
+        const errorResponse = error.response?.data;
+        if (errorResponse?.show_dialog) {
+          setDeviceErrorDialog({
+            open: true,
+            title: errorResponse.dialog_title || 'Error',
+            message: errorResponse.dialog_message || errorResponse.message
+          });
+        } else {
+          toast.error(errorResponse?.message || error.message || 'Check-in failed');
+        }
+      }
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -378,6 +489,13 @@ export default function AttendanceCheckInModal({ open, onClose, onSuccess }) {
             You need to check in for attendance before accessing the LMS.
           </Alert>
         </Box>
+        
+        {locationError && (
+          <Alert severity="error" sx={{ mb: 2 }}>
+            <AlertTitle>Location Error</AlertTitle>
+            {locationError}
+          </Alert>
+        )}
         
         <Box sx={{ display: 'flex', justifyContent: 'center', mb: 3 }}>
           <Button

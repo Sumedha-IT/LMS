@@ -1,4 +1,3 @@
-
 import CloseIcon from '@mui/icons-material/Close';
 import MenuIcon from '@mui/icons-material/Menu'; // Toggle button icon
 import { Box, Button, Drawer, Grid, IconButton, Typography } from '@mui/material';
@@ -138,11 +137,20 @@ const ReviewPage = () => {
                 },
             }}>
                 {/* Header Section */}
-                <Box sx={{ bgcolor: '#f97316' }}>
+                <Box sx={{
+                    background: 'linear-gradient(270deg, #eb6707 0%, #e42b12 100%)',
+                    borderBottom: '4px solid',
+                    borderImage: 'linear-gradient(270deg, #eb6707 0%, #e42b12 100%) 1',
+                }}>
                     <Box sx={{
-                        bgcolor: '#f97316', display: {
+                        background: 'transparent',
+                        display: {
                             sm: 'flex',
-                        }, alignItems: 'center', p: 1, justifyContent: "space-between", width: "60%",
+                        },
+                        alignItems: 'center',
+                        p: 1,
+                        justifyContent: 'space-between',
+                        width: '60%',
                     }}>
                         <Typography sx={{ fontSize: { xs: '15px', md: '17px', lg: '20px' }, color: 'white', ml: '1.5px', fontWeight: 'bold' }}>
                             {examDetails?.title}
@@ -153,7 +161,6 @@ const ReviewPage = () => {
                     </Box>
                     <Button
                         onClick={() => {
-                            // Remove any event listeners that might show confirmation
                             window.onbeforeunload = null;
                             window.close();
                         }}

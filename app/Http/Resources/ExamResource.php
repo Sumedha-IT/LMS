@@ -18,20 +18,25 @@ class ExamResource extends JsonResource
         $totalQuestions = $this->examQuestions()->count();
 
         return [
-            'id' =>$this->id,
+            'id' => $this->id,
             'title' => $this->title,
             'totalMarks' => $this->total_marks,
             'maxAttempts' => $this->max_attempts,
             'starts_at' => $this->starts_at,
             'ends_at' => $this->ends_at,
             'duration' => $this->duration,
-            'batchId' => $this->batch_id,
-            'batch' => $this->batch->name ?? "", 
-            'examDate' =>   date('Y-m-d', strtotime($this->exam_date)),
+            'batchIds' => $this->batches->pluck('id'),
+            'batches' => $this->batches->map(function($batch) {
+                return [
+                    'id' => $batch->id,
+                    'name' => $batch->name
+                ];
+            }),
+            'examDate' => date('Y-m-d', strtotime($this->exam_date)),
             'instructions' => $this->instructions ?? null,
             'invigilators' => $this->invigilators,
             'meta' => $this->meta,
-            'curriculum' =>$this->curriculums,
+            'curriculum' => $this->curriculums,
             'totalQuestions' => $totalQuestions
         ];
     }

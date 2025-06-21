@@ -8,7 +8,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import CalculatorModal from './CalculatorModal';
 import LoadingFallback from '../DashBoard/LoadingFallback';
 
-const QuestionPanel = ({ question, onAnswer, onNext, onMarkForReview, onClearResponse, questions, getSection, isReviewMode, partIds, buttonDisable, handleReviewQuestion, activePartId }) => {
+const QuestionPanel = ({ question, onAnswer, onNext, onMarkForReview, onClearResponse, questions, getSection, isReviewMode, partIds, buttonDisable, handleReviewQuestion, activePartId, examEndTime }) => {
     const [selectedOption, setSelectedOption] = useState('');
     const [loading, setLoading] = useState(false)
     const [UploadExamQuestions] = useUploadExamQuestionsMutation();
@@ -291,23 +291,22 @@ const QuestionPanel = ({ question, onAnswer, onNext, onMarkForReview, onClearRes
                                                              question?.correctOption !== undefined &&
                                                              Number(option.id) === Number(question?.correctOption) && (
                                                                 <Typography sx={{ color: 'green', fontWeight: 'bold', ml: 1 }}>
-                                                                    {question?.questionStatus === "Not Attempted" ? "(Correct Answer - Not Attempted)" : "(Correct Answer)"}
+                                                                    (Correct Answer)
                                                                 </Typography>
                                                             )}
 
-                                                            {/* Always show the user's answer */}
-                                                            {Number(option.id) === Number(selectedOption) && (
-                                                                <Typography
-                                                                    sx={{
-                                                                        color: question?.questionStatus === "Correct" ? 'green' : 'red',
-                                                                        fontWeight: 'bold',
-                                                                        ml: 1
-                                                                    }}
-                                                                >
-                                                                    {question?.questionStatus === "Correct"
-                                                                        ? "(Your Correct Answer)"
-                                                                        : "(Your Answer)"}
-                                                                </Typography>
+                                                            {/* Show the user's answer only if it is not the correct answer */}
+                                                            {Number(option.id) === Number(selectedOption) &&
+                                                                Number(option.id) !== Number(question?.correctOption) && (
+                                                                    <Typography
+                                                                        sx={{
+                                                                            color: 'red',
+                                                                            fontWeight: 'bold',
+                                                                            ml: 1
+                                                                        }}
+                                                                    >
+                                                                        (Your Answer)
+                                                                    </Typography>
                                                             )}
                                                         </>
                                                     )}
@@ -334,15 +333,34 @@ const QuestionPanel = ({ question, onAnswer, onNext, onMarkForReview, onClearRes
                         {/* Calculator Button - moved to the left for better visibility */}
                         {!isReviewMode && (
                             <Button
-                                variant="outlined"
-                                sx={{
-                                    color: '#f97316',
-                                    borderColor: '#f97316',
-                                    fontSize: '12px',
-                                    borderRadius: '20px',
+                                variant={calculatorOpen ? "contained" : "outlined"}
+                                sx={calculatorOpen ? {
+                                    background: 'linear-gradient(270deg, #eb6707 0%, #e42b12 100%)',
+                                    color: 'white',
+                                    fontWeight: 600,
+                                    borderRadius: '8px',
+                                    boxShadow: 'none',
+                                    textTransform: 'none',
                                     px: 3,
-                                    '&:hover': { backgroundColor: '#f97316', color: '#fff' },
-                                    mr: 2
+                                    mr: 2,
+                                    '&:hover': {
+                                        background: 'linear-gradient(270deg, #e42b12 0%, #eb6707 100%)',
+                                        color: '#fff',
+                                        boxShadow: 'none',
+                                    },
+                                } : {
+                                    color: '#333',
+                                    borderColor: '#c0bfbf',
+                                    fontSize: '12px',
+                                    borderRadius: '8px',
+                                    px: 3,
+                                    mr: 2,
+                                    '&:hover': {
+                                        background: 'linear-gradient(270deg, #e42b12 0%, #eb6707 100%)',
+                                        color: '#fff',
+                                        borderColor: 'transparent',
+                                        boxShadow: 'none',
+                                    },
                                 }}
                                 onClick={() => setCalculatorOpen(true)}
                             >
@@ -356,13 +374,20 @@ const QuestionPanel = ({ question, onAnswer, onNext, onMarkForReview, onClearRes
                                 <Button
                                     variant="outlined"
                                     sx={{
-                                        color: '#f97316',
-                                        fontSize: '12px',
-                                        borderColor: '#f97316',
-                                        borderRadius: '20px',
+                                        color: '#333',
+                                        borderColor: '#c0bfbf',
+                                        fontWeight: 600,
+                                        borderRadius: '8px',
+                                        boxShadow: 'none',
+                                        textTransform: 'none',
                                         px: 3,
-                                        mr: 5,
-                                        '&:hover': { backgroundColor: '#f97316', color: '#fff' },
+                                        mr: 2,
+                                        '&:hover': {
+                                            background: 'linear-gradient(270deg, #eb6707 0%, #e42b12 100%)',
+                                            color: '#fff',
+                                            borderColor: 'transparent',
+                                            boxShadow: 'none',
+                                        },
                                     }}
                                     onClick={() => {
                                         const currentIndex = questions.findIndex(q => q.id === question.id);
@@ -377,12 +402,19 @@ const QuestionPanel = ({ question, onAnswer, onNext, onMarkForReview, onClearRes
                                 <Button
                                     variant="outlined"
                                     sx={{
-                                        color: '#f97316',
-                                        fontSize: '12px',
-                                        borderColor: '#f97316',
-                                        borderRadius: '20px',
+                                        color: '#333',
+                                        borderColor: '#c0bfbf',
+                                        fontWeight: 600,
+                                        borderRadius: '8px',
+                                        boxShadow: 'none',
+                                        textTransform: 'none',
                                         px: 3,
-                                        '&:hover': { backgroundColor: '#f97316', color: '#fff' },
+                                        '&:hover': {
+                                            background: 'linear-gradient(270deg, #e42b12 0%, #eb6707 100%)',
+                                            color: '#fff',
+                                            borderColor: 'transparent',
+                                            boxShadow: 'none',
+                                        },
                                     }}
                                     onClick={() => {
                                         const currentIndex = questions.findIndex(q => q.id === question.id);
@@ -401,13 +433,20 @@ const QuestionPanel = ({ question, onAnswer, onNext, onMarkForReview, onClearRes
                                 <Button
                                     variant="outlined"
                                     sx={{
-                                        color: '#f97316',
-                                        fontSize: '12px',
-                                        borderColor: '#f97316',
-                                        borderRadius: '20px',
+                                        color: '#333',
+                                        borderColor: '#c0bfbf',
+                                        fontWeight: 600,
+                                        borderRadius: '8px',
+                                        boxShadow: 'none',
+                                        textTransform: 'none',
                                         px: 3,
                                         mr: 2,
-                                        '&:hover': { backgroundColor: '#f97316', color: '#fff' },
+                                        '&:hover': {
+                                            background: 'linear-gradient(270deg, #eb6707 0%, #e42b12 100%)',
+                                            color: '#fff',
+                                            borderColor: 'transparent',
+                                            boxShadow: 'none',
+                                        },
                                     }}
                                     disabled={question?.id === questions[questions.length - 1]?.id && question?.saved}
                                     onClick={() => { handleSave({ markedForReview: false }); }}
@@ -418,13 +457,20 @@ const QuestionPanel = ({ question, onAnswer, onNext, onMarkForReview, onClearRes
                                 {!question?.saved && <Button
                                     variant="outlined"
                                     sx={{
-                                        color: '#f97316',
-                                        fontSize: '12px',
-                                        borderColor: '#f97316',
-                                        borderRadius: '20px',
+                                        color: '#333',
+                                        borderColor: '#c0bfbf',
+                                        fontWeight: 600,
+                                        borderRadius: '8px',
+                                        boxShadow: 'none',
+                                        textTransform: 'none',
                                         px: 3,
                                         mr: 2,
-                                        '&:hover': { backgroundColor: '#f97316', color: '#fff' },
+                                        '&:hover': {
+                                            background: 'linear-gradient(270deg, #e42b12 0%, #eb6707 100%)',
+                                            color: '#fff',
+                                            borderColor: 'transparent',
+                                            boxShadow: 'none',
+                                        },
                                     }}
                                     disabled={question?.id === questions[questions.length - 1]?.id && question?.saved}
                                     onClick={() => { handleSave({ markedForReview: true }); onMarkForReview(question?.id) }}
@@ -435,13 +481,20 @@ const QuestionPanel = ({ question, onAnswer, onNext, onMarkForReview, onClearRes
                                 <Button
                                     variant="outlined"
                                     sx={{
-                                        color: '#f97316',
-                                        borderColor: '#f97316',
-                                        fontSize: '12px',
-                                        borderRadius: '20px',
+                                        color: '#333',
+                                        borderColor: '#c0bfbf',
+                                        fontWeight: 600,
+                                        borderRadius: '8px',
+                                        boxShadow: 'none',
+                                        textTransform: 'none',
                                         px: 3,
                                         mr: 2,
-                                        '&:hover': { backgroundColor: '#f97316', color: '#fff' },
+                                        '&:hover': {
+                                            background: 'linear-gradient(270deg, #e42b12 0%, #eb6707 100%)',
+                                            color: '#fff',
+                                            borderColor: 'transparent',
+                                            boxShadow: 'none',
+                                        },
                                     }}
                                     disabled={question?.id === questions[questions.length - 1]?.id && question?.saved}
                                     onClick={handleClearResponse}
@@ -452,12 +505,19 @@ const QuestionPanel = ({ question, onAnswer, onNext, onMarkForReview, onClearRes
                                 <Button
                                     variant="outlined"
                                     sx={{
-                                        color: '#f97316',
-                                        borderColor: '#f97316',
-                                        fontSize: '12px',
-                                        borderRadius: '20px',
+                                        color: '#333',
+                                        borderColor: '#c0bfbf',
+                                        fontWeight: 600,
+                                        borderRadius: '8px',
+                                        boxShadow: 'none',
+                                        textTransform: 'none',
                                         px: 3,
-                                        '&:hover': { backgroundColor: '#f97316', color: '#fff' },
+                                        '&:hover': {
+                                            background: 'linear-gradient(270deg, #e42b12 0%, #eb6707 100%)',
+                                            color: '#fff',
+                                            borderColor: 'transparent',
+                                            boxShadow: 'none',
+                                        },
                                     }}
                                     onClick={handleRefresh}
                                     disabled={loading}

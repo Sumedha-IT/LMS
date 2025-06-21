@@ -28,6 +28,12 @@ class UploadAssignment extends Component implements HasForms
         return $form
             ->schema([
                 Forms\Components\FileUpload::make('file')
+                    ->disk('public')
+                    ->directory('assignments')
+                    ->visibility('public')
+                    ->maxSize(10240)
+                    ->acceptedFileTypes(['application/pdf', 'image/*', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'])
+                    ->downloadable()
             ])
             ->statePath('data')
             ->model($this->record);

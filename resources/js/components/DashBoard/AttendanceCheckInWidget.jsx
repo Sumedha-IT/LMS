@@ -325,6 +325,9 @@ export default function AttendanceCheckInWidget({ displayMode = 'button' }) {
     try {
       setCheckInLoading(true);
       
+      // Get location first
+      const location = await getGeolocation();
+      
       // Generate device fingerprint
       const deviceFingerprint = generateDeviceFingerprint();
       
@@ -341,7 +344,10 @@ export default function AttendanceCheckInWidget({ displayMode = 'button' }) {
             }
           },
           device_type: 'browser',
-          device_name: `${navigator.platform} - ${navigator.userAgent.split(' ')[0]}`
+          device_name: `${navigator.platform} - ${navigator.userAgent.split(' ')[0]}`,
+          latitude: location.latitude,
+          longitude: location.longitude,
+          accuracy: location.accuracy
         },
         skipCache: true
       });

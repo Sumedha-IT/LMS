@@ -214,8 +214,19 @@ const ResultComponent = ({ userId, examId, examAttemptId, handleReviewQuestion, 
                                     {/* Review Questions Button */}
                                     <Divider />
                                     <Box sx={{ display: 'flex', justifyContent: { xs: 'center', md: 'start' }, px: 4, py: 2 }}>
-                                        <Button variant="contained" color="warning" sx={{ p: { xs: '10px', md: '15px' }, fontSize: '12px' }} onClick={() => handleReviewQuestion({ userId, examId, partId: item?.partId })}
-                                        >
+                                        <Button variant="contained" sx={{
+                                            background: 'linear-gradient(270deg, #eb6707 0%, #e42b12 100%)',
+                                            color: 'white',
+                                            fontWeight: 600,
+                                            borderRadius: '8px',
+                                            boxShadow: 'none',
+                                            textTransform: 'none',
+                                            '&:hover': {
+                                                background: 'linear-gradient(270deg, #e42b12 0%, #eb6707 100%)',
+                                                color: '#fff',
+                                                boxShadow: 'none',
+                                            },
+                                        }} onClick={() => handleReviewQuestion({ userId, examId, partId: item?.partId })}>
                                             Review Questions
                                         </Button>
                                     </Box>

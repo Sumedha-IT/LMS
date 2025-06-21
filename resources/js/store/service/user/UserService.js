@@ -22,7 +22,15 @@ export const userApi = createApi({
             query: ({ userId, ExamType, page, rowsPerPage }) => `student/${userId}/exams?examType=${ExamType}&size=${rowsPerPage}&page=${page}`,
         }),
         getAttemptedId: builder.query({
-            query: ({ userId, examId }) => `student/${userId}/exam/${examId}/initiateExam`,
+            query: ({ userId, examId, location }) => ({
+                url: `student/${userId}/exam/${examId}/initiateExam`,
+                method: 'GET',
+                params: location ? {
+                    latitude: location.latitude,
+                    longitude: location.longitude,
+                    accuracy: location.accuracy
+                } : {}
+            })
         }),
 
         getExamQuestions: builder.mutation({
@@ -192,7 +200,10 @@ export const userApi = createApi({
             })
         }),
         getCountryAndStates: builder.query({
-            query: () => `/countryAndStates`,
+            query: () => 'countryAndStates',
+        }),
+        getStates: builder.query({
+            query: () => 'states',
         }),
     }),
 })
@@ -229,4 +240,5 @@ export const { useGetStudentDataQuery,
     useUpdateStudentAwardDataMutation,
     useAddStudentAwardDataMutation,
     useGetCountryAndStatesQuery,
+    useGetStatesQuery,
 } = userApi

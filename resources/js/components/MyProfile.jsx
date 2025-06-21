@@ -20,8 +20,8 @@ import { format, parseISO } from 'date-fns';
 import LoadingFallback from './DashBoard/LoadingFallback';
 
 // Make sure we're using the correct API URL
-const API_URL = import.meta.env.VITE_APP_API_URL || 'http://localhost:8000';
-const API_ENDPOINT = `${API_URL}/api`;
+const API_URL = import.meta.env.VITE_APP_API_URL;
+const API_ENDPOINT = `${API_URL}`;
 
 // Update mainMenu array
 const mainMenu = [
@@ -922,7 +922,7 @@ const MyProfile = () => {
 
       formDataToSend.append('avatar_url', avatarFile);
 
-      const response = await axios.post(`${API_URL}/api/profile`, formDataToSend, {
+      const response = await axios.post(`${API_URL}/profile`, formDataToSend, {
         headers: {
           'Accept': 'application/json',
           'Authorization': `Bearer ${userData.token}`,
@@ -1142,7 +1142,7 @@ const MyProfile = () => {
 
       formDataToSend.append('data', JSON.stringify(jsonData));
 
-      const response = await axios.post(`${API_URL}/api/profile`, formDataToSend, {
+      const response = await axios.post(`${API_URL}/profile`, formDataToSend, {
         headers: {
           'Accept': 'application/json',
           'Authorization': `Bearer ${userData.token}`,
@@ -1264,8 +1264,8 @@ const MyProfile = () => {
       }
 
       const url = cert.id
-        ? `${API_URL}/api/certifications/${cert.id}`
-        : `${API_URL}/api/certifications`;
+        ? `${API_URL}/certifications/${cert.id}`
+        : `${API_URL}/certifications`;
 
       const method = cert.id ? 'put' : 'post';
 
@@ -2169,9 +2169,14 @@ const MyProfile = () => {
                   <button
                     onClick={() => setShowProjectForm(true)}
                     className="add-project-btn"
+                    style={{ 
+                      background: 'linear-gradient(270deg, #eb6707 0%, #e42b12 100%)',
+                      color: 'white',
+                      fontFamily: '"Poppins", "Poppins-Medium", sans-serif'
+                    }}
                   >
                     <FiPlus className="add-project-btn-icon" />
-                    Add Project
+                    Add Your First Project
                   </button>
                 )}
               </div>
@@ -2355,7 +2360,11 @@ const MyProfile = () => {
                   <button
                     onClick={() => setShowProjectForm(true)}
                     className="add-project-btn"
-                    style={{ fontFamily: '"Poppins", "Poppins-Medium", sans-serif' }}
+                    style={{ 
+                      background: 'linear-gradient(270deg, #eb6707 0%, #e42b12 100%)',
+                      color: 'white',
+                      fontFamily: '"Poppins", "Poppins-Medium", sans-serif'
+                    }}
                   >
                     <FiPlus className="add-project-btn-icon" />
                     Add Your First Project
@@ -2877,16 +2886,12 @@ const MyProfile = () => {
 
       // For full URLs that already include the domain
       if (path.startsWith('http')) {
-        // Fix double storage issue
-        if (path.includes('/storage//storage/')) {
-          return path.replace('/storage//storage/', '/storage/');
-        }
         return path;
       }
 
       // For relative paths stored in the database
-      // If path contains "certificates/" without a leading slash
-      if (path.includes('certificates/') && !path.startsWith('/')) {
+      // If path contains "avatars/" without a leading slash
+      if (path.includes('avatars/') && !path.startsWith('/')) {
         return `${API_URL}/storage/${path}`;
       }
 
@@ -2895,12 +2900,7 @@ const MyProfile = () => {
         return `${API_URL}${path}`;
       }
 
-      // For paths stored in the database that start with "storage/"
-      if (path.startsWith('storage/')) {
-        return `${API_URL}/${path}`;
-      }
-
-      // Default case - assume it's a relative path that needs /storage/ prefix
+      // Default case - assume it's a relative path
       return `${API_URL}/storage/${path}`;
     }
 
@@ -2930,7 +2930,7 @@ const MyProfile = () => {
         return;
       }
 
-      await axios.delete(`${API_URL}/api/certifications/${cert.id}`, {
+      await axios.delete(`${API_URL}/certifications/${cert.id}`, {
         headers: {
           'Accept': 'application/json',
           'Authorization': `Bearer ${userData.token}`,
@@ -2980,7 +2980,7 @@ const MyProfile = () => {
 
       const response = await axios({
         method: 'delete',
-        url: `${API_URL}/api/delete/education`,
+        url: `${API_URL}/delete/education`,
         data: { id: educationId },
         headers: {
           'Accept': 'application/json',
@@ -3064,12 +3064,12 @@ const MyProfile = () => {
         organization: projectForm.organization || ''
       };
 
-      let url = `${API_URL}/api/projects`;
+      let url = `${API_URL}/projects`;
       let method = 'post';
       let requestData = projectData;
 
       if (editingProject) {
-        url = `${API_URL}/api/projects/${editingProject.id}`;
+        url = `${API_URL}/projects/${editingProject.id}`;
         method = 'post'; // Using POST instead of PUT
         requestData = {
           ...projectData,
@@ -3170,7 +3170,7 @@ const MyProfile = () => {
         return;
       }
 
-      const response = await axios.delete(`${API_URL}/api/projects/${projectToDelete}`, {
+      const response = await axios.delete(`${API_URL}/projects/${projectToDelete}`, {
         headers: {
           'Accept': 'application/json',
           'Authorization': `Bearer ${userData.token}`
@@ -3656,11 +3656,17 @@ const MyProfile = () => {
                   />
                 ) : formData.avatar_url ? (
                   <img
-                    src={getDocumentUrl(formData.avatar_url)}
+                    src={formData.avatar_url}
                     alt="Profile"
                     className="profile-image"
                     onError={(e) => {
+                      console.error("Avatar image failed to load:", e);
                       e.target.src = '/images/avatar-placeholder.png';
+                      // Clear the invalid avatar URL from formData
+                      setFormData(prev => ({
+                        ...prev,
+                        avatar_url: null
+                      }));
                     }}
                   />
                 ) : (
