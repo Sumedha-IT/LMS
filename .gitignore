@@ -25,3 +25,6 @@ Homestead.json
 package-lock.json
 package.json
 
+# Debugbar files
+storage/debugbar/
+
