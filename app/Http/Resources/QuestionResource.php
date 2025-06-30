@@ -25,9 +25,15 @@ class QuestionResource extends JsonResource
             "topic" => $this->topic,
             "marks" => $this->marks,
             "negative_marks" => $this->negative_marks,
-            // "hint" => $this->hint,
-            // "explanation" => $this->explanation,
-            // "answer" => $this->answer,
+            "hint" => $this->hint,
+            "explanation" => $this->explanation,
+            "questions_options" => $this->questions_options->map(function($option) {
+                return [
+                    'id' => $option->id,
+                    'option_text' => $option->option ?? $option->option_text,
+                    'is_correct' => $option->is_correct,
+                ];
+            }),
             "check_capitalization" => $this->check_capitalization,
             "check_punctuation" => $this->check_punctuation,
         ];

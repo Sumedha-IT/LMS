@@ -24,8 +24,8 @@ class QuestionController extends Controller
         }
 
         $data = $validator->validated();
-        // Fetch the QuestionBank by ID and immediately load the related questions
-        $questionBank = QuestionBank::with('questions')->find($data['questionBankId']);
+        // Fetch the QuestionBank by ID and immediately load the related questions and their options
+        $questionBank = QuestionBank::with(['questions.questions_options'])->find($data['questionBankId']);
 
         if (!$questionBank) {
             return response()->json(['message' =>  'Question Bank not found', 'success' => false, "status" => 404], 404);

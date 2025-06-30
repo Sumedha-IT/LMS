@@ -355,28 +355,32 @@ const MyCourses = () => {
                 color: 'green',
                 accessible: true
             };
-        } else if (currentIndex === 0 || (previousTopic && previousTopic.is_completed)) {
+        } else if (currentTopic.is_started) {
             return {
                 status: 'In Progress',
                 color: 'blue',
                 accessible: true
             };
         } else {
-            return {
-                status: 'Not Started',
-                color: 'amber',
-                accessible: false
-            };
+            // Topic is not started - check if previous topic is completed
+            if (currentIndex === 0 || (previousTopic && previousTopic.is_completed)) {
+                return {
+                    status: 'Not Started',
+                    color: 'amber',
+                    accessible: false // Not accessible until admin starts it
+                };
+            } else {
+                return {
+                    status: 'Not Started',
+                    color: 'amber',
+                    accessible: false
+                };
+            }
         }
     };
 
     const handleTopicClick = async (topic) => {
-        const topicStatus = getTopicStatus(topics, topic);
-        if (!topicStatus.accessible) {
-            toast.warning('Please complete the previous topic first');
-            return;
-        }
-
+        // Remove topic access restriction - allow access to any topic
         setSelectedTopic(topic);
         setSelectedAssignment(null);
 
@@ -1028,46 +1032,12 @@ const MyCourses = () => {
                                                         <div
                                                             key={topic.id}
                                                             onClick={() => handleTopicClick(topic)}
-                                                            className={`p-4 transition-colors duration-200 ${
-                                                                !topicStatus.accessible ?
-                                                                'cursor-not-allowed opacity-60' :
-                                                                'cursor-pointer hover:bg-gray-50'
-                                                            } ${
+                                                            className={`p-4 cursor-pointer transition-colors duration-200 hover:bg-gray-50 ${
                                                                 selectedTopic?.id === topic.id ? 'bg-orange-50' : ''
                                                             }`}
                                                         >
                                                             <div className="flex items-center justify-between">
                                                                 <div className="flex items-center space-x-4">
-                                                                    <div className="flex-shrink-0">
-                                                                        {topic.is_completed ? (
-                                                                            <div className="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center">
-                                                                                <svg
-                                                                                    className="w-6 h-6 text-green-600"
-                                                                                    fill="none"
-                                                                                    stroke="currentColor"
-                                                                                    viewBox="0 0 24 24"
-                                                                                >
-                                                                                    <path
-                                                                                        strokeLinecap="round"
-                                                                                        strokeLinejoin="round"
-                                                                                        strokeWidth={2}
-                                                                                        d="M5 13l4 4L19 7"
-                                                                                    />
-                                                                                </svg>
-                                                                            </div>
-                                                                        ) : (
-                                                                            <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center">
-                                                                                <svg
-                                                                                    className="w-6 h-6 text-gray-400"
-                                                                                    fill="none"
-                                                                                    stroke="currentColor"
-                                                                                    viewBox="0 0 24 24"
-                                                                                >
-                                                                                    <circle cx="12" cy="12" r="10" strokeWidth={2} />
-                                                                                </svg>
-                                                                            </div>
-                                                                        )}
-                                                                    </div>
                                                                     <div>
                                                                         <h3 className="text-lg font-medium text-gray-800">{topic.name}</h3>
                                                                     </div>
@@ -1076,21 +1046,6 @@ const MyCourses = () => {
                                                                     <span className={`px-3 py-1 rounded-full text-sm font-medium ${topicStatus.status === 'Done' ? 'bg-green-100 text-green-800' : topicStatus.status === 'In Progress' ? 'bg-blue-100 text-blue-800' : 'bg-amber-100 text-amber-800'}`}>
                                                                         {topicStatus.status}
                                                                     </span>
-                                                                    {!topicStatus.accessible && (
-                                                                        <svg
-                                                                            className="w-5 h-5 text-amber-600"
-                                                                            fill="none"
-                                                                            stroke="currentColor"
-                                                                            viewBox="0 0 24 24"
-                                                                        >
-                                                                            <path
-                                                                                strokeLinecap="round"
-                                                                                strokeLinejoin="round"
-                                                                                strokeWidth={2}
-                                                                                d="M12 15v2m0 0v2m0-2h2m-2 0H8m4-6V4"
-                                                                            />
-                                                                        </svg>
-                                                                    )}
                                                                 </div>
                                                             </div>
                                                         </div>
@@ -1142,16 +1097,22 @@ const MyCourses = () => {
                                             Teaching Material
                                         </button>
                                         <button
-                                            onClick={() => setActiveTab('assignments')}
+                                            onClick={() => {
+                                                if (selectedTopic && selectedTopic.is_started) setActiveTab('assignments');
+                                            }}
+                                            disabled={!selectedTopic || !selectedTopic.is_started}
                                             className={`flex-1 px-6 py-3 text-center font-medium transition-colors duration-200 ${
-                                                activeTab === 'assignments'
-                                                ? 'bg-orange-600 text-white'
-                                                : 'bg-white text-gray-600 hover:bg-gray-50'
+                                                activeTab === 'assignments' && selectedTopic && selectedTopic.is_started
+                                                    ? 'bg-orange-600 text-white'
+                                                    : (!selectedTopic || !selectedTopic.is_started)
+                                                        ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
+                                                        : 'bg-white text-gray-600 hover:bg-gray-50'
                                             }`}
+                                            title={!selectedTopic || !selectedTopic.is_started ? 'Assignments are only available when the topic is in progress.' : ''}
                                         >
                                             Assignments
                                         </button>
-                                        {selectedAssignment && (
+                                        {selectedAssignment && selectedTopic && selectedTopic.is_started && (
                                             <button
                                                 onClick={() => setActiveTab('submit')}
                                                 className={`flex-1 px-6 py-3 text-center font-medium transition-colors duration-200 ${
@@ -1437,6 +1398,10 @@ const MyCourses = () => {
                                                                     <span className="px-4 py-2 bg-green-100 text-green-800 rounded-full text-sm font-medium">
                                                                         Submitted
                                                                     </span>
+                                                                ) : selectedTopic && !selectedTopic.is_started ? (
+                                                                    <span className="px-4 py-2 bg-gray-100 text-gray-800 rounded-full text-sm font-medium">
+                                                                        Topic Not Started
+                                                                    </span>
                                                                 ) : isSubmissionWindowOpen(selectedAssignment.start_submission, selectedAssignment.stop_submission) ? (
                                                                     <span className="px-4 py-2 bg-blue-100 text-blue-800 rounded-full text-sm font-medium">
                                                                         Open for Submission
@@ -1500,6 +1465,21 @@ const MyCourses = () => {
                                                                         </svg>
                                                                         View Submission Details
                                                                     </button>
+                                                                </div>
+                                                            </div>
+                                                        ) : selectedTopic && !selectedTopic.is_started ? (
+                                                            // Topic not started message
+                                                            <div className="bg-gray-50 border border-gray-200 rounded-lg p-6">
+                                                                <div className="flex items-center mb-4">
+                                                                    <svg className="w-8 h-8 text-gray-400 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                                                    </svg>
+                                                                    <div>
+                                                                        <h4 className="text-lg font-semibold text-gray-900">Topic Not Started</h4>
+                                                                        <p className="text-gray-700">
+                                                                            This topic has not been started yet. Assignment submissions will be available once the instructor starts the topic.
+                                                                        </p>
+                                                                    </div>
                                                                 </div>
                                                             </div>
                                                         ) : isSubmissionWindowOpen(selectedAssignment.start_submission, selectedAssignment.stop_submission) ? (

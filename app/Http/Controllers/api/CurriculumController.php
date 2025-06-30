@@ -66,7 +66,9 @@ class CurriculumController extends Controller
                         return [
                             'id' => $topic->topic->id,
                             'name' => $topic->topic->name,
+                            'is_started' => $topic->is_topic_started ?? false,
                             'is_completed' => $topic->is_topic_completed ?? false,
+                            'started_at' => $topic->topic_started_at,
                             'completed_at' => $topic->topic_completed_at
                         ];
                     })
@@ -93,7 +95,9 @@ class CurriculumController extends Controller
                 return [
                     'id' => $topic->topic->id,
                     'name' => $topic->topic->name,
+                    'is_started' => $topic->is_topic_started ?? false,
                     'is_completed' => $topic->is_topic_completed ?? false,
+                    'started_at' => $topic->topic_started_at,
                     'completed_at' => $topic->topic_completed_at
                 ];
             });

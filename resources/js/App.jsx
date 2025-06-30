@@ -30,6 +30,7 @@ import Announcements from './pages/Announcements';
 import StudentJourney from './pages/StudentJourney';
 import StudentAttendance from './components/Attendance/StudentAttendance';
 import StudentManagement from './pages/StudentManagement';
+import QuestionBank from './pages/QuestionBank';
 
 // Export StudentManagement for use in the Filament page
 window.StudentManagement = StudentManagement;
@@ -91,6 +92,7 @@ function App() {
         {/* <Route path="/administrator/:id/topics/:curriculumId" element={<Topics />} /> */}
 
         <Route path="/administrator/:id/student-management" element={<StudentManagement />} />
+        <Route path="/administrator/:id/question-bank" element={<QuestionBank />} />
         <Route path="*" element={<div>Not Found</div>} />
       </Routes>
 

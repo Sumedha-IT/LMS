@@ -1,0 +1,12 @@
+Type,name,subject_name,question_bank_chapter,difficulty_name,question_type_name,description,question,question_type,marks,negative_marks,option_1,option_2,option_3,option_4,correct_answer
+BANK,Scripting Languages Quiz,Computer Science,Programming,Beginner,MCQ - Single Correct,Questions about scripting languages,,,,,,,,,,
+Q,,,,,,,,Which of the following is a scripting language?,MCQ - Single Correct,1,0,Python,C++,Java,Assembly,1
+Q,,,,,,,,Which symbol is used to denote a comment in Python?,MCQ - Single Correct,1,0,#,//,<!--,--,1
+Q,,,,,,,,Which method is used to print output in JavaScript?,MCQ - Single Correct,1,0,console.log(),print(),echo(),System.out.println(),1
+Q,,,,,,,,Which scripting language is primarily used for web browsers?,MCQ - Single Correct,1,0,JavaScript,PHP,Perl,Ruby,1
+Q,,,,,,,,What is the file extension for a Bash script?,MCQ - Single Correct,1,0,.sh,.py,.js,.bat,1
+Q,,,,,,,,Which of the following is NOT a scripting language?,MCQ - Single Correct,1,0,Python,JavaScript,HTML,Perl,3
+Q,,,,,,,,Which function is used to read input from the user in Python 3?,MCQ - Single Correct,1,0,input(),raw_input(),scanf(),gets(),1
+Q,,,,,,,,Which of these is a server-side scripting language?,MCQ - Single Correct,1,0,PHP,HTML,CSS,XML,1
+Q,,,,,,,,Which keyword is used to define a function in JavaScript?,MCQ - Single Correct,1,0,function,def,fun,sub,1
+Q,,,,,,,,Which of the following is used to execute a shell script in Linux?,MCQ - Single Correct,1,0,bash filename.sh,run filename.sh,execute filename.sh,open filename.sh,1 

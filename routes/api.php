@@ -252,6 +252,7 @@ Route::group(['middleware' => [
     Route::get('/questionBanks', [QuestionBankController::class,'index']);
     Route::get('/questionBanks/{id}', [QuestionBankController::class,'show']);
     Route::delete('/questionBanks/{id}', [QuestionBankController::class,'delete']);
+    Route::post('/questionBanks/import', [QuestionBankController::class,'import']);
     Route::get('/questionBankTypes',[QuestionBankController::class,'getQuestionBankTypes']);
     Route::get('/questionBankDifficulties',[QuestionBankController::class,'getQuestionBankDifficulties']);
 
@@ -411,6 +412,7 @@ Route::middleware(['auth:sanctum', 'addHeader'])->group(function () {
         Route::prefix('topics')->group(function () {
             Route::get('/', [TopicController::class, 'index']);
             Route::get('/{id}', [TopicController::class, 'show']);
+            Route::post('/{id}/start', [TopicController::class, 'startTopic']);
             Route::post('/{id}/complete', [TopicController::class, 'markAsCompleted']);
         });
     });

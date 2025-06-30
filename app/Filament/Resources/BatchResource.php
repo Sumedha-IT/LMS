@@ -149,6 +149,28 @@ class BatchResource extends Resource implements HasShieldPermissions
                                                                     ->extraAttributes(['class' => 'mb-4']),
                                                                 Forms\Components\Grid::make(2)
                                                                     ->schema([
+                                                                        Forms\Components\Toggle::make('is_topic_started')
+                                                                            ->label('Started')
+                                                                            ->default(false)
+                                                                            ->live()
+                                                                            ->afterStateUpdated(function ($state, callable $set) {
+                                                                                if ($state) {
+                                                                                    $set('topic_started_at', now()->toDateTimeString());
+                                                                                } else {
+                                                                                    $set('topic_started_at', null);
+                                                                                }
+                                                                            })
+                                                                            ->extraAttributes(['class' => 'mt-2']),
+                                                                        Forms\Components\DatePicker::make('topic_started_at')
+                                                                            ->label('Started At')
+                                                                            ->displayFormat('d/m/Y H:i')
+                                                                            ->format('Y-m-d H:i:s')
+                                                                            ->native(false)
+                                                                            ->dehydrated()
+                                                                            ->extraAttributes(['class' => 'mt-2']),
+                                                                    ]),
+                                                                Forms\Components\Grid::make(2)
+                                                                    ->schema([
                                                                         Forms\Components\Toggle::make('is_topic_completed')
                                                                             ->label('Completed')
                                                                             ->default(false)
@@ -165,8 +187,8 @@ class BatchResource extends Resource implements HasShieldPermissions
                                                                             ->label('Completed At')
                                                                             ->displayFormat('d/m/Y H:i')
                                                                             ->format('Y-m-d H:i:s')
-                                                                            // Removed disabled() and dehydrated(false)
-                                                                            ->dehydrated() // Ensure the value is included in the form submission
+                                                                            ->native(false)
+                                                                            ->dehydrated()
                                                                             ->extraAttributes(['class' => 'mt-2']),
                                                                     ]),
                                                             ]),
@@ -278,7 +300,11 @@ class BatchResource extends Resource implements HasShieldPermissions
             ->actions([
                 Tables\Actions\ViewAction::make()
                     ->hidden(auth()->user()->is_tutor),
-                Tables\Actions\EditAction::make(),
+                Tables\Actions\EditAction::make()
+                    ->label('Start Topics')
+                    ->icon('heroicon-o-play')
+                    ->color('success')
+                    ->visible(fn (Batch $record): bool => auth()->user()->is_admin || auth()->user()->is_coordinator),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([

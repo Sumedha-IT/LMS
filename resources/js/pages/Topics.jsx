@@ -536,6 +536,7 @@ const Topics = () => {
     };
 
     const handleTopicClick = async (topic) => {
+        // Remove topic access restriction - allow access to any topic
         setSelectedTopic(topic);
         setSelectedAssignment(null);
         
@@ -729,7 +730,8 @@ const Topics = () => {
                                                     )}
                                                 </div>
                                                 <div className="mt-4 flex justify-end">
-                                                    {(isWindowOpen || submissions[assignment.id]) && (
+                                                    {/* Only show assignment button if topic is in progress */}
+                                                    {selectedTopic && selectedTopic.is_started && (isWindowOpen || submissions[assignment.id]) && (
                                                         <button
                                                             onClick={(e) => {
                                                                 e.stopPropagation();
@@ -740,6 +742,12 @@ const Topics = () => {
                                                         >
                                                             {submissions[assignment.id] ? 'Edit Submission' : 'Submit'}
                                                         </button>
+                                                    )}
+                                                    {/* Show message if topic is not in progress */}
+                                                    {selectedTopic && !selectedTopic.is_started && (
+                                                        <div className="px-4 py-2 text-sm bg-gray-100 text-gray-600 rounded-lg">
+                                                            Topic not started yet
+                                                        </div>
                                                     )}
                                                 </div>
                                             </div>
@@ -1056,14 +1064,24 @@ const Topics = () => {
                                         <h3 className="text-lg font-medium text-gray-800">{topic.name}</h3>
                                     </div>
                                 </div>
-                                    {topic.is_completed && (
+                                <div className="flex items-center space-x-2">
+                                    {topic.is_completed ? (
                                         <span className="px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs">
                                             Completed
                                         </span>
+                                    ) : topic.is_started ? (
+                                        <span className="px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-xs">
+                                            In Progress
+                                        </span>
+                                    ) : (
+                                        <span className="px-2 py-1 bg-amber-100 text-amber-800 rounded-full text-xs">
+                                            Not Started
+                                        </span>
                                     )}
-                                                </div>
-                                            </div>
-                                        ))}
+                                </div>
+                            </div>
+                        </div>
+                    ))}
                                     </div>
                                 )}
                             </div>
