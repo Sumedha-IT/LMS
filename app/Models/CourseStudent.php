@@ -48,35 +48,35 @@ class CourseStudent extends Model
     protected function isLiveCourse(): Attribute
     {
         return Attribute::make(
-            get: fn($value) => [$value],
+            get: fn($value) => $value,
         );
     }
 
     protected function copyFromExistingCourse(): Attribute
     {
         return Attribute::make(
-            get: fn($value) => [$value],
+            get: fn($value) => $value,
         );
     }
 
     protected function allowCourseComplete(): Attribute
     {
         return Attribute::make(
-            get: fn($value) => [ $value],
+            get: fn($value) => $value,
         );
     }
 
     protected function contentAccessAfterCompletion(): Attribute
     {
         return Attribute::make(
-            get: fn($value) => [$value],
+            get: fn($value) => $value,
         );
     }
 
     protected function courseUnenrolling(): Attribute
     {
         return Attribute::make(
-            get: fn($value) => [$value],
+            get: fn($value) => $value,
         );
     }
 
