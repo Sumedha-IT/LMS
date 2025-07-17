@@ -37,6 +37,8 @@ class Kernel extends HttpKernel
             \App\Http\Middleware\VerifyCsrfToken::class,
             \Illuminate\Routing\Middleware\SubstituteBindings::class,
             \App\Http\Middleware\CheckSession::class,
+            // \App\Http\Middleware\CheckFeatureAccessMiddleware::class,
+
         ],
 
         'api' => [
@@ -44,6 +46,21 @@ class Kernel extends HttpKernel
             \Illuminate\Routing\Middleware\ThrottleRequests::class.':api',
             \Illuminate\Routing\Middleware\SubstituteBindings::class,
         ],
+    ];
+
+    protected $middlewarePriority = [
+        \Illuminate\Cookie\Middleware\EncryptCookies::class,
+        \App\Http\Middleware\AddHeader::class,
+        \Illuminate\Session\Middleware\StartSession::class,
+        \Illuminate\View\Middleware\ShareErrorsFromSession::class,
+        \Illuminate\Contracts\Auth\Middleware\AuthenticatesRequests::class,
+        \Illuminate\Routing\Middleware\ThrottleRequests::class,
+        \Illuminate\Routing\Middleware\ThrottleRequestsWithRedis::class,
+        \Illuminate\Session\Middleware\AuthenticateSession::class,
+        \Illuminate\Routing\Middleware\SubstituteBindings::class,
+        \Illuminate\Auth\Middleware\Authorize::class,
+        \App\Http\Middleware\CheckFeatureAccessMiddleware::class
+
     ];
 
     /**
@@ -66,6 +83,12 @@ class Kernel extends HttpKernel
         'throttle' => \Illuminate\Routing\Middleware\ThrottleRequests::class,
         'verified' => \Illuminate\Auth\Middleware\EnsureEmailIsVerified::class,
         'checksession' => \App\Http\Middleware\CheckSession::class,
-
+        'payloadCheck'=>\App\Http\Middleware\DataValidationMiddleware::class,
+        'addHeader'=>\App\Http\Middleware\AddHeader::class,
+        'encryptCookie' =>\App\Http\Middleware\EncryptCookies::class,
+        'zohoAuth' =>\App\Http\Middleware\ZohoMiddleware::class,
+        'checkFeatureAcc' =>\App\Http\Middleware\CheckFeatureAccessMiddleware::class,
+        'checkStudentAttendance' => \App\Http\Middleware\CheckStudentAttendance::class,
+        'role' => \App\Http\Middleware\CheckRole::class,
     ];
 }

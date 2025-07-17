@@ -1,4 +1,4 @@
-<x-filament-panels::page>
+{{--  <x-filament-panels::page>
 
     <style>
         .dropdown-content {
@@ -62,7 +62,7 @@
 {{--                        </div>--}}
 {{--                    </div>--}}
 {{--                </div>--}}
-            </div>
+            {{-- </div>
             <div class="p-4">
                 <img
                     class="w-full rounded-lg"
@@ -70,9 +70,9 @@
                     alt="Post Image"
                 />
                 <p class="text-gray-700 mt-4">
-                    {{ Str::limit($post->content, 100) }}
+                    {!! Str::limit($post->content, 100) !!}
                     <span class="full-text" style="display: none;">
-                        {{ substr($post->content, 100) }}
+                        {!! substr($post->content, 100) !!}
                     </span>
                     <a href="javascript:void(0);" class="read-more" data-id="{{ $post->id }}" style="display: none;">Read
                         more...</a>
@@ -153,6 +153,6 @@
                 });
             });
         });
-    </script>
+    </script> --}}
 
-</x-filament-panels::page>
+{{--  </x-filament-panels::page>

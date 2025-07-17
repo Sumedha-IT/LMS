@@ -10,10 +10,17 @@ use Filament\Forms\Components\Select;
 use Filament\Forms\Form;
 use Filament\Forms\Get;
 use Filament\Pages\Dashboard as BaseDashboard;
+use Illuminate\Support\Facades\Auth;
 
 class Dashboard extends BaseDashboard
 {
     use BaseDashboard\Concerns\HasFiltersForm;
+
+    public static function shouldRegisterNavigation(): bool
+    {
+        // Hide the default Dashboard for student users
+        return !(Auth::check() && Auth::user()->is_student);
+    }
 
     public function filtersForm(Form $form): Form
     {

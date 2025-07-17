@@ -9,4 +9,6 @@ class QuestionBankType extends Model
 {
     use HasFactory;
     protected $guarded = ['id'];
+
+    
 }

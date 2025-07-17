@@ -49,7 +49,7 @@ class CourseResource extends Resource
 
     public static function getLabel(): string
     {
-        return "My Courses";
+        return "Curriculum";
     }
 
     public static function form(Form $form): Form
@@ -63,12 +63,10 @@ class CourseResource extends Resource
                             ->required()
                             ->maxLength(255),
 
-                        Forms\Components\CheckboxList::make('is_live_course')
+                        Forms\Components\Toggle::make('is_live_course')
                             ->label('Is Live Course')
                             ->inlineLabel(true)
-                            ->options(['1' => 'This will be a LIVE course'])
-                            ->descriptions(['1' => new HtmlString("Live courses let's you create your class schedules and let your
-                            students join you for live learning. <br>You need to have a Zoom account connected with Edmingle to create live courses.")]),
+                            ->helperText("Live courses let's you create your class schedules and let your students join you for live learning. You need to have a Zoom account connected with Edmingle to create live courses."),
 
                         // Forms\Components\CheckboxList::make('sub_categories')
                         //     ->inlineLabel(true)
@@ -77,13 +75,11 @@ class CourseResource extends Resource
                         //     ->gridDirection('row')
                         //     ->searchable(),
 
-                        Forms\Components\CheckboxList::make('copy_from_existing_course')
+                        Forms\Components\Toggle::make('copy_from_existing_course')
                             ->label('Subject Modules')
                             ->inlineLabel(true)
                             ->live()
-                            ->options(['1' => 'I want to choose existing course content for this course program.'])
-                            ->descriptions(['1' => new HtmlString("Keep this checkbox <strong>ON</strong> if you want to attach existing courses to this program.
-                                <br>Keeping it <strong>OFF</strong> will create a new blank course and attach to this program. Don't worry, you can always attach other existing/new courses later.")])
+                            ->helperText("Keep this toggle ON if you want to attach existing courses to this program. Keeping it OFF will create a new blank course and attach to this program. Don't worry, you can always attach other existing/new courses later.")
                             ->hidden(fn(string $context): bool => $context !== 'create'),
 
                         Forms\Components\Select::make('curriculums')
@@ -107,10 +103,10 @@ class CourseResource extends Resource
                             ]),
 
 
-                        Forms\Components\CheckboxList::make('allow_course_complete')
+                        Forms\Components\Toggle::make('allow_course_complete')
                             ->label('Course Completion')
                             ->inlineLabel(true)
-                            ->options(['1' => 'Allow Student to mark course as complete.'])
+                            ->helperText("Allow Student to mark course as complete.")
                             ->hidden(fn(string $context): bool => $context !== 'create'),
 
 
@@ -129,21 +125,20 @@ class CourseResource extends Resource
                 Forms\Components\Section::make()
                     ->schema([
 
-                        Forms\Components\CheckboxList::make('course_unenrolling')
+                        Forms\Components\Toggle::make('course_unenrolling')
                             ->label('Course Unenrolling')
                             ->inlineLabel(true)
-                            ->options(['1' => 'Allow enrolled students to Unenroll from this course'])
-                            ->descriptions(['1' => new HtmlString("If this setting is on, the students who enrolls in this course will also be able to unenroll themselves. Please note that this setting will NOT process any automated fee refunds.")]),
+                            ->helperText("If this setting is on, the students who enrolls in this course will also be able to unenroll themselves. Please note that this setting will NOT process any automated fee refunds."),
 
-                        Forms\Components\CheckboxList::make('content_access_after_completion')
+                        Forms\Components\Toggle::make('content_access_after_completion')
                             ->label('Content Access After Completion')
                             ->inlineLabel(true)
-                            ->options(['1' => 'Allow enrolled students to access course content even after the batch running in this course is marked as completed.']),
+                            ->helperText("Allow enrolled students to access course content even after the batch running in this course is marked as completed."),
 
-                        Forms\Components\CheckboxList::make('allow_course_complete')
+                        Forms\Components\Toggle::make('allow_course_complete')
                             ->label('Course Completion')
                             ->inlineLabel(true)
-                            ->options(['1' => 'Allow Student to mark course as complete.'])
+                            ->helperText("Allow Student to mark course as complete.")
 
                     ])->heading('Other Settings')
                     ->hiddenOn('create'),

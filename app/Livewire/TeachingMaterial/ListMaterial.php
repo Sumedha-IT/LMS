@@ -9,6 +9,7 @@ use App\Models\Batch;
 use App\Models\Branch;
 use App\Models\Section;
 use App\Models\TeachingMaterial;
+use App\Models\Topic;
 use Filament\Facades\Filament;
 use Filament\Forms\Components\Checkbox;
 use Filament\Forms\Components\CheckboxList;
@@ -53,32 +54,30 @@ class ListMaterial extends Component implements HasForms, HasTable
     public function form_in()
     {
         return [
-
             \Filament\Forms\Components\Section::make()
                 ->schema([
-
                     Hidden::make('section_id')
                         ->default($this->section->id),
-
                     Hidden::make('doc_type')
                         ->reactive()
                         ->default(1),
-
-//                    Select::make('section_id')
-//                        ->label('Section')
-//                        ->options(function (callable $get) {
-//                            return Section::pluck('name', 'id');
-//                        })
-//                        ->default()
-//                        ->searchable()
-//                        ->preload()
-//                        ->required()
-//                        ->columnSpanFull(),
+                    Select::make('topic_id')
+                        ->label('Topic')
+                        ->options(function () {
+                            // Use the section passed to the component to filter topics
+                            if ($this->section && $this->section->curriculum_id) {
+                                return Topic::where('curriculum_id', $this->section->curriculum_id)
+                                    ->pluck('name', 'id');
+                            }
+                            return [];
+                        })
+                        ->searchable()
+                        ->preload()
+                        ->required()
+                        ->columnSpanFull(),
                     TextInput::make('name')
                         ->required()
-                        //->hidden(fn(Get $get): bool => $get('doc_type') == 1)
                         ->maxLength(255),
-                    //Forms\Components\TextInput::make('material_source')
                     Radio::make('material_source')
                         ->options([
                             "video" => "Video",
@@ -94,7 +93,6 @@ class ListMaterial extends Component implements HasForms, HasTable
                         ])
                         ->required()
                         ->reactive(),
-
                     FileUpload::make('file')
                         ->inlineLabel(true)
                         ->label('File')
@@ -102,7 +100,6 @@ class ListMaterial extends Component implements HasForms, HasTable
                     Textarea::make('content')
                         ->hidden(fn(Get $get): bool => !in_array($get('material_source'), ['url', 'content']))
                         ->columnSpanFull(),
-
                     Group::make()->schema([
                         Checkbox::make('unlimited_view')
                             ->reactive()
@@ -117,7 +114,6 @@ class ListMaterial extends Component implements HasForms, HasTable
                         ->label('Make this a prerequisite.')
                         ->helperText("Students won't be able to move on to next lesson unless they complete this lesson.")
                         ->required(),
-
                     Toggle::make('published'),
                     Textarea::make('description')
                         ->required()
@@ -147,49 +143,45 @@ class ListMaterial extends Component implements HasForms, HasTable
     public function form_assignment_in()
     {
         return [
-
             \Filament\Forms\Components\Section::make()
                 ->schema([
-
                     Hidden::make('section_id')
                         ->default($this->section->id),
                     Hidden::make('doc_type')
                         ->default(2),
-
-//                    Select::make('section_id')
-//                        ->label('Section')
-//                        ->options(function (callable $get) {
-//                            return Section::pluck('name', 'id');
-//                        })
-//                        ->default()
-//                        ->searchable()
-//                        ->preload()
-//                        ->required()
-//                        ->columnSpanFull(),
                     TextInput::make('name')
                         ->label('Assignment Title')
                         ->required()
                         ->maxLength(255),
-
+                    Select::make('topic_id')
+                        ->label('Topic')
+                        ->options(function () {
+                            // Use the section passed to the component to filter topics
+                            if ($this->section && $this->section->curriculum_id) {
+                                return Topic::where('curriculum_id', $this->section->curriculum_id)
+                                    ->pluck('name', 'id');
+                            }
+                            return [];
+                        })
+                        ->searchable()
+                        ->preload()
+                        ->required()
+                        ->columnSpanFull(),
                     TextInput::make('maximum_marks')
                         ->numeric()
                         ->required(),
-
                     FileUpload::make('file')
                         ->inlineLabel(true)
                         ->label('File'),
-
                     TextInput::make('passing_percentage')
                         ->numeric()
                         ->required(),
-
                     Select::make('result_declaration')
                         ->options([
                             1 => "Declare immediately on test submission",
                             2 => "Declare later (You'll be given an option to declare)",
                         ])
                         ->required(),
-
                     Select::make('maximum_attempts')
                         ->options([
                             -1 => "Unlimited",
@@ -205,26 +197,24 @@ class ListMaterial extends Component implements HasForms, HasTable
                             10 => 10,
                         ])
                         ->required(),
-
-
                     DateTimePicker::make('start_submission')
                         ->native(false)
                         ->reactive()
                         ->default(now())
-                        ->required(),
-                    //->afterStateUpdated(fn ($state, callable $set) => $this->resetEndDate($state, $set)),
+                        ->required()
+                        ->displayFormat('Y-m-d H:i:s')
+                        ->format('Y-m-d H:i:s'),
                     DateTimePicker::make('stop_submission')
                         ->native(false)
                         ->default(now())
                         ->minDate(fn(callable $get) => $get('start_submission'))
-                        ->required(),
-
-
+                        ->required()
+                        ->displayFormat('Y-m-d H:i:s')
+                        ->format('Y-m-d H:i:s'),
                     Toggle::make('prerequisite')
-                        ->label('Make this a prerequisite . ')
-                        ->helperText("Students won't be able to move on to next lesson unless they complete this lesson . ")
+                        ->label('Make this a prerequisite.')
+                        ->helperText("Students won't be able to move on to next lesson unless they complete this lesson.")
                         ->required(),
-
                     Textarea::make('description')
                         ->required()
                         ->columnSpanFull(),
@@ -250,18 +240,11 @@ class ListMaterial extends Component implements HasForms, HasTable
         ];
     }
 
-//    public function resetEndDate($state, $set)
-//    {
-//        if ($state->stop_submission && $state->stop_submission < $state) {
-//            $set('stop_submission', null);
-//        }
-//    }
-
     public function displayDiscription($record)
     {
         if ($record->material_source == "other") {
             return $record->file;
-        } else if ($record->material_source == "url") {
+        } elseif ($record->material_source == "url") {
             return '<svg
    xmlns:dc="http://purl.org/dc/elements/1.1/"
    xmlns:cc="http://creativecommons.org/ns#"
@@ -324,16 +307,12 @@ class ListMaterial extends Component implements HasForms, HasTable
        points="80.2,42.5 48.6,24.3 48.6,60.7 "
        id="polygon9"
        style="fill:#ffffff" /></g></svg>';
-//            video-camera
-
-
         }
     }
 
     public function table(Table $table): Table
     {
         return $table
-            //->query(TeachingMaterial::query())
             ->relationship(fn(): HasMany => $this->section->teaching_material())
             ->inverseRelationship('section')
             ->defaultSort('sort')
@@ -342,67 +321,35 @@ class ListMaterial extends Component implements HasForms, HasTable
             ->headerActions([
                 CreateAction::make('create')
                     ->label('Add Teaching Material')
-                    //->mutateFormDataUsing(fn(callable $set) => $set('doc_type', 1))
                     ->form($this->form_in())
                     ->after(function (TeachingMaterial $record) {
-                        // Ensure Filament::getTenant() returns the correct tenant
                         $tenant = Filament::getTenant();
                         if ($tenant) {
                             $batches = Batch::where('branch_id', $tenant->id)->pluck('id')->all();
                             $record->batches()->attach($batches);
                         }
-                    })
-                ,
+                    }),
                 CreateAction::make('assignment')
                     ->label('Add Assignment')
-                    //->mutateFormDataUsing(fn(callable $set) => $set('doc_type', 2))
                     ->form($this->form_assignment_in())
-
             ])
             ->columns([
                 Tables\Columns\TextColumn::make('sort')
                     ->label(''),
-
                 IconColumn::make('id')
                     ->label('')
                     ->icon('heroicon-o-document-text'),
-                Tables\Columns\TextColumn::make('name')->label('')
-                    ->description(fn(TeachingMaterial $record) => new HtmlString($this->displayDiscription($record))
-                    ),
-//                Tables\Columns\TextColumn::make('material_source')
-//                    ->searchable(),
-//                Tables\Columns\TextColumn::make('file')
-//                    ->searchable(),
-                /*Tables\Columns\IconColumn::make('unlimited_view')
-                    ->boolean(),
-                Tables\Columns\TextColumn::make('maximum_views')
-                    ->numeric()
-                    ->sortable(),
-                Tables\Columns\IconColumn::make('prerequisite')
-                    ->boolean(),
-                Tables\Columns\TextColumn::make('privacy_allow_access')
+                Tables\Columns\TextColumn::make('name')
+                    ->label('')
+                    ->description(fn(TeachingMaterial $record) => new HtmlString($this->displayDiscription($record))),
+                Tables\Columns\TextColumn::make('topic.name')
+                    ->label('Topic')
                     ->searchable(),
-                Tables\Columns\IconColumn::make('privacy_downloadable')
-                    ->boolean(),
-                Tables\Columns\IconColumn::make('published')
-                    ->boolean(),
-                Tables\Columns\TextColumn::make('sort')
-                    ->numeric()
-                    ->sortable(),
-                Tables\Columns\TextColumn::make('created_at')
-                    ->dateTime()
-                    ->sortable()
-                    ->toggleable(isToggledHiddenByDefault: true),
-                Tables\Columns\TextColumn::make('updated_at')
-                    ->dateTime()
-                    ->sortable()
-                    ->toggleable(isToggledHiddenByDefault: true),*/
             ])
             ->filters([
                 //
             ])
             ->actions([
-
                 Action::make('id')
                     ->icon('heroicon-o-eye')
                     ->label('')
@@ -413,7 +360,6 @@ class ListMaterial extends Component implements HasForms, HasTable
                 ActionGroup::make([
                     Tables\Actions\EditAction::make('material')
                         ->form(fn(TeachingMaterial $record) => $record->doc_type == 1 ? $this->form_in() : $this->form_assignment_in()),
-
                     Tables\Actions\EditAction::make('publish')
                         ->icon('heroicon-o-arrow-path')
                         ->label('Publish / UnPublish')
@@ -424,7 +370,7 @@ class ListMaterial extends Component implements HasForms, HasTable
                                 ->searchable()
                                 ->noSearchResultsMessage('No batch found.')
                                 ->bulkToggleable()
-                                ->getOptionLabelFromRecordUsing((fn(Model $record) => new HtmlString($record->additional_details))),
+                                ->getOptionLabelFromRecordUsing(fn(Model $record) => new HtmlString($record->additional_details)),
                         ]),
                     Tables\Actions\DeleteAction::make('delete')
                 ]),
@@ -444,7 +390,6 @@ class ListMaterial extends Component implements HasForms, HasTable
     public static function getPages(): array
     {
         return [
-
             'edit' => EditTeachingMaterial::route('/{record}/edit'),
         ];
     }

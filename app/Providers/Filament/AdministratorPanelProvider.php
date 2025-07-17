@@ -3,6 +3,18 @@
 namespace App\Providers\Filament;
 
 use App\Filament\Pages\Dashboard;
+use App\Filament\Pages\MyProfilePage;
+use App\Filament\Pages\MyCoursesPage;
+use App\Filament\Pages\AnnouncementsPage;
+use App\Filament\Pages\StudentDashboardPage;
+use App\Filament\Pages\StudentJourneyPage;
+use App\Filament\Pages\StudentAttendancePage;
+use App\Filament\Pages\AdminAttendancePage;
+use App\Filament\Pages\TutorAttendancePage;
+use App\Filament\Pages\StudentManagementPage;
+use App\Filament\Pages\CurriculumManagementPage;
+use App\Filament\Pages\StudentPlacementPage;
+use App\Filament\Pages\AdminPlacementPage;
 use App\Http\Middleware\ApplyTenantScopes;
 use App\Livewire\MyCustomPersonalInfo;
 use Filament\Http\Middleware\Authenticate;
@@ -22,15 +34,13 @@ use Illuminate\Session\Middleware\AuthenticateSession;
 use Illuminate\Session\Middleware\StartSession;
 use Illuminate\View\Middleware\ShareErrorsFromSession;
 use Filament\Support\Enums\MaxWidth;
-//use App\Filament\Pages\Auth\EditProfile;
 use App\Filament\Pages\Auth\Tenancy\EditTeamProfile;
 use App\Livewire\CustomPersonalInfo;
-// use App\Filament\Pages\Tenancy\RegisterTeam;
 use App\Models\Team;
 use Filament\Navigation\MenuItem;
 use Jeffgreco13\FilamentBreezy\BreezyCore;
 use Saade\FilamentFullCalendar\FilamentFullCalendarPlugin;
-//use Tapp\FilamentAuthenticationLog\FilamentAuthenticationLogPlugin;
+
 
 class AdministratorPanelProvider extends PanelProvider
 {
@@ -41,45 +51,43 @@ class AdministratorPanelProvider extends PanelProvider
             ->viteTheme('resources/css/filament/administrator/theme.css')
             ->id('administrator')
             ->path('administrator')
+            ->darkMode(false)
             ->login()
+            ->userMenuItems([
+                'account' => MenuItem::make()
+                    ->label(fn () => auth()->user()->name)
+                    ->url('/administrator/my-profile') // Redirect to the actual Filament profile page
+                    ->icon('heroicon-o-user'),
+            ])
             ->passwordReset()
-            ->sidebarCollapsibleOnDesktop()
             ->databaseNotifications()
             ->font('Poppins')
-            //->profile(EditTeamProfile::class)
-            //->profile(isSimple: false)
             ->plugins([
-                FilamentFullCalendarPlugin::make(),
+                // FilamentFullCalendarPlugin::make(),
                 TableLayoutTogglePlugin::make()
                     ->setDefaultLayout('grid')
-                    ->persistLayoutInLocalStorage(true) // allow user to keep his layout preference in his local storage
-                    ->shareLayoutBetweenPages(false) // allow all tables to share the layout option (requires persistLayoutInLocalStorage to be true)
-                    ->displayToggleAction() // used to display the toogle button automatically, on the desired filament hook (defaults to table bar)
+                    ->persistLayoutInLocalStorage(true)
+                    ->shareLayoutBetweenPages(false)
+                    ->displayToggleAction()
                     ->listLayoutButtonIcon('heroicon-o-list-bullet')
                     ->gridLayoutButtonIcon('heroicon-o-squares-2x2'),
-				\BezhanSalleh\FilamentShield\FilamentShieldPlugin::make(),
+                \BezhanSalleh\FilamentShield\FilamentShieldPlugin::make(),
                 BreezyCore::make()
-                ->myProfile(
-                    shouldRegisterUserMenu: true, // Sets the 'account' link in the panel User Menu (default = true)
-                    shouldRegisterNavigation: true, // Adds a main navigation item for the My Profile page (default = false)
-                    navigationGroup: 'Settings', // Sets the navigation group for the My Profile page (default = null)
-                    hasAvatars: true, // Enables the avatar upload form component (default = false)
-                    slug: 'my-profile' // Sets the slug for the profile page (default = 'my-profile')
-                )
+                    ->myProfile(
+                        shouldRegisterUserMenu: false,
+                        shouldRegisterNavigation: false,
+                        navigationGroup: 'Settings',
+                        hasAvatars: true,
+                        slug: 'my-profile-breezy'
+                    )
                     ->avatarUploadComponent(fn($fileUpload) => $fileUpload->disableLabel())
-                    ->myProfileComponents([CustomPersonalInfo::class])
-
                     ->myProfileComponents([
-                    // 'personal_info' => CustomPersonalInfo::class,
-                   'personal_info' => MyCustomPersonalInfo::class, // replaces UpdatePassword component with your own.
-                    // 'two_factor_authentication' => ,
-                    // 'sanctum_tokens' =>
-                ])
-                ->enableTwoFactorAuthentication(
-                    force: false, // force the user to enable 2FA before they can use the application (default = false)
-                    //action: CustomTwoFactorPage::class // optionally, use a custom 2FA page
-                )
-			])
+                        'personal_info' => MyCustomPersonalInfo::class,
+                    ])
+                    ->enableTwoFactorAuthentication(
+                        force: false,
+                    )
+            ])
             ->colors([
                 'primary' => Color::Orange,
                 'secondary' => Color::Blue,
@@ -89,14 +97,20 @@ class AdministratorPanelProvider extends PanelProvider
             ->discoverResources(in: app_path('Filament/Resources'), for: 'App\\Filament\\Resources')
             ->discoverPages(in: app_path('Filament/Pages'), for: 'App\\Filament\\Pages')
             ->pages([
-                Dashboard::class,
+                // Pages\Dashboard::class, // Removing default dashboard
+                StudentDashboardPage::class,
+                MyCoursesPage::class,
+                AnnouncementsPage::class,
+                StudentJourneyPage::class,
+                StudentAttendancePage::class,
+                StudentManagementPage::class,
+                CurriculumManagementPage::class,
+                StudentPlacementPage::class,
+                AdminPlacementPage::class,
             ])
             ->discoverClusters(in: app_path('Filament/Clusters'), for: 'App\\Filament\\Clusters')
             ->discoverWidgets(in: app_path('Filament/Widgets'), for: 'App\\Filament\\Widgets')
-            ->widgets([
-                //Widgets\AccountWidget::class,
-                //Widgets\FilamentInfoWidget::class,
-            ])
+            ->widgets([])
             ->middleware([
                 EncryptCookies::class,
                 AddQueuedCookiesToResponse::class,
@@ -112,16 +126,6 @@ class AdministratorPanelProvider extends PanelProvider
             ->authMiddleware([
                 Authenticate::class,
             ])
-            ->tenant(Team::class)
-            /*->tenantMiddleware([
-                ApplyTenantScopes::class,
-            ], isPersistent: true)*/
-            //->tenantRegistration(RegisterTeam::class)
-            //->tenantProfile(EditTeamProfile::class)
-            // ->tenantMenuItems([
-            //     'profile' => MenuItem::make()->label('Edit team profile'),
-            //     // ...
-            // ])
-            ;
+            ->tenant(Team::class);
     }
 }

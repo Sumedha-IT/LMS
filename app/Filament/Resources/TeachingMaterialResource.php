@@ -27,88 +27,88 @@ class TeachingMaterialResource extends Resource
 
     protected static bool $shouldRegisterNavigation = false;
 
-    public static function form(Form $form): Form
-    {
-        return $form
-            ->schema([
-                Forms\Components\Section::make()
-                    ->schema([
+    // public static function form(Form $form): Form
+    // {
+    //     return $form
+    //         ->schema([
+    //             Forms\Components\Section::make()
+    //                 ->schema([
 
-                        Forms\Components\Select::make('section_id')
-                            ->label('Section')
-                            ->options(function (callable $get) {
-                                return Section::pluck('name', 'id');
-                            })
-                            ->searchable()
-                            ->preload()
-                            ->required()
-                            ->columnSpanFull(),
-                        Forms\Components\TextInput::make('name')
-                            ->required()
-                            ->maxLength(255),
-                        //Forms\Components\TextInput::make('material_source')
-                        Forms\Components\Radio::make('material_source')
-                            ->options([
-                                "video" => "Video",
-                                "other" => "Other File",
-                                "url" => "External URL / Embed Code",
-                                "content" => "Text / HTML"
-                            ])
-                            ->descriptions([
-                                "video" => "MP4/webm.",
-                                "other" => "PDF, Image, Audio, PPT, XLS, ZIP, Other.",
-                                "url" => "Link to a web page, youtube video link, etc.",
-                                "content" => "Useful for putting direct HTML, embeddable code and formatted text."
-                            ])
-                            ->required()
-                            ->reactive(),
+    //                     Forms\Components\Select::make('section_id')
+    //                         ->label('Section')
+    //                         ->options(function (callable $get) {
+    //                             return Section::pluck('name', 'id');
+    //                         })
+    //                         ->searchable()
+    //                         ->preload()
+    //                         ->required()
+    //                         ->columnSpanFull(),
+    //                     Forms\Components\TextInput::make('name')
+    //                         ->required()
+    //                         ->maxLength(255),
+    //                     //Forms\Components\TextInput::make('material_source')
+    //                     Forms\Components\Radio::make('material_source')
+    //                         ->options([
+    //                             "video" => "Video",
+    //                             "other" => "Other File",
+    //                             "url" => "External URL / Embed Code",
+    //                             "content" => "Text / HTML"
+    //                         ])
+    //                         ->descriptions([
+    //                             "video" => "MP4/webm.",
+    //                             "other" => "PDF, Image, Audio, PPT, XLS, ZIP, Other.",
+    //                             "url" => "Link to a web page, youtube video link, etc.",
+    //                             "content" => "Useful for putting direct HTML, embeddable code and formatted text."
+    //                         ])
+    //                         ->required()
+    //                         ->reactive(),
 
-                        Forms\Components\FileUpload::make('file')
-                            ->inlineLabel(true)
-                            ->label('File')
-                            ->hidden(fn (Forms\Get $get): bool => !in_array($get('material_source'), ['video', 'other'])),
-                        Forms\Components\Textarea::make('content')
-                            ->hidden(fn (Forms\Get $get): bool => !in_array($get('material_source'), ['url', 'content']))
-                            ->columnSpanFull(),
+    //                     Forms\Components\FileUpload::make('file')
+    //                         ->inlineLabel(true)
+    //                         ->label('File')
+    //                         ->hidden(fn (Forms\Get $get): bool => !in_array($get('material_source'), ['video', 'other'])),
+    //                     Forms\Components\Textarea::make('content')
+    //                         ->hidden(fn (Forms\Get $get): bool => !in_array($get('material_source'), ['url', 'content']))
+    //                         ->columnSpanFull(),
 
-                        Forms\Components\Group::make()->schema([
-                            Forms\Components\Checkbox::make('unlimited_view')
-                                ->reactive()
-                                ->inline(false)
-                                ->label('Allow unlimited view'),
-                            Forms\Components\TextInput::make('maximum_views')
-                                ->hidden(fn (Forms\Get $get): bool => $get('unlimited_view'))
-                                ->required()
-                                ->numeric(),
-                        ])->columns(4),
-                        Forms\Components\Toggle::make('prerequisite')
-                            ->label('Make this a prerequisite.')
-                            ->helperText("Students won't be able to move on to next lesson unless they complete this lesson.")
-                            ->required(),
+    //                     Forms\Components\Group::make()->schema([
+    //                         Forms\Components\Checkbox::make('unlimited_view')
+    //                             ->reactive()
+    //                             ->inline(false)
+    //                             ->label('Allow unlimited view'),
+    //                         Forms\Components\TextInput::make('maximum_views')
+    //                             ->hidden(fn (Forms\Get $get): bool => $get('unlimited_view'))
+    //                             ->required()
+    //                             ->numeric(),
+    //                     ])->columns(4),
+    //                     Forms\Components\Toggle::make('prerequisite')
+    //                         ->label('Make this a prerequisite.')
+    //                         ->helperText("Students won't be able to move on to next lesson unless they complete this lesson.")
+    //                         ->required(),
 
-                        Forms\Components\Toggle::make('published'),
-                        Forms\Components\Textarea::make('description')
-                            ->required()
-                            ->columnSpanFull()
-                    ]),
-                Forms\Components\Section::make()
-                    ->schema([
-                        Forms\Components\Radio::make('privacy_allow_access')
-                            ->label('Allow Access on')
-                            ->options([
-                                "app" => "Both",
-                                "both" => "App"
-                            ])
-                            ->inline(true),
-                        Forms\Components\Toggle::make('privacy_downloadable')
-                            ->inline(true)
-                            ->label('Downloadable.')
-                            ->helperText("Allow students to download this material"),
-                    ])
-                    ->heading('Privacy')
-            ])
-            ->columns(1);
-    }
+    //                     Forms\Components\Toggle::make('published'),
+    //                     Forms\Components\Textarea::make('description')
+    //                         ->required()
+    //                         ->columnSpanFull()
+    //                 ]),
+    //             Forms\Components\Section::make()
+    //                 ->schema([
+    //                     Forms\Components\Radio::make('privacy_allow_access')
+    //                         ->label('Allow Access on')
+    //                         ->options([
+    //                             "app" => "Both",
+    //                             "both" => "App"
+    //                         ])
+    //                         ->inline(true),
+    //                     Forms\Components\Toggle::make('privacy_downloadable')
+    //                         ->inline(true)
+    //                         ->label('Downloadable.')
+    //                         ->helperText("Allow students to download this material"),
+    //                 ])
+    //                 ->heading('Privacy')
+    //         ])
+    //         ->columns(1);
+    // }
 
     public static function table(Table $table): Table
     {

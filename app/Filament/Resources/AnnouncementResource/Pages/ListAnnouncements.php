@@ -17,7 +17,7 @@ class ListAnnouncements extends ListRecords
 
     protected function getHeaderActions(): array
     {
-        if (auth()->user()->is_admin) {
+        if (auth()->user()->is_admin || auth()->user()->is_coordinator || auth()->user()->is_tutor) {
             return [
                 Actions\CreateAction::make()
                     ->after(function (Announcement $record) {
@@ -31,9 +31,11 @@ class ListAnnouncements extends ListRecords
                             foreach ($record->batch_ids as $batch) {
                                 //dd($batch, $record->batch_ids);
                                 $batch_data = Batch::with('students')->find($batch);
-                                $batch_users = $batch_data->students;
-                                if ($batch_users)
-                                    $users = $users->merge($batch_users);
+                                if ($batch_data) {
+                                    $batch_users = $batch_data->students;
+                                    if ($batch_users)
+                                        $users = $users->merge($batch_users);
+                                }
                             }
                         }
 

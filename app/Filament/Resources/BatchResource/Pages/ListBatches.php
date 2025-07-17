@@ -26,12 +26,13 @@ class ListBatches extends ListRecords
 
     public function getTableQuery(): Builder
     {
-        if(auth()->user()->is_tutor) {
-        return parent::getTableQuery()
-                //->primary('curriculum.id')
-                ->select('batches.*')            
+        $user = auth()->user();
+        if($user->is_tutor) {
+            return parent::getTableQuery()
+                ->select('batches.*')
                 ->join('batch_curriculum', 'batches.id', '=', 'batch_curriculum.batch_id')
-                    ->where('batch_curriculum.tutor_id', auth()->user()->id);
+                ->where('batch_curriculum.tutor_id', $user->id)
+                ->distinct('batches.id');
         }
         return parent::getTableQuery();
     }

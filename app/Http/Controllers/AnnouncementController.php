@@ -10,10 +10,7 @@ class AnnouncementController extends Controller
 {
     public function index()
     {
-        $announcements= Announcement::where('schedule_at','<=',now())
-        ->orderBy('schedule_at', 'desc')
-        ->get();
-
+        $announcements = Announcement::orderBy('schedule_at', 'desc')->get();
         return AnnouncementResource::collection($announcements);
     }
 }

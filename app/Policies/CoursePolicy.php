@@ -13,7 +13,7 @@ class CoursePolicy
      */
     public function viewAny(User $user): bool
     {
-        return $user->is_admin || $user->is_tutor;
+        return $user->is_admin || $user->is_coordinator || $user->is_tutor;
     }
 
     /**
@@ -21,7 +21,7 @@ class CoursePolicy
      */
     public function view(User $user, Course $course): bool
     {
-        return $user->is_admin || $user->is_tutor;
+        return $user->is_admin || $user->is_coordinator || $user->is_tutor;
     }
 
     /**
@@ -29,7 +29,7 @@ class CoursePolicy
      */
     public function create(User $user): bool
     {
-        return $user->is_admin || $user->is_tutor;
+        return $user->is_admin || $user->is_coordinator || $user->is_tutor;
     }
 
     /**
@@ -37,7 +37,7 @@ class CoursePolicy
      */
     public function update(User $user, Course $course): bool
     {
-        return $user->is_admin;
+        return $user->is_admin || $user->is_coordinator;
     }
 
     /**
@@ -45,7 +45,7 @@ class CoursePolicy
      */
     public function delete(User $user, Course $course): bool
     {
-        return $user->is_admin;
+        return $user->is_admin || $user->is_coordinator;
     }
 
     /**
@@ -53,7 +53,7 @@ class CoursePolicy
      */
     public function restore(User $user, Course $course): bool
     {
-        return $user->is_admin;
+        return $user->is_admin || $user->is_coordinator;
     }
 
     /**
@@ -61,10 +61,10 @@ class CoursePolicy
      */
     public function forceDelete(User $user, Course $course): bool
     {
-        return $user->is_admin;
+        return $user->is_admin || $user->is_coordinator;
     }
     public function curriculums(User $user, Course $course): bool
     {
-        return $user->is_admin;
+        return $user->is_admin || $user->is_coordinator;
     }
 }

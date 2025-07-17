@@ -24,19 +24,28 @@ class HolidayResource extends Resource
 
     protected static ?string $navigationIcon = 'heroicon-o-flag';
 
-    protected static ?string $navigationGroup = 'Attendance';
+    protected static ?string $navigationGroup = 'Announcement';
+
+    public static function shouldRegisterNavigation(): bool
+    {
+        // Only show in navigation for admin users
+        return auth()->check() && auth()->user()->is_admin;
+    }
 
     public static function form(Form $form): Form
     {
         return $form
             ->schema([
-                TextInput::make('name')->label('Name'),
-                Select::make('team_id')->relationship('team', 'name')->label('Branch'),
-                // Select::make('calendar_id')
-                //     ->options(Calendar::pluck('name', 'id'))
-                //     ->label('Calendar'),
-                DatePicker::make('date')->native(false)
-
+                TextInput::make('name')
+                    ->label('Holiday Name')
+                    ->required(),
+                Select::make('team_id')
+                    ->relationship('team', 'name')
+                    ->label('Branch')
+                    ->required(),
+                DatePicker::make('date')
+                    ->native(false)
+                    ->required()
             ]);
     }
 
@@ -44,8 +53,8 @@ class HolidayResource extends Resource
     {
         return $table
             ->columns([
-                TextColumn::make('name'),
-                // TextColumn::make('calendar_id'),
+                TextColumn::make('name')->searchable(),
+                TextColumn::make('team.name')->label('Branch'),
                 TextColumn::make('date')->sortable()->date(),
             ])
             ->filters([

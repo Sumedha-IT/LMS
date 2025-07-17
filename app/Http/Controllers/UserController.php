@@ -2,10 +2,19 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Resources\StudentResource;
 use App\Http\Resources\UserResource;
 use App\Models\Qualification;
+use App\Models\Team;
 use App\Models\User;
+use App\Services\UserService;
+use App\Services\ZohoService;
+use Google\Rpc\RequestInfo;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Validator;
+use PDO;
 
 class UserController extends Controller
 {
@@ -33,11 +42,11 @@ class UserController extends Controller
             'upload_resume' => 'required|file|mimes:pdf,doc,docx',
             'upload_aadhar' => 'required|file|mimes:pdf,doc,docx',
             'avatar_url' => 'nullable|file|mimes:jpeg,jpg,png,gif',
-            'parent_name'=> 'nullable|string|max:191',
-            'parent_email'=> 'nullable|email|max:191',
-            'parent_aadhar'=> 'nullable|integer|digits:12',
-            'parent_occupation'=> 'nullable|string|max:191',
-            'residential_address'=> 'nullable|string|max:191'
+            'parent_name' => 'nullable|string|max:191',
+            'parent_email' => 'nullable|email|max:191',
+            'parent_aadhar' => 'nullable|integer|digits:12',
+            'parent_occupation' => 'nullable|string|max:191',
+            'residential_address' => 'nullable|string|max:191'
         ]);
 
         $upload_aadhar = $upload_resume = $upload_avatar_url = "";
@@ -73,21 +82,20 @@ class UserController extends Controller
         //$user->qualification_id = $request->qualification_id;
 
         //dd($request->qualifications);
-//        foreach ($request->qualifications as $qualification) {
-//
-//            $qualificationsWithName = array_map(function($qualification) {
-//                $qualificationDetail = Qualification::find($qualification['qualification_id']);
-//                $qualification['name'] = $qualificationDetail ? $qualificationDetail->name : 'Unknown';
-//                return $qualification;
-//            }, $qualifications);
-//
-//        }
+        //        foreach ($request->qualifications as $qualification) {
+        //
+        //            $qualificationsWithName = array_map(function($qualification) {
+        //                $qualificationDetail = Qualification::find($qualification['qualification_id']);
+        //                $qualification['name'] = $qualificationDetail ? $qualificationDetail->name : 'Unknown';
+        //                return $qualification;
+        //            }, $qualifications);
+        //
+        //        }
 
         //$qualifications = json_encode($request->qualifications);
         $arr_qualifications = [];
-        foreach ($request->qualifications as $qualification)
-        {
-            $arr_qualifications = json_decode(trim(stripslashes($qualification),'"'), true);
+        foreach ($request->qualifications as $qualification) {
+            $arr_qualifications = json_decode(trim(stripslashes($qualification), '"'), true);
         }
 
 
@@ -100,7 +108,7 @@ class UserController extends Controller
 
         // Encode it properly
         //$qualifications = $qualifications;
-//dd($qualifications);
+        //dd($qualifications);
 
         $user->qualification = $arr_qualifications;
 
@@ -118,19 +126,107 @@ class UserController extends Controller
             $user->avatar_url = basename($upload_avatar_url);
 
         $user->save();
-//        dd($user);
+        //        dd($user);
 
         return response()->json(['message' => 'User updated successfully', 'user' => new UserResource($user)]);
     }
 
-    public function find(Request $request)
-    {
-    }
+    public function find(Request $request) {}
 
     public function tutors(Request $request)
     {
-        $users = User::where('role_id', 7)->get();
+        $users = User::where('role_id', 7)
+            ->select('id', 'name', 'email', 'phone')
+            ->get();
+        return response()->json(["data" => $users]);
+    }
 
-        return UserResource::collection($users);
+    public function createStudent(Request $request, UserService $us)
+    {
+        $data = $request->data;
+
+        if(gettype($data) != 'array')
+            $data = json_decode($data,true);
+        if(gettype($data) != 'array')
+            return response()->json(['message' => "Data key must be in array", 'status' => 400, 'success' => false], 400);
+
+        // Log the incoming data for debugging
+        \Log::info('Incoming student data:', $data);
+
+        $validator = Validator::make($data, [
+            'email' => 'required|email',
+            // 'paymentStatus' => 'required|in:1,2,3',
+            'name' =>  'required|string',
+            "phone" => "required|string|max:12",
+            "branchLocation" => 'required|string|exists:branches,name',
+            "zohoCustomerId" => 'required|integer',
+            "batchId" => 'required|exists:batches,id'
+        ]);
+
+        if (!empty($validator->errors()->messages())) {
+            return response()->json(['message' => $validator->errors()->all()[0], 'status' => 400, 'success' => false], 400);
+        }
+
+        $data = $validator->validate();
+        try {
+            $data = $us->createStudent($data);
+            return response()->json(['message' => 'User Created', 'data' => new StudentResource($data['user']), 'status' => 200, 'success' => true], 200);
+        } catch (\Exception $e) {
+            if ($e->getCode() === '23000') {
+                return response()->json([
+                    'message' => 'User Already registered',
+                    'success' => false,
+                    'status' =>  409
+                ], 409); // 409 Conflict
+            }
+            return response()->json([
+                'message' => $e->getMessage(),
+                'success' => false,
+                'status' =>  400
+            ], 400); // 409 Conflict
+
+        }
+    }
+
+
+    public function getPaymentDetails(ZohoService $zs)
+    {
+        $user = Auth::user();
+
+        if(empty($user))
+            return response()->json([ 'message' => 'User not found', "success" => false,'status' => 404], 404);
+
+        if(!$user->getIsStudentAttribute())
+            return response()->json([ 'message' => 'Payment Centre only for the user role', "success" => false,'status' => 400], 400);
+
+        $zohoCrmId = $user->zoho_crm_id;
+        if(empty($zohoCrmId))
+            return response()->json([ 'message' => 'Customer Not Synced yet on zoho', "success" => false,'status' => 400], 400);
+
+        try{
+            $paymentData = $zs->getInvoiceDetails($user);
+            return response()->json($paymentData,200);
+        }catch(\Exception $e){
+            return response()->json([ 'message' => $e->getMessage(), "success" => false,'status' => 500], 500);
+        }
+
+        return response()->json($paymentData,404);
+    }
+
+    public function getTeams(User $user){
+        $teams = Team::where('allow_registration',true)->get();
+        return response()->json($teams);
+    }
+
+    public function getCountryAndStates(){
+        $data = collect(config("countriesAndStates.data"));
+        $data = collect($data)->map(function ($country) {
+            return [
+                'country' => $country['name'],
+                'states' => collect($country['states'])->pluck('name')->toArray()
+            ];
+        });
+        
+        return response()->json(["data" => $data]);
     }
 }

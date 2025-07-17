@@ -1,0 +1,338 @@
+"use client"
+
+import { useState, useEffect } from "react"
+import { motion, AnimatePresence } from "framer-motion"
+import { Box, Card, Typography, IconButton, Avatar, ThemeProvider, createTheme } from "@mui/material"
+import { ChevronLeft, ChevronRight, Star } from "lucide-react"
+
+// Sample data for students
+const students = [
+  {
+    id: 1,
+    name: "Raghav Sharma",
+    company: "Tech Mahindra",
+    image: "/placeholder.svg?height=100&width=100",
+  },
+  {
+    id: 2,
+    name: "Priya Patel",
+    company: "Infosys",
+    image: "/placeholder.svg?height=100&width=100",
+  },
+  {
+    id: 3,
+    name: "Amit Kumar",
+    company: "TCS",
+    image: "/placeholder.svg?height=100&width=100",
+  },
+]
+
+// Create a custom theme
+const theme = createTheme({
+  palette: {
+    primary: {
+      main: "#333333",
+    },
+    secondary: {
+      main: "#ff8c00",
+    },
+  },
+  components: {
+    MuiCard: {
+      styleOverrides: {
+        root: {
+          borderRadius: 8,
+        },
+      },
+    },
+  },
+})
+
+// Create motion components from Material UI components
+const MotionBox = motion(Box)
+const MotionTypography = motion(Typography)
+const MotionAvatar = motion(Avatar)
+
+export default function StudentPlacedCard({ autoScroll = false }) {
+  const [currentIndex, setCurrentIndex] = useState(0)
+  const [direction, setDirection] = useState(0) // -1 for left, 1 for right
+
+  // Auto-scroll functionality
+  useEffect(() => {
+    let intervalId;
+
+    if (autoScroll) {
+      intervalId = setInterval(() => {
+        setDirection(1);
+        setCurrentIndex((prev) => (prev === students.length - 1 ? 0 : prev + 1));
+      }, 3000); // Change slide every 3 seconds
+    }
+
+    return () => {
+      if (intervalId) clearInterval(intervalId);
+    };
+  }, [autoScroll]);
+
+  const handlePrevious = () => {
+    setDirection(-1)
+    setCurrentIndex((prev) => (prev === 0 ? students.length - 1 : prev - 1))
+  }
+
+  const handleNext = () => {
+    setDirection(1)
+    setCurrentIndex((prev) => (prev === students.length - 1 ? 0 : prev + 1))
+  }
+
+  const currentStudent = students[currentIndex]
+
+  // Variants for animations
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: {
+        duration: 0.5,
+        when: "beforeChildren",
+        staggerChildren: 0.2,
+      },
+    },
+  }
+
+  const cardVariants = {
+    enter: (direction) => ({
+      x: direction > 0 ? 300 : -300,
+      opacity: 0,
+    }),
+    center: {
+      x: 0,
+      opacity: 1,
+      transition: {
+        type: "spring",
+        stiffness: 300,
+        damping: 30,
+      },
+    },
+    exit: (direction) => ({
+      x: direction < 0 ? 300 : -300,
+      opacity: 0,
+      transition: {
+        type: "spring",
+        stiffness: 300,
+        damping: 30,
+      },
+    }),
+  }
+
+  const starVariants = {
+    initial: { scale: 0.8, opacity: 0.5 },
+    animate: {
+      scale: [0.8, 1.2, 0.8],
+      opacity: [0.5, 1, 0.5],
+      transition: {
+        duration: 2,
+        repeat: Number.POSITIVE_INFINITY,
+        repeatType: "reverse",
+      },
+    },
+  }
+
+  return (
+    <ThemeProvider theme={theme}>
+      <MotionBox
+        sx={{
+          maxWidth: "100%",
+          height: "100%",
+          margin: "0 auto",
+        }}
+        variants={containerVariants}
+        initial="hidden"
+        animate="visible"
+      >
+        <Card
+          sx={{
+            background: 'linear-gradient(135deg, #0f1f3d 0%, #1e3c72 100%)',
+            color: 'white',
+            padding: 2,
+            height: '100%',
+            display: 'flex',
+            flexDirection: 'column',
+          }}
+        >
+          <MotionTypography
+            variant="h6"
+            component="h2"
+            align="center"
+            sx={{ 
+              mb: 2,
+              background: 'linear-gradient(270deg, #eb6707 0%, #e42b12 100%)',
+              WebkitBackgroundClip: 'text',
+              WebkitTextFillColor: 'transparent',
+              fontWeight: 'bold',
+              fontSize: '1.2rem'
+            }}
+            initial={{ y: -20, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ delay: 0.2 }}
+          >
+            Student Placed
+          </MotionTypography>
+
+          <Card
+            sx={{
+              bgcolor: "white",
+              position: "relative",
+              overflow: "hidden",
+              p: 3,
+              boxShadow: '0 4px 12px rgba(0,0,0,0.08)',
+              borderRadius: '12px',
+              minHeight: '280px', // Increased height
+              width: '100%' // Ensure full width
+            }}
+          >
+            {/* Navigation buttons */}
+            <Box sx={{ position: "absolute", left: 8, top: "50%", transform: "translateY(-50%)", zIndex: 10 }}>
+              <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}>
+                <IconButton
+                  size="small"
+                  onClick={handlePrevious}
+                  sx={{
+                    bgcolor: "rgba(0,0,0,0.1)",
+                    "&:hover": { bgcolor: "rgba(0,0,0,0.2)" },
+                  }}
+                >
+                  <ChevronLeft size={18} />
+                </IconButton>
+              </motion.div>
+            </Box>
+
+            <Box sx={{ position: "absolute", right: 8, top: "50%", transform: "translateY(-50%)", zIndex: 10 }}>
+              <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}>
+                <IconButton
+                  size="small"
+                  onClick={handleNext}
+                  sx={{
+                    bgcolor: "rgba(0,0,0,0.1)",
+                    "&:hover": { bgcolor: "rgba(0,0,0,0.2)" },
+                  }}
+                >
+                  <ChevronRight size={18} />
+                </IconButton>
+              </motion.div>
+            </Box>
+
+            <AnimatePresence mode="wait" custom={direction}>
+              <MotionBox
+                key={currentIndex}
+                custom={direction}
+                variants={cardVariants}
+                initial="enter"
+                animate="center"
+                exit="exit"
+                sx={{ width: "100%", textAlign: "center" }}
+              >
+                {/* Stars animation */}
+                <Box sx={{ height: 148, width: 148, mx: "auto", mb: 2, position: 'relative' }}>
+                  {/* Main star above avatar */}
+                  <MotionBox
+                    sx={{
+                      position: "absolute",
+                      top: -18,
+                      left: "50%",
+                      transform: "translate(-50%, 0)",
+                      zIndex: 2
+                    }}
+                    variants={starVariants}
+                    initial="initial"
+                    animate="animate"
+                    transition={{ delay: 0.1 }}
+                  >
+                    <Star size={28} fill="#ff8c00" color="#ff8c00" />
+                  </MotionBox>
+
+                  {/* Left star */}
+                  <MotionBox
+                    sx={{
+                      position: "absolute",
+                      top: 10,
+                      left: 0,
+                      zIndex: 2
+                    }}
+                    variants={starVariants}
+                    initial="initial"
+                    animate="animate"
+                    transition={{ delay: 0.3 }}
+                  >
+                    <Star size={20} fill="#ff8c00" color="#ff8c00" />
+                  </MotionBox>
+
+                  {/* Right star */}
+                  <MotionBox
+                    sx={{
+                      position: "absolute",
+                      top: 10,
+                      right: 0,
+                      zIndex: 2
+                    }}
+                    variants={starVariants}
+                    initial="initial"
+                    animate="animate"
+                    transition={{ delay: 0.5 }}
+                  >
+                    <Star size={20} fill="#ff8c00" color="#ff8c00" />
+                  </MotionBox>
+
+                  {/* Profile image */}
+                  <MotionAvatar
+                    src="/images/image%2067.png"
+                    alt={currentStudent?.name}
+                    sx={{
+                      width: 128,
+                      height: 128,
+                      border: "2px solid #e0e0e0",
+                      mx: "auto",
+                      boxShadow: '0 4px 8px rgba(0,0,0,0.1)',
+                      background: '#fff',
+                      position: 'relative',
+                      zIndex: 1
+                    }}
+                    initial={{ scale: 0.8, opacity: 0 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                    transition={{ type: "spring", stiffness: 300, damping: 20 }}
+                  />
+                </Box>
+
+                {/* Student details */}
+                <Box sx={{
+                  mt: 1,
+                  textAlign: 'center'
+                }}>
+                  <MotionTypography
+                    variant="subtitle1"
+                    component="h3"
+                    sx={{ fontWeight: 700, color: "#E53510" }}
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.2 }}
+                  >
+                    {currentStudent.name}
+                  </MotionTypography>
+
+                  <MotionTypography
+                    variant="body2"
+                    sx={{ fontWeight: 500, color: "#333" }}
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.3 }}
+                  >
+                    {currentStudent.company}
+                  </MotionTypography>
+                </Box>
+              </MotionBox>
+            </AnimatePresence>
+          </Card>
+        </Card>
+      </MotionBox>
+    </ThemeProvider>
+  )
+}
+

@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Services\ZohoService;
 use BezhanSalleh\FilamentShield\Traits\HasPanelShield;
 use Filament\Facades\Filament;
 use Illuminate\Database\Eloquent\Builder;
@@ -13,10 +14,11 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasManyThrough;
 use Illuminate\Database\Eloquent\Relations\MorphToMany;
 use Spatie\Permission\Traits\HasRoles;
+use Illuminate\Notifications\Notifiable;
 
 class Batch extends Model
 {
-    use HasFactory, HasRoles, HasPanelShield;
+    use HasFactory, HasRoles, HasPanelShield,Notifiable;
 
     //protected $table = "batches";
 
@@ -46,6 +48,25 @@ class Batch extends Model
             //         ->where('batch_curriculum.tutor_id', auth()->user()->id);
             // }
         });
+
+        static::created(function ($batch) {
+            // Resolve the service from the container
+            $zs = app(ZohoService::class);
+            $zs->syncBatchDataOnZoho($batch);
+        });
+
+
+        static::updated(function ($batch) {
+            // Resolve the service from the container
+            $zs = app(ZohoService::class);
+            $zs->syncBatchDataOnZoho($batch);
+        });
+
+        static::deleted(function ($batch) {
+            // Resolve the service from the container
+            $zs = app(ZohoService::class);
+            $response = $zs->deleteBatchOnZoho($batch);
+        });
     }
 
 
@@ -62,12 +83,18 @@ class Batch extends Model
 
     public function curriculums(): HasMany
     {
-        return $this->hasMany(BatchCurriculum::class, 'batch_id','id')
+        return $this->hasMany(BatchCurriculum::class, 'batch_id', 'id')
+            ->with(['curriculum', 'tutor', 'topics.topic']) // Eager load related models
 //            ->when(auth()->check() && auth()->user()->is_tutor, function ($query) {
 //                $query->where('batch_curriculum.tutor_id', auth()->user()->id);
 //            })
             ;
     }
+    // public function curriculums()
+    // {
+    //     return $this->belongsToMany(Curriculum::class, 'batch_curriculum', 'batch_id', 'curriculum_id')
+    //         ->withPivot('tutor_id', 'topic_id', 'is_topic_completed');
+    // }
 
     public function teaching_materials_curriculums(): HasManyThrough
     {
@@ -118,6 +145,11 @@ class Batch extends Model
     public function calendars()
     {
         return $this->hasMany(Calendar::class);
+    }
+
+    public function feedbackForms()
+    {
+        return $this->belongsToMany(FeedbackForm::class, 'batch_feedback_form', 'batch_id', 'feedback_form_id');
     }
 
     public function getCalendarCountAttribute()
@@ -232,5 +264,10 @@ class Batch extends Model
             $this->users->count(),
             $curriculumNames
         );
+    }
+
+    public function exams()
+    {
+        return $this->belongsToMany(Exam::class, 'exam_batches');
     }
 }

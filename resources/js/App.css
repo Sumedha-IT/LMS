@@ -1,0 +1,18 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@media (min-width: 1024px) {
+	.fi-sidebar.fixed {
+    	position:sticky;
+    }
+    .fi-header.flex-col {
+        flex-direction: row;
+    }
+    .fi-breadcrumbs-item-separator.flex.ltr\:hidden:where([dir="ltr"], [dir="ltr"] *){
+        display: none;
+    }
+    .fi-breadcrumbs-item-separator.flex.rtl\:hidden:where([dir="rtl"], [dir="rtl"] *){
+        display: none;
+    }
+}

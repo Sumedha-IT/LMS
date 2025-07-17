@@ -3,27 +3,29 @@
 namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
+use Filament\Panel;
 use Filament\Facades\Filament;
-use Filament\Models\Contracts\FilamentUser;
-use Filament\Models\Contracts\HasAvatar;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\SoftDeletes;
-use Illuminate\Foundation\Auth\User as Authenticatable;
-use Illuminate\Notifications\Notifiable;
-use Illuminate\Support\Facades\Storage;
+use App\Models\StudentEducation;
 use Laravel\Sanctum\HasApiTokens;
+use Illuminate\Support\Collection;
 use Spatie\Permission\Traits\HasRoles;
-use BezhanSalleh\FilamentShield\Traits\HasPanelShield;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Storage;
+use Filament\Models\Contracts\HasAvatar;
+use Illuminate\Notifications\Notifiable;
+use Filament\Models\Contracts\HasTenants;
 
 //use Filament\Models\Contracts\HasDefaultTenant;
-use Filament\Models\Contracts\HasTenants;
-use Filament\Panel;
-use Illuminate\Database\Eloquent\Model;
+use Filament\Models\Contracts\FilamentUser;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use BezhanSalleh\FilamentShield\Traits\HasPanelShield;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
-use Illuminate\Support\Collection;
 use Jeffgreco13\FilamentBreezy\Traits\TwoFactorAuthenticatable;
 use Rappasoft\LaravelAuthenticationLog\Traits\AuthenticationLoggable;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class User extends Authenticatable implements HasTenants, FilamentUser, HasAvatar
 {
@@ -37,11 +39,31 @@ class User extends Authenticatable implements HasTenants, FilamentUser, HasAvata
      *
      * @var array<int, string>
      */
-    /*protected $fillable = [
+    protected $fillable = [
         'name',
         'email',
         'password',
-    ];*/
+        'phone',
+        'gender',
+        'birthday',
+        'address',
+        'city',
+        'state_id',
+        'pincode',
+        'aadhaar_number',
+        'linkedin_profile',
+        'passport_photo_path',
+        'upload_resume',
+        'upload_aadhar',
+        'parent_name',
+        'parent_email',
+        'parent_aadhar',
+        'parent_occupation',
+        'residential_address',
+        'receive_email_notification',
+        'receive_sms_notification',
+        'zoho_crm_id'
+    ];
 
     /**
      * The attributes that should be hidden for serialization.
@@ -61,6 +83,8 @@ class User extends Authenticatable implements HasTenants, FilamentUser, HasAvata
     protected $casts = [
         'email_verified_at' => 'datetime',
         'password' => 'hashed',
+        'receive_email_notification' => 'boolean',
+        'receive_sms_notification' => 'boolean',
         'qualification' => 'array'
     ];
 
@@ -71,7 +95,9 @@ class User extends Authenticatable implements HasTenants, FilamentUser, HasAvata
     protected $coordinatorGroup = [5];
 
 
-
+    public function studentEducation(){
+        return $this->hasMany(StudentEducation::class);
+    }
     public function coomments()
     {
         return $this->hasMany(Comment::class);
@@ -223,6 +249,10 @@ class User extends Authenticatable implements HasTenants, FilamentUser, HasAvata
         return Storage::url($this->avatar_url);
     }
 
+    public function getPassportPhotoUrlAttribute()
+    {
+        return $this->passport_photo_path ? Storage::url($this->passport_photo_path) : null;
+    }
 
     public function getAdditionalDetailsAttribute()
     {
@@ -255,4 +285,87 @@ class User extends Authenticatable implements HasTenants, FilamentUser, HasAvata
     // {
     //     return $this->belongsTo(Team::class, 'latest_team_id');
     // }
+
+
+    public function ExamAttempts()
+    {
+        return $this->hasMany(ExamAttempt::class,'student_id');
+    }
+
+    public function jobProfile()
+    {
+        return $this->hasOne(JobProfile::class);
+    }
+
+    public function profileEducations()
+    {
+        return $this->hasMany(ProfileEducation::class);
+    }
+
+    public function profileExperiences()
+    {
+        return $this->hasMany(ProfileExperience::class);
+    }
+
+    public function jobStatuses()
+    {
+        return $this->hasMany(JobStatus::class);
+    }
+
+    public function jobs()
+    {
+        return $this->hasMany(Job::class, 'recruiter_id');
+    }
+
+    public function projects(): HasMany
+    {
+        return $this->hasMany(Project::class);
+    }
+
+    public function certificates()
+    {
+        return $this->hasMany(Certificate::class);
+    }
+
+    public function isRecruitor()
+    {
+        return $this->role && in_array($this->role->id, [4]) ? true : false;
+    }
+
+    public function certifications()
+    {
+        return $this->hasMany(Certification::class);
+    }
+
+    /**
+     * Check if the user has any of the given roles
+     *
+     * @param array $roles
+     * @return bool
+     */
+    public function hasAnyRole(array $roles): bool
+    {
+        return in_array($this->role, $roles);
+    }
+
+    /**
+     * Check if the user has a specific role
+     *
+     * @param string $role
+     * @return bool
+     */
+    public function hasRole(string $role): bool
+    {
+        return $this->role === $role;
+    }
+
+    /**
+     * Get the user's role
+     *
+     * @return string|null
+     */
+    public function getRole(): ?string
+    {
+        return $this->role;
+    }
 }

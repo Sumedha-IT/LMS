@@ -113,7 +113,10 @@ class UserResource extends Resource
                             // ->dehydrateStateUsing(fn ($state) => Hash::make($state))
                             // ->dehydrated(fn ($state) => filled($state))
                             ->required(fn (string $context): bool => $context === 'create'),
-
+                        Forms\Components\TextInput::make('zoho_crm_id')
+                            ->label('Zoho CRM ID')
+                            ->maxLength(255)
+                            ->required(),
                     ])->columns(2),
 
                 Forms\Components\Section::make()

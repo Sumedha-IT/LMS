@@ -2,43 +2,56 @@
 
 namespace App\Models;
 
+use App\Models\Batch;
+use App\Models\Topic;
 use Filament\Facades\Filament;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Model;
 use App\Models\BatchTeachingMaterial;
 use App\Models\TeachingMaterialStatus;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 class TeachingMaterial extends Model
 {
-    use HasFactory;
-
-    protected $guarded = ['id'];
-
-    protected $casts = [
-        'prerequisite' => 'boolean',
+    protected $fillable = [
+        'topic_id',
+        'section_id',
+        'name',
+        'description',
+        'material_source',
+        'content',
+        'file',
+        'doc_type',
+        'start_submission',
+        'stop_submission'
     ];
 
-    public function section()
-    {
-        return $this->belongsTo(Section::class);
-    }
-
-    public function batches()
-    {
-        $tenant = Filament::getTenant();
-        return $this->belongsToMany(Batch::class, 'batch_teaching_materials',
-            'teaching_material_id', 'batch_id')
-            ->wherePivot('batches.branch_id', $tenant->id);;
-    }
-
-
-    public function batchTeachingMaterials()
-    {
-        return $this->hasMany(BatchTeachingMaterial::class);
-    }
+    protected $casts = [
+        'start_submission' => 'datetime:Y-m-d H:i:s',
+        'stop_submission' => 'datetime:Y-m-d H:i:s'
+    ];
 
     public function teachingMaterialStatuses()
     {
-        return $this->hasMany(TeachingMaterialStatus::class);
+        return $this->hasMany(TeachingMaterialStatus::class, 'teaching_material_id', 'id');
+    }
+
+    public function topic()
+    {
+        return $this->belongsTo(Topic::class, 'topic_id', 'id');
+    }
+    public function batches()
+    {
+        return $this->belongsToMany(Batch::class, 'batch_teaching_materials');
+    }
+
+    protected static function booted()
+    {
+        static::saving(function ($model) {
+            \Log::info('Saving TeachingMaterial', [
+                'start_submission' => $model->start_submission,
+                'stop_submission' => $model->stop_submission,
+                'attributes' => $model->getAttributes(),
+            ]);
+        });
     }
 }
