@@ -12,6 +12,9 @@ use App\Filament\Pages\StudentAttendancePage;
 use App\Filament\Pages\AdminAttendancePage;
 use App\Filament\Pages\TutorAttendancePage;
 use App\Filament\Pages\StudentManagementPage;
+use App\Filament\Pages\CurriculumManagementPage;
+use App\Filament\Pages\StudentPlacementPage;
+use App\Filament\Pages\AdminPlacementPage;
 use App\Http\Middleware\ApplyTenantScopes;
 use App\Livewire\MyCustomPersonalInfo;
 use Filament\Http\Middleware\Authenticate;
@@ -101,6 +104,9 @@ class AdministratorPanelProvider extends PanelProvider
                 StudentJourneyPage::class,
                 StudentAttendancePage::class,
                 StudentManagementPage::class,
+                CurriculumManagementPage::class,
+                StudentPlacementPage::class,
+                AdminPlacementPage::class,
             ])
             ->discoverClusters(in: app_path('Filament/Clusters'), for: 'App\\Filament\\Clusters')
             ->discoverWidgets(in: app_path('Filament/Widgets'), for: 'App\\Filament\\Widgets')

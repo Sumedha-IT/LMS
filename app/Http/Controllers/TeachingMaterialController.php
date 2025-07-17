@@ -44,6 +44,83 @@ class TeachingMaterialController extends Controller
 
         return TeachingMaterialResource::collection($materials);
     }
+
+    public function store(Request $request)
+    {
+        try {
+            $user = $request->user();
+            
+            // Check if user has admin/coordinator permissions
+            if (!$user->is_admin && !$user->is_coordinator) {
+                return response()->json(['error' => 'Unauthorized'], 403);
+            }
+
+            // Log the request data for debugging
+            \Log::info('Teaching material creation request', [
+                'request_data' => $request->all(),
+                'files' => $request->hasFile('file') ? 'Has file' : 'No file',
+                'user_id' => $user->id
+            ]);
+
+            $validator = \Illuminate\Support\Facades\Validator::make($request->all(), [
+                'topic_id' => 'required|exists:topics,id',
+                'name' => 'required|string|max:255',
+                'description' => 'nullable|string',
+                'file' => 'required|file|max:10240', // 10MB Max
+                'doc_type' => 'required|integer|in:1,2', // 1 for teaching material, 2 for assignment
+            ]);
+
+            if ($validator->fails()) {
+                \Log::error('Validation failed for teaching material creation', [
+                    'errors' => $validator->errors(),
+                    'request_data' => $request->all()
+                ]);
+                return response()->json(['errors' => $validator->errors()], 422);
+            }
+
+            // Get the topic to find the curriculum_id
+            $topic = \App\Models\Topic::findOrFail($request->topic_id);
+            
+            // Get the first section of the curriculum (or you might want to handle this differently)
+            $section = \App\Models\Section::where('curriculum_id', $topic->curriculum_id)->first();
+            
+            if (!$section) {
+                return response()->json(['error' => 'No section found for this curriculum'], 404);
+            }
+
+            // Store the file
+            $filePath = $request->file('file')->store('teaching-materials', 'public');
+
+            // Create the teaching material
+            $teachingMaterial = TeachingMaterial::create([
+                'topic_id' => $request->topic_id,
+                'section_id' => $section->id,
+                'name' => $request->name,
+                'description' => $request->description,
+                'material_source' => 'other', // Default to 'other' for file uploads
+                'file' => $filePath,
+                'doc_type' => $request->doc_type,
+                'published' => true,
+                'sort' => 1, // Default sort order
+            ]);
+
+            \Log::info('Teaching material created successfully', [
+                'teaching_material_id' => $teachingMaterial->id,
+                'name' => $teachingMaterial->name,
+                'topic_id' => $teachingMaterial->topic_id
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Teaching material created successfully',
+                'teaching_material' => $teachingMaterial
+            ], 201);
+
+        } catch (\Exception $e) {
+            \Log::error('Error creating teaching material: ' . $e->getMessage());
+            return response()->json(['error' => 'Failed to create teaching material'], 500);
+        }
+    }
     
     public function getPendingAssignments(Request $request)
     {
@@ -237,6 +314,42 @@ class TeachingMaterialController extends Controller
                 'message' => 'Error retrieving teaching materials',
                 'error' => $e->getMessage()
             ], 500);
+        }
+    }
+
+    public function destroy($id)
+    {
+        try {
+            $user = request()->user();
+            
+            // Check if user has admin/coordinator permissions
+            if (!$user->is_admin && !$user->is_coordinator) {
+                return response()->json(['error' => 'Unauthorized'], 403);
+            }
+
+            $teachingMaterial = TeachingMaterial::findOrFail($id);
+
+            // Delete the file from storage if it exists
+            if ($teachingMaterial->file && \Storage::disk('public')->exists($teachingMaterial->file)) {
+                \Storage::disk('public')->delete($teachingMaterial->file);
+            }
+
+            // Delete the teaching material
+            $teachingMaterial->delete();
+
+            \Log::info('Teaching material deleted successfully', [
+                'teaching_material_id' => $id,
+                'user_id' => $user->id
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Teaching material deleted successfully'
+            ]);
+
+        } catch (\Exception $e) {
+            \Log::error('Error deleting teaching material: ' . $e->getMessage());
+            return response()->json(['error' => 'Failed to delete teaching material'], 500);
         }
     }
 
