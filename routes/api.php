@@ -45,6 +45,9 @@ use App\Http\Controllers\api\TopicController;
 use App\Http\Controllers\StudentAttendanceController;
 use App\Http\Controllers\StudentExportController;
 use App\Http\Controllers\api\CurriculumManagementController;
+use App\Http\Controllers\Api\CompanyController;
+use App\Http\Controllers\Api\JobPostingController;
+use App\Http\Controllers\Api\JobApplicationController;
 
 /*
 |--------------------------------------------------------------------------
@@ -469,4 +472,10 @@ Route::middleware(['auth:sanctum'])->group(function () {
     });
 
     Route::post('/student/register-device', [StudentAttendanceController::class, 'registerDevice']);
+});
+
+Route::middleware('auth:sanctum')->group(function () {
+    Route::apiResource('companies', CompanyController::class);
+    Route::apiResource('job-postings', JobPostingController::class);
+    Route::apiResource('job-applications', JobApplicationController::class);
 });
