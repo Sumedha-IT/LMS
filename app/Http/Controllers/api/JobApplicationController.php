@@ -16,7 +16,22 @@ class JobApplicationController extends Controller
 
     public function index()
     {
-        return JobApplication::with('jobPosting', 'user')->get();
+        try {
+            // Test if job_applications table exists
+            $tableExists = \Schema::hasTable('job_applications');
+            \Log::info('Job applications table exists: ' . ($tableExists ? 'Yes' : 'No'));
+            
+            if ($tableExists) {
+                $columns = \Schema::getColumnListing('job_applications');
+                \Log::info('Job applications table columns:', $columns);
+                return JobApplication::with('jobPosting', 'user')->get();
+            } else {
+                return response()->json(['error' => 'Job applications table does not exist'], 500);
+            }
+        } catch (\Exception $e) {
+            \Log::error('Error in job applications index:', ['error' => $e->getMessage()]);
+            return response()->json(['error' => $e->getMessage()], 500);
+        }
     }
 
     public function show($id)
@@ -26,8 +41,19 @@ class JobApplicationController extends Controller
 
     public function store(Request $request)
     {
-        $jobApplication = JobApplication::create($request->all());
-        return response()->json($jobApplication, 201);
+        try {
+            \Log::info('Job application store request received:', $request->all());
+            
+            $jobApplication = JobApplication::create($request->all());
+            \Log::info('Job application created successfully:', $jobApplication->toArray());
+            return response()->json($jobApplication, 201);
+        } catch (\Exception $e) {
+            \Log::error('Error creating job application:', [
+                'message' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            return response()->json(['error' => $e->getMessage()], 500);
+        }
     }
 
     public function update(Request $request, $id)
