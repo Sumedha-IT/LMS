@@ -474,8 +474,8 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::post('/student/register-device', [StudentAttendanceController::class, 'registerDevice']);
 });
 
-Route::middleware('auth:sanctum')->group(function () {
-    Route::apiResource('companies', CompanyController::class);
-    Route::apiResource('job-postings', JobPostingController::class);
-    Route::apiResource('job-applications', JobApplicationController::class);
-});
+// Test routes without authentication
+Route::get('companies-test', [CompanyController::class, 'test']);
+Route::apiResource('companies', CompanyController::class);
+Route::apiResource('job-postings', JobPostingController::class);
+Route::apiResource('job-applications', JobApplicationController::class);

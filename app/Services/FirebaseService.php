@@ -14,17 +14,25 @@ class FirebaseService
     public function __construct()
     {
         try {
-            $firebase = (new Factory)->withServiceAccount(base_path(config('services.firebase.credentials')));
+            // Correctly fetch the path using base_path()
+            $serviceAccountPath = base_path(config('services.firebase.credentials'));
+
+            // Log to verify correct path is used
+            Log::info('Initializing Firebase with: ' . $serviceAccountPath);
+
+            // Load Firebase with service account
+            $firebase = (new Factory)->withServiceAccount($serviceAccountPath);
             $this->messaging = $firebase->createMessaging();
         } catch (\Exception $e) {
-            Log::error('Failed to initialize Firebase: ' . $e->getMessage());
+            Log::error('❌ Failed to initialize Firebase: ' . $e->getMessage());
+            $this->messaging = null;
         }
     }
 
     public function sendNotification($fcm_token, $title, $body)
     {
         if (!$this->messaging) {
-            Log::error('Firebase Messaging not initialized');
+            Log::error('❌ Firebase Messaging not initialized.');
             return false;
         }
 
@@ -34,10 +42,10 @@ class FirebaseService
                 ->withNotification($notification);
 
             $response = $this->messaging->send($message);
-            Log::info('Notification sent successfully', ['response' => $response]);
+            Log::info('✅ Notification sent successfully', ['response' => $response]);
             return true;
         } catch (\Exception $e) {
-            Log::error('Failed to send notification: ' . $e->getMessage());
+            Log::error('❌ Failed to send notification: ' . $e->getMessage());
             return false;
         }
     }
