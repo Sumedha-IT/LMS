@@ -44,6 +44,10 @@ use App\Http\Controllers\api\CurriculumController as ApiCurriculumController;
 use App\Http\Controllers\api\TopicController;
 use App\Http\Controllers\StudentAttendanceController;
 use App\Http\Controllers\StudentExportController;
+use App\Http\Controllers\api\CurriculumManagementController;
+use App\Http\Controllers\Api\CompanyController;
+use App\Http\Controllers\Api\JobPostingController;
+use App\Http\Controllers\Api\JobApplicationController;
 
 /*
 |--------------------------------------------------------------------------
@@ -418,13 +422,44 @@ Route::middleware(['auth:sanctum', 'addHeader'])->group(function () {
     });
 });
 
+// Curriculum Management API routes
+Route::middleware(['auth:sanctum'])->group(function () {
+    // Curriculum Management
+    Route::prefix('curriculum-management')->group(function () {
+        Route::get('/curriculums', [CurriculumManagementController::class, 'index']);
+        Route::post('/curriculums', [CurriculumManagementController::class, 'store']);
+        Route::get('/curriculums/{id}', [CurriculumManagementController::class, 'show']);
+        Route::post('/curriculums/{id}', [CurriculumManagementController::class, 'update']); // For method spoofing
+        Route::put('/curriculums/{id}', [CurriculumManagementController::class, 'update']);
+        Route::delete('/curriculums/{id}', [CurriculumManagementController::class, 'destroy']);
+        
+        // Sections
+        Route::get('/curriculums/{curriculumId}/sections', [CurriculumManagementController::class, 'getSections']);
+        Route::post('/curriculums/{curriculumId}/sections', [CurriculumManagementController::class, 'storeSection']);
+        Route::put('/curriculums/{curriculumId}/sections/{sectionId}', [CurriculumManagementController::class, 'updateSection']);
+        Route::delete('/curriculums/{curriculumId}/sections/{sectionId}', [CurriculumManagementController::class, 'destroySection']);
+        
+        // Topics
+        Route::get('/curriculums/{curriculumId}/topics', [CurriculumManagementController::class, 'getTopics']);
+        Route::post('/curriculums/{curriculumId}/topics', [CurriculumManagementController::class, 'storeTopic']);
+        Route::put('/curriculums/{curriculumId}/topics/{topicId}', [CurriculumManagementController::class, 'updateTopic']);
+        Route::delete('/curriculums/{curriculumId}/topics/{topicId}', [CurriculumManagementController::class, 'destroyTopic']);
+        
+        // Supporting data
+        Route::get('/courses', [CurriculumManagementController::class, 'getCourses']);
+        Route::get('/batches', [CurriculumManagementController::class, 'getBatches']);
+    });
+});
+
 Route::middleware(['auth:sanctum'])->group(function () {
     // ... other routes ...
 
     Route::get('/courses/my/{id}', [MyCourseController::class, 'index']);
     Route::get('/topics', [MyCourseController::class, 'getTopics']);
     Route::get('/teaching-materials', [TeachingMaterialController::class, 'index']);
+    Route::post('/teaching-materials', [TeachingMaterialController::class, 'store']);
     Route::get('/teaching-materials/{topic_id}', [TeachingMaterialController::class, 'getByTopic']);
+    Route::delete('/teaching-materials/{id}', [TeachingMaterialController::class, 'destroy']);
 
     // Student Attendance Routes
     Route::prefix('student-attendance')->group(function () {
@@ -438,3 +473,9 @@ Route::middleware(['auth:sanctum'])->group(function () {
 
     Route::post('/student/register-device', [StudentAttendanceController::class, 'registerDevice']);
 });
+
+// Test routes without authentication
+Route::get('companies-test', [CompanyController::class, 'test']);
+Route::apiResource('companies', CompanyController::class);
+Route::apiResource('job-postings', JobPostingController::class);
+Route::apiResource('job-applications', JobApplicationController::class);
