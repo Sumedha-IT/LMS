@@ -379,16 +379,7 @@ class JobEligibilityCheckController extends Controller
                 ],
                 'total_students' => $processedStudents->count(),
                 'eligible_students' => $eligibleStudents->count(),
-                'students' => $eligibleStudents->values(), // Only eligible students
-                'data_flow_info' => [
-                    'message' => 'For proper eligibility checking, ensure: 1) Course exists, 2) Batch created with course, 3) Students enrolled in batch, 4) Job posting has same course_id',
-                    'required_steps' => [
-                        'Create course in courses table',
-                        'Create batch linked to course (course_id or course_package_id)',
-                        'Enroll students in batch via batch_user table',
-                        'Create job posting with matching course_id'
-                    ]
-                ]
+                'students' => $eligibleStudents->values() // Only eligible students
             ]);
         } catch (\Exception $e) {
             \Log::error('Error in getJobEligibilityList:', [
