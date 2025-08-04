@@ -211,3 +211,7 @@ LEFT JOIN student_placement_eligibility spe ON u.id = spe.user_id
 WHERE u.role_id = 6                                        -- Student role
 AND u.is_active = 1
 AND u.deleted_at IS NULL;
+
+ALTER TABLE job_postings
+ADD COLUMN course_id BIGINT UNSIGNED NULL,
+ADD CONSTRAINT fk_job_postings_course_id FOREIGN KEY (course_id) REFERENCES courses(id) ON DELETE SET NULL;

@@ -37,32 +37,29 @@ const StudentDashboard = ({
   rowsPerPage,
   onPageChange,
   onRowsPerPageChange,
-  onFullPersonalDetailsClick,
-  onViewJobsClick
 }) => {
  
   return (
-      <Paper sx={{ margin: '20px 0', boxShadow: 'none', ...style.paper }}>
+      <Paper sx={{ margin: '20px 0', boxShadow: 3, borderRadius: 3, overflow: 'hidden', ...style.paper }}>
           <TableContainer component={Paper} sx={{ overflowX: 'auto', ...style.container }}>
-              <Table sx={{ minWidth: 650 }} aria-label="customized table">
+              <Table sx={{ minWidth: 650 }} aria-label="customized table" stickyHeader>
                   <TableHead>
-                      <TableRow>
+                      <TableRow sx={{ background: 'linear-gradient(270deg, #eb6707 0%, #e42b12 100%)' }}>
                           {headers?.map((header, index) => (
                               <TableCell
                                   key={index}
                                   sx={{
                                       fontWeight: 'bold',
+                                      fontSize: '1rem',
+                                      background: 'linear-gradient(270deg, #eb6707 0%, #e42b12 100%)',
+                                      color: '#fff',
+                                      borderBottom: '2px solid #e0e0e0',
                                       ...(style.headerCell || {}),
                                   }}
                               >
                                   {header.label}
                               </TableCell>
                           ))}
-                            {(onFullPersonalDetailsClick || onViewJobsClick) && (
-                                <TableCell sx={{ fontWeight: 'bold', textAlign: 'center', ...(style.headerCell || {}) }}>
-                                    Personal Infomation
-                                </TableCell>
-                            )}
                       </TableRow>
                   </TableHead>
                   <TableBody>
@@ -70,9 +67,10 @@ const StudentDashboard = ({
                           <TableRow
                               key={rowIndex}
                               sx={{
-                                  transition: 'background-color 0.3s ease',
+                                  backgroundColor: rowIndex % 2 === 0 ? '#fff' : '#F5FAFF',
+                                  transition: 'background-color 0.3s',
                                   '&:hover': {
-                                      backgroundColor: '#f0f0f0', // Change background on hover
+                                      backgroundColor: '#F0F8FF',
                                   },
                               }}
                           >
@@ -80,7 +78,10 @@ const StudentDashboard = ({
                                   <TableCell
                                       key={index}
                                       sx={{
-                                          padding: '8px 16px',
+                                          padding: '12px 20px',
+                                          fontSize: '0.98rem',
+                                          color: '#333',
+                                          borderBottom: '1px solid #e0e0e0',
                                           ...(style.bodyCell || {}),
                                       }}
                                   >
@@ -89,36 +90,9 @@ const StudentDashboard = ({
                                           : row[header.accessor] || '--'}
                                   </TableCell>
                               ))}
-                               {(onFullPersonalDetailsClick || onViewJobsClick) && (
-                                    <TableCell sx={{ textAlign: 'center' }}>
-                                        {/* Marks List and View Attendance Buttons */}
-                                        {onFullPersonalDetailsClick && (
-                                            <Button
-                                                variant="contained"
-                                                color="primary"
-                                                size="small"
-                                                sx={{ marginRight: 1 }}
-                                                onClick={() => console.log("hi")}
-                                            >
-                                               Personal Details
-                                            </Button>
-                                        )}
-                                        {onViewJobsClick && (
-                                            <Button
-                                                variant="contained"
-                                                color="secondary"
-                                                size="small"
-                                                sx={{ marginLeft: 1 }}
-                                                onClick={() =>  console.log("hi")}
-                                            >
-                                               Job Match
-                                            </Button>
-                                        )}
-                                    </TableCell>
-                                )}
                           </TableRow>
                       )) : (<TableRow>
-                          <TableCell colSpan={headers.length + 1} sx={{ textAlign: 'center', padding: '20px' }}>
+                          <TableCell colSpan={headers.length} sx={{ textAlign: 'center', padding: '20px' }}>
                               No Data
                           </TableCell>
                       </TableRow>)}
@@ -127,16 +101,7 @@ const StudentDashboard = ({
           </TableContainer>
 
           {/* Pagination Component */}
-          <TablePagination
-              rowsPerPageOptions={[5, 10, 25, 50]}
-              component="div"
-              count={totalRecords}
-              rowsPerPage={rowsPerPage}
-              page={page}
-              onPageChange={onPageChange}
-              onRowsPerPageChange={(event) => onRowsPerPageChange(parseInt(event.target.value, 10))}
-              sx={{ ...style.pagination }}
-          />
+          {/* Remove the TablePagination component at the bottom of the StudentDashboard table. */}
       </Paper>
   );
 }

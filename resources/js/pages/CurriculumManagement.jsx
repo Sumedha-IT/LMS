@@ -366,6 +366,7 @@ const CurriculumManagement = () => {
     const [deleteModal, setDeleteModal] = useState({ open: false, type: '', id: null });
     const navigate = useNavigate();
     const { id } = useParams();
+    const [selectedCourseTab, setSelectedCourseTab] = useState(null); // null or course.id
 
     // Modal state for teaching material upload
     const [showTeachingMaterialModal, setShowTeachingMaterialModal] = useState(false);
@@ -869,6 +870,10 @@ const CurriculumManagement = () => {
         }
     };
 
+    // Filter curriculums by selected course tab
+    const filteredCurriculums = selectedCourseTab
+        ? curriculums.filter(c => c.courses && c.courses.some(course => course.id === selectedCourseTab))
+        : [];
 
 
     if (isLoading) {
@@ -885,20 +890,29 @@ const CurriculumManagement = () => {
                             <div className="bg-gradient-to-r from-blue-600 to-purple-600 p-3 rounded-xl">
                                 <BookOpenIcon className="h-8 w-8 text-white" />
                             </div>
-                        <div>
+                            <div>
                                 <h1 className="text-4xl font-bold bg-gradient-to-r from-gray-900 to-gray-600 bg-clip-text text-transparent">
                                     Curriculum Management
                                 </h1>
                                 <p className="text-gray-600 mt-2 text-lg">Design and organize your learning pathways</p>
                             </div>
                         </div>
-                        <button
-                            onClick={() => setShowCreateModal(true)}
-                            className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white px-8 py-4 rounded-xl font-semibold transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl flex items-center space-x-2"
-                        >
-                            <PlusIcon className="h-5 w-5" />
-                            <span>Create Curriculum</span>
-                        </button>
+                        {/* Removed Create Curriculum button from header */}
+                    </div>
+                </div>
+
+                {/* Course Tabs */}
+                <div className="mb-8">
+                    <div className="flex flex-wrap gap-2">
+                        {courses.map(course => (
+                            <button
+                                key={course.id}
+                                className={`px-5 py-2 rounded-xl font-semibold border-2 transition-all duration-200 ${selectedCourseTab === course.id ? 'bg-blue-600 text-white border-blue-600' : 'bg-white text-gray-700 border-gray-200 hover:bg-blue-50'}`}
+                                onClick={() => setSelectedCourseTab(course.id)}
+                            >
+                                {course.name}
+                            </button>
+                        ))}
                     </div>
                 </div>
 
@@ -907,16 +921,30 @@ const CurriculumManagement = () => {
                     <div className="w-full">
                         <div className="bg-white rounded-2xl shadow-xl p-6 border border-gray-100">
                             <div className="flex items-center justify-between mb-6">
-                                        <div className="flex items-center space-x-3">
+                                <div className="flex items-center space-x-3">
                                     <div className="bg-gradient-to-r from-blue-500 to-purple-500 p-2 rounded-lg">
                                         <AcademicCapIcon className="h-6 w-6 text-white" />
-                                            </div>
+                                    </div>
                                     <h2 className="text-2xl font-bold text-gray-900">Curriculums & Topics</h2>
-                                            </div>
-                                        </div>
-                            
+                                </div>
+                            </div>
+                            {/* Show Create Curriculum button only when a course is selected */}
+                            {selectedCourseTab && (
+                                <div className="mb-6">
+                                    <button
+                                        onClick={() => {
+                                            setFormData({ name: '', short_description: '', courses: [selectedCourseTab], image: null });
+                                            setShowCreateModal(true);
+                                        }}
+                                        className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white px-8 py-4 rounded-xl font-semibold transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl flex items-center space-x-2"
+                                    >
+                                        <PlusIcon className="h-5 w-5" />
+                                        <span>Create Curriculum for {courses.find(c => c.id === selectedCourseTab)?.name || ''}</span>
+                                    </button>
+                                </div>
+                            )}
                             <div className="space-y-6">
-                                {curriculums.map((curriculum) => (
+                                {selectedCourseTab && filteredCurriculums.map((curriculum) => (
                                     <CurriculumAccordion 
                                         key={curriculum.id}
                                         curriculum={curriculum}
@@ -935,28 +963,21 @@ const CurriculumManagement = () => {
                                         }}
                                     />
                                 ))}
-                    </div>
-
-                            {curriculums.length === 0 && (
+                            </div>
+                            {selectedCourseTab && filteredCurriculums.length === 0 && (
                                 <div className="text-center py-12">
                                     <div className="bg-gradient-to-r from-gray-100 to-gray-200 p-8 rounded-full w-24 h-24 mx-auto mb-6 flex items-center justify-center">
                                         <BookOpenIcon className="h-12 w-12 text-gray-400" />
                                     </div>
                                     <h3 className="text-xl font-semibold text-gray-900 mb-2">No Curriculums Found</h3>
-                                    <p className="text-gray-600 mb-6">Create your first curriculum to get started</p>
-                                                        <button
-                                        onClick={() => setShowCreateModal(true)}
-                                        className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white px-8 py-4 rounded-xl font-semibold transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl flex items-center space-x-2 mx-auto"
-                                    >
-                                        <PlusIcon className="h-5 w-5" />
-                                        <span>Create Your First Curriculum</span>
-                                                        </button>
-                                                    </div>
-                            )}
-                                                </div>
-                                            </div>
-                                    </div>
+                                    <p className="text-gray-600 mb-6">No curriculums for this course. Create one to get started.</p>
+                                    {/* Removed duplicate Create Curriculum button from empty state */}
                                 </div>
+                            )}
+                        </div>
+                    </div>
+                </div>
+            </div>
 
             {/* Enhanced Create Curriculum Modal */}
             {showCreateModal && (
@@ -966,10 +987,10 @@ const CurriculumManagement = () => {
                             <div className="flex items-center space-x-3">
                                 <div className="bg-white bg-opacity-20 p-2 rounded-lg">
                                     <PlusIcon className="h-6 w-6 text-white" />
-                            </div>
-                                <h2 className="text-2xl font-bold text-white">Create New Curriculum</h2>
                                 </div>
+                                <h2 className="text-2xl font-bold text-white">Create New Curriculum</h2>
                             </div>
+                        </div>
                         <div className="p-6 space-y-6">
                             <div>
                                 <label className="block text-sm font-semibold text-gray-700 mb-3">Curriculum Name</label>
@@ -1038,7 +1059,10 @@ const CurriculumManagement = () => {
                         </div>
                         <div className="bg-gray-50 px-6 py-4 rounded-b-2xl flex justify-end space-x-4">
                             <button
-                                onClick={() => setShowCreateModal(false)}
+                                onClick={() => {
+                                    setShowCreateModal(false);
+                                    setFormData({ name: '', short_description: '', courses: [], image: null });
+                                }}
                                 className="px-6 py-3 text-gray-600 hover:text-gray-800 font-medium transition-colors duration-300"
                             >
                                 Cancel

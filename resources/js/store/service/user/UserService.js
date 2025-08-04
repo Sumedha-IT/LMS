@@ -205,6 +205,102 @@ export const userApi = createApi({
         getStates: builder.query({
             query: () => 'states',
         }),
+
+        // ===== PLACEMENT APIs =====
+        
+        // Companies APIs
+        getCompanies: builder.query({
+            query: () => 'companies',
+        }),
+        getCompanyById: builder.query({
+            query: (id) => `companies/${id}`,
+        }),
+        createCompany: builder.mutation({
+            query: (payload) => ({
+                url: 'companies',
+                method: 'POST',
+                body: payload
+            })
+        }),
+        updateCompany: builder.mutation({
+            query: ({ id, payload }) => ({
+                url: `companies/${id}`,
+                method: 'PUT',
+                body: payload
+            })
+        }),
+        deleteCompany: builder.mutation({
+            query: (id) => ({
+                url: `companies/${id}`,
+                method: 'DELETE'
+            })
+        }),
+
+        // Job Postings APIs
+        getJobPostings: builder.query({
+            query: () => 'job-postings',
+        }),
+        getJobPostingById: builder.query({
+            query: (id) => `job-postings/${id}`,
+        }),
+        createJobPosting: builder.mutation({
+            query: (payload) => ({
+                url: 'job-postings',
+                method: 'POST',
+                body: payload
+            })
+        }),
+        updateJobPosting: builder.mutation({
+            query: ({ id, payload }) => ({
+                url: `job-postings/${id}`,
+                method: 'PUT',
+                body: payload
+            })
+        }),
+        deleteJobPosting: builder.mutation({
+            query: (id) => ({
+                url: `job-postings/${id}`,
+                method: 'DELETE'
+            })
+        }),
+
+        // Job Applications APIs
+        getJobApplications: builder.query({
+            query: () => 'job-applications',
+        }),
+        getJobApplicationById: builder.query({
+            query: (id) => `job-applications/${id}`,
+        }),
+        createJobApplication: builder.mutation({
+            query: (payload) => ({
+                url: 'job-applications',
+                method: 'POST',
+                body: payload
+            })
+        }),
+        updateJobApplication: builder.mutation({
+            query: ({ id, payload }) => ({
+                url: `job-applications/${id}`,
+                method: 'PUT',
+                body: payload
+            })
+        }),
+        deleteJobApplication: builder.mutation({
+            query: (id) => ({
+                url: `job-applications/${id}`,
+                method: 'DELETE'
+            })
+        }),
+
+        // Placement Statistics
+        getPlacementStats: builder.query({
+            query: () => 'placement/stats',
+        }),
+
+        // Test Companies API
+        testCompaniesApi: builder.query({
+            query: () => 'companies-test',
+        }),
     }),
 })
 
@@ -241,4 +337,23 @@ export const { useGetStudentDataQuery,
     useAddStudentAwardDataMutation,
     useGetCountryAndStatesQuery,
     useGetStatesQuery,
+    
+    // Placement API hooks
+    useGetCompaniesQuery,
+    useGetCompanyByIdQuery,
+    useCreateCompanyMutation,
+    useUpdateCompanyMutation,
+    useDeleteCompanyMutation,
+    useGetJobPostingsQuery,
+    useGetJobPostingByIdQuery,
+    useCreateJobPostingMutation,
+    useUpdateJobPostingMutation,
+    useDeleteJobPostingMutation,
+    useGetJobApplicationsQuery,
+    useGetJobApplicationByIdQuery,
+    useCreateJobApplicationMutation,
+    useUpdateJobApplicationMutation,
+    useDeleteJobApplicationMutation,
+    useGetPlacementStatsQuery,
+    useTestCompaniesApiQuery,
 } = userApi
