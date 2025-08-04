@@ -13,6 +13,7 @@ class JobPosting extends Model
         'company_id',
         'posted_by',
         'title',
+        'course_id',
         'description',
         'requirements',
         'responsibilities',
@@ -39,5 +40,15 @@ class JobPosting extends Model
     public function applications()
     {
         return $this->hasMany(JobApplication::class);
+    }
+
+    public function eligibilityCriteria()
+    {
+        return $this->hasOne(JobEligibilityCriteria::class);
+    }
+
+    public function course()
+    {
+        return $this->belongsTo(Course::class);
     }
 } 

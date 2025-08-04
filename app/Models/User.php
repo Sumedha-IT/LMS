@@ -62,7 +62,8 @@ class User extends Authenticatable implements HasTenants, FilamentUser, HasAvata
         'residential_address',
         'receive_email_notification',
         'receive_sms_notification',
-        'zoho_crm_id'
+        'zoho_crm_id',
+        'course_id'
     ];
 
     /**
@@ -158,9 +159,9 @@ class User extends Authenticatable implements HasTenants, FilamentUser, HasAvata
         return $this->belongsTo(Designation::class, 'designation_id');
     }
 
-    public function domain()
+    public function course()
     {
-        return $this->belongsTo(Domain::class, 'domain_id');
+        return $this->belongsTo(Course::class, 'course_id');
     }
 
     public function canAccessTenant(Model $tenant): bool
@@ -367,5 +368,15 @@ class User extends Authenticatable implements HasTenants, FilamentUser, HasAvata
     public function getRole(): ?string
     {
         return $this->role;
+    }
+
+    public function placementEligibility()
+    {
+        return $this->hasOne(StudentPlacementEligibility::class);
+    }
+
+    public function jobApplications()
+    {
+        return $this->hasMany(JobApplication::class);
     }
 }

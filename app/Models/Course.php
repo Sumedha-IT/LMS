@@ -134,5 +134,15 @@ class Course extends Model
     {
         return $this->allow_couse_complete == true ? "Yes" : "False";
     }
+
+    public function jobPostings()
+    {
+        return $this->hasMany(JobPosting::class);
+    }
+
+    public function users()
+    {
+        return $this->hasMany(User::class);
+    }
 }
 
