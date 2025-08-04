@@ -75,6 +75,7 @@ CREATE TABLE `job_postings` (
   `company_id` bigint UNSIGNED NOT NULL,                 -- Links to companies table
   `posted_by` bigint UNSIGNED NOT NULL,                  -- Links to users table (job coordinator)
   `title` varchar(255) NOT NULL,                          -- Job title (e.g., "Software Engineer")
+  `domain_id` bigint UNSIGNED DEFAULT NULL,               -- Links to domains table
   `description` text NOT NULL,                            -- Detailed job description
   `requirements` text,                                     -- Job requirements
   `responsibilities` text,                                 -- Job responsibilities
@@ -107,7 +108,6 @@ CREATE TABLE `job_eligibility_criteria` (
   `mtech_year_of_passout_max` int DEFAULT NULL,           -- Maximum MTech passout year
   `btech_percentage_min` decimal(5,2) DEFAULT NULL,       -- Minimum BTech percentage (e.g., 70.00)
   `mtech_percentage_min` decimal(5,2) DEFAULT NULL,       -- Minimum MTech percentage
-  `domain_id` bigint UNSIGNED DEFAULT NULL,               -- Links to domains table
   `skills_required` json DEFAULT NULL,                    -- Required skills (e.g., ["Java", "Python", "SQL"])
   `additional_criteria` text,                             -- Any other criteria
   `created_at` timestamp NULL DEFAULT NULL,               -- When criteria was created

@@ -21,6 +21,13 @@ class JobApplication extends Model
         'notes',
     ];
 
+    protected $casts = [
+        'application_date' => 'datetime',
+        'shortlisted_date' => 'datetime',
+        'interview_date' => 'datetime',
+        'selection_date' => 'datetime',
+    ];
+
     public function jobPosting()
     {
         return $this->belongsTo(JobPosting::class);

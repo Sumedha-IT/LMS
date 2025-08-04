@@ -24,4 +24,9 @@ class Company extends Model
         'address',
         'is_active',
     ];
+
+    public function jobPostings()
+    {
+        return $this->hasMany(JobPosting::class);
+    }
 }

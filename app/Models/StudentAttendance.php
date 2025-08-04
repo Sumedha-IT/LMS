@@ -9,16 +9,18 @@ class StudentAttendance extends Model
 {
     use HasFactory;
 
+    protected $table = 'student_attendances';
+
     protected $fillable = [
         'user_id',
         'check_in_datetime',
         'check_out_datetime',
-        'status'
+        'status',
     ];
 
     protected $casts = [
         'check_in_datetime' => 'datetime',
-        'check_out_datetime' => 'datetime'
+        'check_out_datetime' => 'datetime',
     ];
 
     public function user()
