@@ -47,6 +47,11 @@ class CourseResource extends Resource
         //return (bool) auth()->user()->is_student;
     }
 
+    public static function shouldRegisterNavigation(): bool
+    {
+        return false;
+    }
+
     public static function getLabel(): string
     {
         return "Curriculum";

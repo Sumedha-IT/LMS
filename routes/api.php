@@ -451,6 +451,8 @@ Route::middleware(['auth:sanctum'])->group(function () {
         
         // Supporting data
         Route::get('/courses', [CurriculumManagementController::class, 'getCourses']);
+        Route::post('/courses', [CurriculumManagementController::class, 'storeCourse']);
+        Route::post('/courses/{courseId}/complete', [CurriculumManagementController::class, 'completeCourse']);
         Route::get('/batches', [CurriculumManagementController::class, 'getBatches']);
     });
 });

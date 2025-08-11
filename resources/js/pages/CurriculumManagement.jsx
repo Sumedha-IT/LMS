@@ -53,7 +53,11 @@ const CurriculumAccordion = ({ curriculum, isSelected, topics, onSelect, onEdit,
                                     className="w-20 h-20 rounded-xl object-cover shadow-lg"
                                 />
                             ) : (
-                                <div className="w-20 h-20 bg-gradient-to-br from-blue-400 to-purple-500 rounded-xl flex items-center justify-center shadow-lg">
+                                <div className="w-20 h-20 rounded-xl flex items-center justify-center shadow-lg"
+                                    style={{
+                                        background: 'linear-gradient(270deg, #3b82f6 0%, #8b5cf6 100%)',
+                                        boxShadow: '0 2px 8px 0 rgba(59,130,246,0.10)'
+                                    }}>
                                     <BookOpenIcon className="h-10 w-10 text-white" />
                                 </div>
                             )}
@@ -70,7 +74,7 @@ const CurriculumAccordion = ({ curriculum, isSelected, topics, onSelect, onEdit,
                                     {curriculum.courses?.length || 0} Courses
                                 </span>
                                 <span className="text-sm bg-purple-100 text-purple-800 px-3 py-1 rounded-full font-medium">
-                                    {topics.length} Topics
+                                    {curriculum.topics_count || 0} Topics
                                 </span>
                             </div>
                         </div>
@@ -113,14 +117,14 @@ const CurriculumAccordion = ({ curriculum, isSelected, topics, onSelect, onEdit,
                     <div className="p-6">
                         <div className="flex justify-between items-center mb-6">
                             <div className="flex items-center space-x-3">
-                                <div className="bg-gradient-to-r from-purple-500 to-pink-500 p-2 rounded-lg">
+                                <div className="bg-gradient-to-r from-blue-500 to-purple-500 p-2 rounded-lg">
                                     <DocumentIcon className="h-6 w-6 text-white" />
                                 </div>
                                 <h4 className="text-xl font-bold text-gray-900">Topics</h4>
                             </div>
                             <button
                                 onClick={onAddTopic}
-                                className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white px-4 py-2 rounded-xl font-semibold transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl flex items-center space-x-2"
+                                className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white px-4 py-2 rounded-xl font-semibold transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl flex items-center space-x-2"
                             >
                                 <PlusIcon className="h-4 w-4" />
                                 <span>Add Topic</span>
@@ -130,10 +134,10 @@ const CurriculumAccordion = ({ curriculum, isSelected, topics, onSelect, onEdit,
                         {topics.length > 0 ? (
                             <div className="space-y-4">
                                 {topics.map((topic, index) => (
-                                    <div key={topic.id} className="bg-gray-50 rounded-xl p-4 border border-gray-200">
+                                    <div key={topic.id} className="bg-gradient-to-r from-blue-50 to-purple-50 rounded-xl p-4 border border-blue-200">
                                         <div className="flex items-center justify-between">
                                             <div className="flex items-center space-x-4">
-                                                <div className="bg-gradient-to-r from-purple-500 to-pink-500 p-2 rounded-lg">
+                                                <div className="bg-gradient-to-r from-blue-500 to-purple-500 p-2 rounded-lg">
                                                     <span className="text-white font-bold text-sm">{index + 1}</span>
                                                 </div>
                                                 <div className="flex-1">
@@ -149,7 +153,7 @@ const CurriculumAccordion = ({ curriculum, isSelected, topics, onSelect, onEdit,
                                                 <div className="flex space-x-2">
                                                     <button
                                                         onClick={() => onTeachingMaterial(topic)}
-                                                        className="bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white px-3 py-2 rounded-lg text-sm font-medium transition-all duration-300 transform hover:scale-105 shadow-md hover:shadow-lg"
+                                                        className="bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white px-3 py-2 rounded-lg text-sm font-medium transition-all duration-300 transform hover:scale-105 shadow-md hover:shadow-lg"
                                                     >
                                                         Teaching Material
                                                     </button>
@@ -183,7 +187,7 @@ const CurriculumAccordion = ({ curriculum, isSelected, topics, onSelect, onEdit,
                                 <p className="text-gray-600 mb-4">Add topics to organize your curriculum content</p>
                                 <button
                                     onClick={onAddTopic}
-                                    className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white px-6 py-3 rounded-xl font-semibold transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl flex items-center space-x-2 mx-auto"
+                                    className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white px-6 py-3 rounded-xl font-semibold transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl flex items-center space-x-2 mx-auto"
                                 >
                                     <PlusIcon className="h-4 w-4" />
                                     <span>Add Your First Topic</span>
@@ -209,7 +213,7 @@ const TopicAccordion = ({ topic, index, onEdit, onDelete, onTeachingMaterial }) 
             >
                 <div className="flex items-center justify-between">
                     <div className="flex items-center space-x-4">
-                        <div className="bg-gradient-to-r from-purple-500 to-pink-500 p-2 rounded-lg">
+                        <div className="bg-gradient-to-r from-blue-500 to-purple-500 p-2 rounded-lg">
                             <span className="text-white font-bold text-sm">{index + 1}</span>
                         </div>
                         <div className="flex-1">
@@ -228,7 +232,7 @@ const TopicAccordion = ({ topic, index, onEdit, onDelete, onTeachingMaterial }) 
                                     e.stopPropagation();
                                     onTeachingMaterial();
                                 }}
-                                className="bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white px-3 py-2 rounded-lg text-sm font-medium transition-all duration-300 transform hover:scale-105 shadow-md hover:shadow-lg"
+                                className="bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white px-3 py-2 rounded-lg text-sm font-medium transition-all duration-300 transform hover:scale-105 shadow-md hover:shadow-lg"
                             >
                                 Teaching Material
                             </button>
@@ -286,7 +290,7 @@ const TopicAccordion = ({ topic, index, onEdit, onDelete, onTeachingMaterial }) 
                             <div className="space-y-2">
                                 <button
                                     onClick={onTeachingMaterial}
-                                    className="w-full bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white px-4 py-2 rounded-lg text-sm font-medium transition-all duration-300"
+                                    className="w-full bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white px-4 py-2 rounded-lg text-sm font-medium transition-all duration-300"
                                 >
                                     Upload Teaching Material
                                 </button>
@@ -382,6 +386,14 @@ const CurriculumManagement = () => {
         file: null
     });
 
+    // Course creation modal state
+    const [showCourseModal, setShowCourseModal] = useState(false);
+    const [showCoursesView, setShowCoursesView] = useState(false);
+    const [courseFormData, setCourseFormData] = useState({
+        name: '',
+        start_date: ''
+    });
+
     const courseOptions = courses.map(course => ({ value: course.id, label: course.name }));
 
     useEffect(() => {
@@ -467,13 +479,18 @@ const CurriculumManagement = () => {
             });
 
             if (response.data.topics) {
+                // Sort topics by created_at to ensure first created appears first
+                const sortedTopics = response.data.topics.sort((a, b) => 
+                    new Date(a.created_at) - new Date(b.created_at)
+                );
+                
                 // Store topics in the map for this specific curriculum
                 setTopicsMap(prev => ({
                     ...prev,
-                    [curriculumId]: response.data.topics
+                    [curriculumId]: sortedTopics
                 }));
                 // Set current topics for the selected curriculum
-                setTopics(response.data.topics);
+                setTopics(sortedTopics);
             }
         } catch (error) {
             console.error('Error fetching topics:', error);
@@ -647,6 +664,60 @@ const CurriculumManagement = () => {
         } catch (error) {
             console.error('Error creating/updating topic:', error);
             toast.error('Failed to create/update topic');
+        }
+    };
+
+    const handleCreateCourse = async () => {
+        try {
+            const userInfo = getCookie("user_info");
+            const userData = JSON.parse(userInfo);
+
+            const response = await api.post('/api/curriculum-management/courses', courseFormData, {
+                headers: {
+                    'Authorization': `Bearer ${userData.token}`,
+                    'Content-Type': 'application/json'
+                }
+            });
+
+                                    if (response.data.success) {
+                            toast.success('Course created successfully!');
+                            setShowCourseModal(false);
+                            setCourseFormData({ name: '', start_date: '' });
+                            // Refresh courses list
+                            fetchCourses();
+                            // Keep the courses view open to show the new course
+                        }
+        } catch (error) {
+            console.error('Error creating course:', error);
+            if (error.response && error.response.data && error.response.data.errors) {
+                const errorMessages = Object.values(error.response.data.errors).flat().join(', ');
+                toast.error(`Validation errors: ${errorMessages}`);
+            } else {
+                toast.error('Failed to create course');
+            }
+        }
+    };
+
+    const handleCompleteCourse = async (courseId) => {
+        try {
+            const userInfo = getCookie("user_info");
+            const userData = JSON.parse(userInfo);
+
+            const response = await api.post(`/api/curriculum-management/courses/${courseId}/complete`, {}, {
+                headers: {
+                    'Authorization': `Bearer ${userData.token}`,
+                    'Content-Type': 'application/json'
+                }
+            });
+
+            if (response.data.success) {
+                toast.success('Course completed successfully!');
+                // Refresh courses list to update the completion status
+                fetchCourses();
+            }
+        } catch (error) {
+            console.error('Error completing course:', error);
+            toast.error('Failed to complete course');
         }
     };
 
@@ -887,7 +958,11 @@ const CurriculumManagement = () => {
                 <div className="bg-white rounded-2xl shadow-xl p-8 mb-8 border border-gray-100">
                     <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6">
                         <div className="flex items-center space-x-4">
-                            <div className="bg-gradient-to-r from-blue-600 to-purple-600 p-3 rounded-xl">
+                            <div className="p-3 rounded-xl"
+                                style={{
+                                    background: 'linear-gradient(270deg, #3b82f6 0%, #8b5cf6 100%)',
+                                    boxShadow: '0 2px 8px 0 rgba(59,130,246,0.10)'
+                                }}>
                                 <BookOpenIcon className="h-8 w-8 text-white" />
                             </div>
                             <div>
@@ -897,9 +972,141 @@ const CurriculumManagement = () => {
                                 <p className="text-gray-600 mt-2 text-lg">Design and organize your learning pathways</p>
                             </div>
                         </div>
-                        {/* Removed Create Curriculum button from header */}
+                        <div className="flex items-center space-x-4">
+                            <button
+                                onClick={() => setShowCoursesView(!showCoursesView)}
+                                className="text-white px-6 py-3 rounded-xl font-semibold transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl flex items-center space-x-2"
+                                style={{
+                                    background: 'linear-gradient(270deg, #3b82f6 0%, #1e40af 100%)',
+                                    boxShadow: '0 2px 8px 0 rgba(59,130,246,0.10)'
+                                }}
+                                onMouseEnter={(e) => {
+                                    e.target.style.background = 'linear-gradient(270deg, #1e40af 0%, #3b82f6 100%)';
+                                }}
+                                onMouseLeave={(e) => {
+                                    e.target.style.background = 'linear-gradient(270deg, #3b82f6 0%, #1e40af 100%)';
+                                }}
+                            >
+                                <BookOpenIcon className="h-5 w-5" />
+                                <span>Course</span>
+                            </button>
+                        </div>
                     </div>
                 </div>
+
+                {/* Courses View */}
+                {showCoursesView && (
+                    <div className="bg-white rounded-2xl shadow-xl p-6 mb-8 border border-gray-100">
+                        <div className="flex items-center justify-between mb-6">
+                            <div className="flex items-center space-x-3">
+                                <div className="p-2 rounded-lg"
+                                    style={{
+                                        background: 'linear-gradient(270deg, #eb6707 0%, #e42b12 100%)',
+                                        boxShadow: '0 2px 8px 0 rgba(235,103,7,0.10)'
+                                    }}>
+                                    <BookOpenIcon className="h-6 w-6 text-white" />
+                                </div>
+                                <h2 className="text-2xl font-bold text-gray-900">All Courses</h2>
+                            </div>
+                            <button
+                                onClick={() => setShowCourseModal(true)}
+                                className="text-white px-6 py-3 rounded-xl font-semibold transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl flex items-center space-x-2"
+                                style={{
+                                    background: 'linear-gradient(270deg, #3b82f6 0%, #1e40af 100%)',
+                                    boxShadow: '0 2px 8px 0 rgba(59,130,246,0.10)'
+                                }}
+                                onMouseEnter={(e) => {
+                                    e.target.style.background = 'linear-gradient(270deg, #1e40af 0%, #3b82f6 100%)';
+                                }}
+                                onMouseLeave={(e) => {
+                                    e.target.style.background = 'linear-gradient(270deg, #3b82f6 0%, #1e40af 100%)';
+                                }}
+                            >
+                                <PlusIcon className="h-5 w-5" />
+                                <span>Create Course</span>
+                            </button>
+                        </div>
+                        
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                            {courses.map(course => (
+                                <div key={course.id} className="bg-gradient-to-br from-blue-50 to-indigo-50 border-2 border-gray-200 rounded-xl p-6 hover:border-blue-300 transition-all duration-300 hover:shadow-lg">
+                                    <div className="flex items-center justify-between mb-4">
+                                        <div className="p-2 rounded-lg"
+                                            style={{
+                                                background: 'linear-gradient(270deg, #3b82f6 0%, #1e40af 100%)',
+                                                boxShadow: '0 2px 8px 0 rgba(59,130,246,0.10)'
+                                            }}>
+                                            <BookOpenIcon className="h-5 w-5 text-white" />
+                                        </div>
+                                        <span className={`text-sm px-2 py-1 rounded-full font-medium ${
+                                            course.is_completed 
+                                                ? 'bg-green-100 text-green-800' 
+                                                : 'bg-blue-100 text-blue-800'
+                                        }`}>
+                                            {course.is_completed ? 'Completed' : 'Active'}
+                                        </span>
+                                    </div>
+                                    <h3 className="text-xl font-bold text-gray-900 mb-2">{course.name}</h3>
+                                    {course.start_date && (
+                                        <p className="text-gray-600 text-sm mb-4">
+                                            Start Date: {new Date(course.start_date).toLocaleDateString()}
+                                        </p>
+                                    )}
+                                    {course.is_completed && course.completed_at && (
+                                        <p className="text-gray-600 text-sm mb-4">
+                                            Completed: {new Date(course.completed_at).toLocaleDateString()}
+                                        </p>
+                                    )}
+                                    <div className="flex items-center justify-between mb-4">
+                                        <span className="text-sm text-gray-500">
+                                            {course.curriculums?.length || 0} Curriculums
+                                        </span>
+                                        <button
+                                            onClick={() => {
+                                                setSelectedCourseTab(course.id);
+                                                setShowCoursesView(false);
+                                            }}
+                                            className="text-blue-600 hover:text-blue-800 font-medium text-sm transition-colors duration-300"
+                                        >
+                                            View Details →
+                                        </button>
+                                    </div>
+                                    {!course.is_completed && (
+                                        <button
+                                            onClick={() => handleCompleteCourse(course.id)}
+                                            className="w-full text-white px-4 py-2 rounded-lg font-semibold transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl flex items-center justify-center space-x-2"
+                                            style={{
+                                                background: 'linear-gradient(270deg, #3b82f6 0%, #1e40af 100%)',
+                                                boxShadow: '0 2px 8px 0 rgba(59,130,246,0.10)'
+                                            }}
+                                            onMouseEnter={(e) => {
+                                                e.target.style.background = 'linear-gradient(270deg, #1e40af 0%, #3b82f6 100%)';
+                                            }}
+                                            onMouseLeave={(e) => {
+                                                e.target.style.background = 'linear-gradient(270deg, #3b82f6 0%, #1e40af 100%)';
+                                            }}
+                                        >
+                                            <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                                            </svg>
+                                            <span>Complete Course</span>
+                                        </button>
+                                    )}
+                                </div>
+                            ))}
+                        </div>
+                        
+                        {courses.length === 0 && (
+                            <div className="text-center py-12">
+                                <div className="bg-gradient-to-r from-gray-100 to-gray-200 p-8 rounded-full w-24 h-24 mx-auto mb-6 flex items-center justify-center">
+                                    <BookOpenIcon className="h-12 w-12 text-gray-400" />
+                                </div>
+                                <h3 className="text-xl font-semibold text-gray-900 mb-2">No Courses Found</h3>
+                                <p className="text-gray-600 mb-6">Create your first course to get started.</p>
+                            </div>
+                        )}
+                    </div>
+                )}
 
                 {/* Course Tabs */}
                 <div className="mb-8">
@@ -907,7 +1114,11 @@ const CurriculumManagement = () => {
                         {courses.map(course => (
                             <button
                                 key={course.id}
-                                className={`px-5 py-2 rounded-xl font-semibold border-2 transition-all duration-200 ${selectedCourseTab === course.id ? 'bg-blue-600 text-white border-blue-600' : 'bg-white text-gray-700 border-gray-200 hover:bg-blue-50'}`}
+                                className={`px-5 py-2 rounded-xl font-semibold border-2 transition-all duration-200 ${selectedCourseTab === course.id ? 'text-white border-blue-500' : 'bg-white text-gray-700 border-gray-200 hover:bg-blue-50'}`}
+                                style={selectedCourseTab === course.id ? {
+                                    background: 'linear-gradient(270deg, #3b82f6 0%, #1e40af 100%)',
+                                    boxShadow: '0 2px 8px 0 rgba(59,130,246,0.10)'
+                                } : {}}
                                 onClick={() => setSelectedCourseTab(course.id)}
                             >
                                 {course.name}
@@ -922,7 +1133,11 @@ const CurriculumManagement = () => {
                         <div className="bg-white rounded-2xl shadow-xl p-6 border border-gray-100">
                             <div className="flex items-center justify-between mb-6">
                                 <div className="flex items-center space-x-3">
-                                    <div className="bg-gradient-to-r from-blue-500 to-purple-500 p-2 rounded-lg">
+                                    <div className="p-2 rounded-lg"
+                                        style={{
+                                            background: 'linear-gradient(270deg, #3b82f6 0%, #1e40af 100%)',
+                                            boxShadow: '0 2px 8px 0 rgba(59,130,246,0.10)'
+                                        }}>
                                         <AcademicCapIcon className="h-6 w-6 text-white" />
                                     </div>
                                     <h2 className="text-2xl font-bold text-gray-900">Curriculums & Topics</h2>
@@ -936,7 +1151,17 @@ const CurriculumManagement = () => {
                                             setFormData({ name: '', short_description: '', courses: [selectedCourseTab], image: null });
                                             setShowCreateModal(true);
                                         }}
-                                        className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white px-8 py-4 rounded-xl font-semibold transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl flex items-center space-x-2"
+                                        className="text-white px-8 py-4 rounded-xl font-semibold transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl flex items-center space-x-2"
+                                        style={{
+                                            background: 'linear-gradient(270deg, #3b82f6 0%, #1e40af 100%)',
+                                            boxShadow: '0 2px 8px 0 rgba(59,130,246,0.10)'
+                                        }}
+                                        onMouseEnter={(e) => {
+                                            e.target.style.background = 'linear-gradient(270deg, #1e40af 0%, #3b82f6 100%)';
+                                        }}
+                                        onMouseLeave={(e) => {
+                                            e.target.style.background = 'linear-gradient(270deg, #3b82f6 0%, #1e40af 100%)';
+                                        }}
                                     >
                                         <PlusIcon className="h-5 w-5" />
                                         <span>Create Curriculum for {courses.find(c => c.id === selectedCourseTab)?.name || ''}</span>
@@ -971,7 +1196,6 @@ const CurriculumManagement = () => {
                                     </div>
                                     <h3 className="text-xl font-semibold text-gray-900 mb-2">No Curriculums Found</h3>
                                     <p className="text-gray-600 mb-6">No curriculums for this course. Create one to get started.</p>
-                                    {/* Removed duplicate Create Curriculum button from empty state */}
                                 </div>
                             )}
                         </div>
@@ -983,7 +1207,11 @@ const CurriculumManagement = () => {
             {showCreateModal && (
                 <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 p-4">
                     <div className="bg-white rounded-2xl shadow-2xl w-full max-w-4xl h-[90vh] overflow-y-auto transform transition-all">
-                        <div className="bg-gradient-to-r from-blue-600 to-purple-600 p-6 rounded-t-2xl">
+                        <div className="p-6 rounded-t-2xl"
+                            style={{
+                                background: 'linear-gradient(270deg, #3b82f6 0%, #1e40af 100%)',
+                                boxShadow: '0 2px 8px 0 rgba(59,130,246,0.10)'
+                            }}>
                             <div className="flex items-center space-x-3">
                                 <div className="bg-white bg-opacity-20 p-2 rounded-lg">
                                     <PlusIcon className="h-6 w-6 text-white" />
@@ -1049,9 +1277,12 @@ const CurriculumManagement = () => {
                                         <span>{uploadProgress}%</span>
                                     </div>
                                     <div className="w-full bg-gray-200 rounded-full h-3">
-                                        <div 
-                                            className="bg-gradient-to-r from-blue-600 to-purple-600 h-3 rounded-full transition-all duration-300"
-                                        style={{ width: `${uploadProgress}%` }}
+                                                                            <div 
+                                        className="h-3 rounded-full transition-all duration-300"
+                                        style={{ 
+                                            width: `${uploadProgress}%`,
+                                            background: 'linear-gradient(270deg, #3b82f6 0%, #1e40af 100%)'
+                                        }}
                                     ></div>
                                     </div>
                                 </div>
@@ -1070,7 +1301,21 @@ const CurriculumManagement = () => {
                             <button
                                 onClick={handleCreateCurriculum}
                                 disabled={isUploading}
-                                className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white px-8 py-3 rounded-xl font-semibold transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl disabled:opacity-50 disabled:transform-none"
+                                className="text-white px-8 py-3 rounded-xl font-semibold transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl disabled:opacity-50 disabled:transform-none"
+                                style={{
+                                    background: 'linear-gradient(270deg, #3b82f6 0%, #1e40af 100%)',
+                                    boxShadow: '0 2px 8px 0 rgba(59,130,246,0.10)'
+                                }}
+                                onMouseEnter={(e) => {
+                                    if (!isUploading) {
+                                        e.target.style.background = 'linear-gradient(270deg, #1e40af 0%, #3b82f6 100%)';
+                                    }
+                                }}
+                                onMouseLeave={(e) => {
+                                    if (!isUploading) {
+                                        e.target.style.background = 'linear-gradient(270deg, #3b82f6 0%, #1e40af 100%)';
+                                    }
+                                }}
                             >
                                 {isUploading ? 'Creating...' : 'Create Curriculum'}
                             </button>
@@ -1165,7 +1410,7 @@ const CurriculumManagement = () => {
             {showTopicModal && (
                 <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 p-4">
                     <div className="bg-white rounded-2xl shadow-2xl w-full max-w-4xl h-[90vh] overflow-y-auto transform transition-all">
-                        <div className="bg-gradient-to-r from-purple-600 to-pink-600 p-6 rounded-t-2xl">
+                        <div className="bg-gradient-to-r from-blue-600 to-purple-600 p-6 rounded-t-2xl">
                             <div className="flex items-center space-x-3">
                                 <div className="bg-white bg-opacity-20 p-2 rounded-lg">
                                     <PlusIcon className="h-6 w-6 text-white" />
@@ -1182,7 +1427,7 @@ const CurriculumManagement = () => {
                                     type="text"
                                     value={topicFormData.name}
                                     onChange={(e) => setTopicFormData(prev => ({ ...prev, name: e.target.value }))}
-                                    className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-300"
+                                    className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300"
                                     placeholder="Enter topic name..."
                                 />
                             </div>
@@ -1203,7 +1448,7 @@ const CurriculumManagement = () => {
                             </button>
                             <button
                                 onClick={handleCreateTopic}
-                                className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white px-8 py-3 rounded-xl font-semibold transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl"
+                                className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white px-8 py-3 rounded-xl font-semibold transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl"
                             >
                                 {selectedTopic ? 'Update Topic' : 'Create Topic'}
                             </button>
@@ -1259,7 +1504,7 @@ const CurriculumManagement = () => {
             {showTeachingMaterialModal && (
                 <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 p-4">
                     <div className="bg-white rounded-2xl shadow-2xl w-full max-w-4xl h-[90vh] overflow-y-auto transform transition-all">
-                        <div className="bg-gradient-to-r from-orange-500 to-red-500 p-6 rounded-t-2xl">
+                        <div className="bg-gradient-to-r from-blue-500 to-indigo-500 p-6 rounded-t-2xl">
                             <div className="flex items-center space-x-3">
                                 <div className="bg-white bg-opacity-20 p-2 rounded-lg">
                                     <DocumentIcon className="h-6 w-6 text-white" />
@@ -1341,7 +1586,7 @@ const CurriculumManagement = () => {
                                     type="text"
                                     value={teachingMaterialForm.title}
                                     onChange={e => setTeachingMaterialForm(f => ({ ...f, title: e.target.value }))}
-                                    className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all duration-300"
+                                    className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300"
                                     placeholder="Enter material title..."
                                     required
                                 />
@@ -1351,7 +1596,7 @@ const CurriculumManagement = () => {
                                 <textarea
                                     value={teachingMaterialForm.description}
                                     onChange={e => setTeachingMaterialForm(f => ({ ...f, description: e.target.value }))}
-                                    className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all duration-300"
+                                    className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300"
                                     rows="4"
                                     placeholder="Describe the teaching material..."
                                     required
@@ -1359,10 +1604,17 @@ const CurriculumManagement = () => {
                             </div>
                             <div>
                                 <label className="block text-sm font-semibold text-gray-700 mb-3">Upload File</label>
-                                <div className="border-2 border-dashed border-gray-300 rounded-xl p-6 text-center hover:border-orange-400 transition-colors duration-300">
+                                <div className="border-2 border-dashed border-gray-300 rounded-xl p-6 text-center hover:border-blue-400 transition-colors duration-300">
                                 <input
                                     type="file"
-                                    onChange={e => setTeachingMaterialForm(f => ({ ...f, file: e.target.files[0] }))}
+                                    onChange={e => {
+                                        const file = e.target.files[0];
+                                        setTeachingMaterialForm(f => ({ ...f, file: file }));
+                                        // Show progress bar immediately when file is selected
+                                        if (file) {
+                                            setUploadProgress(0);
+                                        }
+                                    }}
                                     accept=".pdf,.doc,.docx,.ppt,.pptx,.xls,.xlsx,.mp4,.webm,.jpg,.jpeg,.png,.gif,.zip,.txt,.html"
                                         className="hidden"
                                         id="teaching-material-file"
@@ -1378,16 +1630,28 @@ const CurriculumManagement = () => {
                                         </div>
                                     </label>
                                 </div>
+                                {teachingMaterialForm.file && (
+                                    <div className="mt-3 p-3 bg-blue-50 rounded-lg">
+                                        <div className="flex items-center justify-between">
+                                            <span className="text-sm text-blue-800 font-medium">
+                                                Selected: {teachingMaterialForm.file.name}
+                                            </span>
+                                            <span className="text-xs text-blue-600">
+                                                {(teachingMaterialForm.file.size / 1024 / 1024).toFixed(2)} MB
+                                            </span>
+                                        </div>
+                                    </div>
+                                )}
                             </div>
-                            {uploading && (
+                            {(uploading || teachingMaterialForm.file) && (
                                 <div className="space-y-2">
                                     <div className="flex justify-between text-sm text-gray-600">
-                                        <span>Uploading...</span>
+                                        <span>{uploading ? 'Uploading...' : 'Ready to upload'}</span>
                                         <span>{uploadProgress}%</span>
                                     </div>
                                     <div className="w-full bg-gray-200 rounded-full h-3">
                                         <div
-                                            className="bg-gradient-to-r from-orange-500 to-red-500 h-3 rounded-full transition-all duration-300"
+                                            className="bg-gradient-to-r from-blue-500 to-purple-500 h-3 rounded-full transition-all duration-300"
                                         style={{ width: `${uploadProgress}%` }}
                                     ></div>
                                     </div>
@@ -1407,7 +1671,7 @@ const CurriculumManagement = () => {
                             <button
                                 onClick={handleTeachingMaterialUpload}
                                 disabled={uploading}
-                                className="bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white px-8 py-3 rounded-xl font-semibold transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl disabled:opacity-50 disabled:transform-none"
+                                className="bg-gradient-to-r from-blue-500 to-indigo-500 hover:from-blue-600 hover:to-indigo-600 text-white px-8 py-3 rounded-xl font-semibold transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl disabled:opacity-50 disabled:transform-none"
                             >
                                 {uploading ? 'Uploading...' : 'Upload Material'}
                             </button>
@@ -1453,6 +1717,60 @@ const CurriculumManagement = () => {
                                 className="bg-gradient-to-r from-red-600 to-pink-600 hover:from-red-700 hover:to-pink-700 text-white px-6 py-3 rounded-xl font-semibold transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl"
                             >
                                 Delete Material
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Course Creation Modal */}
+            {showCourseModal && (
+                <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 p-4">
+                    <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl transform transition-all">
+                        <div className="bg-gradient-to-r from-green-600 to-emerald-600 p-6 rounded-t-2xl">
+                            <div className="flex items-center space-x-3">
+                                <div className="bg-white bg-opacity-20 p-2 rounded-lg">
+                                    <PlusIcon className="h-6 w-6 text-white" />
+                                </div>
+                                <h2 className="text-2xl font-bold text-white">Create New Course</h2>
+                            </div>
+                        </div>
+                        <div className="p-6 space-y-6">
+                            <div>
+                                <label className="block text-sm font-semibold text-gray-700 mb-3">Course Name</label>
+                                <input
+                                    type="text"
+                                    value={courseFormData.name}
+                                    onChange={(e) => setCourseFormData(prev => ({ ...prev, name: e.target.value }))}
+                                    className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all duration-300"
+                                    placeholder="Enter course name..."
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-sm font-semibold text-gray-700 mb-3">Course Start Date</label>
+                                <input
+                                    type="date"
+                                    value={courseFormData.start_date}
+                                    onChange={(e) => setCourseFormData(prev => ({ ...prev, start_date: e.target.value }))}
+                                    className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all duration-300"
+                                />
+                            </div>
+                        </div>
+                        <div className="bg-gray-50 px-6 py-4 rounded-b-2xl flex justify-end space-x-4">
+                            <button
+                                onClick={() => {
+                                    setShowCourseModal(false);
+                                    setCourseFormData({ name: '', start_date: '' });
+                                }}
+                                className="px-6 py-3 text-gray-600 hover:text-gray-800 font-medium transition-colors duration-300"
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                onClick={handleCreateCourse}
+                                className="bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white px-8 py-3 rounded-xl font-semibold transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl"
+                            >
+                                Create Course
                             </button>
                         </div>
                     </div>

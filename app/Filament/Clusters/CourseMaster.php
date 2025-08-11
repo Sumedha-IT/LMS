@@ -19,4 +19,9 @@ class CourseMaster extends Cluster
     {
         return "Courses";
     }
+
+    public static function shouldRegisterNavigation(): bool
+    {
+        return false;
+    }
 }

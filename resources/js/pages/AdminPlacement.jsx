@@ -107,6 +107,7 @@ const AdminPlacement = () => {
     const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
     const [deleteConfirmDialog, setDeleteConfirmDialog] = useState({ open: false, type: '', id: null });
     const [companiesSearch, setCompaniesSearch] = useState('');
+    const [applicationsDialog, setApplicationsDialog] = useState({ open: false, jobId: null, jobTitle: '' });
 
     // Job Filters State
     const [jobFilters, setJobFilters] = useState({
@@ -132,6 +133,10 @@ const AdminPlacement = () => {
     const { data: jobPostings, isLoading: jobPostingsLoading, refetch: refetchJobPostings } = useGetJobPostingsQuery(jobFilters);
     const { data: jobApplications, isLoading: jobApplicationsLoading, refetch: refetchJobApplications } = useGetJobApplicationsQuery();
     const { data: courses, isLoading: coursesLoading, refetch: refetchCourses } = useGetCoursesQuery();
+
+    // Enhanced job applications with user details
+    const [enhancedJobApplications, setEnhancedJobApplications] = useState([]);
+    const [loadingEnhancedApplications, setLoadingEnhancedApplications] = useState(false);
 
     // Mutations
     const [createCompany, { isLoading: creatingCompany }] = useCreateCompanyMutation();
@@ -468,6 +473,92 @@ const AdminPlacement = () => {
         // The query will automatically refetch when jobFilters state changes
     };
 
+    // Function to get applications count for a specific job
+    const getApplicationsCount = (jobId) => {
+        if (!jobApplications?.data) return 0;
+        return jobApplications.data.filter(app => app.job_posting_id === jobId).length;
+    };
+
+    // Function to get applications by status for a specific job
+    const getApplicationsByStatus = (jobId) => {
+        if (!jobApplications?.data) return {};
+        const jobApps = jobApplications.data.filter(app => app.job_posting_id === jobId);
+        const statusCounts = {};
+        jobApps.forEach(app => {
+            statusCounts[app.status] = (statusCounts[app.status] || 0) + 1;
+        });
+        return statusCounts;
+    };
+
+    // Function to get applications for a specific job with student details
+    const getJobApplications = (jobId) => {
+        if (!jobApplications?.data) return [];
+        return jobApplications.data.filter(app => app.job_posting_id === jobId);
+    };
+
+    // Function to handle applications dialog
+    const handleApplicationsClick = async (jobId, jobTitle) => {
+        setApplicationsDialog({ open: true, jobId, jobTitle });
+        await fetchEnhancedJobApplications(jobId);
+    };
+
+    // Function to close applications dialog
+    const handleCloseApplicationsDialog = () => {
+        setApplicationsDialog({ open: false, jobId: null, jobTitle: '' });
+    };
+
+    // Function to fetch enhanced job applications with user details
+    const fetchEnhancedJobApplications = async (jobId) => {
+        try {
+            setLoadingEnhancedApplications(true);
+            const userInfo = getCookie('user_info');
+            const userData = JSON.parse(userInfo);
+            
+            // Fetch job applications for specific job with user details
+            const response = await axios.get(`/api/job-applications?job_posting_id=${jobId}`, {
+                headers: { 'Authorization': userData.token }
+            });
+            
+            if (response.data.data) {
+                // For each application, fetch user details with batches and course
+                const enhancedApplications = await Promise.all(
+                    response.data.data.map(async (application) => {
+                        try {
+                            const userResponse = await axios.get(`/api/students/${application.user_id}`, {
+                                headers: { 'Authorization': userData.token }
+                            });
+                            return {
+                                ...application,
+                                user: userResponse.data.data || application.user
+                            };
+                        } catch (err) {
+                            console.error('Error fetching user details:', err);
+                            return application;
+                        }
+                    })
+                );
+                setEnhancedJobApplications(enhancedApplications);
+            }
+        } catch (err) {
+            console.error('Error fetching enhanced job applications:', err);
+            setEnhancedJobApplications([]);
+        } finally {
+            setLoadingEnhancedApplications(false);
+        }
+    };
+
+    // Helper function to get cookie
+    const getCookie = (name) => {
+        let cookies = document.cookie.split('; ');
+        for (let cookie of cookies) {
+            let [key, value] = cookie.split('=');
+            if (key === name) {
+                return decodeURIComponent(value);
+            }
+        }
+        return null;
+    };
+
     const navigate = useNavigate();
 
     if (loading) {
@@ -491,7 +582,7 @@ const AdminPlacement = () => {
     });
 
     return (
-        <Box sx={{ width: '100%', p: { xs: 2, md: 3 } }}>
+        <Box sx={{ width: '100%', p: { xs: 2, md: 3 }, backgroundColor: '#f8f9fa' }}>
             
 
             {/* Modern Tiles */}
@@ -611,6 +702,8 @@ const AdminPlacement = () => {
                 </Box>
 
                 {/* Tab Panels */}
+
+
                 <TabPanel value={tabValue} index={1}>
                     <Box>
                         <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
@@ -886,12 +979,18 @@ const AdminPlacement = () => {
                                     </Button>
                                 </Paper>
                             ) : (
-                            <TableContainer component={Paper} sx={{ borderRadius: 3, boxShadow: 4, overflow: 'hidden' }}>
-                                <Table stickyHeader size="small" sx={{
+                            <TableContainer component={Paper} sx={{ borderRadius: 3, boxShadow: 4 }}>
+                                <Table size="small" sx={{
                                     '& tbody tr:hover': { backgroundColor: 'action.hover' },
-                                    '& tbody tr:nth-of-type(odd)': { backgroundColor: 'rgba(0,0,0,0.02)' }
+                                    '& tbody tr:nth-of-type(odd)': { backgroundColor: 'rgba(0,0,0,0.02)' },
+                                    '& thead th': { 
+                                        background: 'linear-gradient(270deg, #eb6707 0%, #e42b12 100%)',
+                                        color: '#fff',
+                                        fontWeight: 700,
+                                        fontSize: '0.875rem'
+                                    }
                                 }}>
-                                    <TableHead sx={{ background: 'linear-gradient(270deg, #eb6707 0%, #e42b12 100%)', '& .MuiTableCell-root': { fontWeight: 700, color: '#fff' } }}>
+                                    <TableHead>
                                         <TableRow>
                                             <TableCell>Title</TableCell>
                                             <TableCell>Company</TableCell>
@@ -899,46 +998,99 @@ const AdminPlacement = () => {
                                             <TableCell>Location</TableCell>
                                             <TableCell>Type</TableCell>
                                             <TableCell>Status</TableCell>
+                                            <TableCell align="center">Applications</TableCell>
                                             <TableCell align="right">Actions</TableCell>
                                         </TableRow>
                                     </TableHead>
                                                                         <TableBody>
-                                        {jobPostings?.data?.map((job) => (
-                                            <TableRow key={job.id}>
-                                                <TableCell>{job.title}</TableCell>
-                                                <TableCell>{job.company?.name || 'N/A'}</TableCell>
-                                                <TableCell>{job.course?.name || 'N/A'}</TableCell>
-                                                <TableCell>{job.location}</TableCell>
-                                                <TableCell>
-                                                    <Chip 
-                                                        label={job.job_type} 
-                                                        color={getJobTypeColor(job.job_type)} 
-                                                        size="small" 
-                                                    />
-                                                </TableCell>
-                                                <TableCell>
-                                                    <Chip 
-                                                        label={job.status} 
-                                                        color={getStatusColor(job.status)} 
-                                                        size="small" 
-                                                    />
-                                                </TableCell>
-                                                <TableCell align="right">
-                                                    <Box display="flex" justifyContent="flex-end" gap={0.5}>
-                                                        <Tooltip title="Edit">
-                                                            <IconButton size="small" onClick={() => handleOpenDialog('jobPosting', job)}>
-                                                                <EditIcon fontSize="small" />
-                                                            </IconButton>
+                                        {jobPostings?.data?.map((job) => {
+                                            const applicationsCount = getApplicationsCount(job.id);
+                                            const applicationsByStatus = getApplicationsByStatus(job.id);
+                                            
+                                            return (
+                                                <TableRow 
+                                                    key={job.id}
+                                                    onClick={applicationsCount > 0 ? () => handleApplicationsClick(job.id, job.title) : undefined}
+                                                    sx={{ 
+                                                        cursor: applicationsCount > 0 ? 'pointer' : 'default',
+                                                        '&:hover': applicationsCount > 0 ? {
+                                                            backgroundColor: 'rgba(25, 118, 210, 0.08)',
+                                                        } : {},
+                                                        transition: 'all 0.2s ease',
+                                                        '&:hover .MuiTableCell-root': {
+                                                            backgroundColor: 'transparent'
+                                                        }
+                                                    }}
+                                                >
+                                                    <TableCell>{job.title}</TableCell>
+                                                    <TableCell>{job.company?.name || 'N/A'}</TableCell>
+                                                    <TableCell>{job.course?.name || 'N/A'}</TableCell>
+                                                    <TableCell>{job.location}</TableCell>
+                                                    <TableCell>
+                                                        <Chip 
+                                                            label={job.job_type} 
+                                                            color={getJobTypeColor(job.job_type)} 
+                                                            size="small" 
+                                                        />
+                                                    </TableCell>
+                                                    <TableCell>
+                                                        <Chip 
+                                                            label={job.status} 
+                                                            color={getStatusColor(job.status)} 
+                                                            size="small" 
+                                                        />
+                                                    </TableCell>
+                                                    <TableCell align="center">
+                                                        <Tooltip title={
+                                                            <Box>
+                                                                <Typography variant="body2" fontWeight="bold">Applications by Status:</Typography>
+                                                                {Object.keys(applicationsByStatus).length > 0 ? (
+                                                                    Object.entries(applicationsByStatus).map(([status, count]) => (
+                                                                        <Typography key={status} variant="body2">
+                                                                            {status.charAt(0).toUpperCase() + status.slice(1)}: {count}
+                                                                        </Typography>
+                                                                    ))
+                                                                ) : (
+                                                                    <Typography variant="body2">No applications yet</Typography>
+                                                                )}
+                                                                {applicationsCount > 0 && (
+                                                                    <Typography variant="body2" sx={{ mt: 1, fontStyle: 'italic' }}>
+                                                                        Click anywhere on row to view details
+                                                                    </Typography>
+                                                                )}
+                                                            </Box>
+                                                        }>
+                                                            <Box display="flex" alignItems="center" justifyContent="center">
+                                                                <Chip 
+                                                                    label={applicationsCount}
+                                                                    color={applicationsCount > 0 ? 'primary' : 'default'}
+                                                                    variant={applicationsCount > 0 ? 'filled' : 'outlined'}
+                                                                    size="small"
+                                                                    sx={{ 
+                                                                        fontWeight: 600,
+                                                                        minWidth: 40
+                                                                    }}
+                                                                />
+                                                            </Box>
                                                         </Tooltip>
-                                                        <Tooltip title="Delete">
-                                                            <IconButton size="small" color="error" onClick={() => handleDelete('jobPosting', job.id)}>
-                                                                <DeleteIcon fontSize="small" />
-                                                            </IconButton>
-                                                        </Tooltip>
-                                                    </Box>
-                                                </TableCell>
-                                            </TableRow>
-                                        ))}
+                                                    </TableCell>
+                                                    <TableCell align="right" onClick={(e) => e.stopPropagation()}>
+                                                        <Box display="flex" justifyContent="flex-end" gap={0.5}>
+                                                            <Tooltip title="Edit">
+                                                                <IconButton size="small" onClick={() => handleOpenDialog('jobPosting', job)}>
+                                                                    <EditIcon fontSize="small" />
+                                                                </IconButton>
+                                                            </Tooltip>
+                                                            <Tooltip title="Delete">
+                                                                <IconButton size="small" color="error" onClick={() => handleDelete('jobPosting', job.id)}>
+                                                                    <DeleteIcon fontSize="small" />
+                                                                </IconButton>
+                                                            </Tooltip>
+                                                        </Box>
+                                                    </TableCell>
+                                                </TableRow>
+                                            );
+                                        })}
                                     </TableBody>
                                 </Table>
                             </TableContainer>
@@ -981,8 +1133,7 @@ const AdminPlacement = () => {
                                 <CircularProgress />
                             </Box>
                         ) : (
-                            <>
-                            {(!filteredCompanies || filteredCompanies.length === 0) ? (
+                            (!filteredCompanies || filteredCompanies.length === 0) ? (
                                 <Paper sx={{ p: 4, textAlign: 'center', borderRadius: 3, boxShadow: 3 }}>
                                     <Typography variant="h6" gutterBottom>No companies found</Typography>
                                     <Typography variant="body2" color="text.secondary" gutterBottom>
@@ -998,17 +1149,24 @@ const AdminPlacement = () => {
                                     </Button>
                                 </Paper>
                             ) : (
-                            <TableContainer component={Paper} sx={{ borderRadius: 3, boxShadow: 4, overflow: 'hidden' }}>
-                                <Table stickyHeader size="small" sx={{
+                            <TableContainer component={Paper} sx={{ borderRadius: 3, boxShadow: 4 }}>
+                                <Table size="small" sx={{
                                     '& tbody tr:hover': { backgroundColor: 'action.hover' },
-                                    '& tbody tr:nth-of-type(odd)': { backgroundColor: 'rgba(0,0,0,0.02)' }
+                                    '& tbody tr:nth-of-type(odd)': { backgroundColor: 'rgba(0,0,0,0.02)' },
+                                    '& thead th': { 
+                                        background: 'linear-gradient(270deg, #eb6707 0%, #e42b12 100%)',
+                                        color: '#fff',
+                                        fontWeight: 700,
+                                        fontSize: '0.875rem'
+                                    }
                                 }}>
-                                    <TableHead sx={{ background: 'linear-gradient(270deg, #eb6707 0%, #e42b12 100%)', '& .MuiTableCell-root': { fontWeight: 700, color: '#fff' } }}>
+                                    <TableHead>
                                         <TableRow>
                                             <TableCell>Name</TableCell>
                                             <TableCell>Industry</TableCell>
                                             <TableCell>Contact Person</TableCell>
                                             <TableCell>Email</TableCell>
+                                            <TableCell>Phone</TableCell>
                                             <TableCell>Status</TableCell>
                                             <TableCell align="right">Actions</TableCell>
                                         </TableRow>
@@ -1017,9 +1175,10 @@ const AdminPlacement = () => {
                                         {filteredCompanies.map((company) => (
                                             <TableRow key={company.id}>
                                                 <TableCell>{company.name}</TableCell>
-                                                <TableCell>{company.industry}</TableCell>
-                                                <TableCell>{company.contact_person}</TableCell>
-                                                <TableCell>{company.contact_email}</TableCell>
+                                                <TableCell>{company.industry || 'N/A'}</TableCell>
+                                                <TableCell>{company.contact_person || 'N/A'}</TableCell>
+                                                <TableCell>{company.contact_email || 'N/A'}</TableCell>
+                                                <TableCell>{company.contact_phone || 'N/A'}</TableCell>
                                                 <TableCell>
                                                     <Chip 
                                                         label={company.is_active ? 'Active' : 'Inactive'} 
@@ -1046,8 +1205,7 @@ const AdminPlacement = () => {
                                     </TableBody>
                                 </Table>
                             </TableContainer>
-                            )}
-                            </>
+                            )
                         )}
                     </Box>
                 </TabPanel>
@@ -1092,6 +1250,141 @@ const AdminPlacement = () => {
                     <PlacementStudents eligibleOnlyMode={true} />
                 </TabPanel>
             </Paper>
+
+            {/* Applications Dialog */}
+            <Dialog 
+                open={applicationsDialog.open} 
+                onClose={handleCloseApplicationsDialog} 
+                maxWidth="md" 
+                fullWidth
+                PaperProps={{
+                    sx: {
+                        borderRadius: 3,
+                        boxShadow: '0 24px 38px 3px rgba(0,0,0,0.14), 0 9px 46px 8px rgba(0,0,0,0.12), 0 11px 15px -7px rgba(0,0,0,0.2)',
+                    }
+                }}
+            >
+                <DialogTitle 
+                    sx={{ 
+                        background: 'linear-gradient(135deg, #0f1f3d 0%, #1e3c72 100%)',
+                        color: 'white',
+                        py: 3,
+                        position: 'relative',
+                        '&::after': {
+                            content: '""',
+                            position: 'absolute',
+                            bottom: 0,
+                            left: 0,
+                            right: 0,
+                            height: '4px',
+                            background: 'linear-gradient(270deg, #eb6707 0%, #e42b12 100%)',
+                        }
+                    }}
+                >
+                    <Box display="flex" alignItems="center" gap={2}>
+                        <Avatar sx={{ bgcolor: 'rgba(255,255,255,0.2)', width: 40, height: 40 }}>
+                            <GroupIcon />
+                        </Avatar>
+                        <Box>
+                            <Typography variant="h5" fontWeight="600">
+                                Job Applications
+                            </Typography>
+                            <Typography variant="body2" sx={{ opacity: 0.9, mt: 0.5 }}>
+                                {applicationsDialog.jobTitle}
+                            </Typography>
+                        </Box>
+                    </Box>
+                </DialogTitle>
+                
+                <DialogContent sx={{ p: 0 }}>
+                    <Box sx={{ p: 3 }}>
+                        {loadingEnhancedApplications ? (
+                            <Box display="flex" justifyContent="center" alignItems="center" py={4}>
+                                <CircularProgress />
+                                <Typography variant="body2" sx={{ ml: 2 }}>
+                                    Loading student details...
+                                </Typography>
+                            </Box>
+                        ) : applicationsDialog.jobId && (
+                            <TableContainer component={Paper} sx={{ borderRadius: 2, boxShadow: 2 }}>
+                                <Table size="small">
+                                    <TableHead>
+                                        <TableRow sx={{ 
+                                            background: 'linear-gradient(270deg, #eb6707 0%, #e42b12 100%)',
+                                            '& th': { color: '#fff', fontWeight: 700 }
+                                        }}>
+                                            <TableCell>Student Name</TableCell>
+                                            <TableCell>Batch</TableCell>
+                                            <TableCell>Course</TableCell>
+                                            <TableCell>Application Date</TableCell>
+                                            <TableCell>Status</TableCell>
+                                        </TableRow>
+                                    </TableHead>
+                                    <TableBody>
+                                        {enhancedJobApplications.map((application) => (
+                                            <TableRow key={application.id} sx={{ '&:hover': { backgroundColor: 'action.hover' } }}>
+                                                <TableCell>
+                                                    <Box display="flex" alignItems="center" gap={1}>
+                                                        <Avatar sx={{ width: 32, height: 32, fontSize: '0.875rem' }}>
+                                                            {application.user?.name?.charAt(0)?.toUpperCase() || 'S'}
+                                                        </Avatar>
+                                                        <Typography variant="body2" fontWeight={500}>
+                                                            {application.user?.name || 'N/A'}
+                                                        </Typography>
+                                                    </Box>
+                                                </TableCell>
+                                                <TableCell>
+                                                    {application.user?.batches?.[0]?.batch_name || 'N/A'}
+                                                </TableCell>
+                                                <TableCell>
+                                                    {application.user?.course?.name || 'N/A'}
+                                                </TableCell>
+                                                <TableCell>
+                                                    {application.application_date ? 
+                                                        new Date(application.application_date).toLocaleDateString() : 
+                                                        'N/A'
+                                                    }
+                                                </TableCell>
+                                                <TableCell>
+                                                    <Chip 
+                                                        label={application.status} 
+                                                        color={getStatusColor(application.status)} 
+                                                        size="small" 
+                                                    />
+                                                </TableCell>
+                                            </TableRow>
+                                        ))}
+                                    </TableBody>
+                                </Table>
+                            </TableContainer>
+                        )}
+                        
+                        {enhancedJobApplications.length === 0 && !loadingEnhancedApplications && (
+                            <Box textAlign="center" py={4}>
+                                <Typography variant="h6" color="text.secondary" gutterBottom>
+                                    No applications found
+                                </Typography>
+                                <Typography variant="body2" color="text.secondary">
+                                    No students have applied for this job yet.
+                                </Typography>
+                            </Box>
+                        )}
+                    </Box>
+                </DialogContent>
+                
+                <DialogActions sx={{ p: 3, pt: 1 }}>
+                    <Button 
+                        onClick={handleCloseApplicationsDialog}
+                        sx={{ 
+                            textTransform: 'none',
+                            borderRadius: 2,
+                            px: 3
+                        }}
+                    >
+                        Close
+                    </Button>
+                </DialogActions>
+            </Dialog>
 
             {/* Company Dialog */}
             <Dialog 
@@ -1528,244 +1821,901 @@ const AdminPlacement = () => {
             </Dialog>
 
             {/* Job Posting Dialog */}
-            <Dialog open={openDialog && dialogType === 'jobPosting'} onClose={handleCloseDialog} maxWidth="md" fullWidth>
-                <DialogTitle>{selectedItem ? 'Edit Job Posting' : 'Add New Job Posting'}</DialogTitle>
-                <DialogContent>
-                    <Grid container spacing={2} sx={{ mt: 1 }}>
-                        <Grid item xs={12} md={6}>
-                            <TextField
-                                fullWidth
-                                label="Job Title"
-                                value={jobPostingForm.title}
-                                onChange={(e) => setJobPostingForm({...jobPostingForm, title: e.target.value})}
-                            />
-                        </Grid>
-                        <Grid item xs={12} md={6}>
-                            <FormControl fullWidth>
-                                <InputLabel>Company</InputLabel>
-                                <Select
-                                    value={jobPostingForm.company_id}
-                                    onChange={(e) => setJobPostingForm({...jobPostingForm, company_id: e.target.value})}
-                                >
-                                    {companies?.map((company) => (
-                                        <MenuItem key={company.id} value={company.id}>
-                                            {company.name}
-                                        </MenuItem>
-                                    ))}
-                                </Select>
-                            </FormControl>
-                        </Grid>
-                        <Grid item xs={12} md={6}>
-                            <FormControl fullWidth>
-                                <InputLabel>Course</InputLabel>
-                                <Select
-                                    value={jobPostingForm.course_id}
-                                    onChange={(e) => setJobPostingForm({...jobPostingForm, course_id: e.target.value})}
-                                    disabled={coursesLoading}
-                                >
-                                    {coursesLoading ? (
-                                        <MenuItem disabled>Loading courses...</MenuItem>
-                                    ) : (
-                                        courses?.courses?.map((course) => (
-                                            <MenuItem key={course.id} value={course.id}>
-                                                {course.name}
-                                            </MenuItem>
-                                        ))
-                                    )}
-                                </Select>
-                            </FormControl>
-                        </Grid>
-                        <Grid item xs={12} md={6}>
-                            <TextField
-                                fullWidth
-                                label="Location"
-                                value={jobPostingForm.location}
-                                onChange={(e) => setJobPostingForm({...jobPostingForm, location: e.target.value})}
-                            />
-                        </Grid>
-                        <Grid item xs={12} md={6}>
-                            <FormControl fullWidth>
-                                <InputLabel>Job Type</InputLabel>
-                                <Select
-                                    value={jobPostingForm.job_type}
-                                    onChange={(e) => setJobPostingForm({...jobPostingForm, job_type: e.target.value})}
-                                >
-                                    <MenuItem value="full_time">Full Time</MenuItem>
-                                    <MenuItem value="part_time">Part Time</MenuItem>
-                                    <MenuItem value="contract">Contract</MenuItem>
-                                    <MenuItem value="internship">Internship</MenuItem>
-                                </Select>
-                            </FormControl>
-                        </Grid>
-                        <Grid item xs={12}>
-                            <TextField
-                                fullWidth
-                                multiline
-                                rows={3}
-                                label="Description"
-                                value={jobPostingForm.description}
-                                onChange={(e) => setJobPostingForm({...jobPostingForm, description: e.target.value})}
-                            />
-                        </Grid>
-                        <Grid item xs={12}>
-                            <TextField
-                                fullWidth
-                                multiline
-                                rows={3}
-                                label="Requirements"
-                                value={jobPostingForm.requirements}
-                                onChange={(e) => setJobPostingForm({...jobPostingForm, requirements: e.target.value})}
-                            />
-                        </Grid>
-                        <Grid item xs={12} md={6}>
-                            <TextField
-                                fullWidth
-                                label="Minimum Salary"
-                                type="number"
-                                value={jobPostingForm.salary_min}
-                                onChange={(e) => setJobPostingForm({...jobPostingForm, salary_min: e.target.value})}
-                            />
-                        </Grid>
-                        <Grid item xs={12} md={6}>
-                            <TextField
-                                fullWidth
-                                label="Maximum Salary"
-                                type="number"
-                                value={jobPostingForm.salary_max}
-                                onChange={(e) => setJobPostingForm({...jobPostingForm, salary_max: e.target.value})}
-                            />
-                        </Grid>
-                        <Grid item xs={12} md={6}>
-                            <TextField
-                                fullWidth
-                                label="Experience Required"
-                                value={jobPostingForm.experience_required}
-                                onChange={(e) => setJobPostingForm({...jobPostingForm, experience_required: e.target.value})}
-                            />
-                        </Grid>
-                        <Grid item xs={12} md={6}>
-                            <TextField
-                                fullWidth
-                                label="Vacancies"
-                                type="number"
-                                value={jobPostingForm.vacancies}
-                                onChange={(e) => setJobPostingForm({...jobPostingForm, vacancies: e.target.value})}
-                            />
-                        </Grid>
-                        <Grid item xs={12} md={6}>
-                            <FormControl fullWidth>
-                                <InputLabel>Status</InputLabel>
-                                <Select
-                                    value={jobPostingForm.status}
-                                    onChange={(e) => setJobPostingForm({...jobPostingForm, status: e.target.value})}
-                                >
-                                    <MenuItem value="draft">Draft</MenuItem>
-                                    <MenuItem value="open">Open</MenuItem>
-                                    <MenuItem value="closed">Closed</MenuItem>
-                                    <MenuItem value="expired">Expired</MenuItem>
-                                </Select>
-                            </FormControl>
-                        </Grid>
-                        <Grid item xs={12} md={6}>
-                            <TextField
-                                fullWidth
-                                label="Application Deadline"
-                                type="datetime-local"
-                                value={jobPostingForm.application_deadline}
-                                onChange={(e) => setJobPostingForm({...jobPostingForm, application_deadline: e.target.value})}
-                                InputLabelProps={{ shrink: true }}
-                            />
-                        </Grid>
-                        {/* Job Eligibility Criteria Section */}
-                        <Grid item xs={12}>
-                            <Typography variant="h6" sx={{ mt: 2 }}>Job Eligibility Criteria</Typography>
-                        </Grid>
-                        <Grid item xs={12} md={6}>
-                            <TextField
-                                fullWidth
-                                label="BTech Year of Passout (Min)"
-                                type="number"
-                                value={jobPostingForm.btech_year_of_passout_min}
-                                onChange={e => setJobPostingForm({ ...jobPostingForm, btech_year_of_passout_min: e.target.value })}
-                            />
-                        </Grid>
-                        <Grid item xs={12} md={6}>
-                            <TextField
-                                fullWidth
-                                label="BTech Year of Passout (Max)"
-                                type="number"
-                                value={jobPostingForm.btech_year_of_passout_max}
-                                onChange={e => setJobPostingForm({ ...jobPostingForm, btech_year_of_passout_max: e.target.value })}
-                            />
-                        </Grid>
-                        <Grid item xs={12} md={6}>
-                            <TextField
-                                fullWidth
-                                label="MTech Year of Passout (Min)"
-                                type="number"
-                                value={jobPostingForm.mtech_year_of_passout_min}
-                                onChange={e => setJobPostingForm({ ...jobPostingForm, mtech_year_of_passout_min: e.target.value })}
-                            />
-                        </Grid>
-                        <Grid item xs={12} md={6}>
-                            <TextField
-                                fullWidth
-                                label="MTech Year of Passout (Max)"
-                                type="number"
-                                value={jobPostingForm.mtech_year_of_passout_max}
-                                onChange={e => setJobPostingForm({ ...jobPostingForm, mtech_year_of_passout_max: e.target.value })}
-                            />
-                        </Grid>
-                        <Grid item xs={12} md={6}>
-                            <TextField
-                                fullWidth
-                                label="BTech Percentage (Min)"
-                                type="number"
-                                value={jobPostingForm.btech_percentage_min}
-                                onChange={e => setJobPostingForm({ ...jobPostingForm, btech_percentage_min: e.target.value })}
-                            />
-                        </Grid>
-                        <Grid item xs={12} md={6}>
-                            <TextField
-                                fullWidth
-                                label="MTech Percentage (Min)"
-                                type="number"
-                                value={jobPostingForm.mtech_percentage_min}
-                                onChange={e => setJobPostingForm({ ...jobPostingForm, mtech_percentage_min: e.target.value })}
-                            />
-                        </Grid>
-                        <Grid item xs={12} md={6}>
-                            <TextField
-                                fullWidth
-                                label="Skills Required"
-                                placeholder="Enter skills separated by commas (e.g., Java, Python, React)"
-                                value={jobPostingForm.skills_required.join(', ')}
-                                onChange={e => setJobPostingForm({ 
-                                    ...jobPostingForm, 
-                                    skills_required: e.target.value.split(',').map(skill => skill.trim()).filter(skill => skill)
-                                })}
-                            />
-                        </Grid>
-                        <Grid item xs={12}>
-                            <TextField
-                                fullWidth
-                                multiline
-                                rows={2}
-                                label="Additional Criteria"
-                                value={jobPostingForm.additional_criteria}
-                                onChange={e => setJobPostingForm({ ...jobPostingForm, additional_criteria: e.target.value })}
-                            />
-                        </Grid>
-                    </Grid>
+            <Dialog 
+                open={openDialog && dialogType === 'jobPosting'} 
+                onClose={handleCloseDialog} 
+                maxWidth="lg" 
+                fullWidth
+                PaperProps={{
+                    sx: {
+                        borderRadius: 3,
+                        boxShadow: '0 24px 38px 3px rgba(0,0,0,0.14), 0 9px 46px 8px rgba(0,0,0,0.12), 0 11px 15px -7px rgba(0,0,0,0.2)',
+                    }
+                }}
+            >
+                <DialogTitle 
+                    sx={{ 
+                        background: 'linear-gradient(135deg, #0f1f3d 0%, #1e3c72 100%)',
+                        color: 'white',
+                        py: 3,
+                        position: 'relative',
+                        '&::after': {
+                            content: '""',
+                            position: 'absolute',
+                            bottom: 0,
+                            left: 0,
+                            right: 0,
+                            height: '4px',
+                            background: 'linear-gradient(270deg, #eb6707 0%, #e42b12 100%)',
+                        }
+                    }}
+                >
+                    <Box display="flex" alignItems="center" gap={2}>
+                        <Avatar sx={{ bgcolor: 'rgba(255,255,255,0.2)', width: 40, height: 40 }}>
+                            <WorkIcon />
+                        </Avatar>
+                        <Box>
+                            <Typography variant="h5" fontWeight="600">
+                                {selectedItem ? 'Edit Job Posting' : 'Add New Job Posting'}
+                            </Typography>
+                            <Typography variant="body2" sx={{ opacity: 0.9, mt: 0.5 }}>
+                                {selectedItem ? 'Update job posting details' : 'Create a new job posting'}
+                            </Typography>
+                        </Box>
+                    </Box>
+                </DialogTitle>
+                
+                <DialogContent sx={{ p: 0 }}>
+                    <Box sx={{ p: 4, maxHeight: '70vh', overflowY: 'auto' }}>
+                        {/* Job Basic Information Section */}
+                        <Paper 
+                            elevation={0} 
+                            sx={{ 
+                                p: 4, 
+                                mb: 4, 
+                                border: '1px solid #e2e8f0',
+                                borderRadius: 3,
+                                background: '#ffffff',
+                                boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
+                            }}
+                        >
+                            <Box display="flex" alignItems="center" gap={2} mb={4}>
+                                <Avatar sx={{ background: 'linear-gradient(135deg, #0f1f3d 0%, #1e3c72 100%)', width: 36, height: 36 }}>
+                                    <WorkIcon fontSize="small" />
+                                </Avatar>
+                                <Typography variant="h6" fontWeight="600" color="#0f1f3d">
+                                    Job Information
+                                </Typography>
+                            </Box>
+                            
+                            <Grid container spacing={4}>
+                                <Grid item xs={12} md={6}>
+                                    <TextField
+                                        fullWidth
+                                        required
+                                        label="Job Title"
+                                        value={jobPostingForm.title}
+                                        onChange={(e) => setJobPostingForm({...jobPostingForm, title: e.target.value})}
+                                        variant="outlined"
+                                        placeholder="e.g., Senior Software Engineer"
+                                        sx={{
+                                            '& .MuiOutlinedInput-root': {
+                                                borderRadius: 2,
+                                                transition: 'all 0.3s ease',
+                                                '&:hover': {
+                                                    boxShadow: '0 4px 12px rgba(15, 31, 61, 0.15)',
+                                                },
+                                                '&.Mui-focused': {
+                                                    boxShadow: '0 4px 20px rgba(30, 60, 114, 0.25)',
+                                                }
+                                            },
+                                            '& .MuiInputLabel-root': {
+                                                fontSize: '0.9rem',
+                                                fontWeight: 500
+                                            }
+                                        }}
+                                        InputProps={{
+                                            startAdornment: (
+                                                <InputAdornment position="start">
+                                                    💼
+                                                </InputAdornment>
+                                            ),
+                                        }}
+                                    />
+                                </Grid>
+                                <Grid item xs={12} md={6}>
+                                    <FormControl fullWidth>
+                                        <InputLabel sx={{ fontSize: '0.9rem', fontWeight: 500 }}>Company</InputLabel>
+                                        <Select
+                                            value={jobPostingForm.company_id}
+                                            onChange={(e) => setJobPostingForm({...jobPostingForm, company_id: e.target.value})}
+                                            sx={{
+                                                borderRadius: 2,
+                                                '&:hover': {
+                                                    boxShadow: '0 4px 12px rgba(15, 31, 61, 0.15)',
+                                                },
+                                                '&.Mui-focused': {
+                                                    boxShadow: '0 4px 20px rgba(30, 60, 114, 0.25)',
+                                                }
+                                            }}
+                                        >
+                                            {companies?.map((company) => (
+                                                <MenuItem key={company.id} value={company.id}>
+                                                    {company.name}
+                                                </MenuItem>
+                                            ))}
+                                        </Select>
+                                    </FormControl>
+                                </Grid>
+                                <Grid item xs={12} md={6}>
+                                    <FormControl fullWidth>
+                                        <InputLabel sx={{ fontSize: '0.9rem', fontWeight: 500 }}>Course</InputLabel>
+                                        <Select
+                                            value={jobPostingForm.course_id}
+                                            onChange={(e) => setJobPostingForm({...jobPostingForm, course_id: e.target.value})}
+                                            disabled={coursesLoading}
+                                            sx={{
+                                                borderRadius: 2,
+                                                '&:hover': {
+                                                    boxShadow: '0 4px 12px rgba(15, 31, 61, 0.15)',
+                                                },
+                                                '&.Mui-focused': {
+                                                    boxShadow: '0 4px 20px rgba(30, 60, 114, 0.25)',
+                                                }
+                                            }}
+                                        >
+                                            {coursesLoading ? (
+                                                <MenuItem disabled>Loading courses...</MenuItem>
+                                            ) : (
+                                                courses?.courses?.map((course) => (
+                                                    <MenuItem key={course.id} value={course.id}>
+                                                        {course.name}
+                                                    </MenuItem>
+                                                ))
+                                            )}
+                                        </Select>
+                                    </FormControl>
+                                </Grid>
+                                <Grid item xs={12} md={6}>
+                                    <TextField
+                                        fullWidth
+                                        label="Location"
+                                        value={jobPostingForm.location}
+                                        onChange={(e) => setJobPostingForm({...jobPostingForm, location: e.target.value})}
+                                        variant="outlined"
+                                        placeholder="e.g., New York, NY"
+                                        sx={{
+                                            '& .MuiOutlinedInput-root': {
+                                                borderRadius: 2,
+                                                transition: 'all 0.3s ease',
+                                                '&:hover': {
+                                                    boxShadow: '0 4px 12px rgba(15, 31, 61, 0.15)',
+                                                },
+                                                '&.Mui-focused': {
+                                                    boxShadow: '0 4px 20px rgba(30, 60, 114, 0.25)',
+                                                }
+                                            },
+                                            '& .MuiInputLabel-root': {
+                                                fontSize: '0.9rem',
+                                                fontWeight: 500
+                                            }
+                                        }}
+                                        InputProps={{
+                                            startAdornment: (
+                                                <InputAdornment position="start">
+                                                    📍
+                                                </InputAdornment>
+                                            ),
+                                        }}
+                                    />
+                                </Grid>
+                                <Grid item xs={12} md={6}>
+                                    <FormControl fullWidth>
+                                        <InputLabel sx={{ fontSize: '0.9rem', fontWeight: 500 }}>Job Type</InputLabel>
+                                        <Select
+                                            value={jobPostingForm.job_type}
+                                            onChange={(e) => setJobPostingForm({...jobPostingForm, job_type: e.target.value})}
+                                            sx={{
+                                                borderRadius: 2,
+                                                '&:hover': {
+                                                    boxShadow: '0 4px 12px rgba(15, 31, 61, 0.15)',
+                                                },
+                                                '&.Mui-focused': {
+                                                    boxShadow: '0 4px 20px rgba(30, 60, 114, 0.25)',
+                                                }
+                                            }}
+                                        >
+                                            <MenuItem value="full_time">🕐 Full Time</MenuItem>
+                                            <MenuItem value="part_time">⏰ Part Time</MenuItem>
+                                            <MenuItem value="contract">📋 Contract</MenuItem>
+                                            <MenuItem value="internship">🎓 Internship</MenuItem>
+                                        </Select>
+                                    </FormControl>
+                                </Grid>
+                                <Grid item xs={12} md={6}>
+                                    <FormControl fullWidth>
+                                        <InputLabel sx={{ fontSize: '0.9rem', fontWeight: 500 }}>Status</InputLabel>
+                                        <Select
+                                            value={jobPostingForm.status}
+                                            onChange={(e) => setJobPostingForm({...jobPostingForm, status: e.target.value})}
+                                            sx={{
+                                                borderRadius: 2,
+                                                '&:hover': {
+                                                    boxShadow: '0 4px 12px rgba(15, 31, 61, 0.15)',
+                                                },
+                                                '&.Mui-focused': {
+                                                    boxShadow: '0 4px 20px rgba(30, 60, 114, 0.25)',
+                                                }
+                                            }}
+                                        >
+                                            <MenuItem value="draft">📝 Draft</MenuItem>
+                                            <MenuItem value="open">✅ Open</MenuItem>
+                                            <MenuItem value="closed">❌ Closed</MenuItem>
+                                            <MenuItem value="expired">⏰ Expired</MenuItem>
+                                        </Select>
+                                    </FormControl>
+                                </Grid>
+                                <Grid item xs={12}>
+                                    <TextField
+                                        fullWidth
+                                        multiline
+                                        rows={4}
+                                        label="Job Description"
+                                        value={jobPostingForm.description}
+                                        onChange={(e) => setJobPostingForm({...jobPostingForm, description: e.target.value})}
+                                        variant="outlined"
+                                        placeholder="Provide a detailed description of the role, responsibilities, and what makes this position exciting..."
+                                        sx={{
+                                            '& .MuiOutlinedInput-root': {
+                                                borderRadius: 2,
+                                                transition: 'all 0.3s ease',
+                                                '&:hover': {
+                                                    boxShadow: '0 4px 12px rgba(15, 31, 61, 0.15)',
+                                                },
+                                                '&.Mui-focused': {
+                                                    boxShadow: '0 4px 20px rgba(30, 60, 114, 0.25)',
+                                                }
+                                            },
+                                            '& .MuiInputLabel-root': {
+                                                fontSize: '0.9rem',
+                                                fontWeight: 500
+                                            }
+                                        }}
+                                        InputProps={{
+                                            startAdornment: (
+                                                <InputAdornment position="start" sx={{ alignSelf: 'flex-start', mt: 1 }}>
+                                                    📝
+                                                </InputAdornment>
+                                            ),
+                                        }}
+                                    />
+                                </Grid>
+                            </Grid>
+                        </Paper>
+
+                        {/* Job Requirements Section */}
+                        <Paper 
+                            elevation={0} 
+                            sx={{ 
+                                p: 4, 
+                                mb: 4,
+                                border: '1px solid #e2e8f0',
+                                borderRadius: 3,
+                                background: '#ffffff',
+                                boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
+                            }}
+                        >
+                            <Box display="flex" alignItems="center" gap={2} mb={4}>
+                                <Avatar sx={{ background: 'linear-gradient(270deg, #eb6707 0%, #e42b12 100%)', width: 36, height: 36 }}>
+                                    📋
+                                </Avatar>
+                                <Typography variant="h6" fontWeight="600" color="#eb6707">
+                                    Job Requirements & Responsibilities
+                                </Typography>
+                            </Box>
+                            
+                            <Grid container spacing={4}>
+                                <Grid item xs={12}>
+                                    <TextField
+                                        fullWidth
+                                        multiline
+                                        rows={4}
+                                        label="Requirements"
+                                        value={jobPostingForm.requirements}
+                                        onChange={(e) => setJobPostingForm({...jobPostingForm, requirements: e.target.value})}
+                                        variant="outlined"
+                                        placeholder="List the key requirements, qualifications, and skills needed for this position..."
+                                        sx={{
+                                            '& .MuiOutlinedInput-root': {
+                                                borderRadius: 2,
+                                                transition: 'all 0.3s ease',
+                                                '&:hover': {
+                                                    boxShadow: '0 4px 12px rgba(235, 103, 7, 0.15)',
+                                                },
+                                                '&.Mui-focused': {
+                                                    boxShadow: '0 4px 20px rgba(228, 43, 18, 0.25)',
+                                                }
+                                            },
+                                            '& .MuiInputLabel-root': {
+                                                fontSize: '0.9rem',
+                                                fontWeight: 500
+                                            }
+                                        }}
+                                        InputProps={{
+                                            startAdornment: (
+                                                <InputAdornment position="start" sx={{ alignSelf: 'flex-start', mt: 1 }}>
+                                                    ✅
+                                                </InputAdornment>
+                                            ),
+                                        }}
+                                    />
+                                </Grid>
+                                <Grid item xs={12}>
+                                    <TextField
+                                        fullWidth
+                                        multiline
+                                        rows={4}
+                                        label="Responsibilities"
+                                        value={jobPostingForm.responsibilities}
+                                        onChange={(e) => setJobPostingForm({...jobPostingForm, responsibilities: e.target.value})}
+                                        variant="outlined"
+                                        placeholder="Describe the key responsibilities and duties for this role..."
+                                        sx={{
+                                            '& .MuiOutlinedInput-root': {
+                                                borderRadius: 2,
+                                                transition: 'all 0.3s ease',
+                                                '&:hover': {
+                                                    boxShadow: '0 4px 12px rgba(235, 103, 7, 0.15)',
+                                                },
+                                                '&.Mui-focused': {
+                                                    boxShadow: '0 4px 20px rgba(228, 43, 18, 0.25)',
+                                                }
+                                            },
+                                            '& .MuiInputLabel-root': {
+                                                fontSize: '0.9rem',
+                                                fontWeight: 500
+                                            }
+                                        }}
+                                        InputProps={{
+                                            startAdornment: (
+                                                <InputAdornment position="start" sx={{ alignSelf: 'flex-start', mt: 1 }}>
+                                                    🎯
+                                                </InputAdornment>
+                                            ),
+                                        }}
+                                    />
+                                </Grid>
+                            </Grid>
+                        </Paper>
+
+                        {/* Compensation & Details Section */}
+                        <Paper 
+                            elevation={0} 
+                            sx={{ 
+                                p: 4, 
+                                mb: 4,
+                                border: '1px solid #e2e8f0',
+                                borderRadius: 3,
+                                background: '#ffffff',
+                                boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
+                            }}
+                        >
+                            <Box display="flex" alignItems="center" gap={2} mb={4}>
+                                <Avatar sx={{ background: 'linear-gradient(135deg, #059669 0%, #10b981 100%)', width: 36, height: 36 }}>
+                                    💰
+                                </Avatar>
+                                <Typography variant="h6" fontWeight="600" color="#059669">
+                                    Compensation & Details
+                                </Typography>
+                            </Box>
+                            
+                            <Grid container spacing={4}>
+                                <Grid item xs={12} md={6}>
+                                    <TextField
+                                        fullWidth
+                                        label="Minimum Salary"
+                                        type="number"
+                                        value={jobPostingForm.salary_min}
+                                        onChange={(e) => setJobPostingForm({...jobPostingForm, salary_min: e.target.value})}
+                                        variant="outlined"
+                                        placeholder="e.g., 50000"
+                                        sx={{
+                                            '& .MuiOutlinedInput-root': {
+                                                borderRadius: 2,
+                                                transition: 'all 0.3s ease',
+                                                '&:hover': {
+                                                    boxShadow: '0 4px 12px rgba(5, 150, 105, 0.15)',
+                                                },
+                                                '&.Mui-focused': {
+                                                    boxShadow: '0 4px 20px rgba(16, 185, 129, 0.25)',
+                                                }
+                                            },
+                                            '& .MuiInputLabel-root': {
+                                                fontSize: '0.9rem',
+                                                fontWeight: 500
+                                            }
+                                        }}
+                                        InputProps={{
+                                            startAdornment: (
+                                                <InputAdornment position="start">
+                                                    💵
+                                                </InputAdornment>
+                                            ),
+                                        }}
+                                    />
+                                </Grid>
+                                <Grid item xs={12} md={6}>
+                                    <TextField
+                                        fullWidth
+                                        label="Maximum Salary"
+                                        type="number"
+                                        value={jobPostingForm.salary_max}
+                                        onChange={(e) => setJobPostingForm({...jobPostingForm, salary_max: e.target.value})}
+                                        variant="outlined"
+                                        placeholder="e.g., 80000"
+                                        sx={{
+                                            '& .MuiOutlinedInput-root': {
+                                                borderRadius: 2,
+                                                transition: 'all 0.3s ease',
+                                                '&:hover': {
+                                                    boxShadow: '0 4px 12px rgba(5, 150, 105, 0.15)',
+                                                },
+                                                '&.Mui-focused': {
+                                                    boxShadow: '0 4px 20px rgba(16, 185, 129, 0.25)',
+                                                }
+                                            },
+                                            '& .MuiInputLabel-root': {
+                                                fontSize: '0.9rem',
+                                                fontWeight: 500
+                                            }
+                                        }}
+                                        InputProps={{
+                                            startAdornment: (
+                                                <InputAdornment position="start">
+                                                    💵
+                                                </InputAdornment>
+                                            ),
+                                        }}
+                                    />
+                                </Grid>
+                                <Grid item xs={12} md={6}>
+                                    <TextField
+                                        fullWidth
+                                        label="Experience Required"
+                                        value={jobPostingForm.experience_required}
+                                        onChange={(e) => setJobPostingForm({...jobPostingForm, experience_required: e.target.value})}
+                                        variant="outlined"
+                                        placeholder="e.g., 2-5 years"
+                                        sx={{
+                                            '& .MuiOutlinedInput-root': {
+                                                borderRadius: 2,
+                                                transition: 'all 0.3s ease',
+                                                '&:hover': {
+                                                    boxShadow: '0 4px 12px rgba(5, 150, 105, 0.15)',
+                                                },
+                                                '&.Mui-focused': {
+                                                    boxShadow: '0 4px 20px rgba(16, 185, 129, 0.25)',
+                                                }
+                                            },
+                                            '& .MuiInputLabel-root': {
+                                                fontSize: '0.9rem',
+                                                fontWeight: 500
+                                            }
+                                        }}
+                                        InputProps={{
+                                            startAdornment: (
+                                                <InputAdornment position="start">
+                                                    ⏳
+                                                </InputAdornment>
+                                            ),
+                                        }}
+                                    />
+                                </Grid>
+                                <Grid item xs={12} md={6}>
+                                    <TextField
+                                        fullWidth
+                                        label="Number of Vacancies"
+                                        type="number"
+                                        value={jobPostingForm.vacancies}
+                                        onChange={(e) => setJobPostingForm({...jobPostingForm, vacancies: e.target.value})}
+                                        variant="outlined"
+                                        placeholder="e.g., 3"
+                                        sx={{
+                                            '& .MuiOutlinedInput-root': {
+                                                borderRadius: 2,
+                                                transition: 'all 0.3s ease',
+                                                '&:hover': {
+                                                    boxShadow: '0 4px 12px rgba(5, 150, 105, 0.15)',
+                                                },
+                                                '&.Mui-focused': {
+                                                    boxShadow: '0 4px 20px rgba(16, 185, 129, 0.25)',
+                                                }
+                                            },
+                                            '& .MuiInputLabel-root': {
+                                                fontSize: '0.9rem',
+                                                fontWeight: 500
+                                            }
+                                        }}
+                                        InputProps={{
+                                            startAdornment: (
+                                                <InputAdornment position="start">
+                                                    👥
+                                                </InputAdornment>
+                                            ),
+                                        }}
+                                    />
+                                </Grid>
+                                <Grid item xs={12} md={6}>
+                                    <TextField
+                                        fullWidth
+                                        label="Application Deadline"
+                                        type="datetime-local"
+                                        value={jobPostingForm.application_deadline}
+                                        onChange={(e) => setJobPostingForm({...jobPostingForm, application_deadline: e.target.value})}
+                                        InputLabelProps={{ shrink: true }}
+                                        sx={{
+                                            '& .MuiOutlinedInput-root': {
+                                                borderRadius: 2,
+                                                transition: 'all 0.3s ease',
+                                                '&:hover': {
+                                                    boxShadow: '0 4px 12px rgba(5, 150, 105, 0.15)',
+                                                },
+                                                '&.Mui-focused': {
+                                                    boxShadow: '0 4px 20px rgba(16, 185, 129, 0.25)',
+                                                }
+                                            },
+                                            '& .MuiInputLabel-root': {
+                                                fontSize: '0.9rem',
+                                                fontWeight: 500
+                                            }
+                                        }}
+                                        InputProps={{
+                                            startAdornment: (
+                                                <InputAdornment position="start">
+                                                    ⏰
+                                                </InputAdornment>
+                                            ),
+                                        }}
+                                    />
+                                </Grid>
+                                <Grid item xs={12} md={6}>
+                                    <TextField
+                                        fullWidth
+                                        label="Skills Required"
+                                        placeholder="Enter skills separated by commas (e.g., Java, Python, React)"
+                                        value={jobPostingForm.skills_required.join(', ')}
+                                        onChange={e => setJobPostingForm({ 
+                                            ...jobPostingForm, 
+                                            skills_required: e.target.value.split(',').map(skill => skill.trim()).filter(skill => skill)
+                                        })}
+                                        variant="outlined"
+                                        sx={{
+                                            '& .MuiOutlinedInput-root': {
+                                                borderRadius: 2,
+                                                transition: 'all 0.3s ease',
+                                                '&:hover': {
+                                                    boxShadow: '0 4px 12px rgba(5, 150, 105, 0.15)',
+                                                },
+                                                '&.Mui-focused': {
+                                                    boxShadow: '0 4px 20px rgba(16, 185, 129, 0.25)',
+                                                }
+                                            },
+                                            '& .MuiInputLabel-root': {
+                                                fontSize: '0.9rem',
+                                                fontWeight: 500
+                                            }
+                                        }}
+                                        InputProps={{
+                                            startAdornment: (
+                                                <InputAdornment position="start">
+                                                    🛠️
+                                                </InputAdornment>
+                                            ),
+                                        }}
+                                    />
+                                </Grid>
+                            </Grid>
+                        </Paper>
+
+                        {/* Eligibility Criteria Section */}
+                        <Paper 
+                            elevation={0} 
+                            sx={{ 
+                                p: 3, 
+                                mb: 3,
+                                border: '1px solid #e2e8f0',
+                                borderRadius: 2,
+                                background: '#ffffff',
+                                boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
+                            }}
+                        >
+                            <Box display="flex" alignItems="center" gap={2} mb={3}>
+                                <Avatar sx={{ background: 'linear-gradient(135deg, #7c3aed 0%, #8b5cf6 100%)', width: 32, height: 32 }}>
+                                    🎓
+                                </Avatar>
+                                <Typography variant="h6" fontWeight="600" color="#7c3aed">
+                                    Eligibility Criteria
+                                </Typography>
+                            </Box>
+                            
+                            <Grid container spacing={3}>
+                                <Grid item xs={12} md={6}>
+                                    <TextField
+                                        fullWidth
+                                        label="BTech Year of Passout (Min)"
+                                        type="number"
+                                        value={jobPostingForm.btech_year_of_passout_min}
+                                        onChange={e => setJobPostingForm({ ...jobPostingForm, btech_year_of_passout_min: e.target.value })}
+                                        variant="outlined"
+                                        placeholder="e.g., 2020"
+                                        sx={{
+                                            '& .MuiOutlinedInput-root': {
+                                                borderRadius: 2,
+                                                transition: 'all 0.3s ease',
+                                                '&:hover': {
+                                                    boxShadow: '0 4px 12px rgba(124, 58, 237, 0.15)',
+                                                },
+                                                '&.Mui-focused': {
+                                                    boxShadow: '0 4px 20px rgba(139, 92, 246, 0.25)',
+                                                }
+                                            }
+                                        }}
+                                        InputProps={{
+                                            startAdornment: (
+                                                <InputAdornment position="start">
+                                                    📅
+                                                </InputAdornment>
+                                            ),
+                                        }}
+                                    />
+                                </Grid>
+                                <Grid item xs={12} md={6}>
+                                    <TextField
+                                        fullWidth
+                                        label="BTech Year of Passout (Max)"
+                                        type="number"
+                                        value={jobPostingForm.btech_year_of_passout_max}
+                                        onChange={e => setJobPostingForm({ ...jobPostingForm, btech_year_of_passout_max: e.target.value })}
+                                        variant="outlined"
+                                        placeholder="e.g., 2024"
+                                        sx={{
+                                            '& .MuiOutlinedInput-root': {
+                                                borderRadius: 2,
+                                                transition: 'all 0.3s ease',
+                                                '&:hover': {
+                                                    boxShadow: '0 4px 12px rgba(124, 58, 237, 0.15)',
+                                                },
+                                                '&.Mui-focused': {
+                                                    boxShadow: '0 4px 20px rgba(139, 92, 246, 0.25)',
+                                                }
+                                            }
+                                        }}
+                                        InputProps={{
+                                            startAdornment: (
+                                                <InputAdornment position="start">
+                                                    📅
+                                                </InputAdornment>
+                                            ),
+                                        }}
+                                    />
+                                </Grid>
+                                <Grid item xs={12} md={6}>
+                                    <TextField
+                                        fullWidth
+                                        label="MTech Year of Passout (Min)"
+                                        type="number"
+                                        value={jobPostingForm.mtech_year_of_passout_min}
+                                        onChange={e => setJobPostingForm({ ...jobPostingForm, mtech_year_of_passout_min: e.target.value })}
+                                        variant="outlined"
+                                        placeholder="e.g., 2022"
+                                        sx={{
+                                            '& .MuiOutlinedInput-root': {
+                                                borderRadius: 2,
+                                                transition: 'all 0.3s ease',
+                                                '&:hover': {
+                                                    boxShadow: '0 4px 12px rgba(124, 58, 237, 0.15)',
+                                                },
+                                                '&.Mui-focused': {
+                                                    boxShadow: '0 4px 20px rgba(139, 92, 246, 0.25)',
+                                                }
+                                            }
+                                        }}
+                                        InputProps={{
+                                            startAdornment: (
+                                                <InputAdornment position="start">
+                                                    📅
+                                                </InputAdornment>
+                                            ),
+                                        }}
+                                    />
+                                </Grid>
+                                <Grid item xs={12} md={6}>
+                                    <TextField
+                                        fullWidth
+                                        label="MTech Year of Passout (Max)"
+                                        type="number"
+                                        value={jobPostingForm.mtech_year_of_passout_max}
+                                        onChange={e => setJobPostingForm({ ...jobPostingForm, mtech_year_of_passout_max: e.target.value })}
+                                        variant="outlined"
+                                        placeholder="e.g., 2024"
+                                        sx={{
+                                            '& .MuiOutlinedInput-root': {
+                                                borderRadius: 2,
+                                                transition: 'all 0.3s ease',
+                                                '&:hover': {
+                                                    boxShadow: '0 4px 12px rgba(124, 58, 237, 0.15)',
+                                                },
+                                                '&.Mui-focused': {
+                                                    boxShadow: '0 4px 20px rgba(139, 92, 246, 0.25)',
+                                                }
+                                            }
+                                        }}
+                                        InputProps={{
+                                            startAdornment: (
+                                                <InputAdornment position="start">
+                                                    📅
+                                                </InputAdornment>
+                                            ),
+                                        }}
+                                    />
+                                </Grid>
+                                <Grid item xs={12} md={6}>
+                                    <TextField
+                                        fullWidth
+                                        label="BTech Percentage (Min)"
+                                        type="number"
+                                        value={jobPostingForm.btech_percentage_min}
+                                        onChange={e => setJobPostingForm({ ...jobPostingForm, btech_percentage_min: e.target.value })}
+                                        variant="outlined"
+                                        placeholder="e.g., 70"
+                                        sx={{
+                                            '& .MuiOutlinedInput-root': {
+                                                borderRadius: 2,
+                                                transition: 'all 0.3s ease',
+                                                '&:hover': {
+                                                    boxShadow: '0 4px 12px rgba(124, 58, 237, 0.15)',
+                                                },
+                                                '&.Mui-focused': {
+                                                    boxShadow: '0 4px 20px rgba(139, 92, 246, 0.25)',
+                                                }
+                                            }
+                                        }}
+                                        InputProps={{
+                                            startAdornment: (
+                                                <InputAdornment position="start">
+                                                    📊
+                                                </InputAdornment>
+                                            ),
+                                        }}
+                                    />
+                                </Grid>
+                                <Grid item xs={12} md={6}>
+                                    <TextField
+                                        fullWidth
+                                        label="MTech Percentage (Min)"
+                                        type="number"
+                                        value={jobPostingForm.mtech_percentage_min}
+                                        onChange={e => setJobPostingForm({ ...jobPostingForm, mtech_percentage_min: e.target.value })}
+                                        variant="outlined"
+                                        placeholder="e.g., 75"
+                                        sx={{
+                                            '& .MuiOutlinedInput-root': {
+                                                borderRadius: 2,
+                                                transition: 'all 0.3s ease',
+                                                '&:hover': {
+                                                    boxShadow: '0 4px 12px rgba(124, 58, 237, 0.15)',
+                                                },
+                                                '&.Mui-focused': {
+                                                    boxShadow: '0 4px 20px rgba(139, 92, 246, 0.25)',
+                                                }
+                                            }
+                                        }}
+                                        InputProps={{
+                                            startAdornment: (
+                                                <InputAdornment position="start">
+                                                    📊
+                                                </InputAdornment>
+                                            ),
+                                        }}
+                                    />
+                                </Grid>
+                                <Grid item xs={12}>
+                                    <TextField
+                                        fullWidth
+                                        multiline
+                                        rows={3}
+                                        label="Additional Criteria"
+                                        value={jobPostingForm.additional_criteria}
+                                        onChange={e => setJobPostingForm({ ...jobPostingForm, additional_criteria: e.target.value })}
+                                        variant="outlined"
+                                        placeholder="Any additional eligibility criteria or special requirements..."
+                                        sx={{
+                                            '& .MuiOutlinedInput-root': {
+                                                borderRadius: 2,
+                                                transition: 'all 0.3s ease',
+                                                '&:hover': {
+                                                    boxShadow: '0 4px 12px rgba(124, 58, 237, 0.15)',
+                                                },
+                                                '&.Mui-focused': {
+                                                    boxShadow: '0 4px 20px rgba(139, 92, 246, 0.25)',
+                                                }
+                                            }
+                                        }}
+                                        InputProps={{
+                                            startAdornment: (
+                                                <InputAdornment position="start" sx={{ alignSelf: 'flex-start', mt: 1 }}>
+                                                    📝
+                                                </InputAdornment>
+                                            ),
+                                        }}
+                                    />
+                                </Grid>
+                            </Grid>
+                        </Paper>
+                    </Box>
                 </DialogContent>
-                <DialogActions>
-                    <Button onClick={handleCloseDialog}>Cancel</Button>
+                
+                <DialogActions 
+                    sx={{ 
+                        p: 3, 
+                        pt: 0,
+                        gap: 2,
+                        justifyContent: 'space-between'
+                    }}
+                >
+                    <Button 
+                        onClick={handleCloseDialog}
+                        variant="outlined"
+                        size="large"
+                        sx={{
+                            borderRadius: 2,
+                            px: 4,
+                            py: 1.5,
+                            borderColor: '#e5e7eb',
+                            color: '#6b7280',
+                            '&:hover': {
+                                borderColor: '#d1d5db',
+                                backgroundColor: '#f9fafb'
+                            }
+                        }}
+                    >
+                        Cancel
+                    </Button>
                     <Button 
                         onClick={handleSubmit} 
                         variant="contained"
+                        size="large"
                         disabled={creatingJobPosting || updatingJobPosting}
+                        sx={{
+                            background: 'linear-gradient(135deg, #0f1f3d 0%, #1e3c72 100%)',
+                            borderRadius: 2,
+                            px: 4,
+                            py: 1.5,
+                            fontWeight: 600,
+                            boxShadow: '0 4px 15px rgba(15, 31, 61, 0.4)',
+                            '&:hover': {
+                                background: 'linear-gradient(270deg, #eb6707 0%, #e42b12 100%)',
+                                boxShadow: '0 6px 20px rgba(235, 103, 7, 0.6)',
+                                transform: 'translateY(-1px)'
+                            },
+                            '&:disabled': {
+                                background: 'linear-gradient(135deg, #9ca3af 0%, #6b7280 100%)',
+                                boxShadow: 'none'
+                            },
+                            transition: 'all 0.3s ease'
+                        }}
                     >
-                        {creatingJobPosting || updatingJobPosting ? <CircularProgress size={20} /> : 'Save'}
+                        {creatingJobPosting || updatingJobPosting ? (
+                            <Box display="flex" alignItems="center" gap={1}>
+                                <CircularProgress size={20} color="inherit" />
+                                <span>{selectedItem ? 'Updating...' : 'Creating...'}</span>
+                            </Box>
+                        ) : (
+                            <Box display="flex" alignItems="center" gap={1}>
+                                <span>{selectedItem ? 'Update Job Posting' : 'Create Job Posting'}</span>
+                                {selectedItem ? '✏️' : '✨'}
+                            </Box>
+                        )}
                     </Button>
                 </DialogActions>
             </Dialog>

@@ -78,23 +78,13 @@ class TeachingMaterialController extends Controller
                 return response()->json(['errors' => $validator->errors()], 422);
             }
 
-            // Get the topic to find the curriculum_id
-            $topic = \App\Models\Topic::findOrFail($request->topic_id);
-            
-            // Get the first section of the curriculum (or you might want to handle this differently)
-            $section = \App\Models\Section::where('curriculum_id', $topic->curriculum_id)->first();
-            
-            if (!$section) {
-                return response()->json(['error' => 'No section found for this curriculum'], 404);
-            }
-
             // Store the file
             $filePath = $request->file('file')->store('teaching-materials', 'public');
 
-            // Create the teaching material
+            // Create the teaching material without requiring a section
             $teachingMaterial = TeachingMaterial::create([
                 'topic_id' => $request->topic_id,
-                'section_id' => $section->id,
+                'section_id' => null, // Set to null since we're not using sections
                 'name' => $request->name,
                 'description' => $request->description,
                 'material_source' => 'other', // Default to 'other' for file uploads

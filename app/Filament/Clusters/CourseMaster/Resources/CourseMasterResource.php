@@ -47,6 +47,12 @@ class CourseMasterResource extends Resource
     //protected static SubNavigationPosition $subNavigationPosition = SubNavigationPosition::Top;
 
     protected static bool $isScopedToTenant = false;
+
+    public static function shouldRegisterNavigation(): bool
+    {
+        return false;
+    }
+
     public static function form(Form $form): Form
     {
         return $form

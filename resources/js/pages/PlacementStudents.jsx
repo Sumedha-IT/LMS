@@ -346,19 +346,26 @@ const PlacementStudents = ({ eligibleOnlyMode = false }) => {
     };
 
     return (
-        <Box>
+        <Box sx={{ backgroundColor: '#f8f9fa', minHeight: '100vh', p: 3 }}>
             {/* Card Header for Students Page */}
             <Box display="flex" alignItems="center" justifyContent="space-between" mb={3}>
-                <Typography variant="h5" fontWeight={700} gutterBottom>
+                <Typography variant="h5" fontWeight={700} gutterBottom sx={{ color: '#0f1f3d' }}>
                     {eligibleOnlyMode ? 'Eligible Students' : 'Students'}
                 </Typography>
                 {/* Job Eligible Students Filter Button */}
                 {!eligibleOnlyMode && (
                     <Button
-                        variant="outlined"
+                        variant="contained"
                         startIcon={<FilterListIcon />}
                         onClick={() => setShowJobEligibleFilter(!showJobEligibleFilter)}
-                        color="primary"
+                        sx={{
+                            textTransform: 'none',
+                            borderRadius: 2,
+                            background: 'linear-gradient(270deg, #eb6707 0%, #e42b12 100%)',
+                            '&:hover': {
+                                background: 'linear-gradient(270deg, #e42b12 0%, #eb6707 100%)',
+                            }
+                        }}
                     >
                         {showJobEligibleFilter ? 'Hide Job Filter' : 'Job Eligible Students'}
                     </Button>
@@ -367,9 +374,9 @@ const PlacementStudents = ({ eligibleOnlyMode = false }) => {
             
             {/* Eligibility Filter Card */}
             {eligibleOnlyMode ? (
-                <Card sx={{ mb: 4, borderRadius: 4, boxShadow: 6 }}>
+                <Card sx={{ mb: 4, borderRadius: 3, boxShadow: '0 4px 20px rgba(0,0,0,0.08)' }}>
                     <CardContent>
-                        <Typography variant="h6" gutterBottom sx={{ color: brand.purple }}>Filter by Course</Typography>
+                        <Typography variant="h6" gutterBottom sx={{ color: '#0f1f3d', fontWeight: 600 }}>Filter by Course</Typography>
                         <Grid container spacing={2} alignItems="center">
                             <Grid item xs={12} md={6}>
                                 <FormControl fullWidth size="small">
@@ -393,6 +400,15 @@ const PlacementStudents = ({ eligibleOnlyMode = false }) => {
                                     <Button
                                         variant="outlined"
                                         onClick={() => { setSelectedCourse(''); setSelectedCourseJobId(''); setStudents([]); }}
+                                        sx={{
+                                            borderRadius: 2,
+                                            borderColor: '#e5e7eb',
+                                            color: '#6b7280',
+                                            '&:hover': {
+                                                borderColor: '#d1d5db',
+                                                backgroundColor: '#f9fafb'
+                                            }
+                                        }}
                                     >
                                         Clear
                                     </Button>
@@ -410,9 +426,9 @@ const PlacementStudents = ({ eligibleOnlyMode = false }) => {
                 </Card>
             ) : (
                 (showJobEligibleFilter) && (
-                    <Card sx={{ mb: 4, borderRadius: 4, boxShadow: 6 }}>
+                    <Card sx={{ mb: 4, borderRadius: 3, boxShadow: '0 4px 20px rgba(0,0,0,0.08)' }}>
                         <CardContent>
-                            <Typography variant="h6" gutterBottom sx={{ color: brand.purple }}>Filter by Job Posting Eligibility</Typography>
+                            <Typography variant="h6" gutterBottom sx={{ color: '#0f1f3d', fontWeight: 600 }}>Filter by Job Posting Eligibility</Typography>
                             <Grid container spacing={2} alignItems="center">
                                 <Grid item xs={12} md={6}>
                                     <FormControl fullWidth size="small">
@@ -437,7 +453,17 @@ const PlacementStudents = ({ eligibleOnlyMode = false }) => {
                                             variant="contained"
                                             onClick={handleJobEligibleFilter}
                                             disabled={!selectedJobPosting || loadingEligibleStudents}
-                                            sx={{ backgroundColor: brand.green, '&:hover': { backgroundColor: '#1ea152' } }}
+                                            sx={{
+                                                textTransform: 'none',
+                                                borderRadius: 2,
+                                                background: 'linear-gradient(270deg, #eb6707 0%, #e42b12 100%)',
+                                                '&:hover': {
+                                                    background: 'linear-gradient(270deg, #e42b12 0%, #eb6707 100%)',
+                                                },
+                                                '&:disabled': {
+                                                    background: 'linear-gradient(135deg, #9ca3af 0%, #6b7280 100%)',
+                                                }
+                                            }}
                                         >
                                             {loadingEligibleStudents ? <CircularProgress size={20} /> : 'Filter Eligible Students'}
                                         </Button>
@@ -445,6 +471,15 @@ const PlacementStudents = ({ eligibleOnlyMode = false }) => {
                                             <Button
                                                 variant="outlined"
                                                 onClick={clearJobFilter}
+                                                sx={{
+                                                    borderRadius: 2,
+                                                    borderColor: '#e5e7eb',
+                                                    color: '#6b7280',
+                                                    '&:hover': {
+                                                        borderColor: '#d1d5db',
+                                                        backgroundColor: '#f9fafb'
+                                                    }
+                                                }}
                                             >
                                                 Clear Filter
                                             </Button>

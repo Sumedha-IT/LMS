@@ -26,7 +26,8 @@ import {
     CardActions,
     IconButton,
     Tooltip,
-    LinearProgress
+    LinearProgress,
+    Snackbar
 } from '@mui/material';
 import {
     Work as WorkIcon,
@@ -40,9 +41,13 @@ import {
     AccessTime as TimeIcon,
     TrendingUp as TrendingIcon,
     Star as StarIcon,
-    Visibility as ViewIcon
+    Visibility as ViewIcon,
+    CheckCircle as CheckCircleIcon,
+    Cancel as CancelIcon,
+    KeyboardArrowDown as ArrowIcon
 } from '@mui/icons-material';
 import { useGetJobPostingsQuery } from '../../store/service/user/UserService';
+import axios from 'axios';
 
 // JobDescription component for truncating and expanding job descriptions
 const JobDescription = ({ description }) => {
@@ -75,29 +80,91 @@ const JobBoard = ({ studentId }) => {
     const [selectedJob, setSelectedJob] = useState(null);
     const [applyDialogOpen, setApplyDialogOpen] = useState(false);
     const [appliedJobs, setAppliedJobs] = useState([]);
+    const [studentCourse, setStudentCourse] = useState(null);
+    const [loadingStudentCourse, setLoadingStudentCourse] = useState(true);
+    const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
+    const [applyingJob, setApplyingJob] = useState(false);
+    const [expandedJobs, setExpandedJobs] = useState({});
 
     // Real API call for job postings
     const { data: jobPostings, isLoading: loading, error } = useGetJobPostingsQuery();
 
-    // Transform API data to match component expectations
-    const jobs = jobPostings ? jobPostings.map(job => ({
-        id: job.id,
-        title: job.title,
-        company: job.company?.name || 'N/A',
-        location: job.location,
-        type: job.job_type === 'full_time' ? 'Full Time' : 
-              job.job_type === 'part_time' ? 'Part Time' : 
-              job.job_type === 'contract' ? 'Contract' : 'Internship',
-        salary: job.salary_min && job.salary_max ? 
-                `₹${job.salary_min}-${job.salary_max} LPA` : 
-                job.salary_min ? `₹${job.salary_min}+ LPA` : 'Not specified',
-        experience: job.experience_required || 'Not specified',
-        description: job.description,
-        requirements: job.requirements ? job.requirements.split(',').map(req => req.trim()) : [],
-        postedDate: job.created_at ? new Date(job.created_at).toLocaleDateString() : 'N/A',
-        deadline: job.application_deadline ? new Date(job.application_deadline).toLocaleDateString() : 'N/A',
-        domain: 'Computer Science' // Default domain
-    })) : [];
+    // Get student's course information and existing applications
+    useEffect(() => {
+        const getStudentData = async () => {
+            try {
+                setLoadingStudentCourse(true);
+                const userInfo = getCookie('user_info');
+                const userData = JSON.parse(userInfo);
+                const userId = getCookie('x_path_id');
+                
+                // Get student's course
+                const courseResponse = await axios.get(`/api/courses/my/${userId}`, {
+                    headers: { 'Authorization': userData.token }
+                });
+                
+                if (courseResponse.data.courses && courseResponse.data.courses.length > 0) {
+                    setStudentCourse(courseResponse.data.courses[0]);
+                }
+                
+                // Get student's existing job applications
+                const applicationsResponse = await axios.get(`/api/job-applications?user_id=${userId}`, {
+                    headers: { 'Authorization': userData.token }
+                });
+                
+                if (applicationsResponse.data.data) {
+                    const appliedJobIds = applicationsResponse.data.data.map(app => app.job_posting_id);
+                    setAppliedJobs(appliedJobIds);
+                }
+            } catch (err) {
+                console.error('Error fetching student data:', err);
+            } finally {
+                setLoadingStudentCourse(false);
+            }
+        };
+
+        getStudentData();
+    }, []);
+
+    // Helper function to get cookie
+    const getCookie = (name) => {
+        let cookies = document.cookie.split('; ');
+        for (let cookie of cookies) {
+            let [key, value] = cookie.split('=');
+            if (key === name) {
+                return decodeURIComponent(value);
+            }
+        }
+        return null;
+    };
+
+    // Transform API data to match component expectations and filter by course eligibility
+    const jobs = jobPostings?.data ? jobPostings.data.map(job => {
+        // Check if job is eligible for student's course
+        const isEligible = !job.course_id || (studentCourse && job.course_id === studentCourse.id);
+        
+        return {
+            id: job.id,
+            title: job.title,
+            company: job.company?.name || 'N/A',
+            location: job.location,
+            type: job.job_type === 'full_time' ? 'Full Time' : 
+                  job.job_type === 'part_time' ? 'Part Time' : 
+                  job.job_type === 'contract' ? 'Contract' : 'Internship',
+            salary: job.salary_min && job.salary_max ? 
+                    `₹${job.salary_min}-${job.salary_max} LPA` : 
+                    job.salary_min ? `₹${job.salary_min}+ LPA` : 'Not specified',
+            experience: job.experience_required || 'Not specified',
+            description: job.description,
+            requirements: job.requirements ? job.requirements.split(',').map(req => req.trim()) : [],
+            postedDate: job.created_at ? new Date(job.created_at).toLocaleDateString() : 'N/A',
+            deadline: job.application_deadline ? new Date(job.application_deadline).toLocaleDateString() : 'N/A',
+            domain: 'Computer Science', // Default domain
+            course_id: job.course_id,
+            course_name: job.course?.name || 'Any Course',
+            isEligible: isEligible
+        };
+    }) : [];
 
     const filteredJobs = jobs.filter(job => {
         const matchesSearch = job.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -109,16 +176,73 @@ const JobBoard = ({ studentId }) => {
     });
 
     const handleApply = (job) => {
+        if (!job.isEligible) {
+            return; // Don't allow applying for ineligible jobs
+        }
         setSelectedJob(job);
         setApplyDialogOpen(true);
     };
 
-    const confirmApply = () => {
+    const confirmApply = async () => {
         if (selectedJob) {
-            setAppliedJobs([...appliedJobs, selectedJob.id]);
-            setApplyDialogOpen(false);
-            setSelectedJob(null);
+            try {
+                setApplyingJob(true);
+                const userInfo = getCookie('user_info');
+                const userData = JSON.parse(userInfo);
+                const userId = getCookie('x_path_id');
+                
+                // Create job application in database
+                const response = await axios.post('/api/job-applications', {
+                    job_posting_id: selectedJob.id,
+                    user_id: userId,
+                    status: 'applied',
+                    application_date: new Date().toISOString()
+                }, {
+                    headers: { 'Authorization': userData.token }
+                });
+                
+                if (response.status === 201) {
+                    // Update local state to show as applied
+                    setAppliedJobs([...appliedJobs, selectedJob.id]);
+                    setApplyDialogOpen(false);
+                    setSelectedJob(null);
+                    
+                    // Show success message
+                    setSnackbar({
+                        open: true,
+                        message: '🎉 Job application submitted successfully! You will be notified about the next steps.',
+                        severity: 'success'
+                    });
+                }
+            } catch (err) {
+                console.error('Error applying for job:', err);
+                let errorMessage = 'Error applying for job. Please try again.';
+                
+                if (err.response?.status === 409) {
+                    errorMessage = 'You have already applied for this job.';
+                } else if (err.response?.status === 401) {
+                    errorMessage = 'Please log in again to apply for jobs.';
+                } else if (err.response?.status === 403) {
+                    errorMessage = 'You are not eligible to apply for this job.';
+                } else if (err.response?.status === 422) {
+                    errorMessage = 'Invalid application data. Please check your information.';
+                } else if (err.response?.status >= 500) {
+                    errorMessage = 'Server error. Please try again later.';
+                }
+                
+                setSnackbar({
+                    open: true,
+                    message: errorMessage,
+                    severity: 'error'
+                });
+            } finally {
+                setApplyingJob(false);
+            }
         }
+    };
+
+    const handleSnackbarClose = () => {
+        setSnackbar({ ...snackbar, open: false });
     };
 
     const isApplied = (jobId) => appliedJobs.includes(jobId);
@@ -137,12 +261,12 @@ const JobBoard = ({ studentId }) => {
         return companyName.split(' ').map(word => word[0]).join('').toUpperCase().slice(0, 2);
     };
 
-    if (loading) {
+    if (loading || loadingStudentCourse) {
         return (
             <Box display="flex" flexDirection="column" alignItems="center" justifyContent="center" minHeight="400px">
                 <CircularProgress size={60} thickness={4} />
                 <Typography variant="h6" sx={{ mt: 2, color: 'text.secondary' }}>
-                    Loading job opportunities...
+                    {loadingStudentCourse ? 'Loading your course information...' : 'Loading job opportunities...'}
                 </Typography>
             </Box>
         );
@@ -162,284 +286,768 @@ const JobBoard = ({ studentId }) => {
 
     return (
         <Box>
-            {/* Header */}
+            {/* Modern Stats Header */}
             <Box sx={{ mb: 4 }}>
-                <Typography variant="h4" gutterBottom sx={{ fontWeight: 600, color: 'text.primary' }}>
-                    Available Jobs
-                </Typography>
-                <Typography variant="body1" color="text.secondary" sx={{ mb: 2 }}>
-                    Discover exciting opportunities that match your skills and career goals
-                </Typography>
-                <LinearProgress 
-                    variant="determinate" 
-                    value={filteredJobs.length > 0 ? 100 : 0} 
-                    sx={{ height: 4, borderRadius: 2 }}
-                />
+                <Box display="flex" justifyContent="space-between" alignItems="center" mb={3} flexDirection={{ xs: 'column', sm: 'row' }} gap={2}>
+                    <Box>
+                        <Typography variant="h4" gutterBottom sx={{ fontWeight: 700, color: 'text.primary', mb: 1 }}>
+                            💼 Job Opportunities
+                        </Typography>
+                        <Typography variant="body1" color="text.secondary">
+                            {filteredJobs.length} {filteredJobs.length === 1 ? 'opportunity' : 'opportunities'} available
+                        </Typography>
+                    </Box>
+                    
+                    {/* Quick Stats Cards */}
+                    <Grid container spacing={2} sx={{ width: { xs: '100%', sm: 'auto' } }}>
+                        <Grid item>
+                            <Card sx={{ borderRadius: 3, background: 'linear-gradient(135deg, #0f1f3d 0%, #1e3c72 100%)', color: 'white', minWidth: 120 }}>
+                                <CardContent sx={{ p: 2, '&:last-child': { pb: 2 } }}>
+                                    <Typography variant="h6" sx={{ fontWeight: 700, mb: 0.5 }}>
+                                        {filteredJobs.length}
+                                    </Typography>
+                                    <Typography variant="caption" sx={{ opacity: 0.9 }}>
+                                        Total Jobs
+                                    </Typography>
+                                </CardContent>
+                            </Card>
+                        </Grid>
+                        <Grid item>
+                            <Card sx={{ borderRadius: 3, background: 'linear-gradient(270deg, #eb6707 0%, #e42b12 100%)', color: 'white', minWidth: 120 }}>
+                                <CardContent sx={{ p: 2, '&:last-child': { pb: 2 } }}>
+                                    <Typography variant="h6" sx={{ fontWeight: 700, mb: 0.5 }}>
+                                        {appliedJobs.length}
+                                    </Typography>
+                                    <Typography variant="caption" sx={{ opacity: 0.9 }}>
+                                        Applied
+                                    </Typography>
+                                </CardContent>
+                            </Card>
+                        </Grid>
+                    </Grid>
+                </Box>
+                
+                {/* Course Information Card */}
+                {studentCourse && (
+                    <Card sx={{ 
+                        mb: 3, 
+                        borderRadius: 3,
+                        background: 'linear-gradient(135deg, rgba(46, 125, 50, 0.05) 0%, rgba(67, 160, 71, 0.05) 100%)',
+                        border: '1px solid rgba(76, 175, 80, 0.2)',
+                        overflow: 'hidden'
+                    }}>
+                        <CardContent sx={{ p: 3 }}>
+                            <Box display="flex" alignItems="center" gap={3}>
+                                <Box sx={{
+                                    width: 60,
+                                    height: 60,
+                                    borderRadius: '50%',
+                                    background: 'linear-gradient(270deg, #eb6707 0%, #e42b12 100%)',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    boxShadow: '0 4px 20px rgba(235, 103, 7, 0.3)'
+                                }}>
+                                    <CheckCircleIcon sx={{ color: 'white', fontSize: 28 }} />
+                                </Box>
+                                <Box flex={1}>
+                                    <Typography variant="h6" fontWeight={700} sx={{ color: '#0f1f3d', mb: 0.5 }}>
+                                        ✨ Enrolled in: {studentCourse.name}
+                                    </Typography>
+                                    <Typography variant="body2" color="text.secondary" sx={{ lineHeight: 1.6 }}>
+                                        You're eligible for jobs matching your course or open to all students. 
+                                        Keep building your skills to unlock more opportunities! 🎯
+                                    </Typography>
+                                </Box>
+                            </Box>
+                        </CardContent>
+                    </Card>
+                )}
             </Box>
 
-            {/* Enhanced Filters */}
-            <Card sx={{ mb: 4, borderRadius: 3, boxShadow: '0 4px 20px rgba(0,0,0,0.08)' }}>
-                <CardContent sx={{ p: 3 }}>
-                    <Grid container spacing={3} alignItems="center">
-                        <Grid item xs={12} md={4}>
+            {/* Modern Search and Filters */}
+            <Card sx={{ 
+                mb: 4, 
+                borderRadius: 4, 
+                boxShadow: '0 8px 32px rgba(0,0,0,0.06)',
+                border: '1px solid rgba(0,0,0,0.04)',
+                background: 'linear-gradient(135deg, rgba(255,255,255,0.9) 0%, rgba(255,255,255,1) 100%)'
+            }}>
+                <CardContent sx={{ p: 4 }}>
+                    <Box mb={3}>
+                        <Typography variant="h6" sx={{ fontWeight: 700, mb: 1, display: 'flex', alignItems: 'center', gap: 1 }}>
+                            🔍 Find Your Perfect Job
+                        </Typography>
+                        <Typography variant="body2" color="text.secondary">
+                            Use filters below to discover opportunities tailored to your preferences
+                        </Typography>
+                    </Box>
+                    
+                    <Grid container spacing={3}>
+                        <Grid item xs={12} md={5}>
                             <TextField
                                 fullWidth
-                                placeholder="Search jobs by title or company..."
+                                placeholder="Search by job title, company, or keywords..."
                                 value={searchTerm}
                                 onChange={(e) => setSearchTerm(e.target.value)}
                                 InputProps={{
-                                    startAdornment: <SearchIcon sx={{ mr: 1, color: 'text.secondary' }} />,
-                                    sx: { borderRadius: 2 }
+                                    startAdornment: (
+                                        <Box sx={{ 
+                                            display: 'flex', 
+                                            alignItems: 'center', 
+                                            mr: 1,
+                                            p: 1,
+                                            borderRadius: 2,
+                                            background: 'rgba(15, 31, 61, 0.1)'
+                                        }}>
+                                            <SearchIcon sx={{ color: '#0f1f3d', fontSize: 20 }} />
+                                        </Box>
+                                    ),
+                                    sx: { 
+                                        borderRadius: 3,
+                                        '& .MuiOutlinedInput-root': {
+                                            backgroundColor: 'rgba(255,255,255,0.8)',
+                                        }
+                                    }
                                 }}
                                 sx={{
                                     '& .MuiOutlinedInput-root': {
                                         '&:hover fieldset': {
                                             borderColor: 'primary.main',
                                         },
+                                        '&.Mui-focused fieldset': {
+                                            borderWidth: 2,
+                                        }
                                     },
                                 }}
                             />
                         </Grid>
-                        <Grid item xs={12} md={3}>
+                        
+                        <Grid item xs={12} md={2.5}>
                             <FormControl fullWidth>
-                                <InputLabel>Job Type</InputLabel>
+                                <InputLabel sx={{ fontWeight: 500 }}>Job Type</InputLabel>
                                 <Select
                                     value={jobType}
                                     onChange={(e) => setJobType(e.target.value)}
                                     label="Job Type"
-                                    sx={{ borderRadius: 2 }}
+                                    sx={{ 
+                                        borderRadius: 3,
+                                        backgroundColor: 'rgba(255,255,255,0.8)'
+                                    }}
                                 >
                                     <MenuItem value="">All Types</MenuItem>
-                                    <MenuItem value="Full Time">Full Time</MenuItem>
-                                    <MenuItem value="Part Time">Part Time</MenuItem>
-                                    <MenuItem value="Contract">Contract</MenuItem>
-                                    <MenuItem value="Internship">Internship</MenuItem>
+                                    <MenuItem value="Full Time">💼 Full Time</MenuItem>
+                                    <MenuItem value="Part Time">⏰ Part Time</MenuItem>
+                                    <MenuItem value="Contract">📋 Contract</MenuItem>
+                                    <MenuItem value="Internship">🎓 Internship</MenuItem>
                                 </Select>
                             </FormControl>
                         </Grid>
-                        <Grid item xs={12} md={3}>
+                        
+                        <Grid item xs={12} md={2.5}>
                             <FormControl fullWidth>
-                                <InputLabel>Location</InputLabel>
+                                <InputLabel sx={{ fontWeight: 500 }}>Location</InputLabel>
                                 <Select
                                     value={location}
                                     onChange={(e) => setLocation(e.target.value)}
                                     label="Location"
-                                    sx={{ borderRadius: 2 }}
+                                    sx={{ 
+                                        borderRadius: 3,
+                                        backgroundColor: 'rgba(255,255,255,0.8)'
+                                    }}
                                 >
                                     <MenuItem value="">All Locations</MenuItem>
-                                    <MenuItem value="Hyderabad">Hyderabad</MenuItem>
-                                    <MenuItem value="Bangalore">Bangalore</MenuItem>
-                                    <MenuItem value="Mumbai">Mumbai</MenuItem>
-                                    <MenuItem value="Remote">Remote</MenuItem>
+                                    <MenuItem value="Hyderabad">📍 Hyderabad</MenuItem>
+                                    <MenuItem value="Bangalore">📍 Bangalore</MenuItem>
+                                    <MenuItem value="Mumbai">📍 Mumbai</MenuItem>
+                                    <MenuItem value="Remote">🌐 Remote</MenuItem>
                                 </Select>
                             </FormControl>
                         </Grid>
+                        
                         <Grid item xs={12} md={2}>
-                            <Box display="flex" alignItems="center" justifyContent="center">
-                                <Chip 
-                                    icon={<FilterIcon />} 
-                                    label={`${filteredJobs.length} jobs`} 
-                                    color="primary" 
-                                    variant="outlined"
-                                    sx={{ borderRadius: 2 }}
-                                />
+                            <Box sx={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                <Card sx={{ 
+                                    background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', 
+                                    color: 'white',
+                                    borderRadius: 3,
+                                    minWidth: '100%'
+                                }}>
+                                    <CardContent sx={{ p: 2, textAlign: 'center', '&:last-child': { pb: 2 } }}>
+                                        <Typography variant="h6" sx={{ fontWeight: 700, mb: 0.5 }}>
+                                            {filteredJobs.length}
+                                        </Typography>
+                                        <Typography variant="caption" sx={{ opacity: 0.9 }}>
+                                            Results
+                                        </Typography>
+                                    </CardContent>
+                                </Card>
                             </Box>
                         </Grid>
                     </Grid>
                 </CardContent>
             </Card>
 
-            {/* Modern Job Listings */}
+            {/* Collapsible Job Cards */}
             <Grid container spacing={3}>
-                {filteredJobs.map((job) => (
+                {filteredJobs.map((job) => {
+                    const isExpanded = expandedJobs[job.id] || false;
+                    
+                    return (
                     <Grid item xs={12} key={job.id}>
                         <Card 
                             sx={{ 
-                                borderRadius: 4, 
-                                boxShadow: '0 2px 16px rgba(0,0,0,0.07)',
-                                transition: 'all 0.3s cubic-bezier(.25,.8,.25,1)',
-                                border: isApplied(job.id) ? '2px solid #4caf50' : '1px solid #e0e0e0',
-                                background: '#fff',
+                                    borderRadius: 4, 
+                                boxShadow: isApplied(job.id) 
+                                    ? '0 8px 32px rgba(76, 175, 80, 0.15)' 
+                                    : '0 4px 24px rgba(0,0,0,0.05)',
+                                    transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                                border: isApplied(job.id) 
+                                    ? '2px solid #4caf50' 
+                                    : '1px solid rgba(0,0,0,0.06)',
+                                background: isApplied(job.id)
+                                    ? 'linear-gradient(135deg, rgba(76, 175, 80, 0.02) 0%, rgba(129, 199, 132, 0.02) 100%)'
+                                    : 'linear-gradient(135deg, rgba(255,255,255,0.9) 0%, rgba(255,255,255,1) 100%)',
+                                position: 'relative',
+                                overflow: 'hidden',
+                                    cursor: 'pointer',
                                 '&:hover': {
-                                    transform: 'translateY(-6px) scale(1.01)',
-                                    boxShadow: '0 8px 32px rgba(0,0,0,0.13)',
+                                        transform: 'translateY(-4px)',
+                                        boxShadow: '0 8px 32px rgba(0,0,0,0.1)',
+                                    '& .company-avatar': {
+                                            transform: 'scale(1.05)',
+                                    },
                                 },
-                                p: { xs: 2, sm: 3 },
+                                '&::before': {
+                                    content: '""',
+                                    position: 'absolute',
+                                    top: 0,
+                                    left: 0,
+                                    right: 0,
+                                    height: '4px',
+                                    background: job.isEligible 
+                                        ? 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'
+                                        : 'linear-gradient(135deg, #ff9a56 0%, #f44336 100%)',
+                                },
                             }}
-                        >
-                            <CardContent sx={{ p: { xs: 2, sm: 4 } }}>
-                                <Box display="flex" gap={{ xs: 2, sm: 4 }} flexDirection={{ xs: 'column', sm: 'row' }}>
-                                    {/* Company Avatar */}
-                                    <Avatar 
-                                        sx={{ 
-                                            width: 64, 
-                                            height: 64, 
-                                            bgcolor: 'primary.main',
-                                            fontSize: '1.4rem',
-                                            fontWeight: 700,
-                                            boxShadow: '0 2px 8px rgba(0,0,0,0.08)'
-                                        }}
-                                    >
-                                        {getCompanyInitials(job.company)}
-                                    </Avatar>
+                                onClick={() => setExpandedJobs(prev => ({
+                                    ...prev,
+                                    [job.id]: !prev[job.id]
+                                }))}
+                            >
+                                <CardContent sx={{ p: 3 }}>
+                                    {/* Compact Job Header - Always Visible */}
+                                    <Box display="flex" alignItems="center" gap={3}>
+                                        {/* Company Avatar */}
+                                    <Box sx={{ position: 'relative' }}>
+                                        <Avatar 
+                                            className="company-avatar"
+                                            sx={{ 
+                                                    width: 60, 
+                                                    height: 60, 
+                                                background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                                                    fontSize: '1.2rem',
+                                                fontWeight: 800,
+                                                    boxShadow: '0 4px 16px rgba(103, 126, 234, 0.25)',
+                                                transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                                                    border: '2px solid rgba(255,255,255,0.9)',
+                                                color: 'white'
+                                            }}
+                                        >
+                                            {getCompanyInitials(job.company)}
+                                        </Avatar>
+                                        {/* Status indicator */}
+                                        <Box sx={{
+                                            position: 'absolute',
+                                            bottom: -2,
+                                            right: -2,
+                                                width: 20,
+                                                height: 20,
+                                            borderRadius: '50%',
+                                            background: job.isEligible ? '#4caf50' : '#f44336',
+                                                border: '2px solid white',
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            justifyContent: 'center',
+                                                boxShadow: '0 2px 6px rgba(0,0,0,0.15)'
+                                        }}>
+                                            {job.isEligible ? 
+                                                    <CheckCircleIcon sx={{ fontSize: 10, color: 'white' }} /> :
+                                                    <CancelIcon sx={{ fontSize: 10, color: 'white' }} />
+                                            }
+                                        </Box>
+                                    </Box>
 
-                                    {/* Job Details */}
+                                        {/* Job Title and Company */}
                                     <Box flex={1} minWidth={0}>
-                                        <Box display="flex" justifyContent="space-between" alignItems={{ xs: 'flex-start', sm: 'center' }} mb={2} flexDirection={{ xs: 'column', sm: 'row' }} gap={1}>
-                                            <Box minWidth={0}>
-                                                <Typography variant="h5" gutterBottom sx={{ fontWeight: 700, color: 'text.primary', lineHeight: 1.2, fontSize: { xs: '1.1rem', sm: '1.4rem' }, textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap' }}>
-                                                    {job.title}
-                                                </Typography>
-                                                <Typography variant="subtitle1" color="primary" sx={{ fontWeight: 600, fontSize: { xs: '1rem', sm: '1.1rem' } }}>
+                                                    <Typography 
+                                                variant="h6" 
+                                                        sx={{ 
+                                                    fontWeight: 700, 
+                                                            color: 'text.primary', 
+                                                            lineHeight: 1.2, 
+                                                    fontSize: { xs: '1.1rem', sm: '1.3rem' },
+                                                            background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                                                            backgroundClip: 'text',
+                                                            WebkitBackgroundClip: 'text',
+                                                            WebkitTextFillColor: 'transparent',
+                                                    display: 'inline-block',
+                                                    mb: 0.5
+                                                        }}
+                                                    >
+                                                        {job.title}
+                                                    </Typography>
+                                                <Typography 
+                                                variant="body1" 
+                                                    color="primary" 
+                                                    sx={{ 
+                                                    fontWeight: 600, 
+                                                    fontSize: '1rem',
+                                                        display: 'flex',
+                                                        alignItems: 'center',
+                                                        gap: 1
+                                                    }}
+                                                >
+                                                <BusinessIcon sx={{ fontSize: 18 }} />
                                                     {job.company}
                                                 </Typography>
                                             </Box>
+
+                                        {/* Quick Info Chips */}
+                                        <Box display="flex" gap={1} alignItems="center" flexWrap="wrap">
+                                            <Chip 
+                                                label={job.location} 
+                                                size="small"
+                                                icon={<LocationIcon />}
+                                                sx={{ 
+                                                    borderRadius: 2,
+                                                    fontSize: '0.75rem',
+                                                    fontWeight: 600,
+                                                    background: 'rgba(103, 126, 234, 0.1)',
+                                                    color: '#667eea',
+                                                    border: '1px solid rgba(103, 126, 234, 0.2)'
+                                                }}
+                                            />
+                                            <Chip 
+                                                label={job.type} 
+                                                size="small"
+                                                color={getJobTypeColor(job.type)}
+                                                sx={{ 
+                                                    borderRadius: 2,
+                                                    fontSize: '0.75rem',
+                                                    fontWeight: 600
+                                                }}
+                                            />
                                             {isApplied(job.id) && (
                                                 <Chip 
                                                     label="Applied" 
-                                                    color="success" 
-                                                    icon={<StarIcon />}
-                                                    sx={{ borderRadius: 2, fontWeight: 600 }}
+                                                    size="small"
+                                                    icon={<CheckCircleIcon />}
+                                                    sx={{ 
+                                                        borderRadius: 2,
+                                                        fontSize: '0.75rem',
+                                                        fontWeight: 600,
+                                                    background: 'linear-gradient(135deg, #4caf50 0%, #66bb6a 100%)',
+                                                        color: 'white'
+                                                    }}
                                                 />
                                             )}
                                         </Box>
 
-                                        {/* Job Tags */}
-                                        <Box display="flex" gap={1} mb={2} flexWrap="wrap">
-                                            <Chip 
-                                                icon={<LocationIcon />} 
-                                                label={job.location} 
-                                                size="small" 
-                                                variant="outlined"
-                                                sx={{ borderRadius: 2, fontSize: '0.85rem', bgcolor: '#f5f5f5' }}
-                                            />
-                                            <Chip 
-                                                icon={<MoneyIcon />} 
-                                                label={job.salary} 
-                                                size="small" 
-                                                variant="outlined"
-                                                sx={{ borderRadius: 2, fontSize: '0.85rem', bgcolor: '#f5f5f5' }}
-                                            />
-                                            <Chip 
-                                                icon={<ScheduleIcon />} 
-                                                label={job.type} 
-                                                size="small" 
-                                                color={getJobTypeColor(job.type)}
-                                                sx={{ borderRadius: 2, fontSize: '0.85rem' }}
-                                            />
-                                            <Chip 
-                                                icon={<TrendingIcon />} 
-                                                label={job.experience} 
-                                                size="small" 
-                                                variant="outlined"
-                                                sx={{ borderRadius: 2, fontSize: '0.85rem', bgcolor: '#f5f5f5' }}
-                                            />
+                                        {/* Expand/Collapse Icon */}
+                                        <Box sx={{
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            justifyContent: 'center',
+                                            width: 40,
+                                            height: 40,
+                                            borderRadius: '50%',
+                                            background: 'rgba(103, 126, 234, 0.1)',
+                                            transition: 'all 0.3s ease',
+                                            transform: isExpanded ? 'rotate(180deg)' : 'rotate(0deg)'
+                                        }}>
+                                            <ArrowIcon sx={{ color: '#667eea', fontSize: 20 }} />
+                                                        </Box>
                                         </Box>
 
-                                        {/* Job Description with Read More */}
-                                        <JobDescription description={job.description} />
-
-                                        {/* Requirements */}
-                                        {job.requirements.length > 0 && (
-                                            <Box mb={2}>
-                                                <Typography variant="body2" fontWeight="bold" gutterBottom sx={{ color: 'text.primary' }}>
-                                                    Skills Required:
-                                                </Typography>
-                                                <Box display="flex" gap={1} flexWrap="wrap">
-                                                    {job.requirements.slice(0, 4).map((req, index) => (
-                                                        <Chip 
-                                                            key={index} 
-                                                            label={req} 
-                                                            size="small" 
-                                                            variant="outlined"
-                                                            sx={{ borderRadius: 2, fontSize: '0.75rem', bgcolor: '#f5f5f5' }}
-                                                        />
-                                                    ))}
-                                                    {job.requirements.length > 4 && (
-                                                        <Chip 
-                                                            label={`+${job.requirements.length - 4} more`} 
-                                                            size="small" 
-                                                            variant="outlined"
-                                                            sx={{ borderRadius: 2, fontSize: '0.75rem', bgcolor: '#f5f5f5' }}
-                                                        />
-                                                    )}
-                                                </Box>
-                                            </Box>
-                                        )}
-
-                                        {/* Footer */}
-                                        <Box display="flex" justifyContent="space-between" alignItems="center" flexDirection={{ xs: 'column', sm: 'row' }} gap={1}>
-                                            <Box display="flex" gap={2} alignItems="center" flexWrap="wrap">
-                                                <Box display="flex" alignItems="center" gap={0.5}>
-                                                    <TimeIcon sx={{ fontSize: 16, color: 'text.secondary' }} />
-                                                    <Typography variant="caption" color="text.secondary">
-                                                        Posted: {job.postedDate}
-                                                    </Typography>
-                                                </Box>
-                                                {job.deadline !== 'N/A' && (
-                                                    <Box display="flex" alignItems="center" gap={0.5}>
-                                                        <ViewIcon sx={{ fontSize: 16, color: 'text.secondary' }} />
-                                                        <Typography variant="caption" color="text.secondary">
-                                                            Deadline: {job.deadline}
+                                    {/* Expanded Content */}
+                                    {isExpanded && (
+                                        <Box sx={{ mt: 4, pt: 3, borderTop: '1px solid rgba(0,0,0,0.08)' }}>
+                                            {/* Clean Job Overview Section */}
+                                            <Grid container spacing={3} mb={4}>
+                                                {/* Eligibility Status */}
+                                                <Grid item xs={12}>
+                                            <Card sx={{ 
+                                                borderRadius: 3, 
+                                                        background: job.isEligible 
+                                                            ? 'linear-gradient(135deg, rgba(76, 175, 80, 0.08) 0%, rgba(129, 199, 132, 0.08) 100%)'
+                                                            : 'linear-gradient(135deg, rgba(244, 67, 54, 0.08) 0%, rgba(229, 115, 115, 0.08) 100%)',
+                                                        border: job.isEligible 
+                                                            ? '1px solid rgba(76, 175, 80, 0.2)' 
+                                                            : '1px solid rgba(244, 67, 54, 0.2)'
+                                                    }}>
+                                                        <CardContent sx={{ p: 3 }}>
+                                                            <Box display="flex" alignItems="center" gap={2}>
+                                                                <Box sx={{
+                                                                    width: 40,
+                                                                    height: 40,
+                                                                    borderRadius: '50%',
+                                                                    background: job.isEligible ? '#4caf50' : '#f44336',
+                                                                    display: 'flex',
+                                                                    alignItems: 'center',
+                                                                    justifyContent: 'center'
+                                                                }}>
+                                                                    {job.isEligible ? 
+                                                                        <CheckCircleIcon sx={{ fontSize: 20, color: 'white' }} /> :
+                                                                        <CancelIcon sx={{ fontSize: 20, color: 'white' }} />
+                                                                    }
+                                                                </Box>
+                                                                <Box>
+                                                                    <Typography variant="h6" fontWeight={700} sx={{ 
+                                                                        color: job.isEligible ? '#2e7d32' : '#c62828',
+                                                                        mb: 0.5
+                                                                    }}>
+                                                                        {job.isEligible ? '✅ You are eligible for this position!' : '❌ Not eligible for this position'}
+                                                                    </Typography>
+                                                                    <Typography variant="body2" sx={{ 
+                                                                        color: job.isEligible ? '#388e3c' : '#d32f2f',
+                                                                        opacity: 0.8
+                                                                    }}>
+                                                                        {job.isEligible 
+                                                                            ? 'This job matches your course requirements'
+                                                                            : 'This job requires a different course background'
+                                                                        }
+                                                        </Typography>
+                                                                </Box>
+                                                    </Box>
+                                                </CardContent>
+                                            </Card>
+                                                </Grid>
+                                            
+                                                {/* Job Details Grid */}
+                                                <Grid item xs={12} md={6}>
+                                            <Card sx={{ 
+                                                borderRadius: 3, 
+                                                        background: 'linear-gradient(135deg, rgba(103, 126, 234, 0.05) 0%, rgba(118, 75, 162, 0.05) 100%)',
+                                                        border: '1px solid rgba(103, 126, 234, 0.1)',
+                                                        height: '100%'
+                                                    }}>
+                                                        <CardContent sx={{ p: 3 }}>
+                                                            <Typography variant="h6" fontWeight={700} sx={{ mb: 2, color: '#667eea', display: 'flex', alignItems: 'center', gap: 1 }}>
+                                                                💰 Compensation & Benefits
+                                                            </Typography>
+                                                            <Box display="flex" alignItems="center" gap={2} mb={2}>
+                                                                <MoneyIcon sx={{ fontSize: 20, color: '#667eea' }} />
+                                                                <Typography variant="body1" fontWeight={600} sx={{ color: '#667eea' }}>
+                                                            {job.salary}
                                                         </Typography>
                                                     </Box>
-                                                )}
-                                            </Box>
-                                            <Box>
-                                                {!isApplied(job.id) ? (
-                                                    <Button
-                                                        variant="contained"
-                                                        startIcon={<ApplyIcon />}
-                                                        onClick={() => handleApply(job)}
-                                                        sx={{ 
-                                                            borderRadius: 3, 
-                                                            px: 3, 
-                                                            py: 1.2,
-                                                            textTransform: 'none',
-                                                            fontWeight: 700,
-                                                            fontSize: { xs: '0.95rem', sm: '1.05rem' },
-                                                            boxShadow: '0 2px 8px rgba(76,175,80,0.08)'
-                                                        }}
-                                                    >
-                                                        Apply Now
-                                                    </Button>
-                                                ) : (
-                                                    <Button
-                                                        variant="outlined"
-                                                        color="success"
-                                                        disabled
-                                                        sx={{ 
-                                                            borderRadius: 3, 
-                                                            px: 3, 
-                                                            py: 1.2,
-                                                            textTransform: 'none',
-                                                            fontWeight: 700,
-                                                            fontSize: { xs: '0.95rem', sm: '1.05rem' }
-                                                        }}
-                                                    >
-                                                        Applied
-                                                    </Button>
-                                                )}
-                                            </Box>
-                                        </Box>
+                                                            <Typography variant="body2" color="text.secondary">
+                                                                Competitive salary package with benefits
+                                                            </Typography>
+                                                </CardContent>
+                                            </Card>
+                                                </Grid>
+
+                                                <Grid item xs={12} md={6}>
+                                            <Card sx={{ 
+                                                borderRadius: 3, 
+                                                        background: 'linear-gradient(135deg, rgba(255, 152, 0, 0.05) 0%, rgba(255, 193, 7, 0.05) 100%)',
+                                                        border: '1px solid rgba(255, 152, 0, 0.1)',
+                                                        height: '100%'
+                                                    }}>
+                                                        <CardContent sx={{ p: 3 }}>
+                                                            <Typography variant="h6" fontWeight={700} sx={{ mb: 2, color: '#ff9800', display: 'flex', alignItems: 'center', gap: 1 }}>
+                                                                📈 Experience Level
+                                                            </Typography>
+                                                            <Box display="flex" alignItems="center" gap={2} mb={2}>
+                                                                <TrendingIcon sx={{ fontSize: 20, color: '#ff9800' }} />
+                                                                <Typography variant="body1" fontWeight={600} sx={{ color: '#ff9800' }}>
+                                                            {job.experience}
+                                                        </Typography>
+                                                    </Box>
+                                                            <Typography variant="body2" color="text.secondary">
+                                                                Experience required for this role
+                                                            </Typography>
+                                                </CardContent>
+                                            </Card>
+                                                </Grid>
+                                        
+                                                {/* Job Timeline */}
+                                                <Grid item xs={12}>
+                                        <Card sx={{ 
+                                            borderRadius: 3,
+                                                        background: 'linear-gradient(135deg, rgba(76, 175, 80, 0.05) 0%, rgba(129, 199, 132, 0.05) 100%)',
+                                                        border: '1px solid rgba(76, 175, 80, 0.1)'
+                                                    }}>
+                                                        <CardContent sx={{ p: 3 }}>
+                                                            <Typography variant="h6" fontWeight={700} sx={{ mb: 3, color: '#4caf50', display: 'flex', alignItems: 'center', gap: 1 }}>
+                                                                📅 Important Dates
+                                                            </Typography>
+                                                            <Grid container spacing={3}>
+                                                                <Grid item xs={12} md={6}>
+                                                <Box display="flex" alignItems="center" gap={2}>
+                                                    <Box sx={{
+                                                        width: 32,
+                                                        height: 32,
+                                                        borderRadius: '50%',
+                                                                            background: 'rgba(103, 126, 234, 0.1)',
+                                                        display: 'flex',
+                                                        alignItems: 'center',
+                                                        justifyContent: 'center'
+                                                    }}>
+                                                                            <TimeIcon sx={{ fontSize: 16, color: '#667eea' }} />
+                                                    </Box>
+                                                    <Box>
+                                                                            <Typography variant="body2" fontWeight={600} sx={{ color: '#667eea' }}>
+                                                                                Posted Date
+                                                        </Typography>
+                                                                            <Typography variant="body1" fontWeight={700}>
+                                                                                {job.postedDate}
+                                                                            </Typography>
+                                                                        </Box>
+                                                                    </Box>
+                                                                </Grid>
+                                                                {job.deadline !== 'N/A' && (
+                                                                    <Grid item xs={12} md={6}>
+                                                                        <Box display="flex" alignItems="center" gap={2}>
+                                                                            <Box sx={{
+                                                                                width: 32,
+                                                                                height: 32,
+                                                                                borderRadius: '50%',
+                                                                                background: 'rgba(255, 152, 0, 0.1)',
+                                                                                display: 'flex',
+                                                                                alignItems: 'center',
+                                                                                justifyContent: 'center'
+                                                                            }}>
+                                                                                <ViewIcon sx={{ fontSize: 16, color: '#ff9800' }} />
+                                                                            </Box>
+                                                                            <Box>
+                                                                                <Typography variant="body2" fontWeight={600} sx={{ color: '#ff9800' }}>
+                                                                                    Application Deadline
+                                                                                </Typography>
+                                                                                <Typography variant="body1" fontWeight={700}>
+                                                                                    {job.deadline}
+                                                        </Typography>
+                                                    </Box>
+                                                </Box>
+                                                                    </Grid>
+                                                                )}
+                                                            </Grid>
+                                            </CardContent>
+                                        </Card>
+                                                </Grid>
+                                            </Grid>
+
+                                            {/* Job Description Section */}
+                                            <Card sx={{ mb: 4, borderRadius: 3 }}>
+                                                <CardContent sx={{ p: 4 }}>
+                                                    <Typography variant="h5" fontWeight={700} sx={{ mb: 3, color: '#667eea', display: 'flex', alignItems: 'center', gap: 1 }}>
+                                                        📝 Job Description
+                                                    </Typography>
+                                        <JobDescription description={job.description} />
+                                                </CardContent>
+                                            </Card>
+
+                                            {/* Skills Required Section */}
+                                        {job.requirements.length > 0 && (
+                                            <Card sx={{ 
+                                                    mb: 4,
+                                                borderRadius: 3,
+                                                background: 'linear-gradient(135deg, rgba(103, 126, 234, 0.05) 0%, rgba(118, 75, 162, 0.05) 100%)',
+                                                border: '1px solid rgba(103, 126, 234, 0.1)'
+                                            }}>
+                                                    <CardContent sx={{ p: 4 }}>
+                                                        <Typography variant="h5" fontWeight={700} sx={{ mb: 3, color: '#667eea', display: 'flex', alignItems: 'center', gap: 2 }}>
+                                                        <Box sx={{
+                                                                width: 40,
+                                                                height: 40,
+                                                            borderRadius: '50%',
+                                                            background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                                                            display: 'flex',
+                                                            alignItems: 'center',
+                                                            justifyContent: 'center'
+                                                        }}>
+                                                                <StarIcon sx={{ fontSize: 20, color: 'white' }} />
+                                                        </Box>
+                                                            🎯 Required Skills & Technologies
+                                                        </Typography>
+                                                    <Box display="flex" gap={2} flexWrap="wrap">
+                                                            {job.requirements.map((req, index) => (
+                                                            <Card key={index} sx={{ 
+                                                                borderRadius: 2,
+                                                                    background: 'linear-gradient(135deg, rgba(255,255,255,0.9) 0%, rgba(255,255,255,1) 100%)',
+                                                                border: '1px solid rgba(103, 126, 234, 0.2)',
+                                                                    transition: 'all 0.2s ease',
+                                                                    '&:hover': {
+                                                                        transform: 'translateY(-2px)',
+                                                                        boxShadow: '0 4px 12px rgba(103, 126, 234, 0.2)'
+                                                                    }
+                                                                }}>
+                                                                    <CardContent sx={{ p: 2, '&:last-child': { pb: 2 } }}>
+                                                                    <Typography variant="body2" fontWeight={600} sx={{ color: '#667eea' }}>
+                                                                        {req}
+                                                                    </Typography>
+                                                                </CardContent>
+                                                            </Card>
+                                                        ))}
+                                                    </Box>
+                                                </CardContent>
+                                            </Card>
+                                        )}
+
+                                            {/* Action Section */}
+                                        <Card sx={{ 
+                                            borderRadius: 3,
+                                                background: 'linear-gradient(135deg, rgba(248, 249, 250, 0.9) 0%, rgba(255, 255, 255, 1) 100%)',
+                                            border: '1px solid rgba(0,0,0,0.05)'
+                                        }}>
+                                                <CardContent sx={{ p: 4 }}>
+                                                    <Box display="flex" justifyContent="center" alignItems="center">
+                                                        {!isApplied(job.id) ? (
+                                                            <Button
+                                                                variant="contained"
+                                                                size="large"
+                                                                startIcon={<ApplyIcon />}
+                                                                onClick={(e) => {
+                                                                    e.stopPropagation();
+                                                                    handleApply(job);
+                                                                }}
+                                                                disabled={!job.isEligible}
+                                                                sx={{ 
+                                                                    borderRadius: 4, 
+                                                                    px: 6, 
+                                                                    py: 2,
+                                                                    textTransform: 'none',
+                                                                    fontWeight: 800,
+                                                                    fontSize: '1.2rem',
+                                                                    background: job.isEligible 
+                                                                        ? 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'
+                                                                        : 'rgba(0,0,0,0.12)',
+                                                                    boxShadow: job.isEligible 
+                                                                        ? '0 8px 24px rgba(103, 126, 234, 0.3)' 
+                                                                        : 'none',
+                                                                    transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                                                                    '&:hover': {
+                                                                        transform: job.isEligible ? 'translateY(-3px)' : 'none',
+                                                                        boxShadow: job.isEligible 
+                                                                            ? '0 12px 32px rgba(103, 126, 234, 0.4)' 
+                                                                            : 'none',
+                                                                    },
+                                                                    '&:disabled': {
+                                                                        background: 'rgba(0,0,0,0.12)',
+                                                                        color: 'rgba(0,0,0,0.26)'
+                                                                    }
+                                                                }}
+                                                            >
+                                                                {job.isEligible ? '🚀 Apply Now' : '❌ Not Eligible'}
+                                                            </Button>
+                                                        ) : (
+                                                            <Card sx={{
+                                                                background: 'linear-gradient(135deg, #4caf50 0%, #66bb6a 100%)',
+                                                                color: 'white',
+                                                                borderRadius: 4,
+                                                                boxShadow: '0 8px 24px rgba(76, 175, 80, 0.3)',
+                                                                px: 4,
+                                                                py: 2
+                                                            }}>
+                                                                <CardContent sx={{ p: 2, '&:last-child': { pb: 2 } }}>
+                                                                    <Box display="flex" alignItems="center" gap={3}>
+                                                                        <Box sx={{
+                                                                            width: 40,
+                                                                            height: 40,
+                                                                            borderRadius: '50%',
+                                                                            background: 'rgba(255,255,255,0.2)',
+                                                                            display: 'flex',
+                                                                            alignItems: 'center',
+                                                                            justifyContent: 'center'
+                                                                        }}>
+                                                                            <CheckCircleIcon sx={{ fontSize: 24 }} />
+                                                                        </Box>
+                                                                        <Box>
+                                                                            <Typography variant="h6" fontWeight={800}>
+                                                                                ✅ Application Submitted
+                                                                            </Typography>
+                                                                            <Typography variant="body2" sx={{ opacity: 0.9 }}>
+                                                                                You'll hear back soon! Check your email for updates.
+                                                                            </Typography>
+                                                                        </Box>
+                                                                    </Box>
+                                                                </CardContent>
+                                                            </Card>
+                                                        )}
+                                                </Box>
+                                            </CardContent>
+                                        </Card>
                                     </Box>
-                                </Box>
+                                    )}
                             </CardContent>
                         </Card>
                     </Grid>
-                ))}
+                    );
+                })}
             </Grid>
 
             {filteredJobs.length === 0 && (
-                <Card sx={{ mt: 3, borderRadius: 3, textAlign: 'center', py: 6 }}>
-                    <Box display="flex" flexDirection="column" alignItems="center" gap={2}>
-                        <WorkIcon sx={{ fontSize: 60, color: 'text.secondary' }} />
-                        <Typography variant="h6" color="text.secondary">
-                            No jobs found matching your criteria
-                        </Typography>
-                        <Typography variant="body2" color="text.secondary">
-                            Try adjusting your search filters or check back later for new opportunities
-                        </Typography>
+                <Card sx={{ 
+                    mt: 4, 
+                    borderRadius: 5, 
+                    textAlign: 'center', 
+                    py: 8,
+                    background: 'linear-gradient(135deg, rgba(103, 126, 234, 0.05) 0%, rgba(118, 75, 162, 0.05) 100%)',
+                    border: '1px solid rgba(103, 126, 234, 0.1)',
+                    position: 'relative',
+                    overflow: 'hidden',
+                    '&::before': {
+                        content: '""',
+                        position: 'absolute',
+                        top: -50,
+                        right: -50,
+                        width: 150,
+                        height: 150,
+                        background: 'linear-gradient(135deg, rgba(103, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%)',
+                        borderRadius: '50%'
+                    }
+                }}>
+                    <Box display="flex" flexDirection="column" alignItems="center" gap={3} sx={{ position: 'relative', zIndex: 1 }}>
+                        <Box sx={{
+                            width: 120,
+                            height: 120,
+                            borderRadius: '50%',
+                            background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            boxShadow: '0 8px 32px rgba(103, 126, 234, 0.3)',
+                            mb: 2
+                        }}>
+                            <WorkIcon sx={{ fontSize: 60, color: 'white' }} />
+                        </Box>
+                        <Box>
+                            <Typography variant="h5" sx={{ fontWeight: 700, color: 'text.primary', mb: 1 }}>
+                                🔍 No Jobs Found
+                            </Typography>
+                            <Typography variant="h6" color="text.secondary" sx={{ mb: 2 }}>
+                                We couldn't find any opportunities matching your search
+                            </Typography>
+                        </Box>
+                        <Box sx={{ maxWidth: 400 }}>
+                            <Typography variant="body1" color="text.secondary" sx={{ lineHeight: 1.6 }}>
+                                Try adjusting your search filters, or check back later as we're constantly adding new exciting opportunities that match your skills!
+                            </Typography>
+                        </Box>
+                        <Card sx={{
+                            mt: 2,
+                            borderRadius: 3,
+                            background: 'linear-gradient(135deg, rgba(255,255,255,0.8) 0%, rgba(255,255,255,1) 100%)',
+                            border: '1px solid rgba(103, 126, 234, 0.2)'
+                        }}>
+                            <CardContent sx={{ p: 2 }}>
+                                <Typography variant="body2" fontWeight={600} sx={{ color: '#667eea' }}>
+                                    💡 Tip: Clear all filters to see all available positions
+                                </Typography>
+                            </CardContent>
+                        </Card>
                     </Box>
                 </Card>
             )}
@@ -447,7 +1055,7 @@ const JobBoard = ({ studentId }) => {
             {/* Enhanced Apply Dialog */}
             <Dialog 
                 open={applyDialogOpen} 
-                onClose={() => setApplyDialogOpen(false)} 
+                onClose={() => !applyingJob && setApplyDialogOpen(false)} 
                 maxWidth="sm" 
                 fullWidth
                 PaperProps={{
@@ -488,6 +1096,7 @@ const JobBoard = ({ studentId }) => {
                 <DialogActions sx={{ p: 3 }}>
                     <Button 
                         onClick={() => setApplyDialogOpen(false)}
+                        disabled={applyingJob}
                         sx={{ borderRadius: 2, textTransform: 'none' }}
                     >
                         Cancel
@@ -495,6 +1104,8 @@ const JobBoard = ({ studentId }) => {
                     <Button 
                         onClick={confirmApply} 
                         variant="contained"
+                        disabled={applyingJob}
+                        startIcon={applyingJob ? <CircularProgress size={16} color="inherit" /> : <ApplyIcon />}
                         sx={{ 
                             borderRadius: 2, 
                             px: 3,
@@ -502,10 +1113,26 @@ const JobBoard = ({ studentId }) => {
                             fontWeight: 600
                         }}
                     >
-                        Confirm Application
+                        {applyingJob ? 'Submitting...' : 'Confirm Application'}
                     </Button>
                 </DialogActions>
             </Dialog>
+
+            {/* Success/Error Snackbar */}
+            <Snackbar
+                open={snackbar.open}
+                autoHideDuration={6000}
+                onClose={handleSnackbarClose}
+                anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
+            >
+                <Alert 
+                    onClose={handleSnackbarClose} 
+                    severity={snackbar.severity}
+                    sx={{ width: '100%' }}
+                >
+                    {snackbar.message}
+                </Alert>
+            </Snackbar>
         </Box>
     );
 };

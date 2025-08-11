@@ -556,7 +556,8 @@ class CurriculumManagementController extends Controller
                 return response()->json(['error' => 'Unauthorized'], 403);
             }
 
-            $courses = Course::select('id', 'name')
+            $courses = Course::select('id', 'name', 'start_date', 'is_completed', 'completed_at')
+                ->with('curriculums')
                 ->orderBy('name')
                 ->get();
 
@@ -611,6 +612,81 @@ class CurriculumManagementController extends Controller
         } catch (\Exception $e) {
             Log::error('Error fetching batches: ' . $e->getMessage());
             return response()->json(['error' => 'Failed to fetch batches'], 500);
+        }
+    }
+
+    public function storeCourse(Request $request)
+    {
+        try {
+            $user = Auth::user();
+            
+            if (!$user->is_admin && !$user->is_coordinator) {
+                return response()->json(['error' => 'Unauthorized'], 403);
+            }
+
+            $validator = Validator::make($request->all(), [
+                'name' => 'required|string|max:255',
+                'start_date' => 'nullable|date',
+            ]);
+
+            if ($validator->fails()) {
+                return response()->json(['errors' => $validator->errors()], 422);
+            }
+
+            $course = new Course();
+            $course->name = $request->name;
+            $course->start_date = $request->start_date;
+            $course->course_type = 1; // Default to Online Only
+            $course->is_live_course = 0; // Default to false
+            $course->allow_course_complete = 0; // Default to false
+            $course->copy_from_existing_course = 0; // Default to false
+            $course->course_unenrolling = 0; // Default to false
+            $course->content_access_after_completion = 0; // Default to false
+            $course->is_package = 0; // Default to false
+
+            $course->save();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Course created successfully',
+                'course' => $course
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Error creating course: ' . $e->getMessage());
+            return response()->json(['error' => 'Failed to create course'], 500);
+        }
+    }
+
+    public function completeCourse(Request $request, $courseId)
+    {
+        try {
+            $user = Auth::user();
+            
+            if (!$user->is_admin && !$user->is_coordinator) {
+                return response()->json(['error' => 'Unauthorized'], 403);
+            }
+
+            $course = Course::findOrFail($courseId);
+            
+            // Update course completion status
+            $course->is_completed = true;
+            $course->completed_at = now();
+            $course->save();
+
+            Log::info('Course completed successfully', [
+                'course_id' => $course->id,
+                'course_name' => $course->name,
+                'completed_by' => $user->id
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Course completed successfully',
+                'course' => $course
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Error completing course: ' . $e->getMessage());
+            return response()->json(['error' => 'Failed to complete course'], 500);
         }
     }
 } 
