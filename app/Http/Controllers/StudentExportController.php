@@ -25,12 +25,14 @@ class StudentExportController extends Controller
         // }
 
         $attendance = StudentAttendance::where('user_id', $studentId)
-            // ->with(['class', 'subject']) // Uncomment if you have these relationships
             ->get()
             ->map(function ($record) {
                 return [
+                    'id' => $record->id,
                     'date' => $record->check_in_datetime,
-                    'status' => $record->status,
+                    'status' => strtolower($record->status), // Convert to lowercase for frontend
+                    'check_in_datetime' => $record->check_in_datetime,
+                    'check_out_datetime' => $record->check_out_datetime,
                     'remarks' => '', // Add if you have remarks
                     'class_name' => '', // Add if you have class relationship
                     'subject_name' => '' // Add if you have subject relationship

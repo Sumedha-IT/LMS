@@ -238,7 +238,18 @@ export const userApi = createApi({
 
         // Job Postings APIs
         getJobPostings: builder.query({
-            query: () => 'job-postings',
+            query: (params) => {
+                const queryParams = new URLSearchParams();
+                if (params) {
+                    Object.keys(params).forEach(key => {
+                        if (params[key] !== '' && params[key] !== null && params[key] !== undefined) {
+                            queryParams.append(key, params[key]);
+                        }
+                    });
+                }
+                const queryString = queryParams.toString();
+                return `job-postings${queryString ? `?${queryString}` : ''}`;
+            },
         }),
         getJobPostingById: builder.query({
             query: (id) => `job-postings/${id}`,
@@ -297,9 +308,11 @@ export const userApi = createApi({
             query: () => 'placement/stats',
         }),
 
-        // Test Companies API
-        testCompaniesApi: builder.query({
-            query: () => 'companies-test',
+
+
+        // Courses API
+        getCourses: builder.query({
+            query: () => 'curriculum-management/courses',
         }),
     }),
 })
@@ -355,5 +368,5 @@ export const { useGetStudentDataQuery,
     useUpdateJobApplicationMutation,
     useDeleteJobApplicationMutation,
     useGetPlacementStatsQuery,
-    useTestCompaniesApiQuery,
+    useGetCoursesQuery,
 } = userApi

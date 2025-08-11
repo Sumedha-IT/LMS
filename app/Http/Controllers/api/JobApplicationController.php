@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Controllers\Api;
+namespace App\Http\Controllers\api;
 
 use App\Http\Controllers\Controller;
 use App\Models\JobApplication;
@@ -26,7 +26,7 @@ class JobApplicationController extends Controller
             }
 
             // Start with base query
-            $query = JobApplication::with(['jobPosting.company', 'jobPosting.domain', 'user']);
+            $query = JobApplication::with(['jobPosting.company', 'jobPosting.course', 'user']);
 
             // Apply search filters
             $query = $this->applySearchFilters($query, $request);
@@ -104,11 +104,11 @@ class JobApplicationController extends Controller
             });
         }
 
-        // Filter by domain
-        if ($request->filled('domain')) {
-            $domainId = $request->get('domain');
-            $query->whereHas('jobPosting', function ($q) use ($domainId) {
-                $q->where('domain_id', $domainId);
+        // Filter by course
+        if ($request->filled('course')) {
+            $courseId = $request->get('course');
+            $query->whereHas('jobPosting', function ($q) use ($courseId) {
+                $q->where('course_id', $courseId);
             });
         }
 
@@ -177,7 +177,7 @@ class JobApplicationController extends Controller
         if ($request->filled('status')) $filters['status'] = $request->get('status');
         if ($request->filled('job_title')) $filters['job_title'] = $request->get('job_title');
         if ($request->filled('company')) $filters['company'] = $request->get('company');
-        if ($request->filled('domain')) $filters['domain'] = $request->get('domain');
+        if ($request->filled('course')) $filters['course'] = $request->get('course');
         if ($request->filled('date_from')) $filters['date_from'] = $request->get('date_from');
         if ($request->filled('date_to')) $filters['date_to'] = $request->get('date_to');
         if ($request->filled('user_id')) $filters['user_id'] = $request->get('user_id');
@@ -228,7 +228,7 @@ class JobApplicationController extends Controller
     public function search(Request $request)
     {
         try {
-            $query = JobApplication::with(['jobPosting.company', 'jobPosting.domain', 'user']);
+            $query = JobApplication::with(['jobPosting.company', 'jobPosting.course', 'user']);
 
             // Apply advanced search filters
             $query = $this->applyAdvancedSearchFilters($query, $request);
@@ -331,12 +331,12 @@ class JobApplicationController extends Controller
             }
         }
 
-        // Domain filters
-        if ($request->filled('domain_ids')) {
-            $domainIds = $request->get('domain_ids');
-            if (is_array($domainIds)) {
-                $query->whereHas('jobPosting', function ($q) use ($domainIds) {
-                    $query->whereIn('domain_id', $domainIds);
+        // Course filters
+        if ($request->filled('course_ids')) {
+            $courseIds = $request->get('course_ids');
+            if (is_array($courseIds)) {
+                $query->whereHas('jobPosting', function ($q) use ($courseIds) {
+                    $q->whereIn('course_id', $courseIds);
                 });
             }
         }
@@ -346,7 +346,7 @@ class JobApplicationController extends Controller
             $companyIds = $request->get('company_ids');
             if (is_array($companyIds)) {
                 $query->whereHas('jobPosting', function ($q) use ($companyIds) {
-                    $query->whereIn('company_id', $companyIds);
+                    $q->whereIn('company_id', $companyIds);
                 });
             }
         }
@@ -387,7 +387,7 @@ class JobApplicationController extends Controller
         if ($request->filled('interview_date_to')) $criteria['interview_date_to'] = $request->get('interview_date_to');
         if ($request->filled('user_ids')) $criteria['user_ids'] = $request->get('user_ids');
         if ($request->filled('job_posting_ids')) $criteria['job_posting_ids'] = $request->get('job_posting_ids');
-        if ($request->filled('domain_ids')) $criteria['domain_ids'] = $request->get('domain_ids');
+        if ($request->filled('course_ids')) $criteria['course_ids'] = $request->get('course_ids');
         if ($request->filled('company_ids')) $criteria['company_ids'] = $request->get('company_ids');
         if ($request->filled('has_interview')) $criteria['has_interview'] = $request->get('has_interview');
         if ($request->filled('has_rejection_reason')) $criteria['has_rejection_reason'] = $request->get('has_rejection_reason');
@@ -420,13 +420,13 @@ class JobApplicationController extends Controller
                                          ->pluck('count', 'status')
                                          ->toArray();
 
-            // Get applications by domain
-            $applicationsByDomain = JobApplication::where($dateConditions)
+            // Get applications by course
+            $applicationsByCourse = JobApplication::where($dateConditions)
                                                  ->join('job_postings', 'job_applications.job_posting_id', '=', 'job_postings.id')
-                                                 ->join('domains', 'job_postings.domain_id', '=', 'domains.id')
-                                                 ->selectRaw('domains.name as domain_name, COUNT(*) as domain_count')
-                                                 ->groupBy('domains.id', 'domains.name')
-                                                 ->pluck('domain_count', 'domain_name')
+                                                 ->join('courses', 'job_postings.course_id', '=', 'courses.id')
+                                                 ->selectRaw('courses.name as course_name, COUNT(*) as course_count')
+                                                 ->groupBy('courses.id', 'courses.name')
+                                                 ->pluck('course_count', 'course_name')
                                                  ->toArray();
 
             // Get applications by company
@@ -441,7 +441,7 @@ class JobApplicationController extends Controller
             return response()->json([
                 'total_applications' => $totalApplications,
                 'status_breakdown' => $statusCounts,
-                'applications_by_domain' => $applicationsByDomain,
+                'applications_by_course' => $applicationsByCourse,
                 'applications_by_company' => $applicationsByCompany,
                 'date_range' => [
                     'from' => $request->get('date_from'),

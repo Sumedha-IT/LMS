@@ -1,7 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\Api\MyCourseController;
+use App\Http\Controllers\api\MyCourseController;
 
 /*
 |--------------------------------------------------------------------------
@@ -34,6 +34,14 @@ Route::get('clear-cache', function () {
 Route::get('/linkstorage', function () {
     Artisan::call('storage:link');
 });
+
+// User import template download route
+Route::get('/templates/user_import_template.csv', [App\Http\Controllers\TemplateController::class, 'downloadUserImportTemplate'])
+    ->name('user.import.template');
+
+// Template information route
+Route::get('/api/templates/user-import/info', [App\Http\Controllers\TemplateController::class, 'getTemplateInfo'])
+    ->name('user.import.template.info');
 
 Route::get('user/{userId}/exam/{examId}', function ($userId, $examId) {
     return view('exam');  // This should point to the Blade file that loads the React component.

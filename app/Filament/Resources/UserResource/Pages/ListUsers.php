@@ -24,6 +24,11 @@ class ListUsers extends ListRecords
         //dd(Filament::getTenant());
 
         return [
+            Actions\Action::make('downloadTemplate')
+                ->label('Download sample template')
+                ->icon('heroicon-m-arrow-down-tray')
+                ->url(route('user.import.template'))
+                ->openUrlInNewTab(),
             Actions\CreateAction::make()
                 ->mutateFormDataUsing(function (array $data) {
                     $this->tmp_pass = $data['password'];

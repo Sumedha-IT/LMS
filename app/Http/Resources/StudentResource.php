@@ -57,6 +57,33 @@ class StudentResource extends JsonResource
             "receive_sms_notification" => $this->receive_sms_notification,
             "avatar_url" => $this->avatar_url,
             'zoho_crm_id' => $this->zoho_crm_id,
+            // Get course from batch's course_package relationship
+            'course' => $this->whenLoaded('batches', function() {
+                $firstBatch = $this->batches->first();
+                if ($firstBatch && $firstBatch->course_package) {
+                    return [
+                        'id' => $firstBatch->course_package->id,
+                        'name' => $firstBatch->course_package->name,
+                    ];
+                }
+                return null;
+            }),
+            'batches' => $this->whenLoaded('batches', function() {
+                return $this->batches->map(function($batch) {
+                    return [
+                        'id' => $batch->id,
+                        'batch_name' => $batch->name,
+                        'batch_id' => $batch->id,
+                        'course' => $batch->course_package ? [
+                            'id' => $batch->course_package->id,
+                            'name' => $batch->course_package->name,
+                        ] : null,
+                    ];
+                });
+            }),
+            // Add exam marks from user table
+            'exam_total_marks' => $this->exam_total_marks ?? 0,
+            'exam_has_negative_scores' => ($this->exam_total_marks ?? 0) < 0,
         ];
     }
 }

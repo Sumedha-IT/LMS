@@ -54,7 +54,22 @@ class BatchResource extends JsonResource
                         'id' => $student->id,
                         'name' => $student->name,
                         'email' => $student->email,
-                        'phone' => $student->phone
+                        'phone' => $student->phone,
+                        'course' => $this->course_package ? [
+                            'id' => $this->course_package->id,
+                            'name' => $this->course_package->name,
+                        ] : null,
+                        'batches' => $student->batches ? $student->batches->map(function($batch) {
+                            return [
+                                'id' => $batch->id,
+                                'batch_name' => $batch->name,
+                                'batch_id' => $batch->id,
+                                'course' => $batch->course_package ? [
+                                    'id' => $batch->course_package->id,
+                                    'name' => $batch->course_package->name,
+                                ] : null,
+                            ];
+                        }) : [],
                     ];
                 });
             }, []),

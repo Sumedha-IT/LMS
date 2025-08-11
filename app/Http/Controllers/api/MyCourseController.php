@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Controllers\Api;
+namespace App\Http\Controllers\api;
 
 use App\Http\Controllers\Controller;
 use App\Models\BatchCurriculum;
@@ -98,6 +98,15 @@ class MyCourseController extends Controller
                 ->with(['curriculum', 'tutor'])
                 ->get()
                 ->map(function ($batchCurriculum) {
+                    // Check if curriculum exists before accessing its properties
+                    if (!$batchCurriculum->curriculum) {
+                        Log::warning('BatchCurriculum has no curriculum', [
+                            'batch_curriculum_id' => $batchCurriculum->id,
+                            'curriculum_id' => $batchCurriculum->curriculum_id
+                        ]);
+                        return null; // Skip this curriculum
+                    }
+                    
                     return [
                         'id' => $batchCurriculum->curriculum->id,
                         'name' => $batchCurriculum->curriculum->name,
@@ -108,6 +117,9 @@ class MyCourseController extends Controller
                         ] : null,
                         'topics' => []
                     ];
+                })
+                ->filter(function ($curriculum) {
+                    return $curriculum !== null; // Remove null entries
                 });
 
                 return [

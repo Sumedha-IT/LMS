@@ -9,6 +9,8 @@ class JobEligibilityCriteria extends Model
 {
     use HasFactory;
 
+    protected $table = 'job_eligibility_criteria';
+
     protected $fillable = [
         'job_posting_id',
         'btech_year_of_passout_min',

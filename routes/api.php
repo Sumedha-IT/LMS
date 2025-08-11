@@ -45,13 +45,13 @@ use App\Http\Controllers\api\TopicController;
 use App\Http\Controllers\StudentAttendanceController;
 use App\Http\Controllers\StudentExportController;
 use App\Http\Controllers\api\CurriculumManagementController;
-use App\Http\Controllers\Api\CompanyController;
-use App\Http\Controllers\Api\JobPostingController;
-use App\Http\Controllers\Api\JobApplicationController;
-use App\Http\Controllers\Api\PlacementCriteriaController;
-use App\Http\Controllers\Api\StudentPlacementEligibilityController;
-use App\Http\Controllers\Api\JobEligibilityCriteriaController;
-use App\Http\Controllers\Api\JobEligibilityCheckController;
+use App\Http\Controllers\api\CompanyController;
+use App\Http\Controllers\api\JobPostingController;
+use App\Http\Controllers\api\JobApplicationController;
+use App\Http\Controllers\api\PlacementCriteriaController;
+use App\Http\Controllers\api\StudentPlacementEligibilityController;
+use App\Http\Controllers\api\JobEligibilityCriteriaController;
+use App\Http\Controllers\api\JobEligibilityCheckController;
 
 /*
 |--------------------------------------------------------------------------
@@ -478,99 +478,29 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::post('/student/register-device', [StudentAttendanceController::class, 'registerDevice']);
 });
 
-// Test routes without authentication
-Route::get('companies-test', [CompanyController::class, 'test']);
-
-// Placement Management APIs (without authentication for testing)
-Route::apiResource('companies', CompanyController::class);
-
-// Job Applications Search Routes (must be before apiResource)
-Route::get('job-applications/search', [JobApplicationController::class, 'search']);
-Route::get('job-applications/statistics', [JobApplicationController::class, 'getStatistics']);
-Route::get('job-applications/job_posting_id/{job_posting_id}', [JobApplicationController::class, 'filterByJobPostingAndSearch']);
-Route::apiResource('job-applications', JobApplicationController::class);
-
-// Job Postings Routes for Students (must be before apiResource)
-Route::get('job-postings/search', [JobPostingController::class, 'search']);
-Route::get('job-postings/statistics', [JobPostingController::class, 'getStatistics']);
-Route::get('job-postings/filter/company-date', [JobPostingController::class, 'filterByCompanyAndDate']);
-Route::apiResource('job-postings', JobPostingController::class);
+// Placement Management APIs (with authentication)
+Route::middleware(['auth:sanctum'])->group(function () {
+    Route::apiResource('companies', CompanyController::class);
     
-Route::apiResource('placement-criteria', PlacementCriteriaController::class);
-Route::apiResource('student-placement-eligibility', StudentPlacementEligibilityController::class);
-Route::apiResource('job-eligibility-criteria', JobEligibilityCriteriaController::class);
+    // Job Applications Search Routes (must be before apiResource)
+    Route::get('job-applications/search', [JobApplicationController::class, 'search']);
+    Route::get('job-applications/statistics', [JobApplicationController::class, 'getStatistics']);
+    Route::get('job-applications/job_posting_id/{job_posting_id}', [JobApplicationController::class, 'filterByJobPostingAndSearch']);
+    Route::apiResource('job-applications', JobApplicationController::class);
 
-// Job Eligibility Check APIs (temporarily without auth for testing)
-Route::post('job-eligibility-check', [JobEligibilityCheckController::class, 'checkEligibility']);
-Route::get('job-postings/{job_posting_id}/eligible-students', [JobEligibilityCheckController::class, 'getJobEligibilityList']);
-Route::get('job-postings/{job_posting_id}/eligible-student', [JobEligibilityCheckController::class, 'getJobEligibilityList']);
+    // Job Postings Routes for Students (must be before apiResource)
+    Route::get('job-postings/search', [JobPostingController::class, 'search']);
+    Route::get('job-postings/statistics', [JobPostingController::class, 'getStatistics']);
+    Route::get('job-postings/filter/company-date', [JobPostingController::class, 'filterByCompanyAndDate']);
+    Route::apiResource('job-postings', JobPostingController::class);
+        
+    Route::apiResource('placement-criteria', PlacementCriteriaController::class);
+    Route::apiResource('student-placement-eligibility', StudentPlacementEligibilityController::class);
+    Route::apiResource('job-eligibility-criteria', JobEligibilityCriteriaController::class);
 
-// Test endpoint to verify API is working
-Route::get('test-job-eligibility', function() {
-    return response()->json([
-        'message' => 'Job eligibility API is working',
-        'timestamp' => now(),
-        'status' => 'success'
-    ]);
-});
-
-// Test endpoint to check if controller works without middleware
-Route::get('test-controller/{job_posting_id}', function($job_posting_id) {
-    $controller = new \App\Http\Controllers\Api\JobEligibilityCheckController();
-    return $controller->getJobEligibilityList(request(), $job_posting_id);
-});
-
-// Test job applications search without middleware
-Route::get('test-job-applications-search', function() {
-    try {
-        $query = \App\Models\JobApplication::with(['jobPosting.company', 'jobPosting.domain', 'user']);
-        
-        // Simple search test
-        if (request()->filled('q')) {
-            $searchTerm = request()->get('q');
-            $query->whereHas('user', function ($q) use ($searchTerm) {
-                $q->where('name', 'LIKE', "%{$searchTerm}%");
-            });
-        }
-        
-        $perPage = request()->get('per_page', 5);
-        $applications = $query->paginate($perPage);
-        
-        return response()->json([
-            'data' => $applications->items(),
-            'pagination' => [
-                'current_page' => $applications->currentPage(),
-                'last_page' => $applications->lastPage(),
-                'per_page' => $applications->perPage(),
-                'total' => $applications->total(),
-            ],
-            'test' => 'success'
-        ]);
-    } catch (\Exception $e) {
-        return response()->json(['error' => $e->getMessage()], 500);
-    }
-});
-
-// Test job applications statistics without middleware
-Route::get('test-job-applications-statistics', function() {
-    try {
-        $query = \App\Models\JobApplication::query();
-        
-        // Get status counts
-        $statusCounts = $query->selectRaw('status, COUNT(*) as count')
-                             ->groupBy('status')
-                             ->pluck('count', 'status')
-                             ->toArray();
-        
-        // Get total applications
-        $totalApplications = $query->count();
-        
-        return response()->json([
-            'total_applications' => $totalApplications,
-            'status_breakdown' => $statusCounts,
-            'test' => 'success'
-        ]);
-    } catch (\Exception $e) {
-        return response()->json(['error' => $e->getMessage()], 500);
-    }
+    // Job Eligibility Check APIs (with proper authentication)
+    Route::post('job-eligibility-check', [JobEligibilityCheckController::class, 'checkEligibility']);
+    Route::get('job-postings/{job_posting_id}/eligible-students', [JobEligibilityCheckController::class, 'getJobEligibilityList']);
+    Route::get('job-postings/{job_posting_id}/eligible-student', [JobEligibilityCheckController::class, 'getJobEligibilityList']);
+    Route::get('students/{student_id}/exam-marks', [JobEligibilityCheckController::class, 'getStudentExamMarks']);
 });

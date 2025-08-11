@@ -95,6 +95,8 @@ class BatchResource extends Resource implements HasShieldPermissions
                                                             foreach ($curriculum->topics as $topic) {
                                                                 $topics[] = [
                                                                     'topic_id' => $topic->topic_id,
+                                                                    'is_topic_started' => false,
+                                                                    'topic_started_at' => null,
                                                                     'is_topic_completed' => false,
                                                                     'topic_completed_at' => null,
                                                                 ];
@@ -152,6 +154,7 @@ class BatchResource extends Resource implements HasShieldPermissions
                                                                         Forms\Components\Toggle::make('is_topic_started')
                                                                             ->label('Started')
                                                                             ->default(false)
+                                                                            ->required()
                                                                             ->live()
                                                                             ->afterStateUpdated(function ($state, callable $set) {
                                                                                 if ($state) {

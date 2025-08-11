@@ -44,17 +44,18 @@ const StudentDashboard = ({
           <TableContainer component={Paper} sx={{ overflowX: 'auto', ...style.container }}>
               <Table sx={{ minWidth: 650 }} aria-label="customized table" stickyHeader>
                   <TableHead>
-                      <TableRow sx={{ background: 'linear-gradient(270deg, #eb6707 0%, #e42b12 100%)' }}>
+                      <TableRow sx={{ background: 'linear-gradient(135deg, #0f1f3d 0%, #1e3c72 100%)' }}>
                           {headers?.map((header, index) => (
                               <TableCell
                                   key={index}
                                   sx={{
                                       fontWeight: 'bold',
                                       fontSize: '1rem',
-                                      background: 'linear-gradient(270deg, #eb6707 0%, #e42b12 100%)',
-                                      color: '#fff',
                                       borderBottom: '2px solid #e0e0e0',
                                       ...(style.headerCell || {}),
+                                      // Enforce gradient and high-contrast text color
+                                      background: 'linear-gradient(135deg, #0f1f3d 0%, #1e3c72 100%)',
+                                      color: '#fff',
                                   }}
                               >
                                   {header.label}

@@ -5,6 +5,7 @@ namespace App\Http\Controllers\api;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\StudentResource;
 use App\Models\User;
+use App\Models\Attendance;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 
@@ -15,9 +16,21 @@ class StudentsController extends Controller
         $pageNo = $req->get('page', 1);
         $offset = ($pageNo - 1) * $size;
 
-        $students = User::with('role')->whereHas('role', function($query) {
+        $students = User::with(['role', 'batches.course_package'])->whereHas('role', function($query) {
             $query->where('name', 'Student');
         })->offset($offset)->limit($size)->get();
+
+        // Add debugging
+        \Log::info('Students API called', [
+            'total_students' => $students->count(),
+            'first_student' => $students->first() ? [
+                'id' => $students->first()->id,
+                'name' => $students->first()->name,
+                'batches_count' => $students->first()->batches ? $students->first()->batches->count() : 0,
+                'first_batch_course' => $students->first()->batches && $students->first()->batches->first() ? 
+                    ($students->first()->batches->first()->course_package ? $students->first()->batches->first()->course_package->name : 'null') : 'no_batches',
+            ] : null
+        ]);
 
         return StudentResource::collection($students);
     }
@@ -33,7 +46,7 @@ class StudentsController extends Controller
         }
 
         $input = $validator->validated();
-        $student = User::with('role')->whereHas('role', function($query) {
+        $student = User::with(['role', 'batches.course_package'])->whereHas('role', function($query) {
             $query->where('name', 'Student');
         })->where("id",$input['id'])->first();
 
@@ -42,6 +55,52 @@ class StudentsController extends Controller
         }
         return new StudentResource($student);
 
+    }
+
+    /**
+     * Get attendance for a specific student
+     */
+    public function getAttendance($studentId)
+    {
+        try {
+            // Check if student exists
+            $student = User::find($studentId);
+            if (!$student) {
+                return response()->json([
+                    'error' => 'Student not found',
+                    'message' => 'Student with ID ' . $studentId . ' not found'
+                ], 404);
+            }
+
+            // Get attendance records for the student
+            $attendanceRecords = Attendance::where('user_id', $studentId)
+                ->orderBy('created_at', 'desc')
+                ->get();
+
+            // Calculate attendance percentage
+            $totalRecords = $attendanceRecords->count();
+            $presentRecords = $attendanceRecords->where('status', 'present')->count();
+            $absentRecords = $attendanceRecords->where('status', 'absent')->count();
+            $lateRecords = $attendanceRecords->where('status', 'late')->count();
+
+            $attendancePercentage = $totalRecords > 0 ? round(($presentRecords / $totalRecords) * 100, 2) : 0;
+
+            return response()->json([
+                'success' => true,
+                'data' => $attendanceRecords,
+                'summary' => [
+                    'total_records' => $totalRecords,
+                    'present_records' => $presentRecords,
+                    'absent_records' => $absentRecords,
+                    'late_records' => $lateRecords,
+                    'attendance_percentage' => $attendancePercentage
+                ],
+                'message' => 'Attendance retrieved successfully'
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json(['error' => $e->getMessage()], 500);
+        }
     }
 
     

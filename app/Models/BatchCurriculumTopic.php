@@ -90,4 +90,9 @@ class BatchCurriculumTopic extends Model
             $this->attributes['topic_completed_at'] = null;
         }
     }
+
+    public function setIsTopicStartedAttribute($value): void
+    {
+        $this->attributes['is_topic_started'] = (bool) ($value ?? false);
+    }
 }

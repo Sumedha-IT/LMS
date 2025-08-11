@@ -125,10 +125,12 @@ class QuestionBankController extends Controller
                 'has_file' => $request->hasFile('file'),
                 'file_name' => $request->file('file')?->getClientOriginalName(),
                 'file_size' => $request->file('file')?->getSize(),
+                'file_extension' => $request->file('file')?->getClientOriginalExtension(),
+                'file_mime_type' => $request->file('file')?->getMimeType(),
             ]);
 
             $validator = Validator::make($request->all(), [
-                'file' => 'required|file|mimetypes:text/plain,text/csv,application/csv,application/vnd.ms-excel,application/octet-stream,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel.sheet.macroEnabled.12|max:10240',
+                'file' => 'required|file|mimes:csv,xlsx,xls,txt|max:10240',
             ]);
 
             if ($validator->fails()) {
@@ -144,8 +146,16 @@ class QuestionBankController extends Controller
 
             \Log::info('File read successfully', [
                 'total_rows' => count($rows),
-                'first_row' => $rows[0] ?? 'No data'
+                'first_row' => $rows[0] ?? 'No data',
+                'file_extension' => $file->getClientOriginalExtension()
             ]);
+
+            if (empty($rows)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'No data found in the uploaded file. Please ensure the file contains valid data and is in the correct format.'
+                ], 400);
+            }
 
             $successfulBanks = 0;
             $successfulQuestions = 0;
@@ -245,30 +255,81 @@ class QuestionBankController extends Controller
 
     private function readExcelFile($file)
     {
-        $extension = $file->getClientOriginalExtension();
+        $extension = strtolower($file->getClientOriginalExtension());
         $path = $file->getRealPath();
 
         if ($extension === 'csv') {
             return array_map('str_getcsv', file($path));
         } else {
-            // For Excel files, try to read as CSV first (most Excel files can be read as CSV)
+            // For Excel files (xlsx, xls), try multiple approaches
             $data = [];
-            if (($handle = fopen($path, "r")) !== FALSE) {
-                while (($row = fgetcsv($handle, 1000, ",")) !== FALSE) {
-                    $data[] = $row;
-                }
-                fclose($handle);
-            }
             
-            // If no data was read, try with different delimiter
-            if (empty($data)) {
+            // Method 1: Try to read as CSV with different delimiters
+            $delimiters = [',', "\t", ';', '|'];
+            
+            foreach ($delimiters as $delimiter) {
                 if (($handle = fopen($path, "r")) !== FALSE) {
-                    while (($row = fgetcsv($handle, 1000, "\t")) !== FALSE) {
-                        $data[] = $row;
+                    $tempData = [];
+                    while (($row = fgetcsv($handle, 1000, $delimiter)) !== FALSE) {
+                        if (!empty(array_filter($row))) { // Skip empty rows
+                            $tempData[] = $row;
+                        }
                     }
                     fclose($handle);
+                    
+                    if (!empty($tempData) && count($tempData) > 1) {
+                        $data = $tempData;
+                        break;
+                    }
                 }
             }
+            
+            // Method 2: If no data found, try to read the file as text and parse manually
+            if (empty($data)) {
+                $content = file_get_contents($path);
+                if ($content !== false) {
+                    // Try to extract CSV-like data from the content
+                    $lines = explode("\n", $content);
+                    foreach ($lines as $line) {
+                        $line = trim($line);
+                        if (!empty($line)) {
+                            // Try different delimiters
+                            foreach ($delimiters as $delimiter) {
+                                $row = str_getcsv($line, $delimiter);
+                                if (!empty($row) && count($row) > 1) {
+                                    $data[] = $row;
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            
+            // Method 3: If still no data, try to read as XML (for some Excel files)
+            if (empty($data)) {
+                $content = file_get_contents($path);
+                if ($content !== false && strpos($content, '<?xml') !== false) {
+                    // Try to extract data from XML content
+                    preg_match_all('/<c[^>]*>(.*?)<\/c>/s', $content, $matches);
+                    if (!empty($matches[1])) {
+                        $row = [];
+                        foreach ($matches[1] as $cell) {
+                            $row[] = strip_tags($cell);
+                        }
+                        if (!empty($row)) {
+                            $data[] = $row;
+                        }
+                    }
+                }
+            }
+            
+            \Log::info('Excel file processing result', [
+                'file' => $file->getClientOriginalName(),
+                'extension' => $extension,
+                'data_rows' => count($data),
+                'first_row' => $data[0] ?? 'No data'
+            ]);
             
             return $data;
         }

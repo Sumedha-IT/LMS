@@ -70,7 +70,7 @@ class BatchController extends Controller
             }
         }
 
-        $batch = Batch::with('students')->find($id);
+        $batch = Batch::with(['students', 'students.batches.course_package'])->find($id);
 
         if (empty($batch)) {
             \Log::warning('Batch not found', ['batch_id' => $id]);

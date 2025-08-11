@@ -9,6 +9,13 @@ class StudentPlacementEligibility extends Model
 {
     use HasFactory;
 
+    /**
+     * The table associated with the model.
+     *
+     * @var string
+     */
+    protected $table = 'student_placement_eligibility';
+
     protected $fillable = [
         'user_id',
         'is_eligible',

@@ -136,14 +136,10 @@ class UserResource extends Resource
                             ])
                             ->schema([
                                 Forms\Components\Select::make('qualification_id')
-                                    ->relationship('qualification', 'name')
+                                    ->options(Qualification::query()->pluck('name', 'id')->toArray())
                                     ->required()
                                     ->searchable()
                                     ->preload()
-                                    ->createOptionForm([
-                                        Forms\Components\TextInput::make('name')
-                                            ->required(),
-                                    ])
                                     ->columnSpanFull(),
                                 Forms\Components\TextInput::make('year')
                                     ->numeric()
@@ -255,20 +251,9 @@ class UserResource extends Resource
                             ->relationship('designation', 'name')
                             ->searchable()
                             ->preload()
-                            ->hidden(fn (Forms\Get $get): bool => $get('role_id') == 6)
-                            ->createOptionForm([
-                                Forms\Components\TextInput::make('name')
-                                    ->required(),
-                            ]),
+                            ->hidden(fn (Forms\Get $get): bool => (int) $get('role_id') === 6),
 
-                        Forms\Components\Select::make('domain_id')
-                            ->relationship('domain', 'name')
-                            ->searchable()
-                            ->preload()
-                            ->createOptionForm([
-                                Forms\Components\TextInput::make('name')
-                                    ->required(),
-                            ]),
+                        // Removed domain select – domain relation/column no longer exists
 
                     ])->hiddenOn('create')->columns(2),
 
@@ -384,8 +369,6 @@ class UserResource extends Resource
 
     public static function relations(): array
     {
-        return [
-            Assignments::class,
-        ];
+        return [];
     }
 }

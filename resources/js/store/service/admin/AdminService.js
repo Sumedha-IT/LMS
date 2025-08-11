@@ -85,9 +85,94 @@ export const adminApi = createApi({
                 body: data
             })
         }),
+        // Job Posting APIs
+        getJobPostings: builder.query({
+            query: (filters = {}) => ({
+                url: 'job-postings',
+                params: filters
+            }),
+        }),
+        getCompanies: builder.query({
+            query: () => 'companies',
+        }),
+        getJobApplications: builder.query({
+            query: () => 'job-applications',
+        }),
+        createJobPosting: builder.mutation({
+            query: (data) => ({
+                url: 'job-postings',
+                method: 'POST',
+                body: data
+            })
+        }),
+        updateJobPosting: builder.mutation({
+            query: ({ id, data }) => ({
+                url: `job-postings/${id}`,
+                method: 'PUT',
+                body: data
+            })
+        }),
+        deleteJobPosting: builder.mutation({
+            query: (id) => ({
+                url: `job-postings/${id}`,
+                method: 'DELETE',
+            })
+        }),
+        createCompany: builder.mutation({
+            query: (data) => ({
+                url: 'companies',
+                method: 'POST',
+                body: data
+            })
+        }),
+        updateCompany: builder.mutation({
+            query: ({ id, data }) => ({
+                url: `companies/${id}`,
+                method: 'PUT',
+                body: data
+            })
+        }),
+        deleteCompany: builder.mutation({
+            query: (id) => ({
+                url: `companies/${id}`,
+                method: 'DELETE',
+            })
+        }),
+        // Job Eligible Students API
+        getJobEligibleStudents: builder.query({
+            query: (jobPostingId) => `job-postings/${jobPostingId}/eligible-students`,
+        }),
     }),
 })
 
 // Export hooks for usage in functional components, which are
 // auto-generated based on the defined endpoints
-export const { useGetSubjectsQuery,useGetCurriculumQuery, useGetCoursesQuery, useGetExamDataQuery, useGetExamDataByIdMutation,useGetMarkListBanksMutation, useGetRandomQuestionIdsMutation, useGetBatchesQuery, useGetInvigilatorsQuery, useGetQuestionBanksQuery, useGetQuestionsAsPerBankIdQuery, useAddExamDataMutation, useUpdateExamDataMutation, useGetQuestionIdMutation, useAddQuestionBanksMutation } = adminApi
+export const { 
+    useGetSubjectsQuery,
+    useGetCurriculumQuery, 
+    useGetCoursesQuery, 
+    useGetExamDataQuery, 
+    useGetExamDataByIdMutation,
+    useGetMarkListBanksMutation, 
+    useGetRandomQuestionIdsMutation, 
+    useGetBatchesQuery, 
+    useGetInvigilatorsQuery, 
+    useGetQuestionBanksQuery, 
+    useGetQuestionsAsPerBankIdQuery, 
+    useAddExamDataMutation, 
+    useUpdateExamDataMutation, 
+    useGetQuestionIdMutation, 
+    useAddQuestionBanksMutation,
+    // Job Posting hooks
+    useGetJobPostingsQuery,
+    useGetCompaniesQuery,
+    useGetJobApplicationsQuery,
+    useCreateJobPostingMutation,
+    useUpdateJobPostingMutation,
+    useDeleteJobPostingMutation,
+    useCreateCompanyMutation,
+    useUpdateCompanyMutation,
+    useDeleteCompanyMutation,
+    // Job Eligible Students hook
+    useGetJobEligibleStudentsQuery,
+} = adminApi

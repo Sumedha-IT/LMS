@@ -11,7 +11,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('student_placement_eligibilities', function (Blueprint $table) {
+        Schema::create('student_placement_eligibility', function (Blueprint $table) {
             $table->id();
             $table->foreignId('user_id')->constrained('users')->onDelete('cascade');
             $table->boolean('is_eligible')->default(false);
@@ -45,6 +45,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('student_placement_eligibilities');
+        Schema::dropIfExists('student_placement_eligibility');
     }
 };

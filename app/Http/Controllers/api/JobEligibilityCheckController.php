@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Controllers\Api;
+namespace App\Http\Controllers\api;
 
 use App\Http\Controllers\Controller;
 use App\Models\JobPosting;
@@ -8,9 +8,11 @@ use App\Models\StudentPlacementEligibility;
 use App\Models\User;
 use App\Models\ExamAttempt;
 use App\Models\StudentAttendance;
+use App\Services\ExamCalculationService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\DB;
+use Carbon\Carbon;
 
 class JobEligibilityCheckController extends Controller
 {
@@ -18,6 +20,7 @@ class JobEligibilityCheckController extends Controller
     {
         // Temporarily removed authentication for testing
         // $this->middleware('auth:sanctum');
+        $this->examCalculationService = new ExamCalculationService();
     }
 
     /**
@@ -129,42 +132,57 @@ class JobEligibilityCheckController extends Controller
     }
 
     /**
-     * Calculate attendance percentage for a student
+     * Calculate attendance percentage for a student (using fast API logic)
      */
     private function calculateAttendancePercentage($userId)
     {
         try {
             \Log::info("Calculating attendance percentage for user_id: {$userId}");
             
-            // Get total attendance records for the student
-            $totalAttendance = StudentAttendance::where('user_id', $userId)->count();
+            // Get the student's batch
+            $userBatch = \App\Models\BatchUser::where('user_id', $userId)->first();
             
-            if ($totalAttendance === 0) {
-                \Log::info("No attendance records found for user_id: {$userId}");
+            if (!$userBatch) {
+                \Log::info("No batch found for user_id: {$userId}");
                 return 0;
             }
             
-            // Get present attendance records
-            $presentAttendance = StudentAttendance::where('user_id', $userId)
-                ->where('status', 'Present')
-                ->count();
+            // Get batch details
+            $batch = \App\Models\Batch::find($userBatch->batch_id);
             
-            // Get other status counts for detailed logging
-            $absentAttendance = StudentAttendance::where('user_id', $userId)
-                ->where('status', 'Absent')
-                ->count();
+            if (!$batch) {
+                \Log::info("Batch not found for user_id: {$userId}");
+                return 0;
+            }
             
-            $lateAttendance = StudentAttendance::where('user_id', $userId)
-                ->where('status', 'Late')
-                ->count();
+            // Use the same logic as the fast attendance API
+            $batchStartDate = Carbon::parse($batch->start_date)->startOfDay();
+            $endDate = Carbon::now()->endOfDay();
             
-            $percentage = ($presentAttendance / $totalAttendance) * 100;
+            // Get attendance records for the student
+            $attendanceRecords = StudentAttendance::where('user_id', $userId)
+                ->whereBetween('check_in_datetime', [$batchStartDate, $endDate])
+                ->orderBy('check_in_datetime', 'desc')
+                ->get();
             
-            \Log::info("Attendance calculation summary for user_id {$userId}:");
-            \Log::info("- Total attendance records: {$totalAttendance}");
-            \Log::info("- Present: {$presentAttendance}");
-            \Log::info("- Absent: {$absentAttendance}");
-            \Log::info("- Late: {$lateAttendance}");
+            $totalDays = 0;
+            $presentDays = 0;
+            
+            foreach ($attendanceRecords as $record) {
+                $totalDays++;
+                if ($record->check_out_datetime) {
+                    $duration = Carbon::parse($record->check_out_datetime)->diffInMinutes(Carbon::parse($record->check_in_datetime));
+                    if ($duration >= 180) { // 3 hours minimum
+                        $presentDays++;
+                    }
+                }
+            }
+            
+            $percentage = $totalDays > 0 ? ($presentDays / $totalDays) * 100 : 0;
+            
+            \Log::info("Fast attendance calculation summary for user_id {$userId}:");
+            \Log::info("- Total days: {$totalDays}");
+            \Log::info("- Present days: {$presentDays}");
             \Log::info("- Attendance percentage: " . round($percentage, 2) . "%");
             
             return round($percentage, 2);
@@ -180,105 +198,33 @@ class JobEligibilityCheckController extends Controller
     }
 
     /**
-     * Calculate average exam marks for a student
-     * Uses the exam table and total_marks field for accurate calculation
-     * 
-     * Data Flow: Student → Batch → Exam → ExamAttempt
+     * Calculate average exam marks for a student (from user table)
+     * Uses stored exam_total_marks from user table
      */
     private function calculateExamMarks($userId)
     {
         try {
-            \Log::info("Calculating exam marks for user_id: {$userId}");
-            
-            // Get all exam attempts for the student with exam details
-            $examAttempts = ExamAttempt::with('exam')
-                ->where('student_id', $userId)
-                ->whereNotNull('score')
-                ->where('score', '!=', '')
-                ->where('status', 'completed')
-                ->get();
-            
-            if ($examAttempts->isEmpty()) {
-                \Log::info('No completed exam attempts found for user_id: ' . $userId);
+            $student = User::find($userId);
+            if (!$student) {
                 return 0;
             }
+
+            // Get stored exam total marks from user table
+            $totalMarks = $student->exam_total_marks ?? 0;
             
-            \Log::info("Found {$examAttempts->count()} completed exam attempts for user_id: {$userId}");
-            
-            // Debug: Log all exam attempts for this student
-            foreach ($examAttempts as $attempt) {
-                \Log::info("Exam attempt details - ID: {$attempt->id}, Exam ID: {$attempt->exam_id}, Score: {$attempt->score}, Status: {$attempt->status}");
+            // If no stored marks, calculate and store them
+            if ($totalMarks == 0 && !$student->exam_last_calculated_at) {
+                $this->examCalculationService->getStudentExamTotalMarks($userId);
+                $student->refresh();
+                $totalMarks = $student->exam_total_marks ?? 0;
             }
             
-            $totalScore = 0;
-            $totalPossibleScore = 0;
-            $validAttempts = 0;
-            $skippedAttempts = 0;
-            
-            foreach ($examAttempts as $attempt) {
-                // Convert score to float (it's stored as string)
-                $score = floatval($attempt->score);
-                
-                // Get total marks from the exam table using the total_marks field
-                $maxMarks = $attempt->exam ? $attempt->exam->total_marks : 0;
-                
-                // If exam doesn't exist or total_marks is 0, skip this attempt
-                if (!$attempt->exam) {
-                    \Log::warning("Skipping exam attempt {$attempt->id}: Exam not found");
-                    $skippedAttempts++;
-                    continue;
-                }
-                
-                if ($maxMarks <= 0) {
-                    \Log::warning("Skipping exam attempt {$attempt->id}: Invalid total_marks ({$maxMarks}) for exam '{$attempt->exam->title}'");
-                    $skippedAttempts++;
-                    continue;
-                }
-                
-                // Validate score is not negative
-                if ($score < 0) {
-                    \Log::warning("Skipping exam attempt {$attempt->id}: Negative score ({$score})");
-                    $skippedAttempts++;
-                    continue;
-                }
-                
-                // Calculate percentage from raw score (scores are stored as raw marks)
-                $percentageScore = ($score / $maxMarks) * 100;
-                \Log::info("Exam attempt {$attempt->id} (Exam: {$attempt->exam->title}): Raw score = {$score}, MaxMarks = {$maxMarks}, Calculated percentage = " . round($percentageScore, 2) . "%");
-                
-                // Cap percentage at 100%
-                if ($percentageScore > 100) {
-                    \Log::warning("Exam attempt {$attempt->id}: Percentage ({$percentageScore}%) exceeds 100%, capping at 100%");
-                    $percentageScore = 100;
-                }
-                
-                $totalScore += $score; // Add raw score
-                $totalPossibleScore += $maxMarks; // Add max marks
-                $validAttempts++;
-            }
-            
-            if ($totalPossibleScore === 0) {
-                \Log::warning("Total possible score is 0 for user_id: {$userId}. Valid attempts: {$validAttempts}, Skipped attempts: {$skippedAttempts}");
-                return 0;
-            }
-            
-            // Calculate weighted average percentage across all exams
-            $percentage = ($totalScore / $totalPossibleScore) * 100;
-            
-            \Log::info("Exam calculation summary for user_id {$userId}:");
-            \Log::info("- Valid attempts: {$validAttempts}");
-            \Log::info("- Skipped attempts: {$skippedAttempts}");
-            \Log::info("- Total score: {$totalScore}");
-            \Log::info("- Total possible score: {$totalPossibleScore}");
-            \Log::info("- Final percentage: " . round($percentage, 2) . "%");
-            
-            return round($percentage, 2);
+            return $totalMarks;
             
         } catch (\Exception $e) {
-            \Log::error('Error calculating exam marks:', [
+            \Log::error('Error getting exam marks from user table:', [
                 'user_id' => $userId,
-                'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
+                'error' => $e->getMessage()
             ]);
             return 0;
         }
@@ -392,7 +338,50 @@ class JobEligibilityCheckController extends Controller
     }
 
     /**
-     * Check course match between student and job posting
+     * Get exam marks for a specific student (from user table)
+     * 
+     * @param Request $request
+     * @param int $studentId
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function getStudentExamMarks(Request $request, $studentId)
+    {
+        try {
+            // Check if student exists
+            $student = User::find($studentId);
+            if (!$student) {
+                return response()->json([
+                    'error' => 'Student not found',
+                    'message' => 'Student with ID ' . $studentId . ' not found'
+                ], 404);
+            }
+
+            // Get exam marks directly from user table
+            $totalMarks = $student->exam_total_marks ?? 0;
+            $hasNegativeScores = $totalMarks < 0;
+
+            return response()->json([
+                'success' => true,
+                'student' => [
+                    'id' => $student->id,
+                    'name' => $student->name,
+                    'email' => $student->email
+                ],
+                'exam_summary' => [
+                    'total_marks' => $totalMarks,
+                    'last_calculated_at' => $student->exam_last_calculated_at,
+                    'has_negative_scores' => $hasNegativeScores
+                ],
+                'message' => 'Exam marks retrieved successfully'
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json(['error' => $e->getMessage()], 500);
+        }
+    }
+
+    /**
+     * Check if a student meets the criteria for a specific job posting
      * Updated to check through batch system instead of direct course assignment
      */
     private function checkCourseMatch($student, $jobPosting)

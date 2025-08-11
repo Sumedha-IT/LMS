@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Controllers\Api;
+namespace App\Http\Controllers\api;
 
 use App\Http\Controllers\Controller;
 use App\Models\JobPosting;
@@ -21,10 +21,8 @@ class JobPostingController extends Controller
     public function index(Request $request)
     {
         try {
-            // Start with base query - only open jobs
-            $query = JobPosting::with(['company', 'domain', 'postedBy'])
-                              ->where('status', 'open')
-                              ->where('application_deadline', '>', now());
+            // Start with base query - show all jobs for admin
+            $query = JobPosting::with(['company', 'course', 'postedBy', 'eligibilityCriteria']);
 
             // Apply search filters
             $query = $this->applySearchFilters($query, $request);
@@ -61,9 +59,7 @@ class JobPostingController extends Controller
     public function search(Request $request)
     {
         try {
-            $query = JobPosting::with(['company', 'domain', 'postedBy'])
-                              ->where('status', 'open')
-                              ->where('application_deadline', '>', now());
+            $query = JobPosting::with(['company', 'course', 'postedBy', 'eligibilityCriteria']);
 
             // Apply advanced search filters
             $query = $this->applyAdvancedSearchFilters($query, $request);
@@ -100,8 +96,7 @@ class JobPostingController extends Controller
     public function getStatistics(Request $request)
     {
         try {
-            $query = JobPosting::where('status', 'open')
-                              ->where('application_deadline', '>', now());
+            $query = JobPosting::where('status', 'open');
 
             // Apply date range filter if provided
             if ($request->filled('date_from')) {
@@ -113,10 +108,10 @@ class JobPostingController extends Controller
 
             $totalJobs = $query->count();
             
-            // Jobs by domain
-            $jobsByDomain = $query->with('domain')
+            // Jobs by course
+            $jobsByCourse = $query->with('course')
                                  ->get()
-                                 ->groupBy('domain.name')
+                                 ->groupBy('course.name')
                                  ->map(function ($jobs) {
                                      return $jobs->count();
                                  });
@@ -133,7 +128,7 @@ class JobPostingController extends Controller
 
             return response()->json([
                 'total_jobs' => $totalJobs,
-                'jobs_by_domain' => $jobsByDomain,
+                'jobs_by_course' => $jobsByCourse,
                 'jobs_by_location' => $jobsByLocation,
                 'jobs_by_experience' => $jobsByExperience
             ]);
@@ -147,9 +142,7 @@ class JobPostingController extends Controller
     public function show($id)
     {
         try {
-            $jobPosting = JobPosting::with(['company', 'domain', 'postedBy'])
-                                   ->where('status', 'open')
-                                   ->where('application_deadline', '>', now())
+            $jobPosting = JobPosting::with(['company', 'course', 'postedBy', 'eligibilityCriteria'])
                                    ->findOrFail($id);
             
             return response()->json([
@@ -165,6 +158,7 @@ class JobPostingController extends Controller
      */
     private function applySearchFilters($query, Request $request)
     {
+        
         // Search by job title or description
         if ($request->filled('search')) {
             $searchTerm = $request->get('search');
@@ -185,16 +179,22 @@ class JobPostingController extends Controller
             }
         }
 
+        // Filter by status
+        if ($request->filled('status')) {
+            $status = $request->get('status');
+            $query->where('status', $status);
+        }
+
         // Filter by location
         if ($request->filled('location')) {
             $location = $request->get('location');
             $query->where('location', 'LIKE', "%{$location}%");
         }
 
-        // Filter by domain
-        if ($request->filled('domain_id')) {
-            $domainId = $request->get('domain_id');
-            $query->where('domain_id', $domainId);
+        // Filter by course
+        if ($request->filled('course_id')) {
+            $courseId = $request->get('course_id');
+            $query->where('course_id', $courseId);
         }
 
         // Filter by company
@@ -242,8 +242,8 @@ class JobPostingController extends Controller
                   ->orWhereHas('company', function($companyQuery) use ($searchTerm) {
                       $companyQuery->where('name', 'LIKE', "%{$searchTerm}%");
                   })
-                  ->orWhereHas('domain', function($domainQuery) use ($searchTerm) {
-                      $domainQuery->where('name', 'LIKE', "%{$searchTerm}%");
+                  ->orWhereHas('course', function($courseQuery) use ($searchTerm) {
+                      $courseQuery->where('name', 'LIKE', "%{$searchTerm}%");
                   });
             });
         }
@@ -257,8 +257,8 @@ class JobPostingController extends Controller
             $query->whereIn('location', $request->get('locations'));
         }
 
-        if ($request->filled('domain_ids')) {
-            $query->whereIn('domain_id', $request->get('domain_ids'));
+        if ($request->filled('course_ids')) {
+            $query->whereIn('course_id', $request->get('course_ids'));
         }
 
         if ($request->filled('company_ids')) {
@@ -318,7 +318,7 @@ class JobPostingController extends Controller
         if ($request->filled('search')) $filters['search'] = $request->get('search');
         if ($request->filled('job_type')) $filters['job_type'] = $request->get('job_type');
         if ($request->filled('location')) $filters['location'] = $request->get('location');
-        if ($request->filled('domain_id')) $filters['domain_id'] = $request->get('domain_id');
+        if ($request->filled('course_id')) $filters['course_id'] = $request->get('course_id');
         if ($request->filled('company_id')) $filters['company_id'] = $request->get('company_id');
         if ($request->filled('salary_min')) $filters['salary_min'] = $request->get('salary_min');
         if ($request->filled('salary_max')) $filters['salary_max'] = $request->get('salary_max');
@@ -339,7 +339,7 @@ class JobPostingController extends Controller
         if ($request->filled('q')) $criteria['q'] = $request->get('q');
         if ($request->filled('job_types')) $criteria['job_types'] = $request->get('job_types');
         if ($request->filled('locations')) $criteria['locations'] = $request->get('locations');
-        if ($request->filled('domain_ids')) $criteria['domain_ids'] = $request->get('domain_ids');
+        if ($request->filled('course_ids')) $criteria['course_ids'] = $request->get('course_ids');
         if ($request->filled('company_ids')) $criteria['company_ids'] = $request->get('company_ids');
         if ($request->filled('posted_date_from')) $criteria['posted_date_from'] = $request->get('posted_date_from');
         if ($request->filled('posted_date_to')) $criteria['posted_date_to'] = $request->get('posted_date_to');
@@ -356,9 +356,36 @@ class JobPostingController extends Controller
         try {
             \Log::info('Job posting store request received:', $request->all());
             
-        $jobPosting = JobPosting::create($request->all());
+            // Separate job posting data from eligibility criteria data
+            $jobPostingData = $request->only([
+                'company_id', 'posted_by', 'title', 'course_id', 'description', 'requirements', 
+                'responsibilities', 'job_type', 'location', 'salary_min', 'salary_max', 
+                'experience_required', 'vacancies', 'status', 'application_deadline'
+            ]);
+            
+            // Set default posted_by if not provided (for testing)
+            if (!isset($jobPostingData['posted_by'])) {
+                $jobPostingData['posted_by'] = 1; // Default user ID
+            }
+            
+            // Create job posting
+            $jobPosting = JobPosting::create($jobPostingData);
+            
+            // Create eligibility criteria if provided
+            $eligibilityData = $request->only([
+                'btech_year_of_passout_min', 'btech_year_of_passout_max',
+                'mtech_year_of_passout_min', 'mtech_year_of_passout_max',
+                'btech_percentage_min', 'mtech_percentage_min',
+                'skills_required', 'additional_criteria'
+            ]);
+            
+            if (!empty(array_filter($eligibilityData))) {
+                $eligibilityData['job_posting_id'] = $jobPosting->id;
+                \App\Models\JobEligibilityCriteria::create($eligibilityData);
+            }
+            
             \Log::info('Job posting created successfully:', $jobPosting->toArray());
-        return response()->json($jobPosting, 201);
+            return response()->json($jobPosting, 201);
         } catch (\Exception $e) {
             \Log::error('Error creating job posting:', [
                 'message' => $e->getMessage(),
@@ -370,16 +397,85 @@ class JobPostingController extends Controller
 
     public function update(Request $request, $id)
     {
-        $jobPosting = JobPosting::findOrFail($id);
-        $jobPosting->update($request->all());
-        return response()->json($jobPosting);
+        try {
+            $jobPosting = JobPosting::findOrFail($id);
+            
+            // Separate job posting data from eligibility criteria data
+            $jobPostingData = $request->only([
+                'company_id', 'posted_by', 'title', 'course_id', 'description', 'requirements', 
+                'responsibilities', 'job_type', 'location', 'salary_min', 'salary_max', 
+                'experience_required', 'vacancies', 'status', 'application_deadline'
+            ]);
+            
+            // Update job posting
+            $jobPosting->update($jobPostingData);
+            
+            // Update or create eligibility criteria
+            $eligibilityData = $request->only([
+                'btech_year_of_passout_min', 'btech_year_of_passout_max',
+                'mtech_year_of_passout_min', 'mtech_year_of_passout_max',
+                'btech_percentage_min', 'mtech_percentage_min',
+                'skills_required', 'additional_criteria'
+            ]);
+            
+            if (!empty(array_filter($eligibilityData))) {
+                $eligibilityData['job_posting_id'] = $jobPosting->id;
+                
+                // Check if eligibility criteria exists
+                $existingCriteria = \App\Models\JobEligibilityCriteria::where('job_posting_id', $jobPosting->id)->first();
+                
+                if ($existingCriteria) {
+                    $existingCriteria->update($eligibilityData);
+                } else {
+                    \App\Models\JobEligibilityCriteria::create($eligibilityData);
+                }
+            }
+            
+            return response()->json($jobPosting);
+        } catch (\Exception $e) {
+            \Log::error('Error updating job posting:', [
+                'message' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            return response()->json(['error' => $e->getMessage()], 500);
+        }
     }
 
     public function destroy($id)
     {
-        $jobPosting = JobPosting::findOrFail($id);
-        $jobPosting->delete();
-        return response()->json(null, 204);
+        try {
+            \Log::info('Attempting to delete job posting', ['id' => $id]);
+            
+            $jobPosting = JobPosting::with(['eligibilityCriteria', 'applications'])->findOrFail($id);
+            
+            // Delete related applications first
+            if ($jobPosting->applications && $jobPosting->applications->count() > 0) {
+                \Log::info('Deleting related applications', ['count' => $jobPosting->applications->count()]);
+                $jobPosting->applications()->delete();
+            }
+            
+            // Delete related eligibility criteria
+            if ($jobPosting->eligibilityCriteria) {
+                \Log::info('Deleting eligibility criteria');
+                $jobPosting->eligibilityCriteria->delete();
+            }
+            
+            // Delete the job posting
+            $jobPosting->delete();
+            
+            \Log::info('Job posting deleted successfully', ['id' => $id]);
+            return response()->json(['message' => 'Job posting deleted successfully'], 200);
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            \Log::warning('Job posting not found for deletion', ['id' => $id]);
+            return response()->json(['error' => 'Job posting not found'], 404);
+        } catch (\Exception $e) {
+            \Log::error('Error deleting job posting', [
+                'id' => $id,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            return response()->json(['error' => 'Failed to delete job posting: ' . $e->getMessage()], 500);
+        }
     }
 
     /**
@@ -398,10 +494,8 @@ class JobPostingController extends Controller
                 'sort_order' => 'nullable|string|in:asc,desc'
             ]);
 
-            // Start with base query - only open jobs
-            $query = JobPosting::with(['company', 'course', 'postedBy'])
-                              ->where('status', 'open')
-                              ->where('application_deadline', '>', now());
+            // Start with base query - show all jobs for admin
+            $query = JobPosting::with(['company', 'course', 'postedBy', 'eligibilityCriteria']);
 
             // Filter by company name
             if (!empty($validated['company_name'])) {

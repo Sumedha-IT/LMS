@@ -43,6 +43,9 @@ class User extends Authenticatable implements HasTenants, FilamentUser, HasAvata
         'name',
         'email',
         'password',
+        'role_id',
+        'country_code',
+        'contact_number',
         'phone',
         'gender',
         'birthday',
@@ -63,7 +66,10 @@ class User extends Authenticatable implements HasTenants, FilamentUser, HasAvata
         'receive_email_notification',
         'receive_sms_notification',
         'zoho_crm_id',
-        'course_id'
+        'course_id',
+        'exam_total_marks',
+        'exam_last_calculated_at',
+        'exam_last_attempt_id'
     ];
 
     /**
@@ -86,7 +92,8 @@ class User extends Authenticatable implements HasTenants, FilamentUser, HasAvata
         'password' => 'hashed',
         'receive_email_notification' => 'boolean',
         'receive_sms_notification' => 'boolean',
-        'qualification' => 'array'
+        'qualification' => 'array',
+        'exam_last_calculated_at' => 'datetime'
     ];
 
 
