@@ -43,6 +43,7 @@
         "js-cookie": "^3.0.5",
         "js-file-download": "^0.4.12",
         "js-sha256": "^0.11.1",
+        "jszip": "^3.10.1",
         "lottie-react": "^2.4.1",
         "lucide-react": "^0.484.0",
         "pdfjs-dist": "^3.11.174",

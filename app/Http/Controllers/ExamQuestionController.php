@@ -30,6 +30,135 @@ class ExamQuestionController extends Controller
         return response()->json(['message' => 'Questions added', 'success' => true, "status" => 200], 200);
     }
 
+    private function formatQuestionContent($content)
+    {
+        if (empty($content)) {
+            return $content;
+        }
+
+        // Check if the content contains code patterns
+        $codePatterns = [
+            '/class\s+\w+/i',
+            '/function\s+\w+/i',
+            '/if\s*\(/i',
+            '/for\s*\(/i',
+            '/while\s*\(/i',
+            '/switch\s*\(/i',
+            '/try\s*\{/i',
+            '/catch\s*\(/i',
+            '/import\s+/i',
+            '/export\s+/i',
+            '/const\s+/i',
+            '/let\s+/i',
+            '/var\s+/i',
+            '/public\s+/i',
+            '/private\s+/i',
+            '/protected\s+/i',
+            '/static\s+/i',
+            '/final\s+/i',
+            '/abstract\s+/i',
+            '/interface\s+/i',
+            '/extends\s+/i',
+            '/implements\s+/i',
+            '/new\s+/i',
+            '/return\s+/i',
+            '/break\s+/i',
+            '/continue\s+/i',
+            '/throw\s+/i',
+            '/throws\s+/i',
+            '/package\s+/i',
+            '/namespace\s+/i',
+            '/using\s+/i',
+            '/include\s+/i',
+            '/require\s+/i',
+            '/def\s+/i',
+            '/end\s+/i',
+            '/begin\s+/i',
+            '/initial\s+/i',
+            '/always\s+/i',
+            '/module\s+/i',
+            '/endmodule\s+/i',
+            '/wire\s+/i',
+            '/reg\s+/i',
+            '/input\s+/i',
+            '/output\s+/i',
+            '/inout\s+/i',
+            '/parameter\s+/i',
+            '/localparam\s+/i',
+            '/assign\s+/i',
+            '/always_comb\s+/i',
+            '/always_ff\s+/i',
+            '/always_latch\s+/i',
+            '/posedge\s+/i',
+            '/negedge\s+/i',
+            '/\$display\s*\(/i',
+            '/\$finish\s*\(/i',
+            '/\$stop\s*\(/i'
+        ];
+
+        $hasCodePattern = false;
+        foreach ($codePatterns as $pattern) {
+            if (preg_match($pattern, $content)) {
+                $hasCodePattern = true;
+                break;
+            }
+        }
+
+        if ($hasCodePattern) {
+            // Check if the entire content looks like a code block (has multiple lines with code patterns)
+            $lines = explode("\n", $content);
+            $codeLineCount = 0;
+            $totalLines = count($lines);
+            
+            foreach ($lines as $line) {
+                $trimmedLine = trim($line);
+                if (!empty($trimmedLine)) {
+                    foreach ($codePatterns as $pattern) {
+                        if (preg_match($pattern, $trimmedLine)) {
+                            $codeLineCount++;
+                            break;
+                        }
+                    }
+                }
+            }
+            
+            // If more than 50% of non-empty lines contain code patterns, treat as a complete code block
+            if ($codeLineCount > 0 && ($codeLineCount / max(1, $totalLines)) > 0.3) {
+                // Format as a complete code block
+                return '<pre style="background-color: #f8f9fa; padding: 16px; border-radius: 8px; font-family: monospace; font-size: 14px; border: 1px solid #e9ecef; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word; margin: 8px 0; line-height: 1.4;">' . htmlspecialchars($content) . '</pre>';
+            } else {
+                // Format individual lines as before
+                $formattedLines = [];
+                
+                foreach ($lines as $line) {
+                    $trimmedLine = trim($line);
+                    if (!empty($trimmedLine)) {
+                        // Check if this line contains code patterns
+                        $isCodeLine = false;
+                        foreach ($codePatterns as $pattern) {
+                            if (preg_match($pattern, $trimmedLine)) {
+                                $isCodeLine = true;
+                                break;
+                            }
+                        }
+                        
+                        if ($isCodeLine) {
+                            $formattedLines[] = '<div style="background-color: #f8f9fa; padding: 12px; border-radius: 6px; font-family: monospace; font-size: 14px; margin: 4px 0; border: 1px solid #e9ecef; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;">' . htmlspecialchars($line) . '</div>';
+                        } else {
+                            $formattedLines[] = '<div style="margin: 4px 0; word-wrap: break-word; overflow-wrap: break-word;">' . htmlspecialchars($line) . '</div>';
+                        }
+                    } else {
+                        $formattedLines[] = '<div style="margin: 2px 0;">&nbsp;</div>';
+                    }
+                }
+                
+                return implode('', $formattedLines);
+            }
+        }
+
+        return $content;
+    }
+
     public function validateExamQuestions($data){
         $validator = Validator::make($data, [
             '*.partId' => 'required|string',                     // Each section must have a partId that is a string
@@ -196,12 +325,16 @@ class ExamQuestionController extends Controller
                 if (isset($questions[$questionId])) {
                     $question = $questions[$questionId]; // Get the question object
                     $options =  $question->questions_options;
+                    
+                    // Get the original question content (not pre-formatted)
+                    $originalQuestion = $question->question;
+                    
                     $input[] = [
                         'question_id'       => $questionId,
                         'question_bank_id'  => $question->question_bank_id,  // From the pre-fetched question
                         'part_id'           => $partId ,  // Handle "default" section
                         'exam_id'           => $exam->id,  // Constant exam ID
-                        'question'          => $question->question,
+                        'question'          => $this->formatQuestionContent($originalQuestion),
                         'meta'              => json_encode([
                                                 'options' => $options,
                                                 'correctOption' => collect($options)->where('is_correct',1)->pluck('id')->first(),
@@ -210,6 +343,7 @@ class ExamQuestionController extends Controller
                                                     'paragraph' => $question->paragraph,
                                                     'hint' => $question->hint,
                                                     'explanation' => $question->explanation,
+                                                    'image' => $question->image,
                                                 ]
                                                ]),
                         'score'             => $question->marks,
@@ -226,5 +360,31 @@ class ExamQuestionController extends Controller
         $exam->total_marks =  $totalMarks;
         $exam->save();
         ExamQuestion::insert($input);
+    }
+
+    /**
+     * Re-process existing exam questions with new formatting
+     */
+    public function reprocessExamQuestions($examId)
+    {
+        $exam = Exam::find($examId);
+        if (empty($exam)) {
+            return response()->json(['message' => 'Exam not found', 'success' => false, 'status' => 404], 404);
+        }
+
+        // Get all exam questions for this exam
+        $examQuestions = ExamQuestion::where('exam_id', $examId)->get();
+        
+        foreach ($examQuestions as $examQuestion) {
+            // Get the original question from the questions table
+            $originalQuestion = Question::find($examQuestion->question_id);
+            if ($originalQuestion) {
+                // Re-format the question content
+                $examQuestion->question = $this->formatQuestionContent($originalQuestion->question);
+                $examQuestion->save();
+            }
+        }
+
+        return response()->json(['message' => 'Exam questions re-processed successfully', 'success' => true, 'status' => 200], 200);
     }
 }

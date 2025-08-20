@@ -48,12 +48,15 @@ class QuestionAttempLogController extends Controller
                 'id' => $examQuestion->id,
                 'question' => $examQuestion->question,
                 'question_id' => $examQuestion->question_id,
-                'meta' =>    array_map(function ($option) {
-                    return [
-                        'id' => $option['id'],
-                        'option' => $option['option'],
-                    ];
-                }, $examQuestion->meta['options']),
+                'meta' => [
+                    'options' => array_map(function ($option) {
+                        return [
+                            'id' => $option['id'],
+                            'option' => $option['option'],
+                        ];
+                    }, $examQuestion->meta['options']),
+                    'questionMeta' => $examQuestion->meta['questionMeta'] ?? null,
+                ],
                 'answer' => $questionAttempts->answer ?? null,
                 'statusCode' => $questionAttempts->stage ?? "5",
                 'score' => $examQuestion->score,

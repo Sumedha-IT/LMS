@@ -6,10 +6,30 @@ const apiUrl = import.meta.env.VITE_APP_API_URL;
 const baseQuery = fetchBaseQuery({
     baseUrl: apiUrl,
     prepareHeaders: (headers) => {
-        const token = Cookies.get('bearer_token');
-        if (token) {
-            headers.set('Authorization', `Bearer ${token}`);
+        // Try to get token from user_info cookie first
+        const userInfo = Cookies.get('user_info');
+        let token = null;
+        
+        if (userInfo) {
+            try {
+                const userData = JSON.parse(decodeURIComponent(userInfo));
+                token = userData?.token;
+            } catch (error) {
+                console.error('Error parsing user_info cookie:', error);
+            }
         }
+        
+        // Fallback to bearer_token cookie
+        if (!token) {
+            token = Cookies.get('bearer_token');
+        }
+        
+        if (token) {
+            headers.set('Authorization', token);
+        } else {
+            console.warn('No authentication token found');
+        }
+        
         headers.set('Accept', 'application/json');
         headers.set('Content-Type', 'application/json');
         return headers;

@@ -47,8 +47,8 @@ class AnnouncementResource extends Resource
                             ->maxLength(255),
                         Forms\Components\DateTimePicker::make('schedule_at')
                             ->native(false)
-                            ->displayFormat('Y-m-d H:i:s')
-                            ->format('Y-m-d H:i:s')
+                            ->displayFormat('d/m/Y H:i:s')
+                            ->format('d/m/Y H:i:s')
                             ->required(),
                         Forms\Components\Textarea::make('description')
                             ->required()

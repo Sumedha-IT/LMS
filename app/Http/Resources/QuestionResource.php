@@ -21,6 +21,7 @@ class QuestionResource extends JsonResource
             "paragraph" => $this->paragraph,
             "question" => $this->question,
             "question_type" => $this->question_type,
+            "image" => $this->image,
             "difficulty" => $this->difficulty,
             "topic" => $this->topic,
             "marks" => $this->marks,

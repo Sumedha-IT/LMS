@@ -20,18 +20,6 @@ class StudentsController extends Controller
             $query->where('name', 'Student');
         })->offset($offset)->limit($size)->get();
 
-        // Add debugging
-        \Log::info('Students API called', [
-            'total_students' => $students->count(),
-            'first_student' => $students->first() ? [
-                'id' => $students->first()->id,
-                'name' => $students->first()->name,
-                'batches_count' => $students->first()->batches ? $students->first()->batches->count() : 0,
-                'first_batch_course' => $students->first()->batches && $students->first()->batches->first() ? 
-                    ($students->first()->batches->first()->course_package ? $students->first()->batches->first()->course_package->name : 'null') : 'no_batches',
-            ] : null
-        ]);
-
         return StudentResource::collection($students);
     }
 

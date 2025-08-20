@@ -48,6 +48,7 @@ const PlacementStudents = ({ eligibleOnlyMode = false }) => {
     const [studentAssignments, setStudentAssignments] = useState({});
     const [studentAttendance, setStudentAttendance] = useState({});
     const [studentExams, setStudentExams] = useState({});
+    const [studentJobApplications, setStudentJobApplications] = useState({});
 
     // API hooks
     const { data: jobPostings } = useGetJobPostingsQuery();
@@ -80,9 +81,6 @@ const PlacementStudents = ({ eligibleOnlyMode = false }) => {
                 headers: { 'Authorization': userData.token }
             });
             
-            // Debug: Log attendance response
-            console.log(`Fast attendance response for student ${studentId}:`, response.data);
-            
             return response.data;
         } catch (err) {
             console.error('Error fetching attendance:', err);
@@ -93,6 +91,21 @@ const PlacementStudents = ({ eligibleOnlyMode = false }) => {
                 absent_days: 0,
                 attendance_details: []
             };
+        }
+    };
+
+    // Function to fetch student job applications
+    const fetchStudentJobApplications = async (studentId) => {
+        try {
+            const userInfo = getCookie('user_info');
+            const userData = JSON.parse(userInfo);
+            const response = await axios.get(`/api/job-applications?user_id=${studentId}`, {
+                headers: { 'Authorization': userData.token }
+            });
+            return response.data.data || [];
+        } catch (err) {
+            console.error('Error fetching job applications:', err);
+            return [];
         }
     };
 
@@ -115,14 +128,9 @@ const PlacementStudents = ({ eligibleOnlyMode = false }) => {
     const calculateAttendancePercentage = (attendanceData) => {
         if (!attendanceData || !attendanceData.present_days) return 0;
         
-        // Debug: Log attendance data
-        console.log('Fast attendance data for calculation:', attendanceData);
-        
         const presentDays = attendanceData.present_days || 0;
         const totalDays = attendanceData.total_days || 0;
         const percentage = totalDays > 0 ? Math.round((presentDays / totalDays) * 100) : 0;
-        
-        console.log(`Fast attendance calculation: ${presentDays}/${totalDays} = ${percentage}%`);
         
         return percentage;
     };
@@ -131,6 +139,33 @@ const PlacementStudents = ({ eligibleOnlyMode = false }) => {
     const calculateAssignmentSubmissions = (assignmentData) => {
         if (!assignmentData || assignmentData.length === 0) return 0;
         return assignmentData.filter(assignment => assignment.Status === 'submitted').length;
+    };
+
+    // Function to get status color for job application statuses
+    const getStatusColor = (status) => {
+        switch (status) {
+            case 'applied': return 'default';
+            case 'shortlisted': return 'primary';
+            case 'interview_scheduled': return 'info';
+            case 'interviewed': return 'warning';
+            case 'selected': return 'success';
+            case 'rejected': return 'error';
+            case 'withdrawn': return 'secondary';
+            default: return 'default';
+        }
+    };
+
+    // Function to get latest job application status for a student
+    const getLatestJobApplicationStatus = (studentId) => {
+        const applications = studentJobApplications[studentId] || [];
+        if (applications.length === 0) return '--';
+        
+        // Sort by application date (newest first) and return the latest status
+        const sortedApplications = applications.sort((a, b) => 
+            new Date(b.application_date) - new Date(a.application_date)
+        );
+        
+        return sortedApplications[0].status;
     };
 
     // Function to calculate exam marks (optimized version)
@@ -149,28 +184,60 @@ const PlacementStudents = ({ eligibleOnlyMode = false }) => {
         };
     };
 
-    // Function to fetch additional data for students (parallel per student + progressive state updates)
+    // Function to fetch additional data for students (batched state updates for better performance)
     const fetchStudentAdditionalData = async (studentsList) => {
         const tasks = studentsList.map(async (student) => {
             try {
-                const [assignments, attendance, exams] = await Promise.all([
+                const [assignments, attendance, exams, jobApplications] = await Promise.all([
                     fetchStudentAssignments(student.id),
                     fetchStudentAttendance(student.id),
                     fetchStudentExams(student.id),
+                    fetchStudentJobApplications(student.id),
                 ]);
 
-                setStudentAssignments((prev) => ({ ...prev, [student.id]: assignments }));
-                setStudentAttendance((prev) => ({ ...prev, [student.id]: attendance }));
-                setStudentExams((prev) => ({ ...prev, [student.id]: exams }));
+                return {
+                    studentId: student.id,
+                    assignments,
+                    attendance,
+                    exams,
+                    jobApplications,
+                    success: true
+                };
             } catch (e) {
-                // Keep going even if one student fails
-                setStudentAssignments((prev) => ({ ...prev, [student.id]: [] }));
-                setStudentAttendance((prev) => ({ ...prev, [student.id]: { total_days: 0, present_days: 0 } }));
-                setStudentExams((prev) => ({ ...prev, [student.id]: {} }));
+                return {
+                    studentId: student.id,
+                    assignments: [],
+                    attendance: { total_days: 0, present_days: 0 },
+                    exams: {},
+                    jobApplications: [],
+                    success: false
+                };
             }
         });
 
-        await Promise.allSettled(tasks);
+        const results = await Promise.allSettled(tasks);
+        
+        // Batch all state updates together
+        const newAssignments = {};
+        const newAttendance = {};
+        const newExams = {};
+        const newJobApplications = {};
+
+        results.forEach((result) => {
+            if (result.status === 'fulfilled' && result.value) {
+                const { studentId, assignments, attendance, exams, jobApplications } = result.value;
+                newAssignments[studentId] = assignments;
+                newAttendance[studentId] = attendance;
+                newExams[studentId] = exams;
+                newJobApplications[studentId] = jobApplications;
+            }
+        });
+
+        // Update all states at once
+        setStudentAssignments((prev) => ({ ...prev, ...newAssignments }));
+        setStudentAttendance((prev) => ({ ...prev, ...newAttendance }));
+        setStudentExams((prev) => ({ ...prev, ...newExams }));
+        setStudentJobApplications((prev) => ({ ...prev, ...newJobApplications }));
     };
 
     useEffect(() => {

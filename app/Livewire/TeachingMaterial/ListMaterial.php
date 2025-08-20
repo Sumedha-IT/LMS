@@ -202,15 +202,15 @@ class ListMaterial extends Component implements HasForms, HasTable
                         ->reactive()
                         ->default(now())
                         ->required()
-                        ->displayFormat('Y-m-d H:i:s')
-                        ->format('Y-m-d H:i:s'),
+                        ->displayFormat('d/m/Y H:i:s')
+                        ->format('d/m/Y H:i:s'),
                     DateTimePicker::make('stop_submission')
                         ->native(false)
                         ->default(now())
                         ->minDate(fn(callable $get) => $get('start_submission'))
                         ->required()
-                        ->displayFormat('Y-m-d H:i:s')
-                        ->format('Y-m-d H:i:s'),
+                        ->displayFormat('d/m/Y H:i:s')
+                        ->format('d/m/Y H:i:s'),
                     Toggle::make('prerequisite')
                         ->label('Make this a prerequisite.')
                         ->helperText("Students won't be able to move on to next lesson unless they complete this lesson.")

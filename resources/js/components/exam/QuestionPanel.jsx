@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { Box, Typography, Radio, RadioGroup, FormControlLabel, FormControl, Button, CircularProgress } from '@mui/material';
+import { Box, Typography, Radio, RadioGroup, FormControlLabel, FormControl, Button, CircularProgress, Modal, IconButton } from '@mui/material';
 import RefreshIcon from '@mui/icons-material/Refresh';
 import CalculateOutlinedIcon from '@mui/icons-material/CalculateOutlined';
+import CloseIcon from '@mui/icons-material/Close';
+import ZoomInIcon from '@mui/icons-material/ZoomIn';
 import { useUploadExamQuestionsMutation } from '../../store/service/user/UserService';
 import { useParams } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
@@ -15,6 +17,8 @@ const QuestionPanel = ({ question, onAnswer, onNext, onMarkForReview, onClearRes
     const { userId, examAttemptId, examId } = useParams();
     const [activePart, setActivePart] = useState(null);
     const [calculatorOpen, setCalculatorOpen] = useState(false);
+    const [imageModalOpen, setImageModalOpen] = useState(false);
+    const [selectedImage, setSelectedImage] = useState('');
 
     // Effect to handle setting the active part based on partIds or activePartId
     useEffect(() => {
@@ -221,7 +225,7 @@ const QuestionPanel = ({ question, onAnswer, onNext, onMarkForReview, onClearRes
             ) : (
                 <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', }} >
                     <Box>
-                        <Box sx={{ p: 2, height: 'calc(100vh - 289px)', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', overflow: 'auto' }}>
+                        <Box sx={{ p: 2, height: 'calc(100vh - 289px)', display: 'flex', flexDirection: 'column', overflow: 'auto' }}>
                             <FormControl component="fieldset" sx={{ borderBottom: 2, borderColor: "#c0bfbf", pb: 4 }}>
                                 <RadioGroup value={String(selectedOption)} onChange={handleOptionChange}>
                                     <Box sx={{ borderTop: 1, borderBottom: 1, mb: 3, display: 'flex', justifyContent: "space-between" }}>
@@ -270,12 +274,92 @@ const QuestionPanel = ({ question, onAnswer, onNext, onMarkForReview, onClearRes
                                             </Box>
                                         </Box>
                                     )}
-                                    <Typography 
-                                        component="div"
-                                        sx={{ fontSize: { xs: '16px', md: '18px', lg: '19px' }, mb: 3 }}
+
+                                    <Box 
+                                        sx={{ 
+                                            fontSize: { xs: '16px', md: '18px', lg: '19px' }, 
+                                            mb: 3,
+                                            lineHeight: 1.6,
+                                            wordWrap: 'break-word',
+                                            overflowWrap: 'break-word',
+                                            '& div': {
+                                                marginBottom: '4px'
+                                            },
+                                            '& pre': {
+                                                whiteSpace: 'pre-wrap',
+                                                wordWrap: 'break-word',
+                                                overflowWrap: 'break-word',
+                                                backgroundColor: '#f8f9fa',
+                                                padding: '12px',
+                                                borderRadius: '6px',
+                                                border: '1px solid #e9ecef',
+                                                fontSize: '14px',
+                                                fontFamily: 'monospace',
+                                                overflowX: 'auto',
+                                                maxWidth: '100%'
+                                            },
+                                            '& code': {
+                                                backgroundColor: '#f8f9fa',
+                                                padding: '2px 4px',
+                                                borderRadius: '3px',
+                                                fontFamily: 'monospace',
+                                                fontSize: '14px'
+                                            }
+                                        }}
                                         dangerouslySetInnerHTML={{ __html: question?.question }}
                                     />
-                                    {question?.meta.map((option, index) => (
+                                    {question?.meta?.questionMeta?.image && (
+                                        <Box sx={{ mb: 3, position: 'relative' }}>
+                                            <Box sx={{ position: 'relative', display: 'inline-block' }}>
+                                                <img 
+                                                    src={`/${question.meta.questionMeta.image}`} 
+                                                    alt="Question" 
+                                                    style={{ 
+                                                        maxWidth: '100%', 
+                                                        height: 'auto', 
+                                                        borderRadius: '8px',
+                                                        border: '1px solid #e0e0e0',
+                                                        maxHeight: '400px',
+                                                        objectFit: 'contain',
+                                                        cursor: 'pointer',
+                                                        transition: 'transform 0.2s ease-in-out'
+                                                    }}
+                                                    onMouseEnter={(e) => {
+                                                        e.target.style.transform = 'scale(1.02)';
+                                                    }}
+                                                    onMouseLeave={(e) => {
+                                                        e.target.style.transform = 'scale(1)';
+                                                    }}
+                                                    onClick={() => {
+                                                        setSelectedImage(`/${question.meta.questionMeta.image}`);
+                                                        setImageModalOpen(true);
+                                                    }}
+                                                    onError={(e) => {
+                                                        console.error('Image failed to load:', question.meta.questionMeta.image);
+                                                        e.target.style.display = 'none';
+                                                    }}
+                                                />
+                                                <IconButton
+                                                    sx={{
+                                                        position: 'absolute',
+                                                        top: '8px',
+                                                        right: '8px',
+                                                        backgroundColor: 'rgba(255, 255, 255, 0.9)',
+                                                        '&:hover': {
+                                                            backgroundColor: 'rgba(255, 255, 255, 1)'
+                                                        }
+                                                    }}
+                                                    onClick={() => {
+                                                        setSelectedImage(`/${question.meta.questionMeta.image}`);
+                                                        setImageModalOpen(true);
+                                                    }}
+                                                >
+                                                    <ZoomInIcon />
+                                                </IconButton>
+                                            </Box>
+                                        </Box>
+                                    )}
+                                    {question?.meta?.options?.map((option, index) => (
                                         <FormControlLabel
                                             key={index}
                                             value={String(option.id)}
@@ -530,6 +614,57 @@ const QuestionPanel = ({ question, onAnswer, onNext, onMarkForReview, onClearRes
                     </Box>
                 </Box >
             )}
+
+            {/* Image Modal */}
+            <Modal
+                open={imageModalOpen}
+                onClose={() => setImageModalOpen(false)}
+                sx={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    p: 2
+                }}
+            >
+                <Box sx={{
+                    position: 'relative',
+                    maxWidth: '90vw',
+                    maxHeight: '90vh',
+                    bgcolor: 'background.paper',
+                    borderRadius: 2,
+                    boxShadow: 24,
+                    p: 0,
+                    overflow: 'hidden'
+                }}>
+                    <IconButton
+                        sx={{
+                            position: 'absolute',
+                            top: 8,
+                            right: 8,
+                            bgcolor: 'rgba(0, 0, 0, 0.5)',
+                            color: 'white',
+                            zIndex: 1,
+                            '&:hover': {
+                                bgcolor: 'rgba(0, 0, 0, 0.7)'
+                            }
+                        }}
+                        onClick={() => setImageModalOpen(false)}
+                    >
+                        <CloseIcon />
+                    </IconButton>
+                    <img
+                        src={selectedImage}
+                        alt="Question"
+                        style={{
+                            width: '100%',
+                            height: 'auto',
+                            maxHeight: '90vh',
+                            objectFit: 'contain',
+                            display: 'block'
+                        }}
+                    />
+                </Box>
+            </Modal>
         </>
     );
 };

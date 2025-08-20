@@ -97,15 +97,16 @@ class StudentExportController extends Controller
         // }
 
         $examResults = ExamAttempt::where('student_id', $studentId)
-            ->with(['exam', 'subject'])
+            ->with(['exam', 'exam.subject', 'subject'])
             ->get()
             ->map(function ($result) {
                 return [
-                    'exam_name' => $result->exam ? $result->exam->name : '',
-                    'subject' => $result->subject ? $result->subject->name : '',
+                    'exam_name' => $result->exam ? $result->exam->title : '',
+                    'subject' => $result->subject ? $result->subject->name : ($result->exam && $result->exam->subject ? $result->exam->subject->name : ''),
                     'exam_date' => $result->ends_at ?? '',
                     'score' => $result->score ?? '',
                     'status' => $result->status ?? '',
+                    'total_marks' => $result->exam ? $result->exam->total_marks : 0,
                 ];
             });
 

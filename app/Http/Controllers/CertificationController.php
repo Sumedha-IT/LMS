@@ -15,6 +15,25 @@ class CertificationController extends Controller
         return response()->json(['data' => $certifications]);
     }
 
+    public function getUserCertifications(Request $request, $userId)
+    {
+        // Check if the current user is an admin or has permission to view other users' data
+        $user = $request->user();
+        
+        // Debug logging
+        \Log::info('getUserCertifications - User ID: ' . $user->id . ', Role ID: ' . ($user->role ? $user->role->id : 'null') . ', Is Admin: ' . ($user->is_admin ? 'true' : 'false'));
+        
+        // Allow admin users (role_id = 1) to view any user's certifications
+        // You can add more specific permission checks here
+        if (!$user->is_admin && $user->id != $userId) {
+            \Log::warning('getUserCertifications - Unauthorized access attempt. User ID: ' . $user->id . ', Target User ID: ' . $userId);
+            return response()->json(['message' => 'Unauthorized'], 403);
+        }
+        
+        $certifications = Certification::where('user_id', $userId)->get();
+        return response()->json(['data' => $certifications]);
+    }
+
     public function store(Request $request)
     {
         $validator = Validator::make($request->all(), [

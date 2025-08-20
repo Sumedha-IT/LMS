@@ -137,7 +137,6 @@ const JobPostingManagement = () => {
         mtech_year_of_passout_max: '',
         btech_percentage_min: '',
         mtech_percentage_min: '',
-        skills_required: [],
         additional_criteria: ''
     });
 
@@ -173,7 +172,6 @@ const JobPostingManagement = () => {
                 mtech_year_of_passout_max: '',
                 btech_percentage_min: '',
                 mtech_percentage_min: '',
-                skills_required: [],
                 additional_criteria: ''
             });
         }
@@ -227,6 +225,7 @@ const JobPostingManagement = () => {
             case 'open': return 'success';
             case 'draft': return 'warning';
             case 'closed': return 'error';
+            case 'on_hold': return 'info';
             case 'expired': return 'default';
             default: return 'default';
         }
@@ -251,7 +250,6 @@ const JobPostingManagement = () => {
         return list.filter(job => {
             const bySearch = !filters.search ||
                 matches(job.title, filters.search) ||
-                matches(job.description, filters.search) ||
                 matches(job.requirements, filters.search);
             const byType = !filters.job_type || job.job_type === filters.job_type;
             const byStatus = !filters.status || job.status === filters.status;
@@ -324,7 +322,7 @@ const JobPostingManagement = () => {
                                     fullWidth
                                     size="small"
                                     label="Search"
-                                    placeholder="Title, description..."
+                                    placeholder=""
                                     value={filters.search}
                                     onChange={(e) => setFilters({ ...filters, search: e.target.value })}
                                 />
@@ -357,6 +355,7 @@ const JobPostingManagement = () => {
                                         <MenuItem value="draft">Draft</MenuItem>
                                         <MenuItem value="open">Open</MenuItem>
                                         <MenuItem value="closed">Closed</MenuItem>
+                                        <MenuItem value="on_hold">On Hold</MenuItem>
                                         <MenuItem value="expired">Expired</MenuItem>
                                     </Select>
                                 </FormControl>
@@ -598,16 +597,18 @@ const JobPostingManagement = () => {
                                     <MenuItem value="draft">Draft</MenuItem>
                                     <MenuItem value="open">Open</MenuItem>
                                     <MenuItem value="closed">Closed</MenuItem>
+                                    <MenuItem value="on_hold">On Hold</MenuItem>
                                     <MenuItem value="expired">Expired</MenuItem>
                                 </Select>
                             </FormControl>
                         </Grid>
+
                         <Grid item xs={12}>
                             <TextField
                                 fullWidth
                                 multiline
                                 rows={3}
-                                label="Description"
+                                label="Job Description"
                                 value={jobPostingForm.description}
                                 onChange={(e) => setJobPostingForm({...jobPostingForm, description: e.target.value})}
                             />
@@ -617,7 +618,7 @@ const JobPostingManagement = () => {
                                 fullWidth
                                 multiline
                                 rows={3}
-                                label="Requirements"
+                                label="Job Requirements"
                                 value={jobPostingForm.requirements}
                                 onChange={(e) => setJobPostingForm({...jobPostingForm, requirements: e.target.value})}
                             />
@@ -627,7 +628,7 @@ const JobPostingManagement = () => {
                                 fullWidth
                                 multiline
                                 rows={3}
-                                label="Responsibilities"
+                                label="Job Responsibilities"
                                 value={jobPostingForm.responsibilities}
                                 onChange={(e) => setJobPostingForm({...jobPostingForm, responsibilities: e.target.value})}
                             />
@@ -671,10 +672,11 @@ const JobPostingManagement = () => {
                             <TextField
                                 fullWidth
                                 label="Application Deadline"
-                                type="datetime-local"
+                                type="date"
                                 value={jobPostingForm.application_deadline}
                                 onChange={(e) => setJobPostingForm({...jobPostingForm, application_deadline: e.target.value})}
                                 InputLabelProps={{ shrink: true }}
+                                placeholder=""
                             />
                         </Grid>
                         

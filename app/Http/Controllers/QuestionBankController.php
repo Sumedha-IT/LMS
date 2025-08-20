@@ -110,6 +110,207 @@ class QuestionBankController extends Controller
         return response()->json(['message' => 'Question bank not found',"hasError"=>false], 404);
     }
 
+    public function updateQuestion(Request $request, $id)
+    {
+        try {
+            // Handle FormData parsing for PUT requests
+            $data = $request->all();
+            if (empty($data) && $request->header('Content-Type') && strpos($request->header('Content-Type'), 'multipart/form-data') !== false) {
+                // Try different methods to get FormData
+                $data = [];
+                
+                // Method 1: Try request->input()
+                $allInputs = $request->input();
+                if (!empty($allInputs)) {
+                    $data = $allInputs;
+                }
+                
+                // Method 2: Try request->post()
+                if (empty($data)) {
+                    $postData = $request->post();
+                    if (!empty($postData)) {
+                        $data = $postData;
+                    }
+                }
+                
+                // Method 3: Try $_POST directly (fallback)
+                if (empty($data) && !empty($_POST)) {
+                    $data = $_POST;
+                }
+                
+                // Method 4: Try parsing raw content
+                if (empty($data)) {
+                    $rawData = $request->getContent();
+                    if (!empty($rawData)) {
+                        parse_str($rawData, $data);
+                    }
+                }
+                
+                // Handle options array from FormData
+                $options = [];
+                foreach ($data as $key => $value) {
+                    if (preg_match('/^options\[(\d+)\]\[(\w+)\]$/', $key, $matches)) {
+                        $index = $matches[1];
+                        $field = $matches[2];
+                        if (!isset($options[$index])) {
+                            $options[$index] = [];
+                        }
+                        $options[$index][$field] = $value;
+                    }
+                }
+                if (!empty($options)) {
+                    $data['options'] = array_values($options);
+                }
+                
+                \Log::info('FormData parsing result', [
+                    'original_all' => $request->all(),
+                    'parsed_data' => $data,
+                    'all_inputs' => $request->input(),
+                    'post_data' => $request->post(),
+                    'global_post' => $_POST,
+                    'raw_content_length' => strlen($request->getContent())
+                ]);
+            }
+
+            \Log::info('QuestionBankController::updateQuestion called', [
+                'question_id' => $id,
+                'request_data' => $data,
+                'request_input' => $request->input(),
+                'request_post' => $request->post(),
+                'files' => $request->hasFile('image') ? 'Image present' : 'No image',
+                'method' => $request->method(),
+                'url' => $request->url(),
+                'headers' => $request->headers->all(),
+                'content_type' => $request->header('Content-Type')
+            ]);
+
+            $question = \App\Models\Question::find($id);
+            if (!$question) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Question not found'
+                ], 404);
+            }
+
+            // Validate request
+            $validator = Validator::make($data, [
+                'question' => 'required|string',
+                'question_type' => 'required|string',
+                'marks' => 'required|numeric|min:0',
+                'negative_marks' => 'nullable|numeric|min:0',
+                'hint' => 'nullable|string',
+                'explanation' => 'nullable|string',
+                'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:10240',
+                'options' => 'required|array|min:1',
+                'options.*.option' => 'required|string',
+                'options.*.is_correct' => 'required|in:0,1'
+            ]);
+
+            if ($validator->fails()) {
+                \Log::error('Validation failed', [
+                    'errors' => $validator->errors()->toArray(),
+                    'data' => $data,
+                    'request_all' => $request->all(),
+                    'request_input' => $request->input(),
+                    'request_post' => $request->post()
+                ]);
+                return response()->json([
+                    'success' => false,
+                    'message' => $validator->errors()->first()
+                ], 400);
+            }
+
+            // Update question
+            $question->question = $data['question'];
+            $question->question_type = $data['question_type'];
+            $question->marks = $data['marks'];
+            $question->negative_marks = $data['negative_marks'];
+            $question->hint = $data['hint'];
+            $question->explanation = $data['explanation'];
+
+            // Handle image upload
+            if ($request->hasFile('image')) {
+                try {
+                    $image = $request->file('image');
+                    $uploadPath = public_path('uploads/questions');
+                    
+                    // Create directory if it doesn't exist
+                    if (!file_exists($uploadPath)) {
+                        mkdir($uploadPath, 0755, true);
+                    }
+                    
+                    $imageName = time() . '_' . $image->getClientOriginalName();
+                    $image->move($uploadPath, $imageName);
+                    $question->image = 'uploads/questions/' . $imageName;
+                    
+                    \Log::info('Image uploaded successfully', [
+                        'original_name' => $image->getClientOriginalName(),
+                        'saved_name' => $imageName,
+                        'saved_path' => $question->image,
+                        'file_exists' => file_exists($uploadPath . '/' . $imageName)
+                    ]);
+                } catch (\Exception $e) {
+                    \Log::error('Error uploading image', [
+                        'error' => $e->getMessage(),
+                        'trace' => $e->getTraceAsString()
+                    ]);
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Failed to upload image: ' . $e->getMessage()
+                    ], 500);
+                }
+            }
+
+            $question->save();
+
+            // Update options
+            $options = $data['options'] ?? [];
+            
+            // Delete existing options that are not in the new list
+            $existingOptionIds = collect($options)->pluck('id')->filter()->toArray();
+            \App\Models\QuestionOption::where('question_id', $question->id)
+                ->whereNotIn('id', $existingOptionIds)
+                ->delete();
+
+            // Update or create options
+            foreach ($options as $optionData) {
+                if (isset($optionData['id'])) {
+                    // Update existing option
+                    $option = \App\Models\QuestionOption::find($optionData['id']);
+                    if ($option && $option->question_id == $question->id) {
+                        $option->option = $optionData['option'];
+                        $option->is_correct = (bool) $optionData['is_correct'];
+                        $option->save();
+                    }
+                } else {
+                    // Create new option
+                    \App\Models\QuestionOption::create([
+                        'question_id' => $question->id,
+                        'option' => $optionData['option'],
+                        'is_correct' => (bool) $optionData['is_correct']
+                    ]);
+                }
+            }
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Question updated successfully',
+                'question' => $question->load('questions_options')
+            ]);
+
+        } catch (\Exception $e) {
+            \Log::error('Error updating question', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to update question: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
     public function getQuestionBankTypes(){
         return response()->json(QuestionBankType::all(),200);
     }
@@ -149,6 +350,15 @@ class QuestionBankController extends Controller
                 'first_row' => $rows[0] ?? 'No data',
                 'file_extension' => $file->getClientOriginalExtension()
             ]);
+
+            // Debug: Log the parsed data for troubleshooting
+            if (count($rows) > 1) {
+                \Log::info('Sample parsed data', [
+                    'row_1' => $rows[1] ?? 'No row 1',
+                    'row_2' => $rows[2] ?? 'No row 2',
+                    'question_field_length' => isset($rows[2][7]) ? strlen($rows[2][7]) : 'No question field'
+                ]);
+            }
 
             if (empty($rows)) {
                 return response()->json([
@@ -194,10 +404,26 @@ class QuestionBankController extends Controller
                         ]);
                         $successfulBanks++;
                     } elseif (strtoupper($type) === 'Q' && $currentBank) {
+                        // Get the question content
+                        $questionContent = $row[$colMap['question']] ?? '';
+                        
+                        // Format the question content if it contains code
+                        $formattedQuestionContent = $this->formatQuestionContent($questionContent);
+                        
+                        // Debug: Log the question content before saving
+                        \Log::info('Processing question', [
+                            'row_index' => $rowIndex,
+                            'question_length' => strlen($questionContent),
+                            'formatted_length' => strlen($formattedQuestionContent),
+                            'question_preview' => substr($questionContent, 0, 100) . '...',
+                            'col_map' => $colMap,
+                            'question_index' => $colMap['question'] ?? 'not_found'
+                        ]);
+                        
                         // Create the question
                         $question = \App\Models\Question::create([
                             'question_bank_id' => $currentBank->id,
-                            'question' => $row[$colMap['question']] ?? '',
+                            'question' => $formattedQuestionContent,
                             'question_type' => $row[$colMap['question_type']] ?? '',
                             'marks' => $row[$colMap['marks']] ?? 0,
                             'negative_marks' => $row[$colMap['negative_marks']] ?? 0,
@@ -259,7 +485,24 @@ class QuestionBankController extends Controller
         $path = $file->getRealPath();
 
         if ($extension === 'csv') {
-            return array_map('str_getcsv', file($path));
+            // For CSV files, use a larger buffer size to handle long questions
+            $data = [];
+            if (($handle = fopen($path, "r")) !== FALSE) {
+                // Set the maximum line length to 0 (unlimited) to handle very long questions
+                while (($row = fgetcsv($handle, 0, ',')) !== FALSE) {
+                    if (!empty(array_filter($row))) { // Skip empty rows
+                        // Clean up any encoding issues and trim whitespace
+                        $cleanedRow = array_map(function($field) {
+                            // Remove any BOM characters and normalize line endings
+                            $field = str_replace(["\xEF\xBB\xBF", "\r\n", "\r"], ["", "\n", "\n"], $field);
+                            return trim($field);
+                        }, $row);
+                        $data[] = $cleanedRow;
+                    }
+                }
+                fclose($handle);
+            }
+            return $data;
         } else {
             // For Excel files (xlsx, xls), try multiple approaches
             $data = [];
@@ -270,7 +513,7 @@ class QuestionBankController extends Controller
             foreach ($delimiters as $delimiter) {
                 if (($handle = fopen($path, "r")) !== FALSE) {
                     $tempData = [];
-                    while (($row = fgetcsv($handle, 1000, $delimiter)) !== FALSE) {
+                    while (($row = fgetcsv($handle, 0, $delimiter)) !== FALSE) {
                         if (!empty(array_filter($row))) { // Skip empty rows
                             $tempData[] = $row;
                         }
@@ -333,6 +576,135 @@ class QuestionBankController extends Controller
             
             return $data;
         }
+    }
+
+    private function formatQuestionContent($content)
+    {
+        if (empty($content)) {
+            return $content;
+        }
+
+        // Check if the content contains code patterns
+        $codePatterns = [
+            '/class\s+\w+/i',
+            '/function\s+\w+/i',
+            '/if\s*\(/i',
+            '/for\s*\(/i',
+            '/while\s*\(/i',
+            '/switch\s*\(/i',
+            '/try\s*\{/i',
+            '/catch\s*\(/i',
+            '/import\s+/i',
+            '/export\s+/i',
+            '/const\s+/i',
+            '/let\s+/i',
+            '/var\s+/i',
+            '/public\s+/i',
+            '/private\s+/i',
+            '/protected\s+/i',
+            '/static\s+/i',
+            '/final\s+/i',
+            '/abstract\s+/i',
+            '/interface\s+/i',
+            '/extends\s+/i',
+            '/implements\s+/i',
+            '/new\s+/i',
+            '/return\s+/i',
+            '/break\s+/i',
+            '/continue\s+/i',
+            '/throw\s+/i',
+            '/throws\s+/i',
+            '/package\s+/i',
+            '/namespace\s+/i',
+            '/using\s+/i',
+            '/include\s+/i',
+            '/require\s+/i',
+            '/def\s+/i',
+            '/end\s+/i',
+            '/begin\s+/i',
+            '/initial\s+/i',
+            '/always\s+/i',
+            '/module\s+/i',
+            '/endmodule\s+/i',
+            '/wire\s+/i',
+            '/reg\s+/i',
+            '/input\s+/i',
+            '/output\s+/i',
+            '/inout\s+/i',
+            '/parameter\s+/i',
+            '/localparam\s+/i',
+            '/assign\s+/i',
+            '/always_comb\s+/i',
+            '/always_ff\s+/i',
+            '/always_latch\s+/i',
+            '/posedge\s+/i',
+            '/negedge\s+/i',
+            '/\$display\s*\(/i',
+            '/\$finish\s*\(/i',
+            '/\$stop\s*\(/i'
+        ];
+
+        $hasCodePattern = false;
+        foreach ($codePatterns as $pattern) {
+            if (preg_match($pattern, $content)) {
+                $hasCodePattern = true;
+                break;
+            }
+        }
+
+        if ($hasCodePattern) {
+            // Check if the entire content looks like a code block (has multiple lines with code patterns)
+            $lines = explode("\n", $content);
+            $codeLineCount = 0;
+            $totalLines = count($lines);
+            
+            foreach ($lines as $line) {
+                $trimmedLine = trim($line);
+                if (!empty($trimmedLine)) {
+                    foreach ($codePatterns as $pattern) {
+                        if (preg_match($pattern, $trimmedLine)) {
+                            $codeLineCount++;
+                            break;
+                        }
+                    }
+                }
+            }
+            
+            // If more than 30% of lines contain code patterns, treat as a complete code block
+            if ($codeLineCount > 0 && ($codeLineCount / max(1, $totalLines)) > 0.3) {
+                // Format as a complete code block
+                return '<pre style="background-color: #f8f9fa; padding: 16px; border-radius: 8px; font-family: monospace; font-size: 14px; border: 1px solid #e9ecef; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word; margin: 8px 0; line-height: 1.4;">' . htmlspecialchars($content) . '</pre>';
+            } else {
+                // Format individual lines as before
+                $formattedLines = [];
+                
+                foreach ($lines as $line) {
+                    $trimmedLine = trim($line);
+                    if (!empty($trimmedLine)) {
+                        // Check if this line contains code patterns
+                        $isCodeLine = false;
+                        foreach ($codePatterns as $pattern) {
+                            if (preg_match($pattern, $trimmedLine)) {
+                                $isCodeLine = true;
+                                break;
+                            }
+                        }
+                        
+                        if ($isCodeLine) {
+                            $formattedLines[] = '<div style="background-color: #f8f9fa; padding: 12px; border-radius: 6px; font-family: monospace; font-size: 14px; margin: 4px 0; border: 1px solid #e9ecef; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;">' . htmlspecialchars($line) . '</div>';
+                        } else {
+                            $formattedLines[] = '<div style="margin: 4px 0; word-wrap: break-word; overflow-wrap: break-word;">' . htmlspecialchars($line) . '</div>';
+                        }
+                    } else {
+                        $formattedLines[] = '<div style="margin: 2px 0;">&nbsp;</div>';
+                    }
+                }
+                
+                return implode('', $formattedLines);
+            }
+        }
+
+        return $content;
     }
 
     private function validateAndProcessRow($row)

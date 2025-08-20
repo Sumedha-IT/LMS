@@ -19,6 +19,7 @@ class Company extends Model
         'industry',
         'company_size',
         'contact_person',
+        'designation',
         'contact_email',
         'contact_phone',
         'address',

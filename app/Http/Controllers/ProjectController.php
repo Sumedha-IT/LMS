@@ -17,6 +17,28 @@ class ProjectController extends Controller
         return response()->json(['success' => true, 'projects' => $projects]);
     }
 
+    public function getUserProjects(Request $request, $userId)
+    {
+        // Check if the current user is an admin or has permission to view other users' data
+        $user = $request->user();
+        
+        // Debug logging
+        \Log::info('getUserProjects - User ID: ' . $user->id . ', Role ID: ' . ($user->role ? $user->role->id : 'null') . ', Is Admin: ' . ($user->is_admin ? 'true' : 'false'));
+        
+        // Allow admin users (role_id = 1) to view any user's projects
+        // You can add more specific permission checks here
+        if (!$user->is_admin && $user->id != $userId) {
+            \Log::warning('getUserProjects - Unauthorized access attempt. User ID: ' . $user->id . ', Target User ID: ' . $userId);
+            return response()->json(['message' => 'Unauthorized'], 403);
+        }
+        
+        $projects = Project::where('user_id', $userId)
+            ->orderBy('start_date', 'desc')
+            ->get();
+            
+        return response()->json(['success' => true, 'projects' => $projects]);
+    }
+
     public function store(Request $request)
     {
         try {

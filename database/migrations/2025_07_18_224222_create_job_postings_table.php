@@ -25,7 +25,7 @@ return new class extends Migration
             $table->decimal('salary_max', 10, 2)->nullable();
             $table->string('experience_required')->nullable();
             $table->integer('vacancies')->default(1);
-            $table->enum('status', ['open', 'closed', 'draft'])->default('open');
+ +           $table->enum('status', ['open', 'closed', 'draft', 'on_hold'])->default('open');
             $table->timestamp('application_deadline')->nullable();
             $table->timestamps();
         });

@@ -145,6 +145,11 @@ class QuestionBankImporter extends Importer
         // Add question bank ID
         $questionData['question_bank_id'] = $this->record->id;
 
+        // Format question content if it contains code
+        if (!empty($questionData['question'])) {
+            $questionData['question'] = $this->formatQuestionContent($questionData['question']);
+        }
+
         // Create the question
         $question = Question::create($questionData);
 
@@ -171,5 +176,112 @@ class QuestionBankImporter extends Importer
         }
 
         return $body;
+    }
+
+    private function formatQuestionContent($content)
+    {
+        if (empty($content)) {
+            return $content;
+        }
+
+        // Check if the content contains code patterns
+        $codePatterns = [
+            '/class\s+\w+/i',
+            '/function\s+\w+/i',
+            '/if\s*\(/i',
+            '/for\s*\(/i',
+            '/while\s*\(/i',
+            '/switch\s*\(/i',
+            '/try\s*\{/i',
+            '/catch\s*\(/i',
+            '/import\s+/i',
+            '/export\s+/i',
+            '/const\s+/i',
+            '/let\s+/i',
+            '/var\s+/i',
+            '/public\s+/i',
+            '/private\s+/i',
+            '/protected\s+/i',
+            '/static\s+/i',
+            '/final\s+/i',
+            '/abstract\s+/i',
+            '/interface\s+/i',
+            '/extends\s+/i',
+            '/implements\s+/i',
+            '/new\s+/i',
+            '/return\s+/i',
+            '/break\s+/i',
+            '/continue\s+/i',
+            '/throw\s+/i',
+            '/throws\s+/i',
+            '/package\s+/i',
+            '/namespace\s+/i',
+            '/using\s+/i',
+            '/include\s+/i',
+            '/require\s+/i',
+            '/def\s+/i',
+            '/end\s+/i',
+            '/begin\s+/i',
+            '/initial\s+/i',
+            '/always\s+/i',
+            '/module\s+/i',
+            '/endmodule\s+/i',
+            '/wire\s+/i',
+            '/reg\s+/i',
+            '/input\s+/i',
+            '/output\s+/i',
+            '/inout\s+/i',
+            '/parameter\s+/i',
+            '/localparam\s+/i',
+            '/assign\s+/i',
+            '/always_comb\s+/i',
+            '/always_ff\s+/i',
+            '/always_latch\s+/i',
+            '/posedge\s+/i',
+            '/negedge\s+/i',
+            '/\$display\s*\(/i',
+            '/\$finish\s*\(/i',
+            '/\$stop\s*\(/i'
+        ];
+
+        $hasCodePattern = false;
+        foreach ($codePatterns as $pattern) {
+            if (preg_match($pattern, $content)) {
+                $hasCodePattern = true;
+                break;
+            }
+        }
+
+        if ($hasCodePattern) {
+            // Format as HTML with code block
+            $lines = explode("\n", $content);
+            $formattedLines = [];
+            
+            foreach ($lines as $line) {
+                $trimmedLine = trim($line);
+                if (!empty($trimmedLine)) {
+                    // Check if this line contains code patterns
+                    $isCodeLine = false;
+                    foreach ($codePatterns as $pattern) {
+                        if (preg_match($pattern, $trimmedLine)) {
+                            $isCodeLine = true;
+                            break;
+                        }
+                    }
+                    
+                    if ($isCodeLine) {
+                        $formattedLines[] = '<div style="background-color: #f3f4f6; padding: 8px; border-radius: 4px; font-family: monospace; font-size: 14px; margin: 2px 0;">' . htmlspecialchars($line) . '</div>';
+                    } else {
+                        $formattedLines[] = '<div style="margin: 2px 0;">' . htmlspecialchars($line) . '</div>';
+                    }
+                } else {
+                    $formattedLines[] = '<div style="margin: 2px 0;">&nbsp;</div>';
+                }
+            }
+            
+            return implode('', $formattedLines);
+        }
+
+        return $content;
     }
 } 

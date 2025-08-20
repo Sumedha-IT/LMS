@@ -363,6 +363,22 @@ class JobPostingController extends Controller
                 'experience_required', 'vacancies', 'status', 'application_deadline'
             ]);
             
+            // Handle posted_by field - extract ID if it's an object
+            if (isset($jobPostingData['posted_by']) && is_array($jobPostingData['posted_by'])) {
+                $jobPostingData['posted_by'] = $jobPostingData['posted_by']['id'] ?? 1;
+            }
+            
+            // Handle application_deadline date format
+            if (isset($jobPostingData['application_deadline']) && !empty($jobPostingData['application_deadline'])) {
+                try {
+                    $date = \Carbon\Carbon::parse($jobPostingData['application_deadline']);
+                    $jobPostingData['application_deadline'] = $date->format('Y-m-d H:i:s');
+                } catch (\Exception $e) {
+                    \Log::warning('Invalid application_deadline format:', ['value' => $jobPostingData['application_deadline']]);
+                    unset($jobPostingData['application_deadline']);
+                }
+            }
+            
             // Set default posted_by if not provided (for testing)
             if (!isset($jobPostingData['posted_by'])) {
                 $jobPostingData['posted_by'] = 1; // Default user ID
@@ -406,6 +422,22 @@ class JobPostingController extends Controller
                 'responsibilities', 'job_type', 'location', 'salary_min', 'salary_max', 
                 'experience_required', 'vacancies', 'status', 'application_deadline'
             ]);
+            
+            // Handle posted_by field - extract ID if it's an object
+            if (isset($jobPostingData['posted_by']) && is_array($jobPostingData['posted_by'])) {
+                $jobPostingData['posted_by'] = $jobPostingData['posted_by']['id'] ?? 1;
+            }
+            
+            // Handle application_deadline date format
+            if (isset($jobPostingData['application_deadline']) && !empty($jobPostingData['application_deadline'])) {
+                try {
+                    $date = \Carbon\Carbon::parse($jobPostingData['application_deadline']);
+                    $jobPostingData['application_deadline'] = $date->format('Y-m-d H:i:s');
+                } catch (\Exception $e) {
+                    \Log::warning('Invalid application_deadline format:', ['value' => $jobPostingData['application_deadline']]);
+                    unset($jobPostingData['application_deadline']);
+                }
+            }
             
             // Update job posting
             $jobPosting->update($jobPostingData);

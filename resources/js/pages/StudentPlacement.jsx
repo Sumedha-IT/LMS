@@ -92,8 +92,7 @@ const StudentPlacement = () => {
                                     '&:hover': { opacity: 1 }
                                 }}
                             >
-                                <HomeIcon sx={{ mr: 0.5, fontSize: 16 }} />
-                                Dashboard
+                                
                             </Link>
                             <Box 
                                 sx={{ 
@@ -103,7 +102,7 @@ const StudentPlacement = () => {
                                     fontWeight: 500
                                 }}
                             >
-                                <WorkIcon sx={{ mr: 0.5, fontSize: 16 }} />
+                                <WorkIcon sx={{ mr: 0.5, fontSize: 50 }} />
                                 Placement Center
                             </Box>
                         </Breadcrumbs>

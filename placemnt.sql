@@ -78,6 +78,7 @@ CREATE TABLE `companies` (
 CREATE TABLE `job_postings` (
   `id` bigint UNSIGNED NOT NULL AUTO_INCREMENT,          -- Unique identifier
   `company_id` bigint UNSIGNED NOT NULL,                 -- Links to companies table
+  `course_id` bigint UNSIGNED DEFAULT NULL,               -- Links to courses table
   `posted_by` bigint UNSIGNED NOT NULL,                  -- Links to users table (job coordinator)
   `title` varchar(255) NOT NULL,                          -- Job title (e.g., "Software Engineer")
   `description` text NOT NULL,                            -- Detailed job description
@@ -95,9 +96,11 @@ CREATE TABLE `job_postings` (
   `updated_at` timestamp NULL DEFAULT NULL,               -- When job was updated
   PRIMARY KEY (`id`),
   KEY `company_id` (`company_id`),                        -- Index for company filtering
+  KEY `course_id` (`course_id`),                          -- Index for course filtering
   KEY `posted_by` (`posted_by`),                         -- Index for coordinator filtering
   KEY `status` (`status`),                                -- Index for status filtering
   FOREIGN KEY (`company_id`) REFERENCES `companies` (`id`),
+  FOREIGN KEY (`course_id`) REFERENCES `courses` (`id`) ON DELETE SET NULL,
   FOREIGN KEY (`posted_by`) REFERENCES `users` (`id`)
 );
 

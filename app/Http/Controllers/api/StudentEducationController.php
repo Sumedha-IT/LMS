@@ -66,6 +66,29 @@ class StudentEducationController extends Controller
         $education=StudentEducation::where('user_id',$user->id)->get();
         return StudentEducationResource::collection($education);
     }
+
+    public function GetUserEducation(Request $request, $userId){
+        // Check if the current user is an admin or has permission to view other users' data
+        $user = $request->user();
+        
+        // Debug logging
+        \Log::info('GetUserEducation - User ID: ' . $user->id . ', Role ID: ' . ($user->role ? $user->role->id : 'null') . ', Is Admin: ' . ($user->is_admin ? 'true' : 'false'));
+        
+        // Allow admin users (role_id = 1) to view any user's education
+        // You can add more specific permission checks here
+        if (!$user->is_admin && $user->id != $userId) {
+            \Log::warning('GetUserEducation - Unauthorized access attempt. User ID: ' . $user->id . ', Target User ID: ' . $userId);
+            return response()->json(['message' => 'Unauthorized'], 403);
+        }
+        
+        $education = StudentEducation::where('user_id', $userId)
+            ->with(['degreeType', 'specialization'])
+            ->get();
+            
+        return response()->json([
+            'data' => StudentEducationResource::collection($education)
+        ]);
+    }
     public function Update(Request $request){
         $user=$request->user();
         $id=$request->input('id');

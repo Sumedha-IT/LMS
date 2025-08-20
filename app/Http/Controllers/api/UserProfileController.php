@@ -42,16 +42,26 @@ class UserProfileController extends Controller
     public function Update(Request $request)
     {
         try {
-            $request->validate([
-                'data' => 'required|json',
-                'avatar_url' => 'nullable|file|mimes:jpeg,jpg,png',
-                'upload_resume' => 'nullable|file|mimes:pdf,doc,docx',
-                'upload_aadhar' => 'nullable|file|mimes:pdf,jpg,jpeg,png',
-                'passport_photo' => 'nullable|file|mimes:jpeg,jpg,png|max:20480' // 20MB max
-            ]);
-
             $user = $request->user();
             $data = json_decode($request->data, true);
+
+            // Check if this is a resume update request
+            $isResumeUpdate = isset($data['resume_update']) && $data['resume_update'] === true;
+
+            // Define validation rules based on the request type
+            $validationRules = [
+                'data' => 'required|json',
+                'avatar_url' => 'nullable|file|mimes:jpeg,jpg,png',
+                'upload_aadhar' => 'nullable|file|mimes:pdf,jpg,jpeg,png',
+                'passport_photo' => 'nullable|file|mimes:jpeg,jpg,png|max:20480' // 20MB max
+            ];
+
+            // Only validate upload_resume if it's being uploaded
+            if ($request->hasFile('upload_resume')) {
+                $validationRules['upload_resume'] = 'nullable|file|mimes:pdf,doc,docx';
+            }
+
+            $request->validate($validationRules);
 
             // Handle file uploads
             if ($request->hasFile('avatar_url')) {
@@ -108,6 +118,40 @@ class UserProfileController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to update profile: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    public function deleteResume(Request $request)
+    {
+        try {
+            $user = $request->user();
+            
+            // Check if user has a resume to delete
+            if (!$user->upload_resume) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'No resume found to delete'
+                ], 404);
+            }
+
+            // Delete the file from storage
+            Storage::disk('public')->delete($user->upload_resume);
+            
+            // Clear the resume path from user record
+            $user->upload_resume = null;
+            $user->save();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Resume deleted successfully'
+            ]);
+
+        } catch (\Exception $e) {
+            Log::error('Resume deletion error: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to delete resume: ' . $e->getMessage()
             ], 500);
         }
     }

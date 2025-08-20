@@ -14,15 +14,6 @@ class BatchResource extends JsonResource
      */
     public function toArray(Request $request): array
     {
-        // Add logging for debugging
-        \Log::info('BatchResource toArray called', [
-            'batch_id' => $this->id,
-            'batch_name' => $this->name,
-            'has_students' => $this->relationLoaded('students'),
-            'student_count' => $this->whenLoaded('students', function() {
-                return $this->students->count();
-            }, 0)
-        ]);
 
         return [
             'batch_id' => $this->id,
@@ -41,13 +32,6 @@ class BatchResource extends JsonResource
             'completed' => 50,
             'attendance' => rand(1,100),
             'students' => $this->whenLoaded('students', function() {
-                \Log::info('Processing students in BatchResource', [
-                    'student_count' => $this->students->count(),
-                    'first_student' => $this->students->first() ? [
-                        'id' => $this->students->first()->id,
-                        'name' => $this->students->first()->name
-                    ] : null
-                ]);
                 
                 return $this->students->map(function($student) {
                     return [

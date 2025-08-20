@@ -112,6 +112,7 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
     Route::post('logout', [AuthController::class, 'logout']);
 
     // Certification routes
+    Route::get('/certifications/{userId}', [CertificationController::class, 'getUserCertifications']);
     Route::get('/certifications', [CertificationController::class, 'index']);
     Route::post('/certifications', [CertificationController::class, 'store']);
     Route::put('/certifications/{certification}', [CertificationController::class, 'update']);
@@ -153,12 +154,14 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
     //Api for user profile
     Route::get('/profile',[UserProfileController::class,'Index']);
     Route::post('/profile',[UserProfileController::class,'Update']);
+    Route::delete('/profile/resume',[UserProfileController::class,'deleteResume']);
 
     //Api for education section
     Route::get('get/degrees',[StudentEducationController::class,'GetDegreeTypes']);
     Route::get('get/specialization/{id}',[StudentEducationController::class,'GetSpecializations']);
 
     Route::post('education',[StudentEducationController::class,'store']);
+    Route::get('get/education/{userId}',[StudentEducationController::class,"GetUserEducation"]);
     Route::get('get/education',[StudentEducationController::class,"Get_education"]);
     Route::put('update/education',[StudentEducationController::class,'Update']);
     Route::delete('delete/education',[StudentEducationController::class,'delete']);
@@ -258,9 +261,11 @@ Route::group(['middleware' => [
 
     // Question Bank
     Route::get('/questionBanks', [QuestionBankController::class,'index']);
-    Route::get('/questionBanks/{id}', [QuestionBankController::class,'show']);
-    Route::delete('/questionBanks/{id}', [QuestionBankController::class,'delete']);
-    Route::post('/questionBanks/import', [QuestionBankController::class,'import']);
+Route::get('/questionBanks/{id}', [QuestionBankController::class,'show']);
+Route::delete('/questionBanks/{id}', [QuestionBankController::class,'delete']);
+Route::post('/questionBanks/import', [QuestionBankController::class,'import']);
+Route::put('/questionBanks/questions/{id}', [QuestionBankController::class,'updateQuestion']);
+Route::post('/questionBanks/questions/{id}', [QuestionBankController::class,'updateQuestion']);
     Route::get('/questionBankTypes',[QuestionBankController::class,'getQuestionBankTypes']);
     Route::get('/questionBankDifficulties',[QuestionBankController::class,'getQuestionBankDifficulties']);
 
@@ -389,6 +394,7 @@ Route::get("/teams", [UserController::class, "getTeams"]);
 
 // Project routes
 Route::middleware('auth:sanctum')->group(function () {
+    Route::get('/projects/{userId}', [ProjectController::class, 'getUserProjects']);
     Route::get('/projects', [ProjectController::class, 'index']);
     Route::post('/projects', [ProjectController::class, 'store']);
     Route::put('/projects/{project}', [ProjectController::class, 'update']);
@@ -482,13 +488,17 @@ Route::middleware(['auth:sanctum'])->group(function () {
 
 // Placement Management APIs (with authentication)
 Route::middleware(['auth:sanctum'])->group(function () {
+    Route::get('/users/{id}', [UserController::class, 'show']);
     Route::apiResource('companies', CompanyController::class);
     
     // Job Applications Search Routes (must be before apiResource)
     Route::get('job-applications/search', [JobApplicationController::class, 'search']);
-    Route::get('job-applications/statistics', [JobApplicationController::class, 'getStatistics']);
-    Route::get('job-applications/job_posting_id/{job_posting_id}', [JobApplicationController::class, 'filterByJobPostingAndSearch']);
-    Route::apiResource('job-applications', JobApplicationController::class);
+Route::get('job-applications/statistics', [JobApplicationController::class, 'getStatistics']);
+Route::get('job-applications/job_posting_id/{job_posting_id}', [JobApplicationController::class, 'filterByJobPostingAndSearch']);
+Route::post('job-applications/bulk-update', [JobApplicationController::class, 'bulkUpdate']);
+Route::post('job-applications/undo-bulk-update', [JobApplicationController::class, 'undoBulkUpdate']);
+Route::get('job-applications/undo-operations/{job_posting_id}', [JobApplicationController::class, 'getUndoOperations']);
+Route::apiResource('job-applications', JobApplicationController::class);
 
     // Job Postings Routes for Students (must be before apiResource)
     Route::get('job-postings/search', [JobPostingController::class, 'search']);

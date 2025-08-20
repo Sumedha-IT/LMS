@@ -78,9 +78,59 @@ const api = axios.create({
     withCredentials: true
 });
 
+    // Function to format question content with proper code formatting
+    const formatQuestionContent = (content) => {
+        if (!content) return 'No question text available';
+        
+        // Check if the content contains code-like patterns
+        const hasCodePatterns = /(class\s+\w+|function\s+\w+|if\s*\(|for\s*\(|while\s*\(|switch\s*\(|try\s*\{|catch\s*\(|import\s+|export\s+|const\s+|let\s+|var\s+|public\s+|private\s+|protected\s+|static\s+|final\s+|abstract\s+|interface\s+|extends\s+|implements\s+|new\s+|return\s+|break\s+|continue\s+|throw\s+|throws\s+|package\s+|namespace\s+|using\s+|include\s+|require\s+|def\s+|end\s+|begin\s+|initial\s+|always\s+|module\s+|endmodule\s+|wire\s+|reg\s+|input\s+|output\s+|inout\s+|parameter\s+|localparam\s+|assign\s+|always_comb\s+|always_ff\s+|always_latch\s+|posedge\s+|negedge\s+|$display\s*\(|$finish\s*\(|$stop\s*\()/i;
+        
+        if (hasCodePatterns.test(content)) {
+            // Split content into parts: code and regular text
+            const parts = content.split(/(```[\s\S]*?```|`[^`]*`)/);
+            
+            return parts.map((part, index) => {
+                if (part.startsWith('```') && part.endsWith('```')) {
+                    // Already formatted code block
+                    return (
+                        <pre key={index} className="bg-gray-100 p-4 rounded-lg overflow-x-auto text-sm font-mono">
+                            <code>{part.slice(3, -3)}</code>
+                        </pre>
+                    );
+                } else if (part.startsWith('`') && part.endsWith('`')) {
+                    // Inline code
+                    return (
+                        <code key={index} className="bg-gray-100 px-2 py-1 rounded text-sm font-mono">
+                            {part.slice(1, -1)}
+                        </code>
+                    );
+                } else {
+                    // Regular text - check if it contains code patterns
+                    const lines = part.split('\n');
+                    const formattedLines = lines.map((line, lineIndex) => {
+                        if (hasCodePatterns.test(line.trim())) {
+                            return (
+                                <div key={lineIndex} className="bg-gray-100 p-2 rounded font-mono text-sm">
+                                    {line}
+                                </div>
+                            );
+                        } else {
+                            return <div key={lineIndex}>{line}</div>;
+                        }
+                    });
+                    return <div key={index}>{formattedLines}</div>;
+                }
+            });
+        } else {
+            // No code patterns, display as regular text
+            return <div dangerouslySetInnerHTML={{ __html: content }} />;
+        }
+    };
+
 const QuestionBank = () => {
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState(null);
+    const [success, setSuccess] = useState(null);
     const [showIntro, setShowIntro] = useState(true);
     const [showContent, setShowContent] = useState(false);
     const [hideIntro, setHideIntro] = useState(false);
@@ -100,6 +150,20 @@ const QuestionBank = () => {
     const rowsPerPage = 10;
     const [deleteModal, setDeleteModal] = useState({ open: false, bankId: null });
     const [showFormatRequirements, setShowFormatRequirements] = useState(false);
+    
+    // Edit question modal state
+    const [editQuestionModal, setEditQuestionModal] = useState({ open: false, question: null });
+    const [editingQuestion, setEditingQuestion] = useState({
+        question: '',
+        question_type: '',
+        marks: 0,
+        negative_marks: 0,
+        hint: '',
+        explanation: '',
+        image: null,
+        options: []
+    });
+    const [isSaving, setIsSaving] = useState(false);
 
     // Show intro animation for 3 seconds, then transition
     useEffect(() => {
@@ -344,8 +408,10 @@ const QuestionBank = () => {
             const response = await api.get(`/api/questions?questionBankId=${bankId}`, {
                 headers: { 'Authorization': `Bearer ${userData.token}` }
             });
+            console.log('Fetched questions:', response.data.data);
             setBankQuestions(response.data.data || []);
         } catch (err) {
+            console.error('Error fetching questions:', err);
             setError('Failed to fetch questions for this bank.');
         } finally {
             setLoadingQuestions(false);
@@ -364,6 +430,171 @@ const QuestionBank = () => {
         setShowQuestionsModal(false);
         setSelectedBank(null);
         setBankQuestions([]);
+    };
+
+    // Edit question functions
+    const handleEditQuestion = (question) => {
+        setEditingQuestion({
+            id: question.id,
+            question: question.question || '',
+            question_type: question.question_type || '',
+            marks: question.marks || 0,
+            negative_marks: question.negative_marks || 0,
+            hint: question.hint || '',
+            explanation: question.explanation || '',
+            image: question.image || null,
+            options: question.questions_options ? question.questions_options.map(opt => ({
+                id: opt.id,
+                option: opt.option || opt.option_text || '',
+                is_correct: opt.is_correct || false
+            })) : []
+        });
+        setEditQuestionModal({ open: true, question });
+    };
+
+    const closeEditModal = () => {
+        setEditQuestionModal({ open: false, question: null });
+        setEditingQuestion({
+            question: '',
+            question_type: '',
+            marks: 0,
+            negative_marks: 0,
+            hint: '',
+            explanation: '',
+            image: null,
+            options: []
+        });
+    };
+
+    const handleImageUpload = (event) => {
+        const file = event.target.files[0];
+        if (file) {
+            setEditingQuestion(prev => ({
+                ...prev,
+                image: file
+            }));
+        }
+    };
+
+    const handleOptionChange = (index, field, value) => {
+        setEditingQuestion(prev => ({
+            ...prev,
+            options: prev.options.map((opt, i) => 
+                i === index ? { ...opt, [field]: value } : opt
+            )
+        }));
+    };
+
+    const handleCorrectAnswerChange = (index) => {
+        setEditingQuestion(prev => ({
+            ...prev,
+            options: prev.options.map((opt, i) => ({
+                ...opt,
+                is_correct: i === index
+            }))
+        }));
+    };
+
+    const addOption = () => {
+        setEditingQuestion(prev => ({
+            ...prev,
+            options: [...prev.options, { option: '', is_correct: false }]
+        }));
+    };
+
+    const removeOption = (index) => {
+        setEditingQuestion(prev => ({
+            ...prev,
+            options: prev.options.filter((_, i) => i !== index)
+        }));
+    };
+
+    const saveQuestion = async () => {
+        try {
+            setIsSaving(true);
+            const userInfo = getCookie("user_info");
+            const userData = JSON.parse(userInfo);
+
+            let requestData;
+            let headers = {
+                'Authorization': `Bearer ${userData.token}`
+            };
+
+            // If there's an image, use FormData, otherwise use JSON
+            if (editingQuestion.image && editingQuestion.image instanceof File) {
+                const formData = new FormData();
+                formData.append('_method', 'PUT'); // Simulate PUT request
+                formData.append('question', editingQuestion.question);
+                formData.append('question_type', editingQuestion.question_type);
+                formData.append('marks', editingQuestion.marks);
+                formData.append('negative_marks', editingQuestion.negative_marks);
+                formData.append('hint', editingQuestion.hint || '');
+                formData.append('explanation', editingQuestion.explanation || '');
+                formData.append('image', editingQuestion.image);
+                
+                editingQuestion.options.forEach((option, index) => {
+                    formData.append(`options[${index}][option]`, option.option);
+                    formData.append(`options[${index}][is_correct]`, option.is_correct ? '1' : '0');
+                    if (option.id) {
+                        formData.append(`options[${index}][id]`, option.id);
+                    }
+                });
+                
+                requestData = formData;
+                // Use POST method but with _method=PUT to simulate PUT
+                console.log('Sending FormData with image:', editingQuestion.image.name);
+            } else {
+                requestData = {
+                    question: editingQuestion.question,
+                    question_type: editingQuestion.question_type,
+                    marks: editingQuestion.marks,
+                    negative_marks: editingQuestion.negative_marks,
+                    hint: editingQuestion.hint || '',
+                    explanation: editingQuestion.explanation || '',
+                    options: editingQuestion.options.map(option => ({
+                        option: option.option,
+                        is_correct: option.is_correct ? '1' : '0',
+                        id: option.id
+                    }))
+                };
+                headers['Content-Type'] = 'application/json';
+                console.log('Sending JSON data:', requestData);
+            }
+
+            // Use POST for FormData, PUT for JSON
+            const method = (editingQuestion.image && editingQuestion.image instanceof File) ? 'post' : 'put';
+            const response = await api[method](`/api/questionBanks/questions/${editingQuestion.id}`, requestData, {
+                headers: headers
+            });
+
+            if (response.data.success) {
+                setSuccess('Question updated successfully!');
+                closeEditModal();
+                // Refresh questions
+                if (selectedBank) {
+                    fetchBankQuestions(selectedBank.id);
+                }
+                // Clear success message after 3 seconds
+                setTimeout(() => {
+                    setSuccess(null);
+                }, 3000);
+            } else {
+                setError(response.data.message || 'Failed to update question');
+            }
+        } catch (error) {
+            console.error('Error updating question:', error);
+            if (error.response?.data?.message) {
+                setError(error.response.data.message);
+            } else if (error.response?.data?.errors) {
+                // Handle validation errors
+                const errorMessages = Object.values(error.response.data.errors).flat();
+                setError(errorMessages.join(', '));
+            } else {
+                setError('Failed to update question');
+            }
+        } finally {
+            setIsSaving(false);
+        }
     };
 
     // Calculate paginated data
@@ -650,6 +881,15 @@ const QuestionBank = () => {
                             </div>
                         )}
 
+                        {success && (
+                            <div className="bg-green-50 border border-green-200 text-green-700 px-6 py-4 rounded-xl relative shadow-lg animate-fade-in flex items-center gap-3">
+                                <svg className="w-6 h-6 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                </svg>
+                                <span className="block sm:inline">{success}</span>
+                            </div>
+                        )}
+
                         {isLoading && (
                             <div className="flex justify-center items-center py-12">
                                 <LoadingFallback />
@@ -872,26 +1112,86 @@ const QuestionBank = () => {
                                                 <h3 className="text-lg font-semibold text-gray-900">
                                                     Question {index + 1}
                                                 </h3>
-                                                <div className="flex gap-2 text-sm">
-                                                    <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded">
-                                                        {question.question_type || 'MCQ'}
-                                                    </span>
-                                                    <span className="bg-green-100 text-green-800 px-2 py-1 rounded">
-                                                        {question.marks || 0} marks
-                                                    </span>
-                                                    {question.negative_marks !== 0 && question.negative_marks != null && (
-                                                        <span className="bg-red-100 text-red-800 px-2 py-1 rounded">
-                                                            {question.negative_marks > 0 ? '-' : ''}{Math.abs(question.negative_marks)} marks
+                                                <div className="flex gap-2 items-center">
+                                                    <div className="flex gap-2 text-sm">
+                                                        <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded">
+                                                            {question.question_type || 'MCQ'}
                                                         </span>
-                                                    )}
+                                                        <span className="bg-green-100 text-green-800 px-2 py-1 rounded">
+                                                            {question.marks || 0} marks
+                                                        </span>
+                                                        {question.negative_marks !== 0 && question.negative_marks != null && (
+                                                            <span className="bg-red-100 text-red-800 px-2 py-1 rounded">
+                                                                {question.negative_marks > 0 ? '-' : ''}{Math.abs(question.negative_marks)} marks
+                                                            </span>
+                                                        )}
+                                                    </div>
+                                                    <button
+                                                        onClick={() => handleEditQuestion(question)}
+                                                        className="ml-4 px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded text-sm transition-colors"
+                                                    >
+                                                        Edit
+                                                    </button>
                                                 </div>
                                             </div>
                                             
                                             <div className="prose max-w-none">
-                                                <div 
-                                                    className="text-gray-800 mb-4"
-                                                    dangerouslySetInnerHTML={{ __html: question.question || 'No question text available' }}
-                                                />
+                                                <div className="text-gray-800 mb-4">
+                                                    {formatQuestionContent(question.question)}
+                                                </div>
+                                                {question.image && (
+                                                    <div className="mt-4 relative inline-block">
+                                                        <img 
+                                                            src={`/${question.image}`} 
+                                                            alt="Question" 
+                                                            className="max-w-full h-auto rounded-lg border border-gray-200 cursor-pointer transition-transform duration-200 hover:scale-105"
+                                                            style={{ maxHeight: '400px' }}
+                                                            onClick={() => {
+                                                                const modal = document.createElement('div');
+                                                                modal.className = 'fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4';
+                                                                modal.innerHTML = `
+                                                                    <div class="relative max-w-4xl max-h-full">
+                                                                        <button class="absolute top-4 right-4 text-white bg-black bg-opacity-50 rounded-full p-2 hover:bg-opacity-75 z-10" onclick="this.parentElement.parentElement.remove()">
+                                                                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                                                                            </svg>
+                                                                        </button>
+                                                                        <img src="/${question.image}" alt="Question" class="max-w-full max-h-full object-contain rounded-lg" />
+                                                                    </div>
+                                                                `;
+                                                                modal.onclick = (e) => {
+                                                                    if (e.target === modal) modal.remove();
+                                                                };
+                                                                document.body.appendChild(modal);
+                                                            }}
+                                                        />
+                                                        <button
+                                                            className="absolute top-2 right-2 bg-white bg-opacity-90 hover:bg-opacity-100 rounded-full p-1 transition-colors"
+                                                            onClick={() => {
+                                                                const modal = document.createElement('div');
+                                                                modal.className = 'fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4';
+                                                                modal.innerHTML = `
+                                                                    <div class="relative max-w-4xl max-h-full">
+                                                                        <button class="absolute top-4 right-4 text-white bg-black bg-opacity-50 rounded-full p-2 hover:bg-opacity-75 z-10" onclick="this.parentElement.parentElement.remove()">
+                                                                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                                                                            </svg>
+                                                                        </button>
+                                                                        <img src="/${question.image}" alt="Question" class="max-w-full max-h-full object-contain rounded-lg" />
+                                                                    </div>
+                                                                `;
+                                                                modal.onclick = (e) => {
+                                                                    if (e.target === modal) modal.remove();
+                                                                };
+                                                                document.body.appendChild(modal);
+                                                            }}
+                                                        >
+                                                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7"></path>
+                                                            </svg>
+                                                        </button>
+                                                    </div>
+                                                )}
                                             </div>
 
                                             {/* Question Options */}
@@ -965,6 +1265,210 @@ const QuestionBank = () => {
                             >
                                 Delete
                             </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Edit Question Modal */}
+            {editQuestionModal.open && (
+                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+                    <div className="bg-white rounded-2xl shadow-2xl max-w-4xl w-full max-h-[85vh] overflow-hidden flex flex-col">
+                        <div className="p-6 border-b border-gray-200 flex-shrink-0">
+                            <div className="flex justify-between items-center">
+                                <h2 className="text-2xl font-bold text-gray-900">Edit Question</h2>
+                                <button
+                                    onClick={closeEditModal}
+                                    className="text-gray-400 hover:text-gray-600 transition-colors"
+                                >
+                                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+                                    </svg>
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <div className="p-6 overflow-y-auto flex-1" style={{ maxHeight: 'calc(85vh - 200px)' }}>
+                            <div className="space-y-6">
+                                {/* Question Text */}
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                                        Question Text *
+                                    </label>
+                                    <textarea
+                                        value={editingQuestion.question}
+                                        onChange={(e) => setEditingQuestion(prev => ({ ...prev, question: e.target.value }))}
+                                        className="w-full h-32 p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                        placeholder="Enter your question here..."
+                                    />
+                                </div>
+
+                                {/* Question Type */}
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                                        Question Type *
+                                    </label>
+                                    <select
+                                        value={editingQuestion.question_type}
+                                        onChange={(e) => setEditingQuestion(prev => ({ ...prev, question_type: e.target.value }))}
+                                        className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                    >
+                                        <option value="">Select question type</option>
+                                        <option value="MCQ - Single Correct">MCQ - Single Correct</option>
+                                        <option value="MCQ - Multiple Correct">MCQ - Multiple Correct</option>
+                                        <option value="True/False">True/False</option>
+                                        <option value="Fill in the Blanks">Fill in the Blanks</option>
+                                        <option value="Short Answer">Short Answer</option>
+                                        <option value="Long Answer">Long Answer</option>
+                                    </select>
+                                </div>
+
+                                {/* Marks and Negative Marks */}
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                                            Marks *
+                                        </label>
+                                        <input
+                                            type="number"
+                                            value={editingQuestion.marks}
+                                            onChange={(e) => setEditingQuestion(prev => ({ ...prev, marks: parseFloat(e.target.value) || 0 }))}
+                                            className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                            min="0"
+                                            step="0.1"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                                            Negative Marks
+                                        </label>
+                                        <input
+                                            type="number"
+                                            value={editingQuestion.negative_marks}
+                                            onChange={(e) => setEditingQuestion(prev => ({ ...prev, negative_marks: parseFloat(e.target.value) || 0 }))}
+                                            className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                            min="0"
+                                            step="0.1"
+                                        />
+                                    </div>
+                                </div>
+
+                                {/* Image Upload */}
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                                        Question Image
+                                    </label>
+                                    <input
+                                        type="file"
+                                        onChange={handleImageUpload}
+                                        accept="image/*"
+                                        className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                    />
+                                    {editingQuestion.image && (
+                                        <div className="mt-2">
+                                            <p className="text-sm text-gray-600">Selected: {editingQuestion.image.name}</p>
+                                            {typeof editingQuestion.image === 'string' ? (
+                                                <img 
+                                                    src={`/${editingQuestion.image}`} 
+                                                    alt="Current question image" 
+                                                    className="mt-2 max-w-full h-auto rounded border border-gray-200"
+                                                    style={{ maxHeight: '200px' }}
+                                                />
+                                            ) : (
+                                                <p className="text-sm text-blue-600">New image will be uploaded</p>
+                                            )}
+                                        </div>
+                                    )}
+                                </div>
+
+                                {/* Hint and Explanation */}
+                                <div className="grid grid-cols-1 gap-4">
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                                            Hint
+                                        </label>
+                                        <textarea
+                                            value={editingQuestion.hint}
+                                            onChange={(e) => setEditingQuestion(prev => ({ ...prev, hint: e.target.value }))}
+                                            className="w-full h-20 p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                            placeholder="Optional hint for students..."
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                                            Explanation
+                                        </label>
+                                        <textarea
+                                            value={editingQuestion.explanation}
+                                            onChange={(e) => setEditingQuestion(prev => ({ ...prev, explanation: e.target.value }))}
+                                            className="w-full h-20 p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                            placeholder="Explanation of the correct answer..."
+                                        />
+                                    </div>
+                                </div>
+
+                                {/* Options */}
+                                <div>
+                                    <div className="flex justify-between items-center mb-4">
+                                        <label className="block text-sm font-medium text-gray-700">
+                                            Options *
+                                        </label>
+                                        <button
+                                            type="button"
+                                            onClick={addOption}
+                                            className="px-3 py-1 bg-green-600 hover:bg-green-700 text-white rounded text-sm"
+                                        >
+                                            Add Option
+                                        </button>
+                                    </div>
+                                    <div className="space-y-3">
+                                        {editingQuestion.options.map((option, index) => (
+                                            <div key={index} className="flex items-center gap-3 p-3 border border-gray-200 rounded-lg">
+                                                <input
+                                                    type="radio"
+                                                    name="correctAnswer"
+                                                    checked={option.is_correct}
+                                                    onChange={() => handleCorrectAnswerChange(index)}
+                                                    className="w-4 h-4 text-blue-600"
+                                                />
+                                                <input
+                                                    type="text"
+                                                    value={option.option}
+                                                    onChange={(e) => handleOptionChange(index, 'option', e.target.value)}
+                                                    className="flex-1 p-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                                    placeholder={`Option ${index + 1}`}
+                                                />
+                                                <button
+                                                    type="button"
+                                                    onClick={() => removeOption(index)}
+                                                    className="px-2 py-1 bg-red-600 hover:bg-red-700 text-white rounded text-sm"
+                                                >
+                                                    Remove
+                                                </button>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="p-6 border-t border-gray-200 flex-shrink-0 bg-white">
+                            <div className="flex justify-end gap-3">
+                                <button
+                                    onClick={closeEditModal}
+                                    className="px-4 py-2 rounded bg-gray-200 hover:bg-gray-300 text-gray-800 font-medium"
+                                    disabled={isSaving}
+                                >
+                                    Cancel
+                                </button>
+                                <button
+                                    onClick={saveQuestion}
+                                    disabled={isSaving || !editingQuestion.question || !editingQuestion.question_type || editingQuestion.options.length === 0}
+                                    className="px-4 py-2 rounded bg-blue-600 hover:bg-blue-700 text-white font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                                >
+                                    {isSaving ? 'Saving...' : 'Save Changes'}
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>

@@ -18,6 +18,31 @@ use PDO;
 
 class UserController extends Controller
 {
+    public function show($id)
+    {
+        try {
+            $user = User::with(['course', 'batches', 'qualification', 'state'])
+                ->findOrFail($id);
+            
+            // Add course name directly if course relationship exists
+            if ($user->course) {
+                $user->course_name = $user->course->name;
+            }
+            
+            // Add batch name directly if batches relationship exists
+            if ($user->batches && $user->batches->count() > 0) {
+                $user->batch_name = $user->batches->first()->name ?? $user->batches->first()->batch_name;
+            }
+            
+            return response()->json($user);
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => 'User not found',
+                'success' => false
+            ], 404);
+        }
+    }
+
     public function update(Request $request)
     {
         // Validation

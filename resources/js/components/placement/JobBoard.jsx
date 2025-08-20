@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { format } from 'date-fns';
 import {
     Box,
     Card,
@@ -44,7 +45,8 @@ import {
     Visibility as ViewIcon,
     CheckCircle as CheckCircleIcon,
     Cancel as CancelIcon,
-    KeyboardArrowDown as ArrowIcon
+    KeyboardArrowDown as ArrowIcon,
+    Refresh as RefreshIcon
 } from '@mui/icons-material';
 import { useGetJobPostingsQuery } from '../../store/service/user/UserService';
 import axios from 'axios';
@@ -74,20 +76,39 @@ const JobDescription = ({ description }) => {
 };
 
 const JobBoard = ({ studentId }) => {
+    // Date formatting function for d/m/year format
+    const formatDateToDMY = (dateString) => {
+        if (!dateString) return '';
+        try {
+            const date = new Date(dateString);
+            return format(date, 'dd/MM/yyyy');
+        } catch (error) {
+            console.error('Error formatting date:', error);
+            return dateString;
+        }
+    };
+
     const [searchTerm, setSearchTerm] = useState('');
     const [jobType, setJobType] = useState('');
     const [location, setLocation] = useState('');
     const [selectedJob, setSelectedJob] = useState(null);
     const [applyDialogOpen, setApplyDialogOpen] = useState(false);
     const [appliedJobs, setAppliedJobs] = useState([]);
+    const [jobApplications, setJobApplications] = useState([]);
     const [studentCourse, setStudentCourse] = useState(null);
     const [loadingStudentCourse, setLoadingStudentCourse] = useState(true);
     const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
     const [applyingJob, setApplyingJob] = useState(false);
     const [expandedJobs, setExpandedJobs] = useState({});
+    const [refreshTrigger, setRefreshTrigger] = useState(0);
 
     // Real API call for job postings
     const { data: jobPostings, isLoading: loading, error } = useGetJobPostingsQuery();
+
+    // Function to refresh student data
+    const refreshStudentData = () => {
+        setRefreshTrigger(prev => prev + 1);
+    };
 
     // Get student's course information and existing applications
     useEffect(() => {
@@ -115,6 +136,7 @@ const JobBoard = ({ studentId }) => {
                 if (applicationsResponse.data.data) {
                     const appliedJobIds = applicationsResponse.data.data.map(app => app.job_posting_id);
                     setAppliedJobs(appliedJobIds);
+                    setJobApplications(applicationsResponse.data.data);
                 }
             } catch (err) {
                 console.error('Error fetching student data:', err);
@@ -124,7 +146,9 @@ const JobBoard = ({ studentId }) => {
         };
 
         getStudentData();
-    }, []);
+    }, [refreshTrigger]);
+
+
 
     // Helper function to get cookie
     const getCookie = (name) => {
@@ -158,7 +182,7 @@ const JobBoard = ({ studentId }) => {
             description: job.description,
             requirements: job.requirements ? job.requirements.split(',').map(req => req.trim()) : [],
             postedDate: job.created_at ? new Date(job.created_at).toLocaleDateString() : 'N/A',
-            deadline: job.application_deadline ? new Date(job.application_deadline).toLocaleDateString() : 'N/A',
+            deadline: job.application_deadline ? formatDateToDMY(job.application_deadline) : 'N/A',
             domain: 'Computer Science', // Default domain
             course_id: job.course_id,
             course_name: job.course?.name || 'Any Course',
@@ -246,6 +270,37 @@ const JobBoard = ({ studentId }) => {
     };
 
     const isApplied = (jobId) => appliedJobs.includes(jobId);
+    
+    const getApplicationStatus = (jobId) => {
+        const application = jobApplications.find(app => app.job_posting_id === jobId);
+        return application ? application.status : null;
+    };
+
+    const getStatusColor = (status) => {
+        switch (status) {
+            case 'applied': return 'default';
+            case 'shortlisted': return 'primary';
+            case 'interview_scheduled': return 'info';
+            case 'interviewed': return 'warning';
+            case 'selected': return 'success';
+            case 'rejected': return 'error';
+            case 'withdrawn': return 'secondary';
+            default: return 'default';
+        }
+    };
+
+    const getStatusDisplayText = (status) => {
+        switch (status) {
+            case 'applied': return 'Application Submitted';
+            case 'shortlisted': return 'Shortlisted';
+            case 'interview_scheduled': return 'Interview Scheduled';
+            case 'interviewed': return 'Interviewed';
+            case 'selected': return 'Selected';
+            case 'rejected': return 'Rejected';
+            case 'withdrawn': return 'Withdrawn';
+            default: return 'Application Submitted';
+        }
+    };
 
     const getJobTypeColor = (type) => {
         switch (type) {
@@ -290,9 +345,30 @@ const JobBoard = ({ studentId }) => {
             <Box sx={{ mb: 4 }}>
                 <Box display="flex" justifyContent="space-between" alignItems="center" mb={3} flexDirection={{ xs: 'column', sm: 'row' }} gap={2}>
                     <Box>
-                        <Typography variant="h4" gutterBottom sx={{ fontWeight: 700, color: 'text.primary', mb: 1 }}>
-                            💼 Job Opportunities
-                        </Typography>
+                        <Box display="flex" alignItems="center" gap={2} mb={1}>
+                            <Typography variant="h4" sx={{ fontWeight: 700, color: 'text.primary' }}>
+                                💼 Job Opportunities
+                            </Typography>
+                            <Button
+                                variant="outlined"
+                                size="small"
+                                onClick={refreshStudentData}
+                                disabled={loadingStudentCourse}
+                                startIcon={<RefreshIcon />}
+                                sx={{ 
+                                    textTransform: 'none',
+                                    borderRadius: 2,
+                                    borderColor: '#e42b12',
+                                    color: '#e42b12',
+                                    '&:hover': {
+                                        borderColor: '#e42b12',
+                                        backgroundColor: 'rgba(228,43,18,0.1)'
+                                    }
+                                }}
+                            >
+                                {loadingStudentCourse ? 'Refreshing...' : 'Refresh'}
+                            </Button>
+                        </Box>
                         <Typography variant="body1" color="text.secondary">
                             {filteredJobs.length} {filteredJobs.length === 1 ? 'opportunity' : 'opportunities'} available
                         </Typography>
@@ -640,14 +716,25 @@ const JobBoard = ({ studentId }) => {
                                             />
                                             {isApplied(job.id) && (
                                                 <Chip 
-                                                    label="Applied" 
+                                                    label={getStatusDisplayText(getApplicationStatus(job.id))} 
                                                     size="small"
                                                     icon={<CheckCircleIcon />}
+                                                    color={getStatusColor(getApplicationStatus(job.id))}
                                                     sx={{ 
                                                         borderRadius: 2,
                                                         fontSize: '0.75rem',
                                                         fontWeight: 600,
-                                                    background: 'linear-gradient(135deg, #4caf50 0%, #66bb6a 100%)',
+                                                        background: getApplicationStatus(job.id) === 'selected' 
+                                                            ? 'linear-gradient(135deg, #4caf50 0%, #66bb6a 100%)'
+                                                            : getApplicationStatus(job.id) === 'rejected'
+                                                            ? 'linear-gradient(135deg, #f44336 0%, #e57373 100%)'
+                                                            : getApplicationStatus(job.id) === 'shortlisted'
+                                                            ? 'linear-gradient(135deg, #2196f3 0%, #64b5f6 100%)'
+                                                            : getApplicationStatus(job.id) === 'interview_scheduled'
+                                                            ? 'linear-gradient(135deg, #00bcd4 0%, #4dd0e1 100%)'
+                                                            : getApplicationStatus(job.id) === 'interviewed'
+                                                            ? 'linear-gradient(135deg, #ff9800 0%, #ffb74d 100%)'
+                                                            : 'linear-gradient(135deg, #4caf50 0%, #66bb6a 100%)',
                                                         color: 'white'
                                                     }}
                                                 />
@@ -943,38 +1030,73 @@ const JobBoard = ({ studentId }) => {
                                                                 {job.isEligible ? '🚀 Apply Now' : '❌ Not Eligible'}
                                                             </Button>
                                                         ) : (
-                                                            <Card sx={{
-                                                                background: 'linear-gradient(135deg, #4caf50 0%, #66bb6a 100%)',
-                                                                color: 'white',
-                                                                borderRadius: 4,
-                                                                boxShadow: '0 8px 24px rgba(76, 175, 80, 0.3)',
-                                                                px: 4,
-                                                                py: 2
-                                                            }}>
-                                                                <CardContent sx={{ p: 2, '&:last-child': { pb: 2 } }}>
-                                                                    <Box display="flex" alignItems="center" gap={3}>
-                                                                        <Box sx={{
-                                                                            width: 40,
-                                                                            height: 40,
-                                                                            borderRadius: '50%',
-                                                                            background: 'rgba(255,255,255,0.2)',
-                                                                            display: 'flex',
-                                                                            alignItems: 'center',
-                                                                            justifyContent: 'center'
-                                                                        }}>
-                                                                            <CheckCircleIcon sx={{ fontSize: 24 }} />
-                                                                        </Box>
-                                                                        <Box>
-                                                                            <Typography variant="h6" fontWeight={800}>
-                                                                                ✅ Application Submitted
-                                                                            </Typography>
-                                                                            <Typography variant="body2" sx={{ opacity: 0.9 }}>
-                                                                                You'll hear back soon! Check your email for updates.
-                                                                            </Typography>
-                                                                        </Box>
-                                                                    </Box>
-                                                                </CardContent>
-                                                            </Card>
+                                                            (() => {
+                                                                const status = getApplicationStatus(job.id);
+                                                                const statusColor = getStatusColor(status);
+                                                                const statusText = getStatusDisplayText(status);
+                                                                
+                                                                return (
+                                                                    <Card sx={{
+                                                                        background: status === 'selected' 
+                                                                            ? 'linear-gradient(135deg, #4caf50 0%, #66bb6a 100%)'
+                                                                            : status === 'rejected'
+                                                                            ? 'linear-gradient(135deg, #f44336 0%, #e57373 100%)'
+                                                                            : status === 'shortlisted'
+                                                                            ? 'linear-gradient(135deg, #2196f3 0%, #64b5f6 100%)'
+                                                                            : status === 'interview_scheduled'
+                                                                            ? 'linear-gradient(135deg, #00bcd4 0%, #4dd0e1 100%)'
+                                                                            : status === 'interviewed'
+                                                                            ? 'linear-gradient(135deg, #ff9800 0%, #ffb74d 100%)'
+                                                                            : 'linear-gradient(135deg, #4caf50 0%, #66bb6a 100%)',
+                                                                        color: 'white',
+                                                                        borderRadius: 4,
+                                                                        boxShadow: '0 8px 24px rgba(76, 175, 80, 0.3)',
+                                                                        px: 4,
+                                                                        py: 2
+                                                                    }}>
+                                                                        <CardContent sx={{ p: 2, '&:last-child': { pb: 2 } }}>
+                                                                            <Box display="flex" alignItems="center" gap={3}>
+                                                                                <Box sx={{
+                                                                                    width: 40,
+                                                                                    height: 40,
+                                                                                    borderRadius: '50%',
+                                                                                    background: 'rgba(255,255,255,0.2)',
+                                                                                    display: 'flex',
+                                                                                    alignItems: 'center',
+                                                                                    justifyContent: 'center'
+                                                                                }}>
+                                                                                    {status === 'selected' ? (
+                                                                                        <CheckCircleIcon sx={{ fontSize: 24 }} />
+                                                                                    ) : status === 'rejected' ? (
+                                                                                        <CancelIcon sx={{ fontSize: 24 }} />
+                                                                                    ) : (
+                                                                                        <CheckCircleIcon sx={{ fontSize: 24 }} />
+                                                                                    )}
+                                                                                </Box>
+                                                                                <Box>
+                                                                                    <Typography variant="h6" fontWeight={800}>
+                                                                                        {status === 'selected' ? '🎉 ' : status === 'rejected' ? '❌ ' : '✅ '}
+                                                                                        {statusText}
+                                                                                    </Typography>
+                                                                                    <Typography variant="body2" sx={{ opacity: 0.9 }}>
+                                                                                        {status === 'selected' 
+                                                                                            ? 'Congratulations! You have been selected for this position.'
+                                                                                            : status === 'rejected'
+                                                                                            ? 'Thank you for your interest. Keep applying for other opportunities!'
+                                                                                            : status === 'shortlisted'
+                                                                                            ? 'Great news! You have been shortlisted. We will contact you soon.'
+                                                                                            : status === 'interview_scheduled'
+                                                                                            ? 'Your interview has been scheduled. Check your email for details.'
+                                                                                            : status === 'interviewed'
+                                                                                            ? 'Thank you for attending the interview. We will get back to you soon.'
+                                                                                            : 'You\'ll hear back soon! Check your email for updates.'}
+                                                                                    </Typography>
+                                                                                </Box>
+                                                                            </Box>
+                                                                        </CardContent>
+                                                                    </Card>
+                                                                );
+                                                            })()
                                                         )}
                                                 </Box>
                                             </CardContent>

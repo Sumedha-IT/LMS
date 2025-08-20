@@ -1,4 +1,7 @@
 import React, { useState, useEffect } from 'react';
+import { format } from 'date-fns';
+import * as XLSX from 'xlsx';
+import JSZip from 'jszip';
 import { 
     Box, 
     Tabs, 
@@ -35,8 +38,34 @@ import {
     Checkbox,
     FormControlLabel,
     Tooltip,
-    InputAdornment
+    InputAdornment,
+    List,
+    ListItem,
+    ListItemText,
+    ListItemIcon
 } from '@mui/material';
+import {
+    BarChart,
+    Bar,
+    XAxis,
+    YAxis,
+    CartesianGrid,
+    Tooltip as RechartsTooltip,
+    Legend,
+    ResponsiveContainer,
+    PieChart,
+    Pie,
+    Cell,
+    LineChart,
+    Line,
+    AreaChart,
+    Area,
+    RadarChart,
+    PolarGrid,
+    PolarAngleAxis,
+    PolarRadiusAxis,
+    Radar
+} from 'recharts';
 import { 
     Work as WorkIcon, 
     Assessment as AssessmentIcon,
@@ -48,7 +77,19 @@ import {
     Search as SearchIcon,
     Close as CloseIcon,
     Group as GroupIcon,
-    FilterList as FilterListIcon
+    FilterList as FilterListIcon,
+    OpenInNew as OpenInNewIcon,
+    Person as PersonIcon,
+    Description as DescriptionIcon,
+    ArrowBack as ArrowBackIcon,
+    Download as DownloadIcon,
+    Email as EmailIcon,
+    Phone as PhoneIcon,
+    LocationOn as LocationIcon,
+    School as SchoolIcon,
+    CalendarToday as CalendarIcon,
+    LinkedIn as LinkedInIcon,
+    Undo as UndoIcon
 } from '@mui/icons-material';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { 
@@ -97,6 +138,18 @@ function a11yProps(index) {
 
 const AdminPlacement = () => {
     
+    // Date formatting function for d/m/year format
+    const formatDateToDMY = (dateString) => {
+        if (!dateString) return '';
+        try {
+            const date = new Date(dateString);
+            return format(date, 'dd/MM/yyyy');
+        } catch (error) {
+            console.error('Error formatting date:', error);
+            return dateString;
+        }
+    };
+    
     const { id } = useParams();
     const [tabValue, setTabValue] = useState(0);
     const [loading, setLoading] = useState(true);
@@ -137,6 +190,27 @@ const AdminPlacement = () => {
     // Enhanced job applications with user details
     const [enhancedJobApplications, setEnhancedJobApplications] = useState([]);
     const [loadingEnhancedApplications, setLoadingEnhancedApplications] = useState(false);
+    
+    // Student Details Modal State
+    const [studentDetailsDialog, setStudentDetailsDialog] = useState({ open: false, studentId: null, jobId: null });
+    const [selectedStudentData, setSelectedStudentData] = useState(null);
+    const [studentJobApplications, setStudentJobApplications] = useState([]);
+    const [studentExamResults, setStudentExamResults] = useState([]);
+    const [loadingStudentDetails, setLoadingStudentDetails] = useState(false);
+    const [studentDetailsError, setStudentDetailsError] = useState(null);
+    const [studentDetailsTabValue, setStudentDetailsTabValue] = useState(0);
+    
+    // Bulk update state
+    const [selectedApplications, setSelectedApplications] = useState([]);
+    const [bulkUpdateStatus, setBulkUpdateStatus] = useState('');
+    const [bulkUpdateDialog, setBulkUpdateDialog] = useState(false);
+    const [updatingBulkStatus, setUpdatingBulkStatus] = useState(false);
+    
+    // Undo functionality state
+    const [undoOperations, setUndoOperations] = useState([]);
+    const [undoDialog, setUndoDialog] = useState(false);
+    const [undoingOperation, setUndoingOperation] = useState(false);
+    const [lastUndoKey, setLastUndoKey] = useState(null);
 
     // Mutations
     const [createCompany, { isLoading: creatingCompany }] = useCreateCompanyMutation();
@@ -151,13 +225,13 @@ const AdminPlacement = () => {
         name: '',
         description: '',
         website: '',
-        industry: '',
         company_size: '',
         contact_person: '',
+        designation: '',
         contact_email: '',
         contact_phone: '',
         address: '',
-        is_active: true
+        is_active: false
     });
 
     // Form validation states
@@ -219,9 +293,7 @@ const AdminPlacement = () => {
         company_id: '',
         title: '',
         course_id: '',
-        description: '',
         requirements: '',
-        responsibilities: '',
         job_type: 'full_time',
         location: '',
         salary_min: '',
@@ -300,7 +372,6 @@ const AdminPlacement = () => {
                     mtech_year_of_passout_max: '',
                     btech_percentage_min: '',
                     mtech_percentage_min: '',
-                    skills_required: [],
                     additional_criteria: ''
                 };
                 
@@ -319,7 +390,6 @@ const AdminPlacement = () => {
                     mtech_year_of_passout_max: eligibilityData.mtech_year_of_passout_max || '',
                     btech_percentage_min: eligibilityData.btech_percentage_min || '',
                     mtech_percentage_min: eligibilityData.mtech_percentage_min || '',
-                    skills_required: eligibilityData.skills_required || [],
                     additional_criteria: eligibilityData.additional_criteria || ''
                 });
             }
@@ -330,22 +400,23 @@ const AdminPlacement = () => {
                     name: '',
                     description: '',
                     website: '',
-                    industry: '',
                     company_size: '',
                     contact_person: '',
+                    designation: '',
                     contact_email: '',
                     contact_phone: '',
                     address: '',
-                    is_active: true
+                    is_active: false
                 });
+                // Reset form validation states
+                setCompanyFormErrors({});
+                setCompanyFormTouched({});
             } else if (type === 'jobPosting') {
                 setJobPostingForm({
                     company_id: '',
                     title: '',
                     course_id: '',
-                    description: '',
                     requirements: '',
-                    responsibilities: '',
                     job_type: 'full_time',
                     location: '',
                     salary_min: '',
@@ -430,9 +501,22 @@ const AdminPlacement = () => {
 
     const getStatusColor = (status) => {
         switch (status) {
+            // Job posting statuses
             case 'active': return 'success';
+            case 'open': return 'success';
             case 'draft': return 'warning';
             case 'closed': return 'error';
+            case 'on_hold': return 'info';
+            
+            // Job application statuses
+            case 'applied': return 'default';
+            case 'shortlisted': return 'info';
+            case 'interview_scheduled': return 'warning';
+            case 'interviewed': return 'primary';
+            case 'selected': return 'success';
+            case 'rejected': return 'error';
+            case 'withdrawn': return 'secondary';
+            
             default: return 'default';
         }
     };
@@ -500,11 +584,333 @@ const AdminPlacement = () => {
     const handleApplicationsClick = async (jobId, jobTitle) => {
         setApplicationsDialog({ open: true, jobId, jobTitle });
         await fetchEnhancedJobApplications(jobId);
+        await fetchUndoOperations(jobId);
     };
 
     // Function to close applications dialog
     const handleCloseApplicationsDialog = () => {
         setApplicationsDialog({ open: false, jobId: null, jobTitle: '' });
+    };
+
+    const handleStudentDetailsClick = async (studentId, jobId) => {
+        try {
+        setStudentDetailsDialog({ open: true, studentId, jobId });
+        await fetchStudentDetails(studentId);
+        } catch (error) {
+            console.error('Error in handleStudentDetailsClick:', error);
+            setStudentDetailsError('Failed to load student details. Please try again.');
+        }
+    };
+
+    const handleCloseStudentDetailsDialog = () => {
+        setStudentDetailsDialog({ open: false, studentId: null, jobId: null });
+        setSelectedStudentData(null);
+        setStudentJobApplications([]);
+        setStudentExamResults([]);
+        setStudentDetailsError(null);
+        setStudentDetailsTabValue(0);
+    };
+
+    const fetchStudentDetails = async (studentId) => {
+        try {
+            setLoadingStudentDetails(true);
+            setStudentDetailsError(null);
+            
+            // Get authentication token
+            const userInfo = getCookie('user_info');
+            const userData = userInfo ? JSON.parse(userInfo) : null;
+            
+            if (!userData?.token) {
+                throw new Error('Authentication required');
+            }
+
+            // Fetch basic student data first
+            const [
+                profileResult,
+                applicationsResult,
+                examResult
+            ] = await Promise.allSettled([
+                axios.get(`/api/users/${studentId}?include=course,batches`, {
+                    headers: { 'Authorization': `Bearer ${userData.token}` }
+                }),
+                axios.get(`/api/job-applications?user_id=${studentId}`, {
+                    headers: { 'Authorization': `Bearer ${userData.token}` }
+                }),
+                axios.get(`/api/students/${studentId}/exam-results`, {
+                    headers: { 'Authorization': `Bearer ${userData.token}` }
+                })
+            ]);
+
+            // Extract successful responses or use default values
+            const profileResponse = profileResult.status === 'fulfilled' ? profileResult.value : { data: {} };
+            const applicationsResponse = applicationsResult.status === 'fulfilled' ? applicationsResult.value : { data: { data: [] } };
+            const examResponse = examResult.status === 'fulfilled' ? examResult.value : { data: { data: [] } };
+
+            // Log any failed API calls
+            if (profileResult.status === 'rejected') console.error('Profile API failed:', profileResult.reason);
+            if (applicationsResult.status === 'rejected') console.error('Applications API failed:', applicationsResult.reason);
+            if (examResult.status === 'rejected') console.error('Exam API failed:', examResult.reason);
+
+            // Now fetch education, projects, and certifications for the specific user
+            const [
+                educationResult,
+                projectsResult,
+                certificationsResult
+            ] = await Promise.allSettled([
+                axios.get(`/api/get/education/${studentId}`, {
+                    headers: { 'Authorization': `Bearer ${userData.token}` }
+                }),
+                axios.get(`/api/projects/${studentId}`, {
+                    headers: { 'Authorization': `Bearer ${userData.token}` }
+                }),
+                axios.get(`/api/certifications/${studentId}`, {
+                    headers: { 'Authorization': `Bearer ${userData.token}` }
+                })
+            ]);
+
+            // Extract successful responses or use default values
+            const educationResponse = educationResult.status === 'fulfilled' ? educationResult.value : { data: { data: [] } };
+            const projectsResponse = projectsResult.status === 'fulfilled' ? projectsResult.value : { data: { projects: [] } };
+            const certificationsResponse = certificationsResult.status === 'fulfilled' ? certificationsResult.value : { data: { data: [] } };
+
+            // Log any failed API calls
+            if (educationResult.status === 'rejected') console.error('Education API failed:', educationResult.reason);
+            if (projectsResult.status === 'rejected') console.error('Projects API failed:', projectsResult.reason);
+            if (certificationsResult.status === 'rejected') console.error('Certifications API failed:', certificationsResult.reason);
+            
+            // Combine all data into a single object
+            const combinedStudentData = {
+                ...profileResponse.data,
+                education: educationResponse.data.data || [],
+                projects: projectsResponse.data.projects || [],
+                certifications: certificationsResponse.data.data || []
+            };
+            
+            setSelectedStudentData(combinedStudentData);
+            setStudentJobApplications(applicationsResponse.data.data || []);
+            setStudentExamResults(examResponse.data.data || []);
+            
+        } catch (err) {
+            console.error('Error fetching student details:', err);
+            setStudentDetailsError('Failed to load student details: ' + (err.response?.data?.message || err.message));
+        } finally {
+            setLoadingStudentDetails(false);
+        }
+    };
+
+    const handleStudentDetailsTabChange = (event, newValue) => {
+        setStudentDetailsTabValue(newValue);
+    };
+
+    // Bulk update functions
+    const handleSelectAllApplications = (event) => {
+        if (event.target.checked) {
+            setSelectedApplications(enhancedJobApplications.map(app => app.id));
+        } else {
+            setSelectedApplications([]);
+        }
+    };
+
+    const handleSelectApplication = (applicationId) => {
+        setSelectedApplications(prev => 
+            prev.includes(applicationId) 
+                ? prev.filter(id => id !== applicationId)
+                : [...prev, applicationId]
+        );
+    };
+
+    const handleBulkStatusUpdate = async () => {
+        if (!bulkUpdateStatus || selectedApplications.length === 0) {
+            return;
+        }
+
+        try {
+            setUpdatingBulkStatus(true);
+            const userInfo = getCookie('user_info');
+            const userData = userInfo ? JSON.parse(userInfo) : null;
+
+            if (!userData?.token) {
+                throw new Error('Authentication required');
+            }
+
+            const response = await axios.post('/api/job-applications/bulk-update', {
+                application_ids: selectedApplications,
+                status: bulkUpdateStatus,
+                job_posting_id: applicationsDialog.jobId
+            }, {
+                headers: { 'Authorization': `Bearer ${userData.token}` }
+            });
+
+            if (response.data.success) {
+                // Store undo key for later use
+                setLastUndoKey(response.data.undo_key);
+                
+                // Refresh the applications list
+                await fetchEnhancedJobApplications(applicationsDialog.jobId);
+                setSelectedApplications([]);
+                setBulkUpdateStatus('');
+                setBulkUpdateDialog(false);
+                
+                // Show success message with undo option
+                setSnackbar({
+                    open: true,
+                    message: `Successfully updated ${selectedApplications.length} application(s) to ${bulkUpdateStatus}. You can undo this action anytime.`,
+                    severity: 'success',
+                    action: (
+                        <Button 
+                            color="inherit" 
+                            size="small" 
+                            onClick={() => setUndoDialog(true)}
+                            sx={{ color: 'white' }}
+                        >
+                            UNDO
+                        </Button>
+                    )
+                });
+            }
+        } catch (error) {
+            console.error('Bulk update error:', error);
+            setSnackbar({
+                open: true,
+                message: error.response?.data?.message || 'Failed to update applications',
+                severity: 'error'
+            });
+        } finally {
+            setUpdatingBulkStatus(false);
+        }
+    };
+
+    const handleUndoBulkUpdate = async (undoKey = lastUndoKey) => {
+        if (!undoKey) return;
+
+        try {
+            setUndoingOperation(true);
+            const userInfo = getCookie('user_info');
+            const userData = userInfo ? JSON.parse(userInfo) : null;
+
+            if (!userData?.token) {
+                throw new Error('Authentication required');
+            }
+
+            const response = await axios.post('/api/job-applications/undo-bulk-update', {
+                undo_key: undoKey
+            }, {
+                headers: { 'Authorization': `Bearer ${userData.token}` }
+            });
+
+            if (response.data.success) {
+                // Refresh the applications list
+                await fetchEnhancedJobApplications(applicationsDialog.jobId);
+                setUndoDialog(false);
+                setLastUndoKey(null);
+                
+                // Show success message
+                setSnackbar({
+                    open: true,
+                    message: `Successfully reverted ${response.data.reverted_count} application(s) to previous status`,
+                    severity: 'success'
+                });
+            }
+        } catch (error) {
+            console.error('Undo error:', error);
+            setSnackbar({
+                open: true,
+                message: error.response?.data?.message || 'Failed to undo operation',
+                severity: 'error'
+            });
+        } finally {
+            setUndoingOperation(false);
+        }
+    };
+
+    const fetchUndoOperations = async (jobPostingId) => {
+        try {
+            const userInfo = getCookie('user_info');
+            const userData = userInfo ? JSON.parse(userInfo) : null;
+
+            if (!userData?.token) {
+                throw new Error('Authentication required');
+            }
+
+            const response = await axios.get(`/api/job-applications/undo-operations/${jobPostingId}`, {
+                headers: { 'Authorization': `Bearer ${userData.token}` }
+            });
+
+            if (response.data.success) {
+                setUndoOperations(response.data.undo_operations);
+            }
+        } catch (error) {
+            console.error('Error fetching undo operations:', error);
+        }
+    };
+
+
+
+    const formatDate = (dateString) => {
+        if (!dateString) return 'N/A';
+        return new Date(dateString).toLocaleDateString('en-US', {
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric'
+        });
+    };
+
+    // Helper function to get the proper document URL
+    const getDocumentUrl = (path) => {
+        if (!path) return null;
+
+        // For File objects (newly uploaded files)
+        if (path instanceof File) {
+            return URL.createObjectURL(path);
+        }
+
+        // For string paths
+        if (typeof path === 'string') {
+            // For blob URLs (temporary previews)
+            if (path.startsWith('blob:')) {
+                return path;
+            }
+
+            // For full URLs that already include the domain
+            if (path.startsWith('http')) {
+                return path;
+            }
+
+            // Get the base URL without /api for storage files
+            const baseUrl = import.meta.env.VITE_APP_API_URL?.replace('/api', '') || 'http://localhost:8000';
+
+            // For relative paths stored in the database
+            // If path contains "avatars/" without a leading slash
+            if (path.includes('avatars/') && !path.startsWith('/')) {
+                return `${baseUrl}/storage/${path}`;
+            }
+
+            // If path contains "resumes/" without a leading slash
+            if (path.includes('resumes/') && !path.startsWith('/')) {
+                return `${baseUrl}/storage/${path}`;
+            }
+
+            // If path starts with "/storage/"
+            if (path.startsWith('/storage/')) {
+                return `${baseUrl}${path}`;
+            }
+
+            // Default case - assume it's a relative path
+            return `${baseUrl}/storage/${path}`;
+        }
+
+        return null;
+    };
+
+    const downloadFile = (fileUrl, fileName) => {
+        if (!fileUrl) return;
+        
+        const link = document.createElement('a');
+        link.href = fileUrl;
+        link.download = fileName || 'document';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
     };
 
     // Function to fetch enhanced job applications with user details
@@ -559,6 +965,184 @@ const AdminPlacement = () => {
         return null;
     };
 
+    // Function to export applications to Excel with resume files
+    const handleExportApplications = async () => {
+        try {
+            if (!enhancedJobApplications || enhancedJobApplications.length === 0) {
+                setSnackbar({
+                    open: true,
+                    message: 'No applications to export',
+                    severity: 'warning'
+                });
+                return;
+            }
+
+            setSnackbar({
+                open: true,
+                message: 'Preparing export with resume files...',
+                severity: 'info'
+            });
+
+            // Get authentication token
+            const userInfo = getCookie('user_info');
+            const userData = userInfo ? JSON.parse(userInfo) : null;
+            
+            if (!userData?.token) {
+                throw new Error('Authentication required');
+            }
+
+            // Prepare data for export and download resume files
+            const exportData = [];
+            const resumeFiles = [];
+
+            for (const application of enhancedJobApplications) {
+                const studentName = application.user?.name || 'Unknown';
+                const batchName = application.user?.batches?.[0]?.batch_name || 'N/A';
+                const courseName = application.user?.course?.name || 'N/A';
+                const applicationDate = application.application_date ? 
+                    new Date(application.application_date).toLocaleDateString('en-US', {
+                        year: 'numeric',
+                        month: 'short',
+                        day: 'numeric'
+                    }) : 'N/A';
+                const status = application.status?.replace('_', ' ').toUpperCase() || 'N/A';
+                
+                let resumeFileName = 'No Resume';
+                let resumeFileData = null;
+
+                // Download resume file if available
+                if (application.user?.upload_resume) {
+                    try {
+                        const resumeResponse = await axios.get(
+                            `${import.meta.env.VITE_APP_API_URL.replace('/api', '')}/storage/${application.user.upload_resume}`,
+                            {
+                                headers: { 'Authorization': `Bearer ${userData.token}` },
+                                responseType: 'blob'
+                            }
+                        );
+                        
+                        // Get file extension from the resume filename
+                        const fileExtension = application.user.upload_resume.split('.').pop() || 'pdf';
+                        resumeFileName = `${studentName.replace(/[^a-zA-Z0-9]/g, '_')}_Resume.${fileExtension}`;
+                        resumeFileData = resumeResponse.data;
+                        
+                        resumeFiles.push({
+                            name: resumeFileName,
+                            data: resumeFileData,
+                            type: resumeResponse.headers['content-type'] || 'application/pdf'
+                        });
+                    } catch (resumeError) {
+                        console.error('Error downloading resume:', resumeError);
+                        resumeFileName = 'Resume Download Failed';
+                    }
+                }
+
+                exportData.push({
+                    'Student Name': studentName,
+                    'Batch': batchName,
+                    'Course': courseName,
+                    'Application Date': applicationDate,
+                    'Status': status,
+                    'Resume File': resumeFileName
+                });
+            }
+
+            // Create workbook and worksheet
+            const workbook = XLSX.utils.book_new();
+            const worksheet = XLSX.utils.json_to_sheet(exportData);
+
+            // Set column widths
+            const columnWidths = [
+                { wch: 25 }, // Student Name
+                { wch: 15 }, // Batch
+                { wch: 20 }, // Course
+                { wch: 15 }, // Application Date
+                { wch: 15 }, // Status
+                { wch: 30 }  // Resume File
+            ];
+            worksheet['!cols'] = columnWidths;
+
+            // Add worksheet to workbook
+            XLSX.utils.book_append_sheet(workbook, worksheet, 'Job Applications');
+
+            // Generate filename with current date
+            const currentDate = new Date().toISOString().split('T')[0];
+            const jobTitle = applicationsDialog.jobTitle?.replace(/[^a-zA-Z0-9]/g, '_') || 'Job_Applications';
+            const filename = `${jobTitle}_Applications_${currentDate}.xlsx`;
+
+            // Create a ZIP file containing both Excel and resume files
+            if (resumeFiles.length > 0) {
+                try {
+                    // Create a new ZIP file
+                    const zip = new JSZip();
+                    
+                    // Add the Excel file to the ZIP
+                    const excelBuffer = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' });
+                    zip.file(filename, excelBuffer);
+                    
+                    // Add resume files to a 'resumes' folder in the ZIP
+                    const resumesFolder = zip.folder('resumes');
+                    resumeFiles.forEach((file) => {
+                        resumesFolder.file(file.name, file.data);
+                    });
+                    
+                    // Generate and download the ZIP file
+                    const zipBlob = await zip.generateAsync({ type: 'blob' });
+                    const zipUrl = URL.createObjectURL(zipBlob);
+                    const zipLink = document.createElement('a');
+                    zipLink.href = zipUrl;
+                    zipLink.download = `${jobTitle}_Applications_${currentDate}.zip`;
+                    document.body.appendChild(zipLink);
+                    zipLink.click();
+                    document.body.removeChild(zipLink);
+                    URL.revokeObjectURL(zipUrl);
+
+                    setSnackbar({
+                        open: true,
+                        message: `✅ Successfully exported ${enhancedJobApplications.length} applications and ${resumeFiles.length} resume files in ZIP format!`,
+                        severity: 'success'
+                    });
+                } catch (zipError) {
+                    console.error('Error creating ZIP:', zipError);
+                    // Fallback to individual downloads if ZIP fails
+                    XLSX.writeFile(workbook, filename);
+                    resumeFiles.forEach((file) => {
+                        const fileUrl = URL.createObjectURL(file.data);
+                        const link = document.createElement('a');
+                        link.href = fileUrl;
+                        link.download = file.name;
+                        document.body.appendChild(link);
+                        link.click();
+                        document.body.removeChild(link);
+                        URL.revokeObjectURL(fileUrl);
+                    });
+                    
+                    setSnackbar({
+                        open: true,
+                        message: `Exported applications to Excel and resume files individually (ZIP creation failed).`,
+                        severity: 'warning'
+                    });
+                }
+            } else {
+                // Save the Excel file normally if no resumes
+                XLSX.writeFile(workbook, filename);
+                setSnackbar({
+                    open: true,
+                    message: `Successfully exported ${enhancedJobApplications.length} applications to Excel`,
+                    severity: 'success'
+                });
+            }
+
+        } catch (error) {
+            console.error('Export error:', error);
+            setSnackbar({
+                open: true,
+                message: 'Failed to export applications. Please try again.',
+                severity: 'error'
+            });
+        }
+    };
+
     const navigate = useNavigate();
 
     if (loading) {
@@ -575,7 +1159,6 @@ const AdminPlacement = () => {
         const q = companiesSearch.toLowerCase();
         return (
             c.name?.toLowerCase().includes(q) ||
-            c.industry?.toLowerCase().includes(q) ||
             c.contact_person?.toLowerCase().includes(q) ||
             c.contact_email?.toLowerCase().includes(q)
         );
@@ -711,7 +1294,7 @@ const AdminPlacement = () => {
                             <Box display="flex" gap={1.5} alignItems="center">
                                 <TextField
                                     size="small"
-                                    placeholder="Search jobs..."
+                                                                            placeholder=""
                                     value={jobFilters.search || ''}
                                     onChange={(e) => setJobFilters({ ...jobFilters, search: e.target.value })}
                                     InputProps={{
@@ -761,7 +1344,7 @@ const AdminPlacement = () => {
                                     <TextField
                                         fullWidth
                                         label="Search"
-                                        placeholder="Search by title, description, requirements..."
+                                        placeholder=""
                                         value={jobFilters.search || ''}
                                         onChange={(e) => setJobFilters({...jobFilters, search: e.target.value})}
                                         size="small"
@@ -799,6 +1382,7 @@ const AdminPlacement = () => {
                                             <MenuItem value="draft">Draft</MenuItem>
                                             <MenuItem value="open">Open</MenuItem>
                                             <MenuItem value="closed">Closed</MenuItem>
+                                            <MenuItem value="on_hold">On Hold</MenuItem>
                                         </Select>
                                     </FormControl>
                                 </Grid>
@@ -808,7 +1392,7 @@ const AdminPlacement = () => {
                                     <TextField
                                         fullWidth
                                         label="Location"
-                                        placeholder="Enter location..."
+                                        placeholder=""
                                         value={jobFilters.location || ''}
                                         onChange={(e) => setJobFilters({...jobFilters, location: e.target.value})}
                                         size="small"
@@ -869,7 +1453,7 @@ const AdminPlacement = () => {
                                         fullWidth
                                         label="Min Salary"
                                         type="number"
-                                        placeholder="Min"
+                                        placeholder=""
                                         value={jobFilters.salary_min || ''}
                                         onChange={(e) => setJobFilters({...jobFilters, salary_min: e.target.value})}
                                         size="small"
@@ -880,7 +1464,7 @@ const AdminPlacement = () => {
                                         fullWidth
                                         label="Max Salary"
                                         type="number"
-                                        placeholder="Max"
+                                        placeholder=""
                                         value={jobFilters.salary_max || ''}
                                         onChange={(e) => setJobFilters({...jobFilters, salary_max: e.target.value})}
                                         size="small"
@@ -892,7 +1476,7 @@ const AdminPlacement = () => {
                                     <TextField
                                         fullWidth
                                         label="Experience"
-                                        placeholder="e.g., 2 years"
+                                        placeholder=""
                                         value={jobFilters.experience_required || ''}
                                         onChange={(e) => setJobFilters({...jobFilters, experience_required: e.target.value})}
                                         size="small"
@@ -998,6 +1582,7 @@ const AdminPlacement = () => {
                                             <TableCell>Location</TableCell>
                                             <TableCell>Type</TableCell>
                                             <TableCell>Status</TableCell>
+                                            <TableCell>Application Deadline</TableCell>
                                             <TableCell align="center">Applications</TableCell>
                                             <TableCell align="right">Actions</TableCell>
                                         </TableRow>
@@ -1039,6 +1624,9 @@ const AdminPlacement = () => {
                                                             color={getStatusColor(job.status)} 
                                                             size="small" 
                                                         />
+                                                    </TableCell>
+                                                    <TableCell>
+                                                        {job.application_deadline ? formatDateToDMY(job.application_deadline) : 'N/A'}
                                                     </TableCell>
                                                     <TableCell align="center">
                                                         <Tooltip title={
@@ -1163,7 +1751,6 @@ const AdminPlacement = () => {
                                     <TableHead>
                                         <TableRow>
                                             <TableCell>Name</TableCell>
-                                            <TableCell>Industry</TableCell>
                                             <TableCell>Contact Person</TableCell>
                                             <TableCell>Email</TableCell>
                                             <TableCell>Phone</TableCell>
@@ -1175,7 +1762,6 @@ const AdminPlacement = () => {
                                         {filteredCompanies.map((company) => (
                                             <TableRow key={company.id}>
                                                 <TableCell>{company.name}</TableCell>
-                                                <TableCell>{company.industry || 'N/A'}</TableCell>
                                                 <TableCell>{company.contact_person || 'N/A'}</TableCell>
                                                 <TableCell>{company.contact_email || 'N/A'}</TableCell>
                                                 <TableCell>{company.contact_phone || 'N/A'}</TableCell>
@@ -1212,32 +1798,326 @@ const AdminPlacement = () => {
 
                 <TabPanel value={tabValue} index={3}>
                     <Box>
-                        <Typography variant="h5" gutterBottom>
-                            Placement Reports
+                        <Typography variant="h5" gutterBottom sx={{ mb: 3, fontWeight: 600 }}>
+                            📊 Placement Analytics & Reports
                         </Typography>
                         
                         <Grid container spacing={3}>
+                            {/* Placement Overview Chart */}
                             <Grid item xs={12} md={6}>
-                                <Card>
+                                <Card sx={{ height: '100%', borderRadius: 3, boxShadow: 3 }}>
                                     <CardContent>
-                                        <Typography variant="h6" gutterBottom>
-                                            Placement Statistics
+                                        <Typography variant="h6" gutterBottom sx={{ fontWeight: 600, color: '#0f1f3d' }}>
+                                            📈 Placement Overview
                                         </Typography>
-                                        <Typography variant="body2" color="text.secondary">
-                                            View detailed placement statistics and analytics
-                                        </Typography>
+                                        <Box sx={{ height: 300, mt: 2 }}>
+                                            <ResponsiveContainer width="100%" height="100%">
+                                                <BarChart
+                                                    data={[
+                                                        {
+                                                            name: 'Total Students',
+                                                            value: stats?.totalStudents || 0,
+                                                            fill: '#0f1f3d'
+                                                        },
+                                                        {
+                                                            name: 'Eligible Students',
+                                                            value: stats?.eligibleStudents || 0,
+                                                            fill: '#2196f3'
+                                                        },
+                                                        {
+                                                            name: 'Placed Students',
+                                                            value: stats?.placedStudents || 0,
+                                                            fill: '#4caf50'
+                                                        }
+                                                    ]}
+                                                    margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
+                                                >
+                                                    <CartesianGrid strokeDasharray="3 3" />
+                                                    <XAxis dataKey="name" />
+                                                    <YAxis />
+                                                    <RechartsTooltip />
+                                                    <Bar dataKey="value" fill="#8884d8" />
+                                                </BarChart>
+                                            </ResponsiveContainer>
+                                        </Box>
                                     </CardContent>
                                 </Card>
                             </Grid>
+
+                            {/* Application Status Pie Chart */}
                             <Grid item xs={12} md={6}>
-                                <Card>
+                                <Card sx={{ height: '100%', borderRadius: 3, boxShadow: 3 }}>
                                     <CardContent>
-                                        <Typography variant="h6" gutterBottom>
-                                            Domain-wise Analysis
+                                        <Typography variant="h6" gutterBottom sx={{ fontWeight: 600, color: '#0f1f3d' }}>
+                                            📋 Application Status Distribution
                                         </Typography>
-                                        <Typography variant="body2" color="text.secondary">
-                                            Placement success rate by domain
+                                        <Box sx={{ height: 300, mt: 2 }}>
+                                            <ResponsiveContainer width="100%" height="100%">
+                                                <PieChart>
+                                                    <Pie
+                                                        data={(() => {
+                                                            const statusCounts = {};
+                                                            jobApplications?.data?.forEach(app => {
+                                                                statusCounts[app.status] = (statusCounts[app.status] || 0) + 1;
+                                                            });
+                                                            
+                                                            return Object.entries(statusCounts).map(([status, count]) => ({
+                                                                name: status.replace('_', ' ').toUpperCase(),
+                                                                value: count
+                                                            }));
+                                                        })()}
+                                                        cx="50%"
+                                                        cy="50%"
+                                                        labelLine={false}
+                                                        label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                                                        outerRadius={80}
+                                                        fill="#8884d8"
+                                                        dataKey="value"
+                                                    >
+                                                        {(() => {
+                                                            const statusColors = ['#2196f3', '#ff9800', '#9c27b0', '#ff5722', '#4caf50', '#f44336', '#9e9e9e'];
+                                                            return jobApplications?.data?.map((entry, index) => (
+                                                                <Cell key={`cell-${index}`} fill={statusColors[index % statusColors.length]} />
+                                                            ));
+                                                        })()}
+                                                    </Pie>
+                                                    <RechartsTooltip />
+                                                </PieChart>
+                                            </ResponsiveContainer>
+                                        </Box>
+                                    </CardContent>
+                                </Card>
+                            </Grid>
+
+                            {/* Monthly Applications Trend */}
+                            <Grid item xs={12} md={8}>
+                                <Card sx={{ borderRadius: 3, boxShadow: 3 }}>
+                                    <CardContent>
+                                        <Typography variant="h6" gutterBottom sx={{ fontWeight: 600, color: '#0f1f3d' }}>
+                                            📈 Monthly Applications Trend
                                         </Typography>
+                                        <Box sx={{ height: 300, mt: 2 }}>
+                                            <ResponsiveContainer width="100%" height="100%">
+                                                <AreaChart
+                                                    data={(() => {
+                                                        const monthlyData = {};
+                                                        jobApplications?.data?.forEach(app => {
+                                                            const date = new Date(app.application_date);
+                                                            const monthYear = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+                                                            monthlyData[monthYear] = (monthlyData[monthYear] || 0) + 1;
+                                                        });
+                                                        
+                                                        return Object.entries(monthlyData)
+                                                            .sort(([a], [b]) => a.localeCompare(b))
+                                                            .map(([month, count]) => ({
+                                                                month,
+                                                                applications: count
+                                                            }));
+                                                    })()}
+                                                    margin={{ top: 10, right: 30, left: 0, bottom: 0 }}
+                                                >
+                                                    <CartesianGrid strokeDasharray="3 3" />
+                                                    <XAxis dataKey="month" />
+                                                    <YAxis />
+                                                    <RechartsTooltip />
+                                                    <Area type="monotone" dataKey="applications" stroke="#8884d8" fill="#8884d8" fillOpacity={0.3} />
+                                                </AreaChart>
+                                            </ResponsiveContainer>
+                                        </Box>
+                                    </CardContent>
+                                </Card>
+                            </Grid>
+
+                            {/* Job Postings vs Applications */}
+                            <Grid item xs={12} md={4}>
+                                <Card sx={{ borderRadius: 3, boxShadow: 3 }}>
+                                    <CardContent>
+                                        <Typography variant="h6" gutterBottom sx={{ fontWeight: 600, color: '#0f1f3d' }}>
+                                            💼 Job Postings vs Applications
+                                        </Typography>
+                                        <Box sx={{ height: 300, mt: 2 }}>
+                                            <ResponsiveContainer width="100%" height="100%">
+                                                <BarChart
+                                                    data={[
+                                                        {
+                                                            name: 'Active Jobs',
+                                                            value: stats?.activeJobs || 0,
+                                                            fill: '#2196f3'
+                                                        },
+                                                        {
+                                                            name: 'Total Applications',
+                                                            value: jobApplications?.data?.length || 0,
+                                                            fill: '#ff9800'
+                                                        },
+                                                        {
+                                                            name: 'Avg per Job',
+                                                            value: stats?.activeJobs > 0 ? Math.round((jobApplications?.data?.length || 0) / stats?.activeJobs) : 0,
+                                                            fill: '#4caf50'
+                                                        }
+                                                    ]}
+                                                    margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
+                                                >
+                                                    <CartesianGrid strokeDasharray="3 3" />
+                                                    <XAxis dataKey="name" />
+                                                    <YAxis />
+                                                    <RechartsTooltip />
+                                                    <Bar dataKey="value" fill="#8884d8" />
+                                                </BarChart>
+                                            </ResponsiveContainer>
+                                        </Box>
+                                    </CardContent>
+                                </Card>
+                            </Grid>
+
+                            {/* Company Performance Radar Chart */}
+                            <Grid item xs={12} md={6}>
+                                <Card sx={{ borderRadius: 3, boxShadow: 3 }}>
+                                    <CardContent>
+                                        <Typography variant="h6" gutterBottom sx={{ fontWeight: 600, color: '#0f1f3d' }}>
+                                            🎯 Placement Performance Metrics
+                                        </Typography>
+                                        <Box sx={{ height: 300, mt: 2 }}>
+                                            <ResponsiveContainer width="100%" height="100%">
+                                                <RadarChart
+                                                    data={[
+                                                        {
+                                                            subject: 'Placement Rate',
+                                                            A: stats?.totalStudents > 0 ? Math.round((stats?.placedStudents / stats?.totalStudents) * 100) : 0,
+                                                            fullMark: 100,
+                                                        },
+                                                        {
+                                                            subject: 'Eligibility Rate',
+                                                            A: stats?.totalStudents > 0 ? Math.round((stats?.eligibleStudents / stats?.totalStudents) * 100) : 0,
+                                                            fullMark: 100,
+                                                        },
+                                                        {
+                                                            subject: 'Job Availability',
+                                                            A: stats?.activeJobs > 0 ? Math.min(100, (stats?.activeJobs / 10) * 100) : 0,
+                                                            fullMark: 100,
+                                                        },
+                                                        {
+                                                            subject: 'Application Rate',
+                                                            A: stats?.eligibleStudents > 0 ? Math.min(100, ((jobApplications?.data?.length || 0) / stats?.eligibleStudents) * 100) : 0,
+                                                            fullMark: 100,
+                                                        },
+                                                        {
+                                                            subject: 'Success Rate',
+                                                            A: jobApplications?.data?.length > 0 ? Math.round(((jobApplications?.data?.filter(app => app.status === 'selected').length) / jobApplications?.data?.length) * 100) : 0,
+                                                            fullMark: 100,
+                                                        },
+                                                    ]}
+                                                >
+                                                    <PolarGrid />
+                                                    <PolarAngleAxis dataKey="subject" />
+                                                    <PolarRadiusAxis angle={30} domain={[0, 100]} />
+                                                    <Radar name="Performance" dataKey="A" stroke="#8884d8" fill="#8884d8" fillOpacity={0.6} />
+                                                    <RechartsTooltip />
+                                                </RadarChart>
+                                            </ResponsiveContainer>
+                                        </Box>
+                                    </CardContent>
+                                </Card>
+                            </Grid>
+
+                            {/* Recent Activity Timeline */}
+                            <Grid item xs={12} md={6}>
+                                <Card sx={{ borderRadius: 3, boxShadow: 3 }}>
+                                    <CardContent>
+                                        <Typography variant="h6" gutterBottom sx={{ fontWeight: 600, color: '#0f1f3d' }}>
+                                            🕒 Recent Activity Timeline
+                                        </Typography>
+                                        <Box sx={{ mt: 2, maxHeight: 300, overflowY: 'auto' }}>
+                                            {jobApplications?.data?.slice(0, 8).map((app, index) => (
+                                                <Box key={index} sx={{ 
+                                                    mb: 2, 
+                                                    p: 2, 
+                                                    borderRadius: 2, 
+                                                    bgcolor: 'rgba(0,0,0,0.02)',
+                                                    borderLeft: '4px solid #2196f3',
+                                                    position: 'relative'
+                                                }}>
+                                                    <Box display="flex" justifyContent="space-between" alignItems="flex-start">
+                                                        <Box>
+                                                            <Typography variant="body2" fontWeight={600} color="primary.main">
+                                                                {app.user?.name || 'Unknown Student'}
+                                                            </Typography>
+                                                            <Typography variant="caption" color="text.secondary">
+                                                                Applied for {app.job_posting?.title || 'Unknown Job'}
+                                                            </Typography>
+                                                        </Box>
+                                                        <Chip 
+                                                            label={app.status?.replace('_', ' ').toUpperCase()} 
+                                                            size="small"
+                                                            color={app.status === 'selected' ? 'success' : 
+                                                                   app.status === 'rejected' ? 'error' : 
+                                                                   app.status === 'shortlisted' ? 'warning' : 'default'}
+                                                        />
+                                                    </Box>
+                                                    <Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: 'block' }}>
+                                                        {app.application_date ? new Date(app.application_date).toLocaleDateString('en-US', {
+                                                            year: 'numeric',
+                                                            month: 'short',
+                                                            day: 'numeric',
+                                                            hour: '2-digit',
+                                                            minute: '2-digit'
+                                                        }) : 'N/A'}
+                                                    </Typography>
+                                                </Box>
+                                            ))}
+                                            {(!jobApplications?.data || jobApplications.data.length === 0) && (
+                                                <Typography variant="body2" color="text.secondary" sx={{ fontStyle: 'italic', textAlign: 'center', py: 4 }}>
+                                                    No recent activity
+                                                </Typography>
+                                            )}
+                                        </Box>
+                                    </CardContent>
+                                </Card>
+                            </Grid>
+
+                            {/* Quick Actions */}
+                            <Grid item xs={12}>
+                                <Card sx={{ borderRadius: 3, boxShadow: 3 }}>
+                                    <CardContent>
+                                        <Typography variant="h6" gutterBottom sx={{ fontWeight: 600, color: '#0f1f3d' }}>
+                                            ⚡ Quick Actions & Export
+                                        </Typography>
+                                        <Box sx={{ mt: 2, display: 'flex', gap: 2, flexWrap: 'wrap' }}>
+                                            <Button
+                                                variant="outlined"
+                                                startIcon={<WorkIcon />}
+                                                onClick={() => setTabValue(1)}
+                                                sx={{ textTransform: 'none', borderRadius: 2 }}
+                                            >
+                                                View Job Postings
+                                            </Button>
+                                            <Button
+                                                variant="outlined"
+                                                startIcon={<GroupIcon />}
+                                                onClick={() => setTabValue(2)}
+                                                sx={{ textTransform: 'none', borderRadius: 2 }}
+                                            >
+                                                View Eligible Students
+                                            </Button>
+                                            <Button
+                                                variant="outlined"
+                                                startIcon={<BusinessIcon />}
+                                                onClick={() => setTabValue(0)}
+                                                sx={{ textTransform: 'none', borderRadius: 2 }}
+                                            >
+                                                Manage Companies
+                                            </Button>
+                                            <Button
+                                                variant="contained"
+                                                startIcon={<DownloadIcon />}
+                                                sx={{ 
+                                                    textTransform: 'none', 
+                                                    borderRadius: 2,
+                                                    background: 'linear-gradient(270deg, #eb6707 0%, #e42b12 100%)'
+                                                }}
+                                            >
+                                                Export Report
+                                            </Button>
+                                        </Box>
                                     </CardContent>
                                 </Card>
                             </Grid>
@@ -1281,18 +2161,44 @@ const AdminPlacement = () => {
                         }
                     }}
                 >
-                    <Box display="flex" alignItems="center" gap={2}>
-                        <Avatar sx={{ bgcolor: 'rgba(255,255,255,0.2)', width: 40, height: 40 }}>
-                            <GroupIcon />
-                        </Avatar>
-                        <Box>
-                            <Typography variant="h5" fontWeight="600">
-                                Job Applications
-                            </Typography>
-                            <Typography variant="body2" sx={{ opacity: 0.9, mt: 0.5 }}>
-                                {applicationsDialog.jobTitle}
-                            </Typography>
+                    <Box display="flex" alignItems="center" justifyContent="space-between">
+                        <Box display="flex" alignItems="center" gap={2}>
+                            <Avatar sx={{ bgcolor: 'rgba(255,255,255,0.2)', width: 40, height: 40 }}>
+                                <GroupIcon />
+                            </Avatar>
+                            <Box>
+                                <Typography variant="h5" fontWeight="600">
+                                    Job Applications
+                                </Typography>
+                                <Typography variant="body2" sx={{ opacity: 0.9, mt: 0.5 }}>
+                                    {applicationsDialog.jobTitle}
+                                </Typography>
+                            </Box>
                         </Box>
+                        <Button
+                            variant="contained"
+                            startIcon={<DownloadIcon />}
+                            onClick={handleExportApplications}
+                            disabled={loadingEnhancedApplications || enhancedJobApplications.length === 0}
+                            sx={{ 
+                                bgcolor: 'rgba(255,255,255,0.2)', 
+                                color: 'white',
+                                border: '1px solid rgba(255,255,255,0.3)',
+                                textTransform: 'none',
+                                fontWeight: 600,
+                                '&:hover': { 
+                                    bgcolor: 'rgba(255,255,255,0.3)',
+                                    border: '1px solid rgba(255,255,255,0.5)'
+                                },
+                                '&:disabled': {
+                                    bgcolor: 'rgba(255,255,255,0.1)',
+                                    color: 'rgba(255,255,255,0.5)',
+                                    border: '1px solid rgba(255,255,255,0.1)'
+                                }
+                            }}
+                        >
+                            Export to Excel
+                        </Button>
                     </Box>
                 </DialogTitle>
                 
@@ -1307,22 +2213,126 @@ const AdminPlacement = () => {
                             </Box>
                         ) : applicationsDialog.jobId && (
                             <TableContainer component={Paper} sx={{ borderRadius: 2, boxShadow: 2 }}>
+                                {/* Bulk Update Controls */}
+                                {selectedApplications.length > 0 && (
+                                    <Box sx={{ 
+                                        p: 2, 
+                                        background: 'linear-gradient(270deg, #eb6707 0%, #e42b12 100%)',
+                                        display: 'flex', 
+                                        alignItems: 'center', 
+                                        gap: 2,
+                                        borderRadius: '8px 8px 0 0'
+                                    }}>
+                                        <Typography variant="body2" color="white" fontWeight={500}>
+                                            {selectedApplications.length} application(s) selected
+                                        </Typography>
+                                        <FormControl size="small" sx={{ minWidth: 150 }}>
+                                            <Select
+                                                value={bulkUpdateStatus}
+                                                onChange={(e) => setBulkUpdateStatus(e.target.value)}
+                                                displayEmpty
+                                                sx={{ 
+                                                    bgcolor: 'white', 
+                                                    '& .MuiSelect-select': { py: 1 },
+                                                    '& .MuiOutlinedInput-notchedOutline': { border: 'none' }
+                                                }}
+                                            >
+                                                <MenuItem value="" disabled>Select Status</MenuItem>
+                                                <MenuItem value="shortlisted">Shortlisted</MenuItem>
+                                                <MenuItem value="interview_scheduled">Interview Scheduled</MenuItem>
+                                                <MenuItem value="interviewed">Interviewed</MenuItem>
+                                                <MenuItem value="selected">Selected</MenuItem>
+                                                <MenuItem value="rejected">Rejected</MenuItem>
+                                                <MenuItem value="withdrawn">Withdrawn</MenuItem>
+                                            </Select>
+                                        </FormControl>
+                                        <Button
+                                            variant="contained"
+                                            size="small"
+                                            onClick={() => setBulkUpdateDialog(true)}
+                                            disabled={!bulkUpdateStatus}
+                                            sx={{ 
+                                                bgcolor: 'white', 
+                                                color: '#e42b12', 
+                                                fontWeight: 600,
+                                                '&:hover': { 
+                                                    bgcolor: 'rgba(255,255,255,0.9)',
+                                                    color: '#e42b12'
+                                                },
+                                                '&:disabled': {
+                                                    bgcolor: 'rgba(255,255,255,0.5)',
+                                                    color: 'rgba(228,43,18,0.5)'
+                                                }
+                                            }}
+                                        >
+                                            Update Status
+                                        </Button>
+                                        <Button
+                                            variant="outlined"
+                                            size="small"
+                                            onClick={() => setSelectedApplications([])}
+                                            sx={{ 
+                                                borderColor: 'white', 
+                                                color: 'white', 
+                                                fontWeight: 500,
+                                                '&:hover': { 
+                                                    borderColor: 'white', 
+                                                    bgcolor: 'rgba(255,255,255,0.1)' 
+                                                } 
+                                            }}
+                                        >
+                                            Clear Selection
+                                        </Button>
+                                    </Box>
+                                )}
+                                
                                 <Table size="small">
                                     <TableHead>
                                         <TableRow sx={{ 
                                             background: 'linear-gradient(270deg, #eb6707 0%, #e42b12 100%)',
                                             '& th': { color: '#fff', fontWeight: 700 }
                                         }}>
+                                            <TableCell padding="checkbox">
+                                                <Checkbox
+                                                    checked={selectedApplications.length === enhancedJobApplications.length && enhancedJobApplications.length > 0}
+                                                    indeterminate={selectedApplications.length > 0 && selectedApplications.length < enhancedJobApplications.length}
+                                                    onChange={handleSelectAllApplications}
+                                                    sx={{ color: 'white', '&.Mui-checked': { color: 'white' } }}
+                                                />
+                                            </TableCell>
                                             <TableCell>Student Name</TableCell>
                                             <TableCell>Batch</TableCell>
                                             <TableCell>Course</TableCell>
                                             <TableCell>Application Date</TableCell>
                                             <TableCell>Status</TableCell>
                                         </TableRow>
+                                        <TableRow>
+                                            <TableCell colSpan={7} sx={{ textAlign: 'center', py: 1, fontSize: '0.875rem', color: 'text.secondary', fontStyle: 'italic' }}>
+                                                Select applications to update status in bulk, or click on any student row to view complete details
+                                            </TableCell>
+                                        </TableRow>
                                     </TableHead>
                                     <TableBody>
                                         {enhancedJobApplications.map((application) => (
-                                            <TableRow key={application.id} sx={{ '&:hover': { backgroundColor: 'action.hover' } }}>
+                                            <TableRow 
+                                                key={application.id} 
+                                                onClick={() => handleStudentDetailsClick(application.user_id, applicationsDialog.jobId)}
+                                                sx={{ 
+                                                    '&:hover': { backgroundColor: 'rgba(103, 126, 234, 0.08)' },
+                                                    cursor: 'pointer',
+                                                    transition: 'background-color 0.2s ease'
+                                                }}
+                                            >
+                                                <TableCell padding="checkbox">
+                                                    <Checkbox
+                                                        checked={selectedApplications.includes(application.id)}
+                                                        onChange={(e) => {
+                                                            e.stopPropagation();
+                                                            handleSelectApplication(application.id);
+                                                        }}
+                                                        onClick={(e) => e.stopPropagation()}
+                                                    />
+                                                </TableCell>
                                                 <TableCell>
                                                     <Box display="flex" alignItems="center" gap={1}>
                                                         <Avatar sx={{ width: 32, height: 32, fontSize: '0.875rem' }}>
@@ -1346,11 +2356,16 @@ const AdminPlacement = () => {
                                                     }
                                                 </TableCell>
                                                 <TableCell>
-                                                    <Chip 
-                                                        label={application.status} 
-                                                        color={getStatusColor(application.status)} 
-                                                        size="small" 
-                                                    />
+                                                    <Box display="flex" alignItems="center" gap={1}>
+                                                        <Chip 
+                                                            label={application.status} 
+                                                            color={getStatusColor(application.status)} 
+                                                            size="small" 
+                                                        />
+                                                        <Tooltip title="View complete student details">
+                                                            <OpenInNewIcon sx={{ fontSize: 16, opacity: 0.7 }} />
+                                                        </Tooltip>
+                                                    </Box>
                                                 </TableCell>
                                             </TableRow>
                                         ))}
@@ -1373,6 +2388,26 @@ const AdminPlacement = () => {
                 </DialogContent>
                 
                 <DialogActions sx={{ p: 3, pt: 1 }}>
+                    {undoOperations.length > 0 && (
+                        <Button 
+                            onClick={() => setUndoDialog(true)}
+                            variant="outlined"
+                            sx={{ 
+                                textTransform: 'none',
+                                borderRadius: 2,
+                                px: 3,
+                                borderColor: '#e42b12',
+                                color: '#e42b12',
+                                '&:hover': {
+                                    borderColor: '#e42b12',
+                                    backgroundColor: 'rgba(228,43,18,0.1)'
+                                }
+                            }}
+                            startIcon={<UndoIcon />}
+                        >
+                            Undo Operations ({undoOperations.length})
+                        </Button>
+                    )}
                     <Button 
                         onClick={handleCloseApplicationsDialog}
                         sx={{ 
@@ -1380,6 +2415,173 @@ const AdminPlacement = () => {
                             borderRadius: 2,
                             px: 3
                         }}
+                    >
+                        Close
+                    </Button>
+                </DialogActions>
+            </Dialog>
+
+            {/* Bulk Update Confirmation Dialog */}
+            <Dialog
+                open={bulkUpdateDialog}
+                onClose={() => setBulkUpdateDialog(false)}
+                maxWidth="sm"
+                fullWidth
+                PaperProps={{
+                    sx: {
+                        borderRadius: 3,
+                        boxShadow: '0 24px 38px 3px rgba(0,0,0,0.14), 0 9px 46px 8px rgba(0,0,0,0.12), 0 11px 15px -7px rgba(0,0,0,0.2)',
+                    }
+                }}
+            >
+                <DialogTitle sx={{ 
+                    background: 'linear-gradient(270deg, #eb6707 0%, #e42b12 100%)',
+                    color: 'white',
+                    py: 3
+                }}>
+                    <Typography variant="h6" fontWeight="600">
+                        Confirm Bulk Status Update
+                    </Typography>
+                </DialogTitle>
+                
+                <DialogContent sx={{ p: 3 }}>
+                    <Typography variant="body1" gutterBottom>
+                        Are you sure you want to update the status of <strong>{selectedApplications.length}</strong> application(s) to <strong>{bulkUpdateStatus}</strong>?
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary" sx={{ mt: 2 }}>
+                        This action will:
+                    </Typography>
+                    <ul style={{ marginTop: 8, marginBottom: 16 }}>
+                        <li>Update the application status in the database</li>
+                        <li>Send email notifications to the selected students</li>
+                        <li>Update the status in the student placement center</li>
+                    </ul>
+                    <Typography variant="body2" color="warning.main" fontWeight="500">
+                        This action cannot be undone.
+                    </Typography>
+                </DialogContent>
+                
+                <DialogActions sx={{ p: 3, pt: 1 }}>
+                    <Button 
+                        onClick={() => setBulkUpdateDialog(false)}
+                        disabled={updatingBulkStatus}
+                        sx={{ textTransform: 'none' }}
+                    >
+                        Cancel
+                    </Button>
+                    <Button 
+                        onClick={handleBulkStatusUpdate}
+                        variant="contained"
+                        disabled={updatingBulkStatus}
+                        sx={{ 
+                            textTransform: 'none',
+                            background: 'linear-gradient(270deg, #eb6707 0%, #e42b12 100%)',
+                            '&:hover': {
+                                background: 'linear-gradient(270deg, #eb6707 0%, #e42b12 100%)',
+                            }
+                        }}
+                    >
+                        {updatingBulkStatus ? (
+                            <>
+                                <CircularProgress size={16} sx={{ mr: 1, color: 'white' }} />
+                                Updating...
+                            </>
+                        ) : (
+                            'Confirm Update'
+                        )}
+                    </Button>
+                </DialogActions>
+            </Dialog>
+
+            {/* Undo Operations Dialog */}
+            <Dialog
+                open={undoDialog}
+                onClose={() => setUndoDialog(false)}
+                maxWidth="md"
+                fullWidth
+                PaperProps={{
+                    sx: {
+                        borderRadius: 3,
+                        boxShadow: '0 24px 38px 3px rgba(0,0,0,0.14), 0 9px 46px 8px rgba(0,0,0,0.12), 0 11px 15px -7px rgba(0,0,0,0.2)',
+                    }
+                }}
+            >
+                <DialogTitle sx={{ 
+                    background: 'linear-gradient(270deg, #eb6707 0%, #e42b12 100%)',
+                    color: 'white',
+                    py: 3
+                }}>
+                    <Typography variant="h6" fontWeight="600">
+                        Available Undo Operations
+                    </Typography>
+                </DialogTitle>
+                
+                <DialogContent sx={{ p: 3 }}>
+                    {undoOperations.length > 0 ? (
+                        <Box>
+                            <Typography variant="body1" gutterBottom>
+                                The following operations can be undone:
+                            </Typography>
+                            <TableContainer component={Paper} sx={{ mt: 2 }}>
+                                <Table>
+                                    <TableHead>
+                                        <TableRow>
+                                            <TableCell>Status</TableCell>
+                                            <TableCell>Applications</TableCell>
+                                            <TableCell>Date</TableCell>
+                                            <TableCell>Action</TableCell>
+                                        </TableRow>
+                                    </TableHead>
+                                    <TableBody>
+                                        {undoOperations.map((operation, index) => (
+                                            <TableRow key={index}>
+                                                <TableCell>
+                                                    <Chip 
+                                                        label={operation.new_status} 
+                                                        color={getStatusColor(operation.new_status)}
+                                                        size="small"
+                                                    />
+                                                </TableCell>
+                                                <TableCell>{operation.updated_count} application(s)</TableCell>
+                                                <TableCell>
+                                                    {new Date(operation.updated_at).toLocaleString()}
+                                                </TableCell>
+                                                <TableCell>
+                                                    <Button
+                                                        variant="outlined"
+                                                        size="small"
+                                                        onClick={() => handleUndoBulkUpdate(operation.undo_key)}
+                                                        disabled={undoingOperation}
+                                                        startIcon={<UndoIcon />}
+                                                        sx={{ 
+                                                            borderColor: '#e42b12',
+                                                            color: '#e42b12',
+                                                            '&:hover': {
+                                                                borderColor: '#e42b12',
+                                                                backgroundColor: 'rgba(228,43,18,0.1)'
+                                                            }
+                                                        }}
+                                                    >
+                                                        {undoingOperation ? 'Undoing...' : 'Undo'}
+                                                    </Button>
+                                                </TableCell>
+                                            </TableRow>
+                                        ))}
+                                    </TableBody>
+                                </Table>
+                            </TableContainer>
+                        </Box>
+                    ) : (
+                        <Typography variant="body1" color="text.secondary">
+                            No undo operations available.
+                        </Typography>
+                    )}
+                </DialogContent>
+                
+                <DialogActions sx={{ p: 3, pt: 1 }}>
+                    <Button 
+                        onClick={() => setUndoDialog(false)}
+                        sx={{ textTransform: 'none' }}
                     >
                         Close
                     </Button>
@@ -1487,36 +2689,7 @@ const AdminPlacement = () => {
                                         }}
                                     />
                                 </Grid>
-                                <Grid item xs={12} md={6}>
-                                    <FormControl fullWidth>
-                                        <InputLabel>Industry</InputLabel>
-                                        <Select
-                                            value={companyForm.industry || ''}
-                                            label="Industry"
-                                            onChange={(e) => handleCompanyFormChange('industry', e.target.value)}
-                                            sx={{
-                                                borderRadius: 2,
-                                                '&:hover': {
-                                                    boxShadow: '0 4px 12px rgba(15, 31, 61, 0.15)',
-                                                },
-                                                '&.Mui-focused': {
-                                                    boxShadow: '0 4px 20px rgba(30, 60, 114, 0.25)',
-                                                }
-                                            }}
-                                        >
-                                            <MenuItem value="Technology">💻 Technology</MenuItem>
-                                            <MenuItem value="Healthcare">🏥 Healthcare</MenuItem>
-                                            <MenuItem value="Finance">💰 Finance</MenuItem>
-                                            <MenuItem value="Education">🎓 Education</MenuItem>
-                                            <MenuItem value="Manufacturing">🏭 Manufacturing</MenuItem>
-                                            <MenuItem value="Retail">🛒 Retail</MenuItem>
-                                            <MenuItem value="Consulting">💼 Consulting</MenuItem>
-                                            <MenuItem value="Government">🏛️ Government</MenuItem>
-                                            <MenuItem value="Non-profit">❤️ Non-profit</MenuItem>
-                                            <MenuItem value="Other">📋 Other</MenuItem>
-                                        </Select>
-                                    </FormControl>
-                                </Grid>
+
                                 <Grid item xs={12} md={6}>
                                     <TextField
                                         fullWidth
@@ -1524,7 +2697,7 @@ const AdminPlacement = () => {
                                         value={companyForm.website}
                                         onChange={(e) => setCompanyForm({...companyForm, website: e.target.value})}
                                         variant="outlined"
-                                        placeholder="https://www.company.com"
+                                        placeholder=""
                                         sx={{
                                             '& .MuiOutlinedInput-root': {
                                                 borderRadius: 2,
@@ -1581,7 +2754,7 @@ const AdminPlacement = () => {
                                         value={companyForm.description}
                                         onChange={(e) => setCompanyForm({...companyForm, description: e.target.value})}
                                         variant="outlined"
-                                        placeholder="Describe your company's mission, values, and what makes it unique..."
+                                        placeholder=""
                                         sx={{
                                             '& .MuiOutlinedInput-root': {
                                                 borderRadius: 2,
@@ -1635,7 +2808,7 @@ const AdminPlacement = () => {
                                         value={companyForm.contact_person}
                                         onChange={(e) => setCompanyForm({...companyForm, contact_person: e.target.value})}
                                         variant="outlined"
-                                        placeholder="Full name of contact person"
+                                        placeholder=""
                                         sx={{
                                             '& .MuiOutlinedInput-root': {
                                                 borderRadius: 2,
@@ -1660,12 +2833,41 @@ const AdminPlacement = () => {
                                 <Grid item xs={12} md={6}>
                                     <TextField
                                         fullWidth
+                                        label="Designation"
+                                        value={companyForm.designation}
+                                        onChange={(e) => setCompanyForm({...companyForm, designation: e.target.value})}
+                                        variant="outlined"
+                                        placeholder=""
+                                        sx={{
+                                            '& .MuiOutlinedInput-root': {
+                                                borderRadius: 2,
+                                                transition: 'all 0.3s ease',
+                                                '&:hover': {
+                                                    boxShadow: '0 4px 12px rgba(235, 103, 7, 0.15)',
+                                                },
+                                                '&.Mui-focused': {
+                                                    boxShadow: '0 4px 20px rgba(228, 43, 18, 0.25)',
+                                                }
+                                            }
+                                        }}
+                                        InputProps={{
+                                            startAdornment: (
+                                                <InputAdornment position="start">
+                                                    🏢
+                                                </InputAdornment>
+                                            ),
+                                        }}
+                                    />
+                                </Grid>
+                                <Grid item xs={12} md={6}>
+                                    <TextField
+                                        fullWidth
                                         label="Contact Email"
                                         type="email"
                                         value={companyForm.contact_email}
                                         onChange={(e) => setCompanyForm({...companyForm, contact_email: e.target.value})}
                                         variant="outlined"
-                                        placeholder="contact@company.com"
+                                        placeholder=""
                                         sx={{
                                             '& .MuiOutlinedInput-root': {
                                                 borderRadius: 2,
@@ -1694,7 +2896,7 @@ const AdminPlacement = () => {
                                         value={companyForm.contact_phone}
                                         onChange={(e) => setCompanyForm({...companyForm, contact_phone: e.target.value})}
                                         variant="outlined"
-                                        placeholder="+1 (555) 123-4567"
+                                        placeholder=""
                                         sx={{
                                             '& .MuiOutlinedInput-root': {
                                                 borderRadius: 2,
@@ -1728,7 +2930,7 @@ const AdminPlacement = () => {
                                         value={companyForm.address}
                                         onChange={(e) => setCompanyForm({...companyForm, address: e.target.value})}
                                         variant="outlined"
-                                        placeholder="Street address, city, state, zip code, country"
+                                        placeholder=""
                                         sx={{
                                             '& .MuiOutlinedInput-root': {
                                                 borderRadius: 2,
@@ -1897,7 +3099,7 @@ const AdminPlacement = () => {
                                         value={jobPostingForm.title}
                                         onChange={(e) => setJobPostingForm({...jobPostingForm, title: e.target.value})}
                                         variant="outlined"
-                                        placeholder="e.g., Senior Software Engineer"
+                                        placeholder=""
                                         sx={{
                                             '& .MuiOutlinedInput-root': {
                                                 borderRadius: 2,
@@ -1983,7 +3185,7 @@ const AdminPlacement = () => {
                                         value={jobPostingForm.location}
                                         onChange={(e) => setJobPostingForm({...jobPostingForm, location: e.target.value})}
                                         variant="outlined"
-                                        placeholder="e.g., New York, NY"
+                                        placeholder=""
                                         sx={{
                                             '& .MuiOutlinedInput-root': {
                                                 borderRadius: 2,
@@ -2051,45 +3253,12 @@ const AdminPlacement = () => {
                                             <MenuItem value="draft">📝 Draft</MenuItem>
                                             <MenuItem value="open">✅ Open</MenuItem>
                                             <MenuItem value="closed">❌ Closed</MenuItem>
+                                            <MenuItem value="on_hold">⏸️ On Hold</MenuItem>
                                             <MenuItem value="expired">⏰ Expired</MenuItem>
                                         </Select>
                                     </FormControl>
                                 </Grid>
-                                <Grid item xs={12}>
-                                    <TextField
-                                        fullWidth
-                                        multiline
-                                        rows={4}
-                                        label="Job Description"
-                                        value={jobPostingForm.description}
-                                        onChange={(e) => setJobPostingForm({...jobPostingForm, description: e.target.value})}
-                                        variant="outlined"
-                                        placeholder="Provide a detailed description of the role, responsibilities, and what makes this position exciting..."
-                                        sx={{
-                                            '& .MuiOutlinedInput-root': {
-                                                borderRadius: 2,
-                                                transition: 'all 0.3s ease',
-                                                '&:hover': {
-                                                    boxShadow: '0 4px 12px rgba(15, 31, 61, 0.15)',
-                                                },
-                                                '&.Mui-focused': {
-                                                    boxShadow: '0 4px 20px rgba(30, 60, 114, 0.25)',
-                                                }
-                                            },
-                                            '& .MuiInputLabel-root': {
-                                                fontSize: '0.9rem',
-                                                fontWeight: 500
-                                            }
-                                        }}
-                                        InputProps={{
-                                            startAdornment: (
-                                                <InputAdornment position="start" sx={{ alignSelf: 'flex-start', mt: 1 }}>
-                                                    📝
-                                                </InputAdornment>
-                                            ),
-                                        }}
-                                    />
-                                </Grid>
+
                             </Grid>
                         </Paper>
 
@@ -2110,7 +3279,7 @@ const AdminPlacement = () => {
                                     📋
                                 </Avatar>
                                 <Typography variant="h6" fontWeight="600" color="#eb6707">
-                                    Job Requirements & Responsibilities
+                                    Job Description, Roles and Responsibilities
                                 </Typography>
                             </Box>
                             
@@ -2120,11 +3289,11 @@ const AdminPlacement = () => {
                                         fullWidth
                                         multiline
                                         rows={4}
-                                        label="Requirements"
+                                        label="Job Description, Roles and Responsibilities"
                                         value={jobPostingForm.requirements}
                                         onChange={(e) => setJobPostingForm({...jobPostingForm, requirements: e.target.value})}
                                         variant="outlined"
-                                        placeholder="List the key requirements, qualifications, and skills needed for this position..."
+                                        placeholder=""
                                         sx={{
                                             '& .MuiOutlinedInput-root': {
                                                 borderRadius: 2,
@@ -2150,41 +3319,7 @@ const AdminPlacement = () => {
                                         }}
                                     />
                                 </Grid>
-                                <Grid item xs={12}>
-                                    <TextField
-                                        fullWidth
-                                        multiline
-                                        rows={4}
-                                        label="Responsibilities"
-                                        value={jobPostingForm.responsibilities}
-                                        onChange={(e) => setJobPostingForm({...jobPostingForm, responsibilities: e.target.value})}
-                                        variant="outlined"
-                                        placeholder="Describe the key responsibilities and duties for this role..."
-                                        sx={{
-                                            '& .MuiOutlinedInput-root': {
-                                                borderRadius: 2,
-                                                transition: 'all 0.3s ease',
-                                                '&:hover': {
-                                                    boxShadow: '0 4px 12px rgba(235, 103, 7, 0.15)',
-                                                },
-                                                '&.Mui-focused': {
-                                                    boxShadow: '0 4px 20px rgba(228, 43, 18, 0.25)',
-                                                }
-                                            },
-                                            '& .MuiInputLabel-root': {
-                                                fontSize: '0.9rem',
-                                                fontWeight: 500
-                                            }
-                                        }}
-                                        InputProps={{
-                                            startAdornment: (
-                                                <InputAdornment position="start" sx={{ alignSelf: 'flex-start', mt: 1 }}>
-                                                    🎯
-                                                </InputAdornment>
-                                            ),
-                                        }}
-                                    />
-                                </Grid>
+
                             </Grid>
                         </Paper>
 
@@ -2218,7 +3353,7 @@ const AdminPlacement = () => {
                                         value={jobPostingForm.salary_min}
                                         onChange={(e) => setJobPostingForm({...jobPostingForm, salary_min: e.target.value})}
                                         variant="outlined"
-                                        placeholder="e.g., 50000"
+                                        placeholder=""
                                         sx={{
                                             '& .MuiOutlinedInput-root': {
                                                 borderRadius: 2,
@@ -2252,7 +3387,7 @@ const AdminPlacement = () => {
                                         value={jobPostingForm.salary_max}
                                         onChange={(e) => setJobPostingForm({...jobPostingForm, salary_max: e.target.value})}
                                         variant="outlined"
-                                        placeholder="e.g., 80000"
+                                        placeholder=""
                                         sx={{
                                             '& .MuiOutlinedInput-root': {
                                                 borderRadius: 2,
@@ -2285,7 +3420,7 @@ const AdminPlacement = () => {
                                         value={jobPostingForm.experience_required}
                                         onChange={(e) => setJobPostingForm({...jobPostingForm, experience_required: e.target.value})}
                                         variant="outlined"
-                                        placeholder="e.g., 2-5 years"
+                                        placeholder=""
                                         sx={{
                                             '& .MuiOutlinedInput-root': {
                                                 borderRadius: 2,
@@ -2319,7 +3454,7 @@ const AdminPlacement = () => {
                                         value={jobPostingForm.vacancies}
                                         onChange={(e) => setJobPostingForm({...jobPostingForm, vacancies: e.target.value})}
                                         variant="outlined"
-                                        placeholder="e.g., 3"
+                                        placeholder=""
                                         sx={{
                                             '& .MuiOutlinedInput-root': {
                                                 borderRadius: 2,
@@ -2349,10 +3484,11 @@ const AdminPlacement = () => {
                                     <TextField
                                         fullWidth
                                         label="Application Deadline"
-                                        type="datetime-local"
+                                        type="date"
                                         value={jobPostingForm.application_deadline}
                                         onChange={(e) => setJobPostingForm({...jobPostingForm, application_deadline: e.target.value})}
                                         InputLabelProps={{ shrink: true }}
+                                        placeholder=""
                                         sx={{
                                             '& .MuiOutlinedInput-root': {
                                                 borderRadius: 2,
@@ -2378,42 +3514,7 @@ const AdminPlacement = () => {
                                         }}
                                     />
                                 </Grid>
-                                <Grid item xs={12} md={6}>
-                                    <TextField
-                                        fullWidth
-                                        label="Skills Required"
-                                        placeholder="Enter skills separated by commas (e.g., Java, Python, React)"
-                                        value={jobPostingForm.skills_required.join(', ')}
-                                        onChange={e => setJobPostingForm({ 
-                                            ...jobPostingForm, 
-                                            skills_required: e.target.value.split(',').map(skill => skill.trim()).filter(skill => skill)
-                                        })}
-                                        variant="outlined"
-                                        sx={{
-                                            '& .MuiOutlinedInput-root': {
-                                                borderRadius: 2,
-                                                transition: 'all 0.3s ease',
-                                                '&:hover': {
-                                                    boxShadow: '0 4px 12px rgba(5, 150, 105, 0.15)',
-                                                },
-                                                '&.Mui-focused': {
-                                                    boxShadow: '0 4px 20px rgba(16, 185, 129, 0.25)',
-                                                }
-                                            },
-                                            '& .MuiInputLabel-root': {
-                                                fontSize: '0.9rem',
-                                                fontWeight: 500
-                                            }
-                                        }}
-                                        InputProps={{
-                                            startAdornment: (
-                                                <InputAdornment position="start">
-                                                    🛠️
-                                                </InputAdornment>
-                                            ),
-                                        }}
-                                    />
-                                </Grid>
+
                             </Grid>
                         </Paper>
 
@@ -2447,7 +3548,7 @@ const AdminPlacement = () => {
                                         value={jobPostingForm.btech_year_of_passout_min}
                                         onChange={e => setJobPostingForm({ ...jobPostingForm, btech_year_of_passout_min: e.target.value })}
                                         variant="outlined"
-                                        placeholder="e.g., 2020"
+                                        placeholder=""
                                         sx={{
                                             '& .MuiOutlinedInput-root': {
                                                 borderRadius: 2,
@@ -2477,7 +3578,7 @@ const AdminPlacement = () => {
                                         value={jobPostingForm.btech_year_of_passout_max}
                                         onChange={e => setJobPostingForm({ ...jobPostingForm, btech_year_of_passout_max: e.target.value })}
                                         variant="outlined"
-                                        placeholder="e.g., 2024"
+                                        placeholder=""
                                         sx={{
                                             '& .MuiOutlinedInput-root': {
                                                 borderRadius: 2,
@@ -2507,7 +3608,7 @@ const AdminPlacement = () => {
                                         value={jobPostingForm.mtech_year_of_passout_min}
                                         onChange={e => setJobPostingForm({ ...jobPostingForm, mtech_year_of_passout_min: e.target.value })}
                                         variant="outlined"
-                                        placeholder="e.g., 2022"
+                                        placeholder=""
                                         sx={{
                                             '& .MuiOutlinedInput-root': {
                                                 borderRadius: 2,
@@ -2537,7 +3638,7 @@ const AdminPlacement = () => {
                                         value={jobPostingForm.mtech_year_of_passout_max}
                                         onChange={e => setJobPostingForm({ ...jobPostingForm, mtech_year_of_passout_max: e.target.value })}
                                         variant="outlined"
-                                        placeholder="e.g., 2024"
+                                        placeholder=""
                                         sx={{
                                             '& .MuiOutlinedInput-root': {
                                                 borderRadius: 2,
@@ -2567,7 +3668,7 @@ const AdminPlacement = () => {
                                         value={jobPostingForm.btech_percentage_min}
                                         onChange={e => setJobPostingForm({ ...jobPostingForm, btech_percentage_min: e.target.value })}
                                         variant="outlined"
-                                        placeholder="e.g., 70"
+                                        placeholder=""
                                         sx={{
                                             '& .MuiOutlinedInput-root': {
                                                 borderRadius: 2,
@@ -2597,7 +3698,7 @@ const AdminPlacement = () => {
                                         value={jobPostingForm.mtech_percentage_min}
                                         onChange={e => setJobPostingForm({ ...jobPostingForm, mtech_percentage_min: e.target.value })}
                                         variant="outlined"
-                                        placeholder="e.g., 75"
+                                        placeholder=""
                                         sx={{
                                             '& .MuiOutlinedInput-root': {
                                                 borderRadius: 2,
@@ -2744,6 +3845,777 @@ const AdminPlacement = () => {
                     </Button>
                     <Button onClick={confirmDelete} color="error" variant="contained">
                         Delete
+                    </Button>
+                </DialogActions>
+            </Dialog>
+
+            {/* Student Details Modal */}
+            <Dialog
+                open={studentDetailsDialog.open}
+                onClose={handleCloseStudentDetailsDialog}
+                maxWidth="lg"
+                fullWidth
+                PaperProps={{
+                    sx: {
+                        borderRadius: 3,
+                        boxShadow: '0 24px 38px 3px rgba(0,0,0,0.14), 0 9px 46px 8px rgba(0,0,0,0.12), 0 11px 15px -7px rgba(0,0,0,0.2)',
+                        maxHeight: '90vh'
+                    }
+                }}
+            >
+                <DialogTitle 
+                    component="div"
+                    sx={{ 
+                        background: 'linear-gradient(135deg, #0f1f3d 0%, #1e3c72 100%)',
+                        color: 'white',
+                        py: 3,
+                        position: 'relative',
+                        '&::after': {
+                            content: '""',
+                            position: 'absolute',
+                            bottom: 0,
+                            left: 0,
+                            right: 0,
+                            height: '4px',
+                            background: 'linear-gradient(270deg, #eb6707 0%, #e42b12 100%)',
+                        }
+                    }}
+                >
+                    <Box display="flex" alignItems="center" justifyContent="space-between">
+                        <Box display="flex" alignItems="center" gap={2}>
+                            <Avatar sx={{ 
+                                width: 48, 
+                                height: 48, 
+                                fontSize: '1.5rem',
+                                bgcolor: 'rgba(255,255,255,0.2)'
+                            }}>
+                                <PersonIcon />
+                            </Avatar>
+                            <Box>
+                                <Typography variant="h5" fontWeight="600">
+                                    Student Application Details
+                                </Typography>
+                                <Typography variant="body2" sx={{ opacity: 0.9, mt: 0.5 }}>
+                                    Complete profile and application history
+                                </Typography>
+                            </Box>
+                        </Box>
+                        <IconButton 
+                            onClick={handleCloseStudentDetailsDialog}
+                            sx={{ color: 'white' }}
+                        >
+                            <CloseIcon />
+                        </IconButton>
+                    </Box>
+                </DialogTitle>
+                
+                <DialogContent sx={{ p: 0 }}>
+                    {loadingStudentDetails ? (
+                        <Box display="flex" justifyContent="center" alignItems="center" py={8}>
+                            <CircularProgress />
+                            <Typography variant="body2" sx={{ ml: 2 }}>
+                                Loading student details...
+                            </Typography>
+                        </Box>
+                    ) : studentDetailsError ? (
+                        <Box p={3}>
+                            <Alert severity="error">{studentDetailsError}</Alert>
+                        </Box>
+                    ) : selectedStudentData ? (
+                        <Box>
+                            {/* Student Basic Info Card */}
+                            <Card sx={{ m: 3, background: 'linear-gradient(135deg, #0f1f3d 0%, #1e3c72 100%)', color: 'white' }}>
+                                <CardContent>
+                                    <Grid container spacing={3} alignItems="center">
+                                        <Grid item>
+                                            <Avatar 
+                                                sx={{ 
+                                                    width: 80, 
+                                                    height: 80, 
+                                                    fontSize: '2rem',
+                                                    bgcolor: 'rgba(255,255,255,0.2)'
+                                                }}
+                                            >
+                                                {selectedStudentData.name?.charAt(0)?.toUpperCase() || 'S'}
+                                            </Avatar>
+                                        </Grid>
+                                        <Grid item xs>
+                                            <Typography variant="h5" fontWeight="600" gutterBottom>
+                                                {selectedStudentData.name}
+                                            </Typography>
+                                            <Typography variant="body1" sx={{ opacity: 0.9 }}>
+                                                {selectedStudentData.email}
+                                            </Typography>
+                                            <Typography variant="body2" sx={{ opacity: 0.8 }}>
+                                                Batch: {selectedStudentData.batch_name || selectedStudentData.batches?.[0]?.batch_name || selectedStudentData.batches?.[0]?.name || 'N/A'}
+                                            </Typography>
+                                        </Grid>
+                                        <Grid item>
+                                            <Chip 
+                                                label={selectedStudentData.course_name || selectedStudentData.course?.name || 'Course N/A'} 
+                                                sx={{ bgcolor: 'rgba(255,255,255,0.2)', color: 'white' }}
+                                            />
+                                        </Grid>
+                                    </Grid>
+                                </CardContent>
+                            </Card>
+
+                            {/* Tabs */}
+                            <Paper sx={{ mx: 3, mb: 3 }}>
+                                <Tabs 
+                                    value={studentDetailsTabValue} 
+                                    onChange={handleStudentDetailsTabChange}
+                                    sx={{ 
+                                        borderBottom: 1, 
+                                        borderColor: 'divider',
+                                        '& .MuiTab-root': {
+                                            textTransform: 'none',
+                                            fontWeight: 500
+                                        }
+                                    }}
+                                >
+                                    <Tab 
+                                        icon={<PersonIcon />} 
+                                        label="Profile" 
+                                    />
+                                    <Tab 
+                                        icon={<DescriptionIcon />} 
+                                        label="Resume" 
+                                    />
+                                    <Tab 
+                                        icon={<AssessmentIcon />} 
+                                        label="Scorecards" 
+                                    />
+                                    <Tab 
+                                        icon={<WorkIcon />} 
+                                        label="Applied Jobs" 
+                                    />
+                                </Tabs>
+
+                                {/* Profile Tab */}
+                                {studentDetailsTabValue === 0 && (
+                                    <Box sx={{ p: 3 }}>
+                                        <Grid container spacing={3}>
+                                            {/* Personal Information */}
+                                            <Grid item xs={12} md={6}>
+                                                <Card>
+                                                    <CardContent>
+                                                        <Typography variant="h6" gutterBottom sx={{ display: 'flex', alignItems: 'center' }}>
+                                                            <PersonIcon sx={{ mr: 1 }} />
+                                                            Personal Information
+                                                        </Typography>
+                                                        <List dense>
+                                                            <ListItem>
+                                                                <ListItemIcon>
+                                                                    <EmailIcon />
+                                                                </ListItemIcon>
+                                                                <ListItemText 
+                                                                    primary="Email" 
+                                                                    secondary={selectedStudentData.email || 'N/A'} 
+                                                                />
+                                                            </ListItem>
+                                                            <ListItem>
+                                                                <ListItemIcon>
+                                                                    <PhoneIcon />
+                                                                </ListItemIcon>
+                                                                <ListItemText 
+                                                                    primary="Phone" 
+                                                                    secondary={`${selectedStudentData.country_code || '+91'} ${selectedStudentData.phone || 'N/A'}`} 
+                                                                />
+                                                            </ListItem>
+                                                            <ListItem>
+                                                                <ListItemIcon>
+                                                                    <CalendarIcon />
+                                                                </ListItemIcon>
+                                                                <ListItemText 
+                                                                    primary="Date of Birth" 
+                                                                    secondary={formatDate(selectedStudentData.birthday)} 
+                                                                />
+                                                            </ListItem>
+                                                            <ListItem>
+                                                                <ListItemIcon>
+                                                                    <PersonIcon />
+                                                                </ListItemIcon>
+                                                                <ListItemText 
+                                                                    primary="Gender" 
+                                                                    secondary={selectedStudentData.gender || 'N/A'} 
+                                                                />
+                                                            </ListItem>
+                                                            <ListItem>
+                                                                <ListItemIcon>
+                                                                    <LocationIcon />
+                                                                </ListItemIcon>
+                                                                <ListItemText 
+                                                                    primary="Address" 
+                                                                    secondary={selectedStudentData.address || 'N/A'} 
+                                                                />
+                                                            </ListItem>
+                                                            <ListItem>
+                                                                <ListItemIcon>
+                                                                    <LocationIcon />
+                                                                </ListItemIcon>
+                                                                <ListItemText 
+                                                                    primary="City" 
+                                                                    secondary={selectedStudentData.city || 'N/A'} 
+                                                                />
+                                                            </ListItem>
+                                                            <ListItem>
+                                                                <ListItemIcon>
+                                                                    <LocationIcon />
+                                                                </ListItemIcon>
+                                                                <ListItemText 
+                                                                    primary="Pincode" 
+                                                                    secondary={selectedStudentData.pincode || 'N/A'} 
+                                                                />
+                                                            </ListItem>
+                                                            {selectedStudentData.aadhaar_number && (
+                                                            <ListItem>
+                                                                <ListItemIcon>
+                                                                        <DescriptionIcon />
+                                                                </ListItemIcon>
+                                                                <ListItemText 
+                                                                        primary="Aadhaar Number" 
+                                                                        secondary={selectedStudentData.aadhaar_number} 
+                                                                />
+                                                            </ListItem>
+                                                            )}
+                                                            {selectedStudentData.linkedin_profile && (
+                                                            <ListItem>
+                                                                <ListItemIcon>
+                                                                        <LinkedInIcon />
+                                                                </ListItemIcon>
+                                                                <ListItemText 
+                                                                        primary="LinkedIn Profile" 
+                                                                        secondary={
+                                                                            <a 
+                                                                                href={selectedStudentData.linkedin_profile} 
+                                                                                target="_blank" 
+                                                                                rel="noopener noreferrer"
+                                                                                style={{ color: '#1976d2', textDecoration: 'none' }}
+                                                                            >
+                                                                                View Profile
+                                                                            </a>
+                                                                        } 
+                                                                />
+                                                            </ListItem>
+                                                            )}
+                                                        </List>
+                                                    </CardContent>
+                                                </Card>
+                                            </Grid>
+
+
+
+                                            {/* Parent Information */}
+                                             {(selectedStudentData.parent_name || selectedStudentData.parent_email || selectedStudentData.parent_contact || selectedStudentData.parent_occupation) && (
+                                            <Grid item xs={12}>
+                                                <Card>
+                                                    <CardContent>
+                                                        <Typography variant="h6" gutterBottom>
+                                                            Parent Information
+                                                        </Typography>
+                                                        <Grid container spacing={2}>
+                                                                 {selectedStudentData.parent_name && (
+                                                            <Grid item xs={12} md={6}>
+                                                                <Typography variant="subtitle2" color="text.secondary">
+                                                                    Parent Name
+                                                                </Typography>
+                                                                <Typography variant="body1">
+                                                                             {selectedStudentData.parent_name}
+                                                                </Typography>
+                                                            </Grid>
+                                                                 )}
+                                                                 {selectedStudentData.parent_email && (
+                                                            <Grid item xs={12} md={6}>
+                                                                <Typography variant="subtitle2" color="text.secondary">
+                                                                    Parent Email
+                                                                </Typography>
+                                                                <Typography variant="body1">
+                                                                             {selectedStudentData.parent_email}
+                                                                </Typography>
+                                                            </Grid>
+                                                                 )}
+                                                                 {selectedStudentData.parent_contact && (
+                                                            <Grid item xs={12} md={6}>
+                                                                <Typography variant="subtitle2" color="text.secondary">
+                                                                    Parent Contact
+                                                                </Typography>
+                                                                <Typography variant="body1">
+                                                                             {selectedStudentData.parent_contact}
+                                                                </Typography>
+                                                            </Grid>
+                                                                 )}
+                                                                 {selectedStudentData.parent_occupation && (
+                                                            <Grid item xs={12} md={6}>
+                                                                <Typography variant="subtitle2" color="text.secondary">
+                                                                    Parent Occupation
+                                                                </Typography>
+                                                                <Typography variant="body1">
+                                                                             {selectedStudentData.parent_occupation}
+                                                                </Typography>
+                                                            </Grid>
+                                                                 )}
+                                                        </Grid>
+                                                    </CardContent>
+                                                </Card>
+                                            </Grid>
+                                             )}
+
+                                             {/* Education Details */}
+                                             {selectedStudentData.education && selectedStudentData.education.length > 0 && (
+                                                 <Grid item xs={12}>
+                                                <Card>
+                                                    <CardContent>
+                                                        <Typography variant="h6" gutterBottom sx={{ display: 'flex', alignItems: 'center' }}>
+                                                                 <SchoolIcon sx={{ mr: 1 }} />
+                                                                 Education Details
+                                                        </Typography>
+                                                             <Grid container spacing={2}>
+                                                                 {selectedStudentData.education.map((edu, index) => (
+                                                                     <Grid item xs={12} key={index}>
+                                                                         <Card variant="outlined" sx={{ p: 2 }}>
+                                                                             <Typography variant="subtitle1" fontWeight="bold" gutterBottom>
+                                                                                 {edu.institute_name || 'Institute Name N/A'}
+                                                                </Typography>
+                                                                             <Grid container spacing={1}>
+                                                                                 <Grid item xs={12} md={6}>
+                                                            <Typography variant="body2" color="text.secondary">
+                                                                                         Degree: {edu.degree_type?.name || 'N/A'}
+                                                            </Typography>
+                                                                                 </Grid>
+                                                                                 {edu.specialization?.name && (
+                                                                                     <Grid item xs={12} md={6}>
+                                                                                         <Typography variant="body2" color="text.secondary">
+                                                                                             Specialization: {edu.specialization.name}
+                                                                                         </Typography>
+                                                                                     </Grid>
+                                                                                 )}
+                                                                                 <Grid item xs={12} md={6}>
+                                                                                     <Typography variant="body2" color="text.secondary">
+                                                                                         Duration: {formatDate(edu.duration_from)} - {formatDate(edu.duration_to)}
+                                                                                     </Typography>
+                                                                                 </Grid>
+                                                                                 <Grid item xs={12} md={6}>
+                                                                                     <Typography variant="body2" color="text.secondary">
+                                                                                         CGPA/Percentage: {edu.percentage_cgpa || 'N/A'}%
+                                                                                     </Typography>
+                                                                                 </Grid>
+                                                                                 <Grid item xs={12}>
+                                                                                     <Typography variant="body2" color="text.secondary">
+                                                                                         Location: {edu.location || 'N/A'}
+                                                                                     </Typography>
+                                                                                 </Grid>
+                                                                             </Grid>
+                                                                         </Card>
+                                                                     </Grid>
+                                                                 ))}
+                                                             </Grid>
+                                                    </CardContent>
+                                                </Card>
+                                            </Grid>
+                                             )}
+
+                                             {/* Projects */}
+                                             {selectedStudentData.projects && selectedStudentData.projects.length > 0 && (
+                                                 <Grid item xs={12}>
+                                                <Card>
+                                                    <CardContent>
+                                                        <Typography variant="h6" gutterBottom sx={{ display: 'flex', alignItems: 'center' }}>
+                                                                 <WorkIcon sx={{ mr: 1 }} />
+                                                                 Projects
+                                                        </Typography>
+                                                             <Grid container spacing={2}>
+                                                                 {selectedStudentData.projects.map((project, index) => (
+                                                                     <Grid item xs={12} key={index}>
+                                                                         <Card variant="outlined" sx={{ p: 2 }}>
+                                                                             <Typography variant="subtitle1" fontWeight="bold" gutterBottom>
+                                                                                 {project.title || 'Project Title N/A'}
+                                                                </Typography>
+                                                                             <Grid container spacing={1}>
+                                                                                 {project.role && (
+                                                                                     <Grid item xs={12} md={6}>
+                                                                                         <Typography variant="body2" color="text.secondary">
+                                                                                             Role: {project.role}
+                                                                                         </Typography>
+                                                                                     </Grid>
+                                                                                 )}
+                                                                                 {project.technologies && (
+                                                                                     <Grid item xs={12} md={6}>
+                                                                                         <Typography variant="body2" color="text.secondary">
+                                                                                             Technologies: {project.technologies}
+                                                                </Typography>
+                                                                                     </Grid>
+                                                                                 )}
+                                                                                 <Grid item xs={12} md={6}>
+                                                                                     <Typography variant="body2" color="text.secondary">
+                                                                                         Duration: {formatDate(project.start_date)} - {project.is_ongoing ? 'Present' : formatDate(project.end_date)}
+                                                                </Typography>
+                                                                                 </Grid>
+                                                                                 {project.team_size && (
+                                                                                     <Grid item xs={12} md={6}>
+                                                                                         <Typography variant="body2" color="text.secondary">
+                                                                                             Team Size: {project.team_size}
+                                                                                         </Typography>
+                                                                                     </Grid>
+                                                                                 )}
+                                                                                 {project.project_type && (
+                                                                                     <Grid item xs={12} md={6}>
+                                                                                         <Typography variant="body2" color="text.secondary">
+                                                                                             Project Type: {project.project_type}
+                                                                                         </Typography>
+                                                                                     </Grid>
+                                                                                 )}
+                                                                                 {project.client_name && (
+                                                                                     <Grid item xs={12} md={6}>
+                                                                                         <Typography variant="body2" color="text.secondary">
+                                                                                             Client: {project.client_name}
+                                                                                         </Typography>
+                                                                                     </Grid>
+                                                                                 )}
+                                                                                 <Grid item xs={12}>
+                                                                                     <Typography variant="body2" color="text.secondary">
+                                                                                         Description: {project.description || 'No description available'}
+                                                                                     </Typography>
+                                                                                 </Grid>
+                                                                                 {project.key_achievements && (
+                                                                                     <Grid item xs={12}>
+                                                                                         <Typography variant="body2" color="text.secondary">
+                                                                                             Key Achievements: {project.key_achievements}
+                                                                                         </Typography>
+                                                                                     </Grid>
+                                                                                 )}
+                                                                                 {(project.project_url || project.github_url) && (
+                                                                                     <Grid item xs={12}>
+                                                                <Box display="flex" gap={1}>
+                                                                                             {project.project_url && (
+                                                                    <Button
+                                                                        size="small"
+                                                                        variant="outlined"
+                                                                                                     startIcon={<OpenInNewIcon />}
+                                                                                                     onClick={() => window.open(project.project_url, '_blank')}
+                                                                    >
+                                                                                                     View Project
+                                                                    </Button>
+                                                                                             )}
+                                                                                             {project.github_url && (
+                                                                    <Button
+                                                                        size="small"
+                                                                        variant="outlined"
+                                                                                                     startIcon={<OpenInNewIcon />}
+                                                                                                     onClick={() => window.open(project.github_url, '_blank')}
+                                                                    >
+                                                                                                     View GitHub
+                                                                    </Button>
+                                                                                             )}
+                                                                </Box>
+                                                                                     </Grid>
+                                                                                 )}
+                                                                             </Grid>
+                                                                         </Card>
+                                                                     </Grid>
+                                                                 ))}
+                                                             </Grid>
+                                                         </CardContent>
+                                                     </Card>
+                                                 </Grid>
+                                             )}
+
+                                             {/* Certifications */}
+                                             {selectedStudentData.certifications && selectedStudentData.certifications.length > 0 && (
+                                                 <Grid item xs={12}>
+                                                     <Card>
+                                                         <CardContent>
+                                                             <Typography variant="h6" gutterBottom sx={{ display: 'flex', alignItems: 'center' }}>
+                                                                 <AssessmentIcon sx={{ mr: 1 }} />
+                                                                 Certifications
+                                                             </Typography>
+                                                             <Grid container spacing={2}>
+                                                                 {selectedStudentData.certifications.map((cert, index) => (
+                                                                     <Grid item xs={12} md={6} key={index}>
+                                                                         <Card variant="outlined" sx={{ p: 2 }}>
+                                                                             <Typography variant="subtitle1" fontWeight="bold" gutterBottom>
+                                                                                 {cert.certification_name || 'Certification Name N/A'}
+                                                                             </Typography>
+                                                                             <Grid container spacing={1}>
+                                                                                 <Grid item xs={12}>
+                                                            <Typography variant="body2" color="text.secondary">
+                                                                                         Authority: {cert.authority || 'N/A'}
+                                                            </Typography>
+                                                                                 </Grid>
+                                                                                 <Grid item xs={12} md={6}>
+                                                                                     <Typography variant="body2" color="text.secondary">
+                                                                                         Date: {formatDate(cert.certification_date)}
+                                                                                     </Typography>
+                                                                                 </Grid>
+                                                                                 {cert.score && (
+                                                                                     <Grid item xs={12} md={6}>
+                                                                                         <Typography variant="body2" color="text.secondary">
+                                                                                             Score: {cert.score}%
+                                                                                         </Typography>
+                                                                                     </Grid>
+                                                                                 )}
+                                                                                 {cert.certificate_number && (
+                                                                                     <Grid item xs={12}>
+                                                                                         <Typography variant="body2" color="text.secondary">
+                                                                                             Certificate Number: {cert.certificate_number}
+                                                                                         </Typography>
+                                                                                     </Grid>
+                                                                                 )}
+                                                                             </Grid>
+                                                                         </Card>
+                                                                     </Grid>
+                                                                 ))}
+                                                             </Grid>
+                                                    </CardContent>
+                                                </Card>
+                                            </Grid>
+                                             )}
+                                         </Grid>
+                                    </Box>
+                                )}
+
+                                {/* Resume Tab */}
+                                {studentDetailsTabValue === 1 && (
+                                    <Box sx={{ p: 3 }}>
+                                        <Grid container spacing={3}>
+                                            {/* Resume - Full Width Display */}
+                                                <Grid item xs={12}>
+                                                    <Card>
+                                                        <CardContent>
+                                                            <Typography variant="h6" gutterBottom sx={{ display: 'flex', alignItems: 'center' }}>
+                                                            <DescriptionIcon sx={{ mr: 1 }} />
+                                                            Resume
+                                                            </Typography>
+                                                        {selectedStudentData.upload_resume ? (
+                                                            <Box>
+                                                                <Box display="flex" gap={1} mb={2}>
+                                                            <Button
+                                                                        variant="outlined"
+                                                                        startIcon={<DownloadIcon />}
+                                                                        onClick={() => downloadFile(getDocumentUrl(selectedStudentData.upload_resume), 'resume.pdf')}
+                                                                    >
+                                                                        Download Resume
+                                                            </Button>
+                                                                </Box>
+                                                                <Box sx={{ 
+                                                                    width: '100%', 
+                                                                    height: '600px', 
+                                                                    border: '1px solid #e0e0e0',
+                                                                    borderRadius: '4px',
+                                                                    overflow: 'hidden'
+                                                                }}>
+                                                                    <iframe
+                                                                        src={getDocumentUrl(selectedStudentData.upload_resume)}
+                                                                        title="Student Resume"
+                                                                        width="100%"
+                                                                        height="100%"
+                                                                        style={{ border: 'none' }}
+                                                                    />
+                                                                </Box>
+                                                            </Box>
+                                                        ) : (
+                                                            <Box sx={{ 
+                                                                display: 'flex', 
+                                                                flexDirection: 'column', 
+                                                                alignItems: 'center', 
+                                                                justifyContent: 'center',
+                                                                py: 8,
+                                                                textAlign: 'center'
+                                                            }}>
+                                                                <DescriptionIcon sx={{ fontSize: 64, color: 'text.secondary', mb: 2 }} />
+                                                                <Typography variant="h6" color="text.secondary" gutterBottom>
+                                                                    No Resume Available
+                                                                </Typography>
+                                                                <Typography variant="body2" color="text.secondary">
+                                                                    This student has not uploaded a resume yet.
+                                                                </Typography>
+                                                            </Box>
+                                                        )}
+                                                        </CardContent>
+                                                    </Card>
+                                                </Grid>
+                                        </Grid>
+                                    </Box>
+                                )}
+
+                                {/* Scorecards Tab */}
+                                {studentDetailsTabValue === 2 && (
+                                    <Box sx={{ p: 3 }}>
+                                        <Grid container spacing={3}>
+                                            {/* Exam Results */}
+                                            <Grid item xs={12}>
+                                                <Card>
+                                                    <CardContent>
+                                                        <Typography variant="h6" gutterBottom sx={{ display: 'flex', alignItems: 'center' }}>
+                                                            <AssessmentIcon sx={{ mr: 1 }} />
+                                                            Exam Results
+                                                        </Typography>
+                                                        
+                                                        {studentExamResults.length > 0 ? (
+                                                            <TableContainer>
+                                                                <Table>
+                                                                    <TableHead>
+                                                                        <TableRow>
+                                                                            <TableCell>Exam Name</TableCell>
+                                                                            <TableCell>Marks Obtained</TableCell>
+                                                                            <TableCell>Total Marks</TableCell>
+                                                                            <TableCell>Percentage</TableCell>
+                                                                            <TableCell>Date</TableCell>
+                                                                        </TableRow>
+                                                                    </TableHead>
+                                                                    <TableBody>
+                                                                        {studentExamResults.map((result, index) => {
+                                                                            return (
+                                                                                <TableRow key={index}>
+                                                                                                                                                                                                                                                    <TableCell>{result.exam_name || 'N/A'}</TableCell>
+                                                                                <TableCell>{result.score || 'N/A'}</TableCell>
+                                                                                    <TableCell>{result.total_marks || 'N/A'}</TableCell>
+                                                                                    <TableCell>
+                                                                                        {result.score && result.total_marks ? 
+                                                                                            `${((parseFloat(result.score) / parseFloat(result.total_marks)) * 100).toFixed(2)}%` : 
+                                                                                            'N/A'
+                                                                                        }
+                                                                                    </TableCell>
+                                                                                    <TableCell>{formatDate(result.exam_date)}</TableCell>
+                                                                                </TableRow>
+                                                                            );
+                                                                        })}
+                                                                    </TableBody>
+                                                                </Table>
+                                                            </TableContainer>
+                                                        ) : (
+                                                            <Typography variant="body2" color="text.secondary">
+                                                                No exam results available
+                                                            </Typography>
+                                                        )}
+                                                    </CardContent>
+                                                </Card>
+                                            </Grid>
+
+                                            {/* Academic Performance Summary */}
+                                            <Grid item xs={12} md={6}>
+                                                <Card>
+                                                    <CardContent>
+                                                        <Typography variant="h6" gutterBottom>
+                                                            Academic Summary
+                                                        </Typography>
+                                                        <List dense>
+                                                            <ListItem>
+                                                                <ListItemText 
+                                                                    primary="Total Exams Taken" 
+                                                                    secondary={studentExamResults.length} 
+                                                                />
+                                                            </ListItem>
+                                                            <ListItem>
+                                                                <ListItemText 
+                                                                    primary="Average Percentage" 
+                                                                    secondary={
+                                                                        studentExamResults.length > 0 
+                                                                            ? `${(studentExamResults.reduce((sum, result) => {
+                                                                                const score = result.score || result.marks_obtained;
+                                                                                const total = result.total_marks || result.max_marks;
+                                                                                const percentage = score && total ? 
+                                                                                    (score / total) * 100 : 0;
+                                                                                return sum + percentage;
+                                                                            }, 0) / studentExamResults.length).toFixed(2)}%`
+                                                                            : 'N/A'
+                                                                    } 
+                                                                />
+                                                            </ListItem>
+                                                            <ListItem>
+                                                                <ListItemText 
+                                                                    primary="Highest Score" 
+                                                                    secondary={
+                                                                        studentExamResults.length > 0 
+                                                                            ? `${Math.max(...studentExamResults.map(r => {
+                                                                                const score = r.score || r.marks_obtained;
+                                                                                const total = r.total_marks || r.max_marks;
+                                                                                return score && total ? 
+                                                                                    (score / total) * 100 : 0;
+                                                                            }))}%`
+                                                                            : 'N/A'
+                                                                    } 
+                                                                />
+                                                            </ListItem>
+                                                        </List>
+                                                    </CardContent>
+                                                </Card>
+                                            </Grid>
+                                        </Grid>
+                                    </Box>
+                                )}
+
+                                {/* Applied Jobs Tab */}
+                                {studentDetailsTabValue === 3 && (
+                                    <Box sx={{ p: 3 }}>
+                                        <Card>
+                                            <CardContent>
+                                                <Typography variant="h6" gutterBottom sx={{ display: 'flex', alignItems: 'center' }}>
+                                                    <WorkIcon sx={{ mr: 1 }} />
+                                                    Applied Jobs ({studentJobApplications.length})
+                                                </Typography>
+                                                
+                                                {studentJobApplications.length > 0 ? (
+                                                    <TableContainer>
+                                                        <Table>
+                                                                                                                                <TableHead>
+                                                                        <TableRow>
+                                                                            <TableCell>Job Title</TableCell>
+                                                                            <TableCell>Company</TableCell>
+                                                                            <TableCell>Application Date</TableCell>
+                                                                            <TableCell>Job Status</TableCell>
+                                                                        </TableRow>
+                                                                    </TableHead>
+                                                            <TableBody>
+                                                                {studentJobApplications.map((application) => (
+                                                                    <TableRow key={application.id}>
+                                                                        <TableCell>
+                                                                            <Typography variant="subtitle2" fontWeight={500}>
+                                                                                {application.job_posting?.title || 'N/A'}
+                                                                            </Typography>
+                                                                        </TableCell>
+                                                                        <TableCell>
+                                                                            {application.job_posting?.company?.name || 'N/A'}
+                                                                        </TableCell>
+                                                                        <TableCell>
+                                                                            {formatDate(application.application_date)}
+                                                                        </TableCell>
+                                                                        <TableCell>
+                                                                            <Chip 
+                                                                                label={application.status} 
+                                                                                color={getStatusColor(application.status)} 
+                                                                                size="small" 
+                                                                            />
+                                                                        </TableCell>
+                                                                    </TableRow>
+                                                                ))}
+                                                            </TableBody>
+                                                        </Table>
+                                                    </TableContainer>
+                                                ) : (
+                                                    <Typography variant="body2" color="text.secondary">
+                                                        No job applications found
+                                                    </Typography>
+                                                )}
+                                            </CardContent>
+                                        </Card>
+                                    </Box>
+                                )}
+                            </Paper>
+                        </Box>
+                    ) : null}
+                </DialogContent>
+                
+                <DialogActions sx={{ p: 3, pt: 1 }}>
+                    <Button 
+                        onClick={handleCloseStudentDetailsDialog}
+                        sx={{ 
+                            textTransform: 'none',
+                            borderRadius: 2,
+                            px: 3
+                        }}
+                    >
+                        Close
                     </Button>
                 </DialogActions>
             </Dialog>

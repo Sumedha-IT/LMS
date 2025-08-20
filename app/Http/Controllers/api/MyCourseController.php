@@ -54,11 +54,7 @@ class MyCourseController extends Controller
                 return response()->json(['message' => 'Unauthorized access'], 403);
             }
 
-            // Log the authenticated user info
-            Log::info('User accessing my-courses:', [
-                'user_id' => $user->id,
-                'is_student' => $user->is_student ?? false
-            ]);
+
 
             // Get the user's assigned batches and their courses
             $courses = Course::select('courses.*')

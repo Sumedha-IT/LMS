@@ -4,6 +4,7 @@ namespace App\Http\Controllers\api;
 
 use App\Http\Controllers\Controller;
 use App\Models\JobApplication;
+use App\Models\StudentPlacementEligibility;
 use Illuminate\Http\Request;
 
 class JobApplicationController extends Controller
@@ -19,7 +20,6 @@ class JobApplicationController extends Controller
         try {
             // Test if job_applications table exists
             $tableExists = \Schema::hasTable('job_applications');
-            \Log::info('Job applications table exists: ' . ($tableExists ? 'Yes' : 'No'));
             
             if (!$tableExists) {
                 return response()->json(['error' => 'Job applications table does not exist'], 500);
@@ -65,7 +65,6 @@ class JobApplicationController extends Controller
         // Search by student name or email
         if ($request->filled('search')) {
             $searchTerm = $request->get('search');
-            \Log::info('Search term: ' . $searchTerm);
             
             $query->whereHas('user', function ($q) use ($searchTerm) {
                 $q->where(function($subQuery) use ($searchTerm) {
@@ -73,9 +72,6 @@ class JobApplicationController extends Controller
                              ->orWhere('email', 'LIKE', "%{$searchTerm}%");
                 });
             });
-            
-            \Log::info('Query SQL: ' . $query->toSql());
-            \Log::info('Query bindings: ' . json_encode($query->getBindings()));
         }
 
         // Filter by application status
@@ -197,7 +193,6 @@ class JobApplicationController extends Controller
             \Log::info('Job application store request received:', $request->all());
             
         $jobApplication = JobApplication::create($request->all());
-            \Log::info('Job application created successfully:', $jobApplication->toArray());
         return response()->json($jobApplication, 201);
         } catch (\Exception $e) {
             \Log::error('Error creating job application:', [
@@ -556,6 +551,408 @@ class JobApplicationController extends Controller
                 'message' => 'An error occurred while filtering job applications',
                 'error' => $e->getMessage()
             ], 500);
+        }
+    }
+
+    /**
+     * Bulk update job application statuses
+     */
+    public function bulkUpdate(Request $request)
+    {
+        try {
+            // Validate request
+            $request->validate([
+                'application_ids' => 'required|array',
+                'application_ids.*' => 'required|integer|exists:job_applications,id',
+                'status' => 'required|string|in:applied,shortlisted,interview_scheduled,interviewed,selected,rejected,withdrawn',
+                'job_posting_id' => 'required|integer|exists:job_postings,id'
+            ]);
+
+            $applicationIds = $request->application_ids;
+            $newStatus = $request->status;
+            $jobPostingId = $request->job_posting_id;
+
+            // Get the applications to update
+            $applications = JobApplication::whereIn('id', $applicationIds)
+                ->where('job_posting_id', $jobPostingId)
+                ->with(['user', 'jobPosting.company'])
+                ->get();
+
+            if ($applications->isEmpty()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'No valid applications found to update'
+                ], 404);
+            }
+
+            // Store previous statuses for undo functionality
+            $previousStatuses = [];
+            $updatedCount = 0;
+            $emailData = [];
+
+            foreach ($applications as $application) {
+                $oldStatus = $application->status;
+                
+                // Store previous status for undo
+                $previousStatuses[$application->id] = [
+                    'status' => $oldStatus,
+                    'shortlisted_date' => $application->shortlisted_date,
+                    'interview_date' => $application->interview_date,
+                    'selection_date' => $application->selection_date
+                ];
+                
+                // Update the application status
+                $updateData = ['status' => $newStatus];
+                
+                // Update relevant dates based on status
+                switch ($newStatus) {
+                    case 'shortlisted':
+                        $updateData['shortlisted_date'] = now();
+                        break;
+                    case 'interview_scheduled':
+                        $updateData['interview_date'] = now();
+                        break;
+                    case 'selected':
+                        $updateData['selection_date'] = now();
+                        break;
+                }
+
+                $application->update($updateData);
+                $updatedCount++;
+
+                // Update placement eligibility if status is 'selected'
+                if ($newStatus === 'selected') {
+                    $this->updatePlacementEligibility($application->user_id, $application->jobPosting);
+                }
+
+                // Prepare email data
+                $emailData[] = [
+                    'user' => $application->user,
+                    'jobPosting' => $application->jobPosting,
+                    'oldStatus' => $oldStatus,
+                    'newStatus' => $newStatus,
+                    'application' => $application
+                ];
+            }
+
+            // Store undo data in session or cache for later use
+            $undoKey = 'bulk_update_' . time() . '_' . $jobPostingId;
+            \Cache::put($undoKey, [
+                'application_ids' => $applicationIds,
+                'previous_statuses' => $previousStatuses,
+                'new_status' => $newStatus,
+                'job_posting_id' => $jobPostingId,
+                'updated_at' => now(),
+                'updated_count' => $updatedCount
+            ], now()->addDays(30)); // Keep undo data for 30 days
+
+            // Store the undo key in a list for this job posting
+            $cacheKeyList = 'bulk_update_keys_' . $jobPostingId;
+            $existingKeys = \Cache::get($cacheKeyList, []);
+            $existingKeys[] = $undoKey;
+            \Cache::put($cacheKeyList, $existingKeys, now()->addDays(30));
+
+            // Send email notifications
+            $this->sendBulkStatusUpdateEmails($emailData);
+
+            return response()->json([
+                'success' => true,
+                'message' => "Successfully updated {$updatedCount} application(s) to {$newStatus}",
+                'updated_count' => $updatedCount,
+                'status' => $newStatus,
+                'undo_key' => $undoKey,
+                'can_undo' => true
+            ]);
+
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Validation failed',
+                'errors' => $e->errors()
+            ], 422);
+        } catch (\Exception $e) {
+            \Log::error('Bulk update error:', ['error' => $e->getMessage()]);
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to update applications: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Undo bulk status update
+     */
+    public function undoBulkUpdate(Request $request)
+    {
+        try {
+            // Validate request
+            $request->validate([
+                'undo_key' => 'required|string'
+            ]);
+
+            $undoKey = $request->undo_key;
+            $undoData = \Cache::get($undoKey);
+
+            if (!$undoData) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Undo data not found or expired'
+                ], 404);
+            }
+
+            $applicationIds = $undoData['application_ids'];
+            $previousStatuses = $undoData['previous_statuses'];
+            $jobPostingId = $undoData['job_posting_id'];
+
+            // Get the applications to revert
+            $applications = JobApplication::whereIn('id', $applicationIds)
+                ->where('job_posting_id', $jobPostingId)
+                ->with(['user', 'jobPosting.company'])
+                ->get();
+
+            if ($applications->isEmpty()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'No applications found to revert'
+                ], 404);
+            }
+
+            $revertedCount = 0;
+            $emailData = [];
+
+            foreach ($applications as $application) {
+                if (isset($previousStatuses[$application->id])) {
+                    $previousData = $previousStatuses[$application->id];
+                    $currentStatus = $application->status;
+                    
+                    // Revert to previous status and dates
+                    $updateData = [
+                        'status' => $previousData['status'],
+                        'shortlisted_date' => $previousData['shortlisted_date'],
+                        'interview_date' => $previousData['interview_date'],
+                        'selection_date' => $previousData['selection_date']
+                    ];
+
+                    $application->update($updateData);
+                    $revertedCount++;
+
+                    // If we're reverting from 'selected' status, update placement eligibility
+                    if ($currentStatus === 'selected' && $previousData['status'] !== 'selected') {
+                        $this->revertPlacementEligibility($application->user_id);
+                    }
+
+                    // Prepare email data for reversion notification
+                    $emailData[] = [
+                        'user' => $application->user,
+                        'jobPosting' => $application->jobPosting,
+                        'oldStatus' => $currentStatus,
+                        'newStatus' => $previousData['status'],
+                        'application' => $application
+                    ];
+                }
+            }
+
+            // Remove undo data from cache
+            \Cache::forget($undoKey);
+
+            // Remove the key from the list
+            $cacheKeyList = 'bulk_update_keys_' . $jobPostingId;
+            $existingKeys = \Cache::get($cacheKeyList, []);
+            $existingKeys = array_filter($existingKeys, function($key) use ($undoKey) {
+                return $key !== $undoKey;
+            });
+            \Cache::put($cacheKeyList, $existingKeys, now()->addDays(30));
+
+            // Send email notifications for reversion
+            $this->sendBulkStatusUpdateEmails($emailData);
+
+            return response()->json([
+                'success' => true,
+                'message' => "Successfully reverted {$revertedCount} application(s) to previous status",
+                'reverted_count' => $revertedCount,
+                'previous_status' => $undoData['new_status']
+            ]);
+
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Validation failed',
+                'errors' => $e->errors()
+            ], 422);
+        } catch (\Exception $e) {
+            \Log::error('Undo bulk update error:', ['error' => $e->getMessage()]);
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to revert applications: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Get available undo operations for a job posting
+     */
+    public function getUndoOperations(Request $request, $job_posting_id)
+    {
+        try {
+            $undoOperations = [];
+            
+            // Get all cache keys that match the pattern for this job posting
+            $cacheKeys = \Cache::get('bulk_update_keys_' . $job_posting_id, []);
+            
+            foreach ($cacheKeys as $undoKey) {
+                $undoData = \Cache::get($undoKey);
+                if ($undoData && $undoData['job_posting_id'] == $job_posting_id) {
+                    $undoOperations[] = [
+                        'undo_key' => $undoKey,
+                        'new_status' => $undoData['new_status'],
+                        'updated_count' => $undoData['updated_count'],
+                        'updated_at' => $undoData['updated_at'],
+                        'can_undo' => true
+                    ];
+                }
+            }
+
+            return response()->json([
+                'success' => true,
+                'undo_operations' => $undoOperations
+            ]);
+
+        } catch (\Exception $e) {
+            \Log::error('Get undo operations error:', ['error' => $e->getMessage()]);
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to get undo operations: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Send email notifications for bulk status updates
+     */
+    private function sendBulkStatusUpdateEmails($emailData)
+    {
+        try {
+            foreach ($emailData as $data) {
+                $user = $data['user'];
+                $jobPosting = $data['jobPosting'];
+                $oldStatus = $data['oldStatus'];
+                $newStatus = $data['newStatus'];
+
+                // Prepare email content based on status
+                $subject = "Job Application Status Update - {$jobPosting->title}";
+                $message = $this->getStatusUpdateEmailContent($user, $jobPosting, $oldStatus, $newStatus);
+
+                // Send email (you can use Laravel's Mail facade here)
+                // For now, we'll log the email data
+                \Log::info('Status update email would be sent:', [
+                    'to' => $user->email,
+                    'subject' => $subject,
+                    'status' => $newStatus,
+                    'job_title' => $jobPosting->title,
+                    'company' => $jobPosting->company->name ?? 'Unknown Company'
+                ]);
+
+                // TODO: Implement actual email sending
+                // Mail::to($user->email)->send(new JobApplicationStatusUpdate($user, $jobPosting, $oldStatus, $newStatus));
+            }
+        } catch (\Exception $e) {
+            \Log::error('Error sending bulk status update emails:', ['error' => $e->getMessage()]);
+        }
+    }
+
+    /**
+     * Update placement eligibility when a student is selected
+     */
+    private function updatePlacementEligibility($userId, $jobPosting)
+    {
+        try {
+            // Find or create placement eligibility record
+            $eligibility = StudentPlacementEligibility::firstOrCreate(
+                ['user_id' => $userId],
+                [
+                    'is_eligible' => true,
+                    'is_placed' => false,
+                    'profile_completion_percentage' => 0,
+                    'course_completion_status' => false,
+                    'exam_standards_met' => false,
+                    'attendance_percentage' => 0,
+                    'fees_payment_status' => false,
+                    'lab_test_cases_completed' => false,
+                    'assignments_completed' => false,
+                ]
+            );
+
+            // Update placement information
+            $eligibility->update([
+                'is_placed' => true,
+                'placement_date' => now(),
+                'placement_company' => $jobPosting->company ? $jobPosting->company->name : 'Unknown Company',
+                'placement_salary' => $jobPosting->salary ? $jobPosting->salary : null,
+                'is_eligible' => true, // Student is eligible since they got placed
+                'last_eligibility_check' => now(),
+            ]);
+
+            \Log::info("Updated placement eligibility for user {$userId}: placed at " . ($jobPosting->company ? $jobPosting->company->name : 'Unknown Company'));
+
+        } catch (\Exception $e) {
+            \Log::error("Error updating placement eligibility for user {$userId}: " . $e->getMessage());
+        }
+    }
+
+    /**
+     * Revert placement eligibility when a student's selection is undone
+     */
+    private function revertPlacementEligibility($userId)
+    {
+        try {
+            $eligibility = StudentPlacementEligibility::where('user_id', $userId)->first();
+            
+            if ($eligibility) {
+                $eligibility->update([
+                    'is_placed' => false,
+                    'placement_date' => null,
+                    'placement_company' => null,
+                    'placement_salary' => null,
+                    'last_eligibility_check' => now(),
+                ]);
+
+                \Log::info("Reverted placement eligibility for user {$userId}: placement status removed");
+            }
+
+        } catch (\Exception $e) {
+            \Log::error("Error reverting placement eligibility for user {$userId}: " . $e->getMessage());
+        }
+    }
+
+    /**
+     * Get email content for status updates
+     */
+    private function getStatusUpdateEmailContent($user, $jobPosting, $oldStatus, $newStatus)
+    {
+        $companyName = $jobPosting->company->name ?? 'the company';
+        $jobTitle = $jobPosting->title;
+
+        switch ($newStatus) {
+            case 'selected':
+                return "Dear {$user->name},\n\nCongratulations! Your application for the position of {$jobTitle} at {$companyName} has been selected. We will contact you soon with further details.\n\nBest regards,\nPlacement Team";
+            
+            case 'rejected':
+                return "Dear {$user->name},\n\nThank you for your interest in the position of {$jobTitle} at {$companyName}. After careful consideration, we regret to inform you that we are unable to move forward with your application at this time.\n\nWe encourage you to continue applying for other opportunities.\n\nBest regards,\nPlacement Team";
+            
+            case 'shortlisted':
+                return "Dear {$user->name},\n\nGreat news! Your application for the position of {$jobTitle} at {$companyName} has been shortlisted. We will contact you soon with next steps.\n\nBest regards,\nPlacement Team";
+            
+            case 'interview_scheduled':
+                return "Dear {$user->name},\n\nYour application for the position of {$jobTitle} at {$companyName} has been selected for an interview. We will contact you soon with interview details.\n\nBest regards,\nPlacement Team";
+            
+            case 'interviewed':
+                return "Dear {$user->name},\n\nThank you for attending the interview for the position of {$jobTitle} at {$companyName}. We will review your interview performance and get back to you soon.\n\nBest regards,\nPlacement Team";
+            
+            case 'withdrawn':
+                return "Dear {$user->name},\n\nYour application for the position of {$jobTitle} at {$companyName} has been withdrawn as requested.\n\nBest regards,\nPlacement Team";
+            
+            default:
+                return "Dear {$user->name},\n\nYour application status for the position of {$jobTitle} at {$companyName} has been updated to {$newStatus}.\n\nBest regards,\nPlacement Team";
         }
     }
 } 

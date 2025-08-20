@@ -39,6 +39,7 @@ const mainMenu = [
   { id: 'education', label: 'Education', icon: <MdSchool /> },
   { id: 'projects', label: 'Projects', icon: <MdBuild /> },
   { id: 'certifications', label: 'Certifications', icon: <MdStar /> },
+  { id: 'resume-upload', label: 'Resume Upload', icon: <AiOutlineFilePdf /> },
   { id: 'resume', label: 'Export as Resume', icon: <AiOutlineFilePdf /> },
 ];
 
@@ -55,7 +56,7 @@ const calculateCompletionPercentage = (formData, menuId, projects) => {
       case 'personal':
         const basicFields = ['name', 'email', 'gender', 'birthday'];
         const additionalFields = ['address', 'city', 'state_id', 'pincode'];
-        const docsFields = ['aadhaar_number', 'upload_aadhar', 'linkedin_profile', 'passport_photo', 'upload_resume'];
+        const docsFields = ['aadhaar_number', 'upload_aadhar', 'linkedin_profile', 'passport_photo'];
         const parentFields = ['parent_name', 'parent_email', 'parent_aadhar', 'parent_occupation', 'residential_address'];
 
         const basicComplete = basicFields.filter(field => formData[field]).length;
@@ -138,6 +139,10 @@ const calculateCompletionPercentage = (formData, menuId, projects) => {
         // Prevent division by zero
         return totalCertFields > 0 ? Math.round((completedCertFields / totalCertFields) * 100) : 0;
 
+      case 'resume-upload':
+        // Check if resume is uploaded
+        return (formData.upload_resume || formData.resume_path) ? 100 : 0;
+
     default:
       return 0;
     }
@@ -148,20 +153,21 @@ const calculateCompletionPercentage = (formData, menuId, projects) => {
 };
 
 // Add this function after calculateCompletionPercentage
-const calculateOverallProgress = (formData, projects) => {
-  // Check if formData is valid to prevent NaN
-  if (!formData || typeof formData !== 'object') {
-    console.error('Invalid formData in calculateOverallProgress:', formData);
-    return 0;
-  }
+  const calculateOverallProgress = (formData, projects) => {
+    // Check if formData is valid to prevent NaN
+    if (!formData || typeof formData !== 'object') {
+      console.error('Invalid formData in calculateOverallProgress:', formData);
+      return 0;
+    }
 
-  const sections = ['personal', 'education', 'projects', 'certifications'];
-  const weights = {
-    personal: 0.4,    // 40% weight for personal details
-    education: 0.25,  // 25% weight for education
-    projects: 0.2,    // 20% weight for projects
-    certifications: 0.15  // 15% weight for certifications
-  };
+    const sections = ['personal', 'education', 'projects', 'certifications', 'resume-upload'];
+    const weights = {
+      personal: 0.35,     // 35% weight for personal details
+      education: 0.25,    // 25% weight for education
+      projects: 0.2,      // 20% weight for projects
+      certifications: 0.15, // 15% weight for certifications
+      'resume-upload': 0.05 // 5% weight for resume upload
+    };
 
   let weightedSum = 0;
   sections.forEach(section => {
@@ -227,6 +233,7 @@ const MyProfile = () => {
     aadhaar_number: '',
     linkedin_profile: '',
     upload_resume: null,
+    resume_path: null,
     upload_aadhar: null,
     parent_name: '',
     parent_email: '',
@@ -266,6 +273,11 @@ const MyProfile = () => {
   const [showResumeModal, setShowResumeModal] = useState(false);
   const [selectedTemplate, setSelectedTemplate] = useState('modern');
   const [pdfViewerModal, setPdfViewerModal] = useState({
+    isOpen: false,
+    fileUrl: '',
+    fileName: ''
+  });
+  const [resumeViewerModal, setResumeViewerModal] = useState({
     isOpen: false,
     fileUrl: '',
     fileName: ''
@@ -789,7 +801,6 @@ const MyProfile = () => {
     if (!data.upload_aadhar && !data.aadhar_path) errors.push('Aadhaar document is required');
     if (!data.linkedin_profile?.trim()) errors.push('LinkedIn profile is required');
     if (!data.passport_photo && !data.passport_photo_path) errors.push('Passport size photo is required');
-    if (!data.upload_resume && !data.resume_path) errors.push('Resume is required');
     return errors;
   };
 
@@ -873,8 +884,20 @@ const MyProfile = () => {
     if (files && files[0]) {
       const file = files[0];
 
-      // Add file size validation for avatar and passport photo
-      if ((name === 'avatar_url' || name === 'passport_photo') && file.size > 2 * 1024 * 1024) { // 2MB limit
+      // File size validation
+      if (name === 'upload_resume') {
+        if (file.size > 10 * 1024 * 1024) { // 10MB limit for resume
+          toast.error('Resume file must be less than 10MB');
+          return;
+        }
+        // Validate file type for resume
+        const allowedTypes = ['application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'];
+        if (!allowedTypes.includes(file.type)) {
+          toast.error('Resume must be in PDF, DOC, or DOCX format');
+          return;
+        }
+        toast.success('Resume file selected successfully!');
+      } else if ((name === 'avatar_url' || name === 'passport_photo') && file.size > 2 * 1024 * 1024) { // 2MB limit
         toast.error(`${name === 'avatar_url' ? 'Profile picture' : 'Passport photo'} must be less than 2MB`);
         return;
       }
@@ -897,6 +920,11 @@ const MyProfile = () => {
           // The preview for passport_photo is handled directly in the render function
         };
         reader.readAsDataURL(file);
+      }
+
+      // Auto-save resume when uploaded
+      if (name === 'upload_resume') {
+        handleResumeUpload(file);
       }
     }
   };
@@ -954,11 +982,97 @@ const MyProfile = () => {
     }
   };
 
-  const handleRemoveFile = (fieldName) => {
+  const handleResumeUpload = async (resumeFile) => {
+    try {
+      setLoading(true);
+
+      const userInfo = getCookie("user_info");
+      const userData = userInfo ? JSON.parse(userInfo) : null;
+
+      if (!userData?.token) {
+        toast.error('User authentication required');
+        return;
+      }
+
+      // Create FormData object
+      const formDataToSend = new FormData();
+
+      // Only send the resume data
+      const jsonData = { resume_update: true };
+      formDataToSend.append('data', JSON.stringify(jsonData));
+
+      formDataToSend.append('upload_resume', resumeFile);
+
+      const response = await axios.post(`${API_URL}/profile`, formDataToSend, {
+        headers: {
+          'Accept': 'application/json',
+          'Authorization': `Bearer ${userData.token}`,
+          'Content-Type': 'multipart/form-data',
+        },
+        withCredentials: true,
+      });
+
+      if (response.data.success) {
+        toast.success('Resume uploaded successfully!');
+        if (response.data.user && response.data.user.upload_resume) {
+          // Update the formData with the response from the server
+          setFormData(prev => ({
+            ...prev,
+            upload_resume: null, // Clear the File object since we now have the path
+            resume_path: response.data.user.upload_resume,
+            upload_resume_path: response.data.user.upload_resume // Also set this for compatibility
+          }));
+          console.log('Resume uploaded successfully. Path:', response.data.user.upload_resume);
+        }
+      } else {
+        throw new Error(response.data.message || 'Upload failed');
+      }
+    } catch (error) {
+      console.error('Resume upload error:', error);
+      toast.error(error.response?.data?.message || 'Failed to upload resume');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleRemoveFile = async (fieldName) => {
+    if (fieldName === 'upload_resume') {
+      // Handle resume deletion from backend
+      try {
+        const token = localStorage.getItem('token');
+        const response = await fetch(`${API_URL}/profile/resume`, {
+          method: 'DELETE',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+        });
+
+        const result = await response.json();
+
+        if (result.success) {
+          toast.success('Resume deleted successfully');
+          // Update local state to remove resume
+          setFormData(prev => ({
+            ...prev,
+            upload_resume: null,
+            resume_path: null,
+            upload_resume_path: null
+          }));
+        } else {
+          toast.error(result.message || 'Failed to delete resume');
+        }
+      } catch (error) {
+        console.error('Error deleting resume:', error);
+        toast.error('Failed to delete resume');
+      }
+    } else {
+      // Handle other file removals (existing logic)
     setFormData(prev => ({
       ...prev,
       [fieldName]: null
     }));
+    }
   };
 
   const handleAddItem = (field) => {
@@ -1066,7 +1180,6 @@ const MyProfile = () => {
     if (!data.upload_aadhar && !data.aadhar_path) errors.push('Aadhaar document is required');
     if (!data.linkedin_profile?.trim()) errors.push('LinkedIn profile is required');
     if (!data.passport_photo && !data.passport_photo_path) errors.push('Passport size photo is required');
-    if (!data.upload_resume && !data.resume_path) errors.push('Resume is required');
 
     // Parent Details
     if (!data.parent_name?.trim()) errors.push('Parent name is required');
@@ -1693,39 +1806,16 @@ const MyProfile = () => {
 
               <div className="flex flex-col h-full">
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Resume<span className="text-red-500">*</span>
+                  Resume
                 </label>
                 <div className="flex items-center space-x-4">
-                  <label className="cursor-pointer text-white px-4 py-2 rounded-lg transition-colors" style={{background: 'linear-gradient(270deg, #eb6707 0%, #e42b12 100%)'}}>
-                    <input
-                      type="file"
-                      name="upload_resume"
-                      onChange={handleFileChange}
-                      accept=".pdf,.doc,.docx"
-                      className="hidden"
-                      required={!formData.upload_resume}
-                    />
-                    Choose Resume
-                  </label>
-                  {formData.upload_resume && (
-                    <div className="flex items-center gap-2">
-                      <a
-                        href={getDocumentUrl(formData.upload_resume)}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-orange-500 hover:text-orange-600"
-                      >
-                        View Resume
-                      </a>
-                      <button
-                        type="button"
-                        onClick={() => handleRemoveFile('upload_resume')}
-                        className="text-red-500 hover:text-red-600"
-                      >
-                        ×
-                      </button>
-                    </div>
-                  )}
+                  <a
+                    href="/profile/resume-upload"
+                    className="text-orange-500 hover:text-orange-600 font-medium"
+                  >
+                    Manage Resume →
+                  </a>
+                  <span className="text-sm text-gray-500">(Dedicated section available)</span>
                 </div>
               </div>
             </div>
@@ -1746,8 +1836,7 @@ const MyProfile = () => {
                   background: !formData.aadhaar_number?.trim() ||
                     (!formData.upload_aadhar && !formData.aadhar_path) ||
                     !formData.linkedin_profile?.trim() ||
-                    (!formData.passport_photo && !formData.passport_photo_path) ||
-                    (!formData.upload_resume && !formData.resume_path)
+                    (!formData.passport_photo && !formData.passport_photo_path)
                     ? '#9ca3af'
                     : 'linear-gradient(270deg, #eb6707 0%, #e42b12 100%)'
                 }}
@@ -1755,8 +1844,7 @@ const MyProfile = () => {
                   !formData.aadhaar_number?.trim() ||
                   (!formData.upload_aadhar && !formData.aadhar_path) ||
                   !formData.linkedin_profile?.trim() ||
-                  (!formData.passport_photo && !formData.passport_photo_path) ||
-                  (!formData.upload_resume && !formData.resume_path)
+                  (!formData.passport_photo && !formData.passport_photo_path)
                 }
               >
                 Next
@@ -2801,6 +2889,120 @@ const MyProfile = () => {
             ))}
           </div>
         );
+      case 'resume-upload':
+        return (
+          <div className="space-y-6">
+            <div className="bg-white rounded-lg p-8">
+              <div className="text-center space-y-4">
+                
+                {/* Current Resume Display */}
+                {(formData.upload_resume || formData.resume_path) && (
+                  <div className="mt-8 bg-gray-50 rounded-lg p-6">
+                    <h3 className="text-lg font-semibold mb-4 text-gray-800">Current Resume</h3>
+                    <div className="flex items-center justify-between p-4 bg-white rounded-lg border">
+                      <div className="flex items-center gap-3">
+                        <div className="p-2 bg-orange-100 rounded-lg">
+                          <AiOutlineFilePdf className="w-6 h-6 text-orange-600" />
+                        </div>
+                        <div>
+                          <p className="font-medium text-gray-800">
+                            {formData.upload_resume instanceof File 
+                              ? formData.upload_resume.name 
+                              : 'Resume.pdf'
+                            }
+                          </p>
+                          <p className="text-sm text-gray-500">
+                            {formData.upload_resume instanceof File 
+                              ? `${(formData.upload_resume.size / 1024 / 1024).toFixed(2)} MB`
+                              : 'Uploaded resume'
+                            }
+                          </p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={() => {
+                            const url = getDocumentUrl(formData.upload_resume || formData.resume_path || formData.upload_resume_path);
+                            console.log('Resume URL:', url);
+                            console.log('Resume path data:', {
+                              upload_resume: formData.upload_resume,
+                              resume_path: formData.resume_path,
+                              upload_resume_path: formData.upload_resume_path
+                            });
+                            console.log('API_URL:', API_URL);
+                            if (!url) {
+                              toast.error('Resume file not found');
+                            } else {
+                              const fileName = formData.upload_resume instanceof File 
+                                ? formData.upload_resume.name 
+                                : 'Resume.pdf';
+                              openPdfViewer(url, fileName);
+                            }
+                          }}
+                          className="px-3 py-1.5 text-orange-600 bg-orange-50 rounded-lg hover:bg-orange-100 transition-colors text-sm font-medium"
+                        >
+                          <FiEye className="w-4 h-4 inline mr-1" />
+                          View
+                        </button>
+                        <button
+                          onClick={() => handleRemoveFile('upload_resume')}
+                          className="px-3 py-1.5 text-red-600 bg-red-50 rounded-lg hover:bg-red-100 transition-colors text-sm font-medium"
+                        >
+                          <FiTrash2 className="w-4 h-4 inline mr-1" />
+                          Remove
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Upload New Resume */}
+                <div className="mt-8">
+                  <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center">
+                    <div className="mx-auto w-16 h-16 bg-orange-100 rounded-full flex items-center justify-center mb-4">
+                      <AiOutlineFilePdf className="w-8 h-8 text-orange-600" />
+                    </div>
+                    <h3 className="text-lg font-medium text-gray-800 mb-2">Upload New Resume</h3>
+                    <p className="text-gray-600 mb-4">
+                      Supported formats: PDF, DOC, DOCX (Max size: 10MB)
+                    </p>
+                    <label className="cursor-pointer inline-flex items-center gap-2 px-6 py-3 text-white rounded-lg transition-colors hover:opacity-90"
+                           style={{
+                             background: 'linear-gradient(270deg, #eb6707 0%, #e42b12 100%)'
+                           }}>
+                      <input
+                        type="file"
+                        name="upload_resume"
+                        onChange={handleFileChange}
+                        className="hidden"
+                        accept=".pdf,.doc,.docx"
+                      />
+                      <FiPlus className="w-5 h-5" />
+                      Choose Resume File
+                    </label>
+                  </div>
+                </div>
+
+
+
+                {/* Save Button */}
+                {formData.upload_resume && (
+                  <div className="mt-6 flex justify-center">
+                    <button
+                      onClick={() => handleResumeUpload(formData.upload_resume)}
+                      className="px-6 py-3 text-white rounded-lg transition-colors hover:opacity-90"
+                      style={{
+                        background: 'linear-gradient(270deg, #eb6707 0%, #e42b12 100%)'
+                      }}
+                    >
+                      Save Resume
+                    </button>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        );
       case 'resume':
         return (
           <div className="space-y-6">
@@ -2889,19 +3091,27 @@ const MyProfile = () => {
         return path;
       }
 
+      // Get the base URL without /api for storage files
+      const baseUrl = API_URL.replace('/api', '');
+
       // For relative paths stored in the database
       // If path contains "avatars/" without a leading slash
       if (path.includes('avatars/') && !path.startsWith('/')) {
-        return `${API_URL}/storage/${path}`;
+        return `${baseUrl}/storage/${path}`;
+      }
+
+      // If path contains "resumes/" without a leading slash
+      if (path.includes('resumes/') && !path.startsWith('/')) {
+        return `${baseUrl}/storage/${path}`;
       }
 
       // If path starts with "/storage/"
       if (path.startsWith('/storage/')) {
-        return `${API_URL}${path}`;
+        return `${baseUrl}${path}`;
       }
 
       // Default case - assume it's a relative path
-      return `${API_URL}/storage/${path}`;
+      return `${baseUrl}/storage/${path}`;
     }
 
     return null;
@@ -3806,7 +4016,7 @@ const MyProfile = () => {
           />
 
           {/* Existing menu grid */}
-          <div className="mt-12 grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div className="mt-12 grid grid-cols-2 md:grid-cols-5 gap-4">
             {mainMenu.filter(menu => menu.id !== 'resume').map((menu) => (
               <button
                 key={menu.id}

@@ -42,7 +42,7 @@ class Kernel extends HttpKernel
         ],
 
         'api' => [
-             \Laravel\Sanctum\Http\Middleware\EnsureFrontendRequestsAreStateful::class,
+            \Laravel\Sanctum\Http\Middleware\EnsureFrontendRequestsAreStateful::class,
             \Illuminate\Routing\Middleware\ThrottleRequests::class.':api',
             \Illuminate\Routing\Middleware\SubstituteBindings::class,
         ],
@@ -88,7 +88,6 @@ class Kernel extends HttpKernel
         'encryptCookie' =>\App\Http\Middleware\EncryptCookies::class,
         'zohoAuth' =>\App\Http\Middleware\ZohoMiddleware::class,
         'checkFeatureAcc' =>\App\Http\Middleware\CheckFeatureAccessMiddleware::class,
-        'checkStudentAttendance' => \App\Http\Middleware\CheckStudentAttendance::class,
-        'role' => \App\Http\Middleware\CheckRole::class,
+        'checkStudentAttendance' => \App\Http\Middleware\CheckStudentAttendance::class
     ];
 }
