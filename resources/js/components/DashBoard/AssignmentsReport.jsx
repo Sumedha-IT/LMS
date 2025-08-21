@@ -2,28 +2,34 @@ import { useEffect, useState } from "react";
 import { apiRequest } from "../../utils/api";
 import Cookies from "js-cookie";
 
-export default function AssignmentsReport() {
+export default function AssignmentsReport({ assignmentData: propAssignmentData = null }) {
   const [Assignment, setAssignment] = useState([]);
 
   useEffect(() => {
-    const FetchUserdata = async () => {
-      try {
-        const userId = Cookies.get("x_path_id");
-        if (!userId) {
-          throw new Error("No user ID found");
-        }
-        const data1 = await apiRequest("/getUserAssignments", {
-          params: {
-            student_id: userId
+    // If assignment data is provided as props, use it
+    if (propAssignmentData) {
+      setAssignment(propAssignmentData);
+    } else {
+      // Fallback to API call only if no data provided (for backward compatibility)
+      const FetchUserdata = async () => {
+        try {
+          const userId = Cookies.get("x_path_id");
+          if (!userId) {
+            throw new Error("No user ID found");
           }
-        });
-        setAssignment(data1.data);
-      } catch (err) {
-        console.error("Error fetching profile data:", err);
-      }
-    };
-    FetchUserdata();
-  }, []);
+          const data1 = await apiRequest("/getUserAssignments", {
+            params: {
+              student_id: userId
+            }
+          });
+          setAssignment(data1.data);
+        } catch (err) {
+          console.error("Error fetching profile data:", err);
+        }
+      };
+      FetchUserdata();
+    }
+  }, [propAssignmentData]);
 
   const getPerformanceColor = (performance) => {
     switch(performance) {

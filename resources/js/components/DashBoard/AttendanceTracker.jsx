@@ -3,10 +3,9 @@
 import { useState, useEffect } from "react"
 import { motion } from "framer-motion"
 import { User, ArrowRight } from "lucide-react"
-import { apiRequest } from "../../utils/api"
 import { useNavigate } from "react-router-dom"
 
-export default function AttendanceTracker() {
+export default function AttendanceTracker({ attendanceData: propAttendanceData = null }) {
   const [progress, setProgress] = useState(0)
   const [attendanceData, setAttendanceData] = useState({
     current: 0,
@@ -17,43 +16,56 @@ export default function AttendanceTracker() {
   const navigate = useNavigate()
 
   useEffect(() => {
-    const fetchAttendanceData = async () => {
-      try {
-        setLoading(true)
-        // Use the student attendance report API which has the correct attendance calculation
-        const data = await apiRequest("/student-attendance/report?filter_type=all", { skipCache: true })
+    // If attendance data is provided as props, use it
+    if (propAttendanceData) {
+      const presentDays = propAttendanceData.present_days || 0;
+      const totalDays = propAttendanceData.total_days || 0;
+      const attendancePercentage = totalDays > 0 ? Math.round((presentDays / totalDays) * 100) : 0;
 
-        // Check if we have attendance data
-        if (data) {
-          // Calculate the correct attendance percentage from the report
-          const presentDays = data.present_days || 0
-          const totalDays = data.total_days || 0
-          const attendancePercentage = totalDays > 0 ? Math.round((presentDays / totalDays) * 100) : 0
+      setAttendanceData({
+        current: presentDays,
+        total: totalDays,
+        percentage: attendancePercentage
+      });
+      setProgress(attendancePercentage);
+      setLoading(false);
+    } else {
+      // Fallback to API call only if no data provided (for backward compatibility)
+      const fetchAttendanceData = async () => {
+        try {
+          setLoading(true);
+          // Import apiRequest only when needed
+          const { apiRequest } = await import("../../utils/api");
+          const data = await apiRequest("/student-attendance/report?filter_type=all", { skipCache: false });
 
-          // Set the attendance data from the API response
+          if (data) {
+            const presentDays = data.present_days || 0;
+            const totalDays = data.total_days || 0;
+            const attendancePercentage = totalDays > 0 ? Math.round((presentDays / totalDays) * 100) : 0;
+
+            setAttendanceData({
+              current: presentDays,
+              total: totalDays,
+              percentage: attendancePercentage
+            });
+            setProgress(attendancePercentage);
+          }
+          setLoading(false);
+        } catch (err) {
+          console.error('Error fetching attendance data:', err);
           setAttendanceData({
-            current: presentDays,
-            total: totalDays,
-            percentage: attendancePercentage
-          })
-          setProgress(attendancePercentage)
+            current: 0,
+            total: 0,
+            percentage: 0
+          });
+          setProgress(0);
+          setLoading(false);
         }
-        setLoading(false)
-      } catch (err) {
-        console.error('Error fetching attendance data:', err)
-        // Set default values in case of error
-        setAttendanceData({
-          current: 0,
-          total: 0,
-          percentage: 0
-        })
-        setProgress(0)
-        setLoading(false)
-      }
-    }
+      };
 
-    fetchAttendanceData()
-  }, [])
+      fetchAttendanceData();
+    }
+  }, [propAttendanceData]);
 
   const handleViewDetails = () => {
     navigate('/student/attendance')

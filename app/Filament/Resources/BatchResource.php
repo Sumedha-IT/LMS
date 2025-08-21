@@ -36,7 +36,7 @@ class BatchResource extends Resource implements HasShieldPermissions
     public static function shouldRegisterNavigation(): bool
     {
         $user = auth()->user();
-        return !$user->is_student && ($user->is_admin || $user->is_coordinator || $user->is_tutor);
+        return !$user->is_student && !$user->is_placement_student && ($user->is_admin || $user->is_coordinator || $user->is_tutor);
     }
 
     public static function getPermissionPrefixes(): array

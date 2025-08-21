@@ -25,6 +25,7 @@ use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Hash;
 use Filament\Tables\Enums\FiltersLayout;
 
@@ -113,10 +114,6 @@ class UserResource extends Resource
                             // ->dehydrateStateUsing(fn ($state) => Hash::make($state))
                             // ->dehydrated(fn ($state) => filled($state))
                             ->required(fn (string $context): bool => $context === 'create'),
-                        Forms\Components\TextInput::make('zoho_crm_id')
-                            ->label('Zoho CRM ID')
-                            ->maxLength(255)
-                            ->required(),
                     ])->columns(2),
 
                 Forms\Components\Section::make()
@@ -257,6 +254,15 @@ class UserResource extends Resource
 
                     ])->hiddenOn('create')->columns(2),
 
+                Forms\Components\Section::make('Access Control')
+                    ->schema([
+                        Forms\Components\Toggle::make('placement_center_access')
+                            ->label('Placement Center Access')
+                            ->helperText('Enable this to allow the user to access the Placement Center')
+                            ->default(false)
+                            ->visible(fn ($record) => $record && in_array($record->role_id, [6, 11])), // Only show for students and placement students
+                    ])->hiddenOn('create')->columns(1),
+
             ]);
     }
 
@@ -264,7 +270,7 @@ class UserResource extends Resource
     {
         return User::query()->whereHas('teams', function ($query) {
             $query->where('id', Filament::getTenant());
-        })->where('role_id', 6);
+        })->whereIn('role_id', [6, 11]); // Students (6) and Placement Students (11)
     }
 
 
@@ -285,6 +291,11 @@ class UserResource extends Resource
                     ->searchable(),
                 ToggleColumn::make('is_active')
                     ->label('Active'),
+                ToggleColumn::make('placement_center_access')
+                    ->label('Placement Center Access')
+                    ->onColor('success')
+                    ->offColor('danger')
+                    ->toggleable(isToggledHiddenByDefault: false),
                 Tables\Columns\TextColumn::make('created_at')
                     ->dateTime()
                     ->sortable()
@@ -304,6 +315,11 @@ class UserResource extends Resource
                     ->relationship('batches', 'name')
                     ->searchable()
                     ->preload(),
+                Tables\Filters\TernaryFilter::make('placement_center_access')
+                    ->label('Placement Center Access')
+                    ->placeholder('All users')
+                    ->trueLabel('Has access')
+                    ->falseLabel('No access'),
             ],FiltersLayout::AboveContent)
             ->actions([
                 Tables\Actions\ViewAction::make()->label(''),
@@ -323,6 +339,38 @@ class UserResource extends Resource
                     Tables\Actions\ForceDeleteBulkAction::make(),
                     Tables\Actions\RestoreBulkAction::make(),
                 ]),
+                Tables\Actions\BulkAction::make('enable_placement_access')
+                    ->label('Enable Placement Center Access')
+                    ->icon('heroicon-o-check-circle')
+                    ->color('success')
+                    ->requiresConfirmation()
+                    ->modalHeading('Enable Placement Center Access')
+                    ->modalDescription('Are you sure you want to enable placement center access for the selected users?')
+                    ->modalSubmitActionLabel('Enable Access')
+                    ->action(function (Collection $records) {
+                        $records->each(function ($record) {
+                            if (in_array($record->role_id, [6, 11])) { // Only for students and placement students
+                                $record->update(['placement_center_access' => true]);
+                            }
+                        });
+                    })
+                    ->deselectRecordsAfterCompletion(),
+                Tables\Actions\BulkAction::make('disable_placement_access')
+                    ->label('Disable Placement Center Access')
+                    ->icon('heroicon-o-x-circle')
+                    ->color('danger')
+                    ->requiresConfirmation()
+                    ->modalHeading('Disable Placement Center Access')
+                    ->modalDescription('Are you sure you want to disable placement center access for the selected users?')
+                    ->modalSubmitActionLabel('Disable Access')
+                    ->action(function (Collection $records) {
+                        $records->each(function ($record) {
+                            if (in_array($record->role_id, [6, 11])) { // Only for students and placement students
+                                $record->update(['placement_center_access' => false]);
+                            }
+                        });
+                    })
+                    ->deselectRecordsAfterCompletion(),
             ]);
     }
 

@@ -28,8 +28,8 @@ class ExaminationResource extends Resource
     {
         // Ensure there's a logged-in user
         if (Auth::check() && Auth::user()) {
-            // Check if the user's role is 'Student' i.e role id = 6
-            return (Auth::user()->getIsStudentAttribute());
+            // Only show for regular students, not placement students
+            return (Auth::user()->getIsStudentAttribute() && !Auth::user()->getIsPlacementStudentAttribute());
         }
     
         // Return false if no user is logged in or role is not 'Student'

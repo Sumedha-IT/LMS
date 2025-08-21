@@ -20,7 +20,7 @@ class ExamResource extends Resource
     public static function shouldRegisterNavigation(): bool
     {
         if (Auth::check() && Auth::user()) {
-            return !(Auth::user()->getIsStudentAttribute());
+            return !(Auth::user()->getIsStudentAttribute() || Auth::user()->getIsPlacementStudentAttribute());
         }
     
         // Return false if no user is logged in or role is not 'Student'

@@ -19,7 +19,7 @@ class CheckFeatureAccessMiddleware
     {
     
         $user = Auth::user();
-        if (empty($user) || !$user->getIsStudentAttribute() ) {
+        if (empty($user) || !($user->getIsStudentAttribute() || $user->getIsPlacementStudentAttribute()) ) {
             return $next($request);
         }
     

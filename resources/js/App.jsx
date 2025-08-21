@@ -1,3 +1,4 @@
+import React from 'react';
 import { Route, Routes } from 'react-router-dom';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
@@ -35,13 +36,15 @@ import CurriculumManagement from './pages/CurriculumManagement';
 import StudentPlacement from './pages/StudentPlacement';
 import AdminPlacement from './pages/AdminPlacement';
 import JobPostingManagement from './pages/JobPostingManagement';
+import { AppProvider } from './contexts/AppContext';
 
 // Export StudentManagement for use in the Filament page
 window.StudentManagement = StudentManagement;
 window.StudentPlacement = StudentPlacement;
 window.AdminPlacement = AdminPlacement;
 
-function App() {
+// Main app content
+const AppContent = () => {
   return (
     <div className="">
       <ToastContainer />
@@ -105,9 +108,15 @@ function App() {
         <Route path="/administrator/:id/job-posting-management" element={<JobPostingManagement />} />
         <Route path="*" element={<div>Not Found</div>} />
       </Routes>
-
-
     </div>
+  );
+};
+
+function App() {
+  return (
+    <AppProvider>
+      <AppContent />
+    </AppProvider>
   );
 }
 

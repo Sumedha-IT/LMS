@@ -18,15 +18,15 @@ class MyCoursesPage extends Page
 
     public function mount(): void
     {
-        // Only allow students to access this page
-        if (!Auth::user()->is_student) {
+        // Only allow regular students to access this page, not placement students
+        if (!Auth::user()->is_student || Auth::user()->is_placement_student) {
             redirect()->to('/administrator/dashboard');
         }
     }
 
     public static function shouldRegisterNavigation(): bool
     {
-        return Auth::check() && Auth::user()->is_student;
+        return Auth::check() && Auth::user()->is_student && !Auth::user()->is_placement_student;
     }
 
     public function getMaxContentWidth(): MaxWidth

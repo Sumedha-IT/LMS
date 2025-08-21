@@ -49,9 +49,7 @@ use App\Http\Controllers\api\CompanyController;
 use App\Http\Controllers\api\JobPostingController;
 use App\Http\Controllers\api\JobApplicationController;
 use App\Http\Controllers\api\PlacementCriteriaController;
-use App\Http\Controllers\api\StudentPlacementEligibilityController;
 use App\Http\Controllers\api\JobEligibilityCriteriaController;
-use App\Http\Controllers\api\JobEligibilityCheckController;
 
 /*
 |--------------------------------------------------------------------------
@@ -507,12 +505,7 @@ Route::apiResource('job-applications', JobApplicationController::class);
     Route::apiResource('job-postings', JobPostingController::class);
         
     Route::apiResource('placement-criteria', PlacementCriteriaController::class);
-    Route::apiResource('student-placement-eligibility', StudentPlacementEligibilityController::class);
     Route::apiResource('job-eligibility-criteria', JobEligibilityCriteriaController::class);
 
-    // Job Eligibility Check APIs (with proper authentication)
-    Route::post('job-eligibility-check', [JobEligibilityCheckController::class, 'checkEligibility']);
-    Route::get('job-postings/{job_posting_id}/eligible-students', [JobEligibilityCheckController::class, 'getJobEligibilityList']);
-    Route::get('job-postings/{job_posting_id}/eligible-student', [JobEligibilityCheckController::class, 'getJobEligibilityList']);
-    Route::get('students/{student_id}/exam-marks', [JobEligibilityCheckController::class, 'getStudentExamMarks']);
+
 });

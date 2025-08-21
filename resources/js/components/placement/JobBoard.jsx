@@ -283,6 +283,7 @@ const JobBoard = ({ studentId }) => {
             case 'interview_scheduled': return 'info';
             case 'interviewed': return 'warning';
             case 'selected': return 'success';
+            case 'selected_not_joined': return 'warning';
             case 'rejected': return 'error';
             case 'withdrawn': return 'secondary';
             default: return 'default';
@@ -296,6 +297,7 @@ const JobBoard = ({ studentId }) => {
             case 'interview_scheduled': return 'Interview Scheduled';
             case 'interviewed': return 'Interviewed';
             case 'selected': return 'Selected';
+            case 'selected_not_joined': return 'Selected Not Joined';
             case 'rejected': return 'Rejected';
             case 'withdrawn': return 'Withdrawn';
             default: return 'Application Submitted';
