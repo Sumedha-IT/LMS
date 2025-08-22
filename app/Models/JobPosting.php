@@ -9,6 +9,14 @@ class JobPosting extends Model
 {
     use HasFactory;
 
+    protected $casts = [
+        'eligible_courses' => 'array',
+        'specializations' => 'array',
+        'skills_required' => 'array',
+        'btech_percentage_min' => 'decimal:2',
+        'mtech_percentage_min' => 'decimal:2',
+    ];
+
     protected $fillable = [
         'company_id',
         'posted_by',
@@ -25,6 +33,27 @@ class JobPosting extends Model
         'vacancies',
         'status',
         'application_deadline',
+        // New fields added to job_postings table
+        'eligible_courses',
+        'specializations',
+        'backlogs_allowed',
+        'training_period_stipend',
+        'bond_service_agreement',
+        'mandatory_original_documents',
+        'recruitment_process_steps',
+        'mode_of_recruitment',
+        'interview_date',
+        'interview_mode',
+        'venue_link',
+        // Eligibility criteria fields (moved from separate table)
+        'btech_year_of_passout_min',
+        'btech_year_of_passout_max',
+        'mtech_year_of_passout_min',
+        'mtech_year_of_passout_max',
+        'btech_percentage_min',
+        'mtech_percentage_min',
+        'skills_required',
+        'additional_criteria',
     ];
 
     public function company()

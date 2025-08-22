@@ -22,7 +22,7 @@ class JobPostingController extends Controller
     {
         try {
             // Start with base query - show all jobs for admin
-            $query = JobPosting::with(['company', 'course', 'postedBy', 'eligibilityCriteria']);
+            $query = JobPosting::with(['company', 'course', 'postedBy']);
 
             // Apply search filters
             $query = $this->applySearchFilters($query, $request);
@@ -59,7 +59,7 @@ class JobPostingController extends Controller
     public function search(Request $request)
     {
         try {
-            $query = JobPosting::with(['company', 'course', 'postedBy', 'eligibilityCriteria']);
+            $query = JobPosting::with(['company', 'course', 'postedBy']);
 
             // Apply advanced search filters
             $query = $this->applyAdvancedSearchFilters($query, $request);
@@ -142,7 +142,7 @@ class JobPostingController extends Controller
     public function show($id)
     {
         try {
-            $jobPosting = JobPosting::with(['company', 'course', 'postedBy', 'eligibilityCriteria'])
+            $jobPosting = JobPosting::with(['company', 'course', 'postedBy'])
                                    ->findOrFail($id);
             
             return response()->json([
@@ -356,11 +356,20 @@ class JobPostingController extends Controller
         try {
             \Log::info('Job posting store request received:', $request->all());
             
-            // Separate job posting data from eligibility criteria data
+            // All job posting data including eligibility criteria fields
             $jobPostingData = $request->only([
                 'company_id', 'posted_by', 'title', 'course_id', 'description', 'requirements', 
                 'responsibilities', 'job_type', 'location', 'salary_min', 'salary_max', 
-                'experience_required', 'vacancies', 'status', 'application_deadline'
+                'experience_required', 'vacancies', 'status', 'application_deadline',
+                // New fields added to job_postings table
+                'eligible_courses', 'specializations', 'backlogs_allowed', 'training_period_stipend',
+                'bond_service_agreement', 'mandatory_original_documents', 'recruitment_process_steps',
+                'mode_of_recruitment', 'interview_date', 'interview_mode', 'venue_link',
+                // Eligibility criteria fields now in main table
+                'btech_year_of_passout_min', 'btech_year_of_passout_max',
+                'mtech_year_of_passout_min', 'mtech_year_of_passout_max',
+                'btech_percentage_min', 'mtech_percentage_min',
+                'skills_required', 'additional_criteria'
             ]);
             
             // Handle posted_by field - extract ID if it's an object
@@ -384,21 +393,22 @@ class JobPostingController extends Controller
                 $jobPostingData['posted_by'] = 1; // Default user ID
             }
             
-            // Create job posting
-            $jobPosting = JobPosting::create($jobPostingData);
-            
-            // Create eligibility criteria if provided
-            $eligibilityData = $request->only([
-                'btech_year_of_passout_min', 'btech_year_of_passout_max',
-                'mtech_year_of_passout_min', 'mtech_year_of_passout_max',
-                'btech_percentage_min', 'mtech_percentage_min',
-                'skills_required', 'additional_criteria'
-            ]);
-            
-            if (!empty(array_filter($eligibilityData))) {
-                $eligibilityData['job_posting_id'] = $jobPosting->id;
-                \App\Models\JobEligibilityCriteria::create($eligibilityData);
+            // Convert arrays to JSON strings for JSON fields
+            if (isset($jobPostingData['eligible_courses']) && is_array($jobPostingData['eligible_courses'])) {
+                $jobPostingData['eligible_courses'] = json_encode($jobPostingData['eligible_courses']);
             }
+            
+            if (isset($jobPostingData['specializations']) && is_array($jobPostingData['specializations'])) {
+                $jobPostingData['specializations'] = json_encode($jobPostingData['specializations']);
+            }
+            
+            // Convert skills_required array to JSON if it's an array
+            if (isset($jobPostingData['skills_required']) && is_array($jobPostingData['skills_required'])) {
+                $jobPostingData['skills_required'] = json_encode($jobPostingData['skills_required']);
+            }
+            
+            // Create job posting with all fields
+            $jobPosting = JobPosting::create($jobPostingData);
             
             \Log::info('Job posting created successfully:', $jobPosting->toArray());
             return response()->json($jobPosting, 201);
@@ -416,11 +426,20 @@ class JobPostingController extends Controller
         try {
             $jobPosting = JobPosting::findOrFail($id);
             
-            // Separate job posting data from eligibility criteria data
+            // All job posting data including eligibility criteria fields
             $jobPostingData = $request->only([
                 'company_id', 'posted_by', 'title', 'course_id', 'description', 'requirements', 
                 'responsibilities', 'job_type', 'location', 'salary_min', 'salary_max', 
-                'experience_required', 'vacancies', 'status', 'application_deadline'
+                'experience_required', 'vacancies', 'status', 'application_deadline',
+                // New fields added to job_postings table
+                'eligible_courses', 'specializations', 'backlogs_allowed', 'training_period_stipend',
+                'bond_service_agreement', 'mandatory_original_documents', 'recruitment_process_steps',
+                'mode_of_recruitment', 'interview_date', 'interview_mode', 'venue_link',
+                // Eligibility criteria fields now in main table
+                'btech_year_of_passout_min', 'btech_year_of_passout_max',
+                'mtech_year_of_passout_min', 'mtech_year_of_passout_max',
+                'btech_percentage_min', 'mtech_percentage_min',
+                'skills_required', 'additional_criteria'
             ]);
             
             // Handle posted_by field - extract ID if it's an object
@@ -439,29 +458,22 @@ class JobPostingController extends Controller
                 }
             }
             
-            // Update job posting
-            $jobPosting->update($jobPostingData);
-            
-            // Update or create eligibility criteria
-            $eligibilityData = $request->only([
-                'btech_year_of_passout_min', 'btech_year_of_passout_max',
-                'mtech_year_of_passout_min', 'mtech_year_of_passout_max',
-                'btech_percentage_min', 'mtech_percentage_min',
-                'skills_required', 'additional_criteria'
-            ]);
-            
-            if (!empty(array_filter($eligibilityData))) {
-                $eligibilityData['job_posting_id'] = $jobPosting->id;
-                
-                // Check if eligibility criteria exists
-                $existingCriteria = \App\Models\JobEligibilityCriteria::where('job_posting_id', $jobPosting->id)->first();
-                
-                if ($existingCriteria) {
-                    $existingCriteria->update($eligibilityData);
-                } else {
-                    \App\Models\JobEligibilityCriteria::create($eligibilityData);
-                }
+            // Convert arrays to JSON strings for JSON fields
+            if (isset($jobPostingData['eligible_courses']) && is_array($jobPostingData['eligible_courses'])) {
+                $jobPostingData['eligible_courses'] = json_encode($jobPostingData['eligible_courses']);
             }
+            
+            if (isset($jobPostingData['specializations']) && is_array($jobPostingData['specializations'])) {
+                $jobPostingData['specializations'] = json_encode($jobPostingData['specializations']);
+            }
+            
+            // Convert skills_required array to JSON if it's an array
+            if (isset($jobPostingData['skills_required']) && is_array($jobPostingData['skills_required'])) {
+                $jobPostingData['skills_required'] = json_encode($jobPostingData['skills_required']);
+            }
+            
+            // Update job posting with all fields
+            $jobPosting->update($jobPostingData);
             
             return response()->json($jobPosting);
         } catch (\Exception $e) {
@@ -478,18 +490,12 @@ class JobPostingController extends Controller
         try {
             \Log::info('Attempting to delete job posting', ['id' => $id]);
             
-            $jobPosting = JobPosting::with(['eligibilityCriteria', 'applications'])->findOrFail($id);
+            $jobPosting = JobPosting::with(['applications'])->findOrFail($id);
             
             // Delete related applications first
             if ($jobPosting->applications && $jobPosting->applications->count() > 0) {
                 \Log::info('Deleting related applications', ['count' => $jobPosting->applications->count()]);
                 $jobPosting->applications()->delete();
-            }
-            
-            // Delete related eligibility criteria
-            if ($jobPosting->eligibilityCriteria) {
-                \Log::info('Deleting eligibility criteria');
-                $jobPosting->eligibilityCriteria->delete();
             }
             
             // Delete the job posting
@@ -527,7 +533,7 @@ class JobPostingController extends Controller
             ]);
 
             // Start with base query - show all jobs for admin
-            $query = JobPosting::with(['company', 'course', 'postedBy', 'eligibilityCriteria']);
+            $query = JobPosting::with(['company', 'course', 'postedBy']);
 
             // Filter by company name
             if (!empty($validated['company_name'])) {

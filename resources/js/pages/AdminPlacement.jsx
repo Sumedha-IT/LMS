@@ -39,6 +39,7 @@ import {
     FormControlLabel,
     Tooltip,
     InputAdornment,
+    FormHelperText,
     List,
     ListItem,
     ListItemText,
@@ -92,6 +93,7 @@ import {
     Undo as UndoIcon
 } from '@mui/icons-material';
 import { useParams, useNavigate, Link } from 'react-router-dom';
+import { countryStates } from '../utils/jsonData';
 import { 
     useGetCompaniesQuery,
     useCreateCompanyMutation,
@@ -211,6 +213,22 @@ const AdminPlacement = () => {
     const [undoingOperation, setUndoingOperation] = useState(false);
     const [lastUndoKey, setLastUndoKey] = useState(null);
 
+    // Company Details Dialog State
+    const [companyDetailsDialog, setCompanyDetailsDialog] = useState({ open: false, company: null });
+    
+    // Job Posting Details Dialog State
+    const [jobPostingDetailsDialog, setJobPostingDetailsDialog] = useState({ open: false, jobPosting: null });
+    
+    // States for dynamic dropdown
+    const [availableStates, setAvailableStates] = useState([]);
+    
+    // Generate year options for dropdowns
+    const currentYear = new Date().getFullYear();
+    const yearOptions = [];
+    for (let year = currentYear - 10; year <= currentYear + 5; year++) {
+        yearOptions.push(year);
+    }
+
     // Mutations
     const [createCompany, { isLoading: creatingCompany }] = useCreateCompanyMutation();
     const [updateCompany, { isLoading: updatingCompany }] = useUpdateCompanyMutation();
@@ -230,6 +248,18 @@ const AdminPlacement = () => {
         contact_email: '',
         contact_phone: '',
         address: '',
+        // New fields
+        company_address: '',
+        city: '',
+        state: '',
+        country: '',
+        contact_person_name: '',
+        contact_email_new: '',
+        contact_number: '',
+        alternate_contact_number: '',
+        about_company: '',
+        linkedin_url: '',
+        social_media_links: '',
         is_active: false
     });
 
@@ -248,7 +278,83 @@ const AdminPlacement = () => {
             errors.name = 'Company name must be at least 2 characters';
         }
 
-        // Email validation
+        // Company Address validation
+        if (!form.company_address?.trim()) {
+            errors.company_address = 'Company address is required';
+        }
+
+        // City validation
+        if (!form.city?.trim()) {
+            errors.city = 'City is required';
+        }
+
+        // State validation
+        if (!form.state?.trim()) {
+            errors.state = 'State is required';
+        }
+
+        // Country validation
+        if (!form.country?.trim()) {
+            errors.country = 'Country is required';
+        }
+
+        // Contact Person Name validation (alphabets only)
+        if (!form.contact_person_name?.trim()) {
+            errors.contact_person_name = 'Contact person name is required';
+        } else if (!/^[A-Za-z\s]+$/.test(form.contact_person_name)) {
+            errors.contact_person_name = 'Contact person name should contain only alphabets';
+        }
+
+        // Contact Email validation
+        if (!form.contact_email_new?.trim()) {
+            errors.contact_email_new = 'Contact email is required';
+        } else {
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!emailRegex.test(form.contact_email_new)) {
+                errors.contact_email_new = 'Please enter a valid email address';
+            }
+        }
+
+        // Contact Number validation
+        if (!form.contact_number?.trim()) {
+            errors.contact_number = 'Contact number is required';
+        } else {
+            const phoneRegex = /^[\+]?[1-9][\d]{0,15}$/;
+            if (!phoneRegex.test(form.contact_number.replace(/[\s\-\(\)]/g, ''))) {
+                errors.contact_number = 'Please enter a valid phone number';
+            }
+        }
+
+        // Alternate Contact Number validation (optional)
+        if (form.alternate_contact_number?.trim()) {
+            const phoneRegex = /^[\+]?[1-9][\d]{0,15}$/;
+            if (!phoneRegex.test(form.alternate_contact_number.replace(/[\s\-\(\)]/g, ''))) {
+                errors.alternate_contact_number = 'Please enter a valid phone number';
+            }
+        }
+
+        // About Company validation
+        if (!form.about_company?.trim()) {
+            errors.about_company = 'About company is required';
+        }
+
+        // LinkedIn URL validation (optional)
+        if (form.linkedin_url?.trim()) {
+            const urlRegex = /^(https?:\/\/)?([\da-z\.-]+)\.([a-z\.]{2,6})([\/\w \.-]*)*\/?$/;
+            if (!urlRegex.test(form.linkedin_url)) {
+                errors.linkedin_url = 'Please enter a valid LinkedIn URL';
+            }
+        }
+
+        // Social Media Links validation (optional)
+        if (form.social_media_links?.trim()) {
+            const urlRegex = /^(https?:\/\/)?([\da-z\.-]+)\.([a-z\.]{2,6})([\/\w \.-]*)*\/?$/;
+            if (!urlRegex.test(form.social_media_links)) {
+                errors.social_media_links = 'Please enter a valid URL';
+            }
+        }
+
+        // Email validation (old field)
         if (form.contact_email?.trim()) {
             const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
             if (!emailRegex.test(form.contact_email)) {
@@ -264,7 +370,7 @@ const AdminPlacement = () => {
             }
         }
 
-        // Phone validation (basic)
+        // Phone validation (old field)
         if (form.contact_phone?.trim()) {
             const phoneRegex = /^[\+]?[1-9][\d]{0,15}$/;
             if (!phoneRegex.test(form.contact_phone.replace(/[\s\-\(\)]/g, ''))) {
@@ -309,7 +415,19 @@ const AdminPlacement = () => {
         btech_percentage_min: '',
         mtech_percentage_min: '',
         skills_required: [],
-        additional_criteria: ''
+        additional_criteria: '',
+        // New fields from SQL query
+        eligible_courses: [],
+        specializations: [],
+        backlogs_allowed: '',
+        training_period_stipend: '',
+        bond_service_agreement: '',
+        mandatory_original_documents: '',
+        recruitment_process_steps: '',
+        mode_of_recruitment: '',
+        interview_date: '',
+        interview_mode: '',
+        venue_link: ''
     });
 
     useEffect(() => {
@@ -358,7 +476,43 @@ const AdminPlacement = () => {
         setSelectedItem(item);
         if (item) {
             if (type === 'company') {
-                setCompanyForm(item);
+                // Convert null values to empty strings to prevent React warnings
+                const sanitizedItem = {
+                    name: item.name || '',
+                    description: item.description || '',
+                    website: item.website || '',
+                    company_size: item.company_size || '',
+                    contact_person: item.contact_person || '',
+                    designation: item.designation || '',
+                    contact_email: item.contact_email || '',
+                    contact_phone: item.contact_phone || '',
+                    address: item.address || '',
+                    // New fields
+                    company_address: item.company_address || '',
+                    city: item.city || '',
+                    state: item.state || '',
+                    country: item.country || '',
+                    contact_person_name: item.contact_person_name || '',
+                    contact_email_new: item.contact_email_new || '',
+                    contact_number: item.contact_number || '',
+                    alternate_contact_number: item.alternate_contact_number || '',
+                    about_company: item.about_company || '',
+                    linkedin_url: item.linkedin_url || '',
+                    social_media_links: item.social_media_links || '',
+                    is_active: item.is_active || false
+                };
+                setCompanyForm(sanitizedItem);
+                // Set available states for the existing company's country
+                if (item.country) {
+                    const countryData = countryStates.find(cs => cs.country === item.country);
+                    if (countryData) {
+                        setAvailableStates(countryData.state);
+                    } else {
+                        setAvailableStates([]);
+                    }
+                } else {
+                    setAvailableStates([]);
+                }
             } else if (type === 'jobPosting') {
                 // Merge job posting data with default eligibility criteria fields
                 const defaultEligibilityFields = {
@@ -368,13 +522,25 @@ const AdminPlacement = () => {
                     mtech_year_of_passout_max: '',
                     btech_percentage_min: '',
                     mtech_percentage_min: '',
-                    additional_criteria: ''
+                    additional_criteria: '',
+                    // New fields from SQL query
+                    eligible_courses: [],
+                    specializations: [],
+                    backlogs_allowed: '',
+                    training_period_stipend: '',
+                    bond_service_agreement: '',
+                    mandatory_original_documents: '',
+                    recruitment_process_steps: '',
+                    mode_of_recruitment: '',
+                    interview_date: '',
+                    interview_mode: '',
+                    venue_link: ''
                 };
                 
                 // Merge the job posting data with default eligibility fields
                 
                 // Extract eligibility criteria data if it exists
-                const eligibilityData = item.eligibilityCriteria || {};
+                const eligibilityData = item || {};
                 
                 setJobPostingForm({
                     ...defaultEligibilityFields,
@@ -386,7 +552,21 @@ const AdminPlacement = () => {
                     mtech_year_of_passout_max: eligibilityData.mtech_year_of_passout_max || '',
                     btech_percentage_min: eligibilityData.btech_percentage_min || '',
                     mtech_percentage_min: eligibilityData.mtech_percentage_min || '',
-                    additional_criteria: eligibilityData.additional_criteria || ''
+                    additional_criteria: eligibilityData.additional_criteria || '',
+                    // Handle new fields - parse JSON if needed
+                    eligible_courses: Array.isArray(item.eligible_courses) ? item.eligible_courses : 
+                                    (typeof item.eligible_courses === 'string' ? JSON.parse(item.eligible_courses || '[]') : []),
+                    specializations: Array.isArray(item.specializations) ? item.specializations : 
+                                   (typeof item.specializations === 'string' ? JSON.parse(item.specializations || '[]') : []),
+                    backlogs_allowed: item.backlogs_allowed || '',
+                    training_period_stipend: item.training_period_stipend || '',
+                    bond_service_agreement: item.bond_service_agreement || '',
+                    mandatory_original_documents: item.mandatory_original_documents || '',
+                    recruitment_process_steps: item.recruitment_process_steps || '',
+                    mode_of_recruitment: item.mode_of_recruitment || '',
+                    interview_date: item.interview_date || '',
+                    interview_mode: item.interview_mode || '',
+                    venue_link: item.venue_link || ''
                 });
             }
         } else {
@@ -402,11 +582,25 @@ const AdminPlacement = () => {
                     contact_email: '',
                     contact_phone: '',
                     address: '',
+                    // New fields
+                    company_address: '',
+                    city: '',
+                    state: '',
+                    country: '',
+                    contact_person_name: '',
+                    contact_email_new: '',
+                    contact_number: '',
+                    alternate_contact_number: '',
+                    about_company: '',
+                    linkedin_url: '',
+                    social_media_links: '',
                     is_active: false
                 });
                 // Reset form validation states
                 setCompanyFormErrors({});
                 setCompanyFormTouched({});
+                // Reset available states
+                setAvailableStates([]);
             } else if (type === 'jobPosting') {
                 setJobPostingForm({
                     company_id: '',
@@ -429,7 +623,19 @@ const AdminPlacement = () => {
                     btech_percentage_min: '',
                     mtech_percentage_min: '',
                     skills_required: [],
-                    additional_criteria: ''
+                    additional_criteria: '',
+                    // New fields from SQL query
+                    eligible_courses: [],
+                    specializations: [],
+                    backlogs_allowed: '',
+                    training_period_stipend: '',
+                    bond_service_agreement: '',
+                    mandatory_original_documents: '',
+                    recruitment_process_steps: '',
+                    mode_of_recruitment: '',
+                    interview_date: '',
+                    interview_mode: '',
+                    venue_link: ''
                 });
             }
         }
@@ -493,6 +699,44 @@ const AdminPlacement = () => {
 
     const cancelDelete = () => {
         setDeleteConfirmDialog({ open: false, type: '', id: null });
+    };
+
+    const handleViewCompanyDetails = (company) => {
+        setCompanyDetailsDialog({ open: true, company });
+    };
+
+    const handleCloseCompanyDetails = () => {
+        setCompanyDetailsDialog({ open: false, company: null });
+    };
+
+    const handleViewJobPostingDetails = (jobPosting) => {
+        setJobPostingDetailsDialog({ open: true, jobPosting });
+    };
+
+    const handleCloseJobPostingDetails = () => {
+        setJobPostingDetailsDialog({ open: false, jobPosting: null });
+    };
+
+    // Function to handle country change and update available states
+    const handleCountryChange = (country) => {
+        // Update both country and state in a single operation
+        const newForm = { ...companyForm, country: country, state: '' };
+        setCompanyForm(newForm);
+        
+        // Mark fields as touched
+        setCompanyFormTouched({ ...companyFormTouched, country: true, state: true });
+        
+        // Validate and update errors
+        const errors = validateCompanyForm(newForm);
+        setCompanyFormErrors(errors);
+        
+        // Find states for the selected country
+        const countryData = countryStates.find(cs => cs.country === country);
+        if (countryData) {
+            setAvailableStates(countryData.state);
+        } else {
+            setAvailableStates([]);
+        }
     };
 
     const getStatusColor = (status) => {
@@ -1655,6 +1899,11 @@ const AdminPlacement = () => {
                                                     </TableCell>
                                                     <TableCell align="right" onClick={(e) => e.stopPropagation()}>
                                                         <Box display="flex" justifyContent="flex-end" gap={0.5}>
+                                                            <Tooltip title="View Details">
+                                                                <IconButton size="small" color="primary" onClick={() => handleViewJobPostingDetails(job)}>
+                                                                    <ViewIcon fontSize="small" />
+                                                                </IconButton>
+                                                            </Tooltip>
                                                             <Tooltip title="Edit">
                                                                 <IconButton size="small" onClick={() => handleOpenDialog('jobPosting', job)}>
                                                                     <EditIcon fontSize="small" />
@@ -1743,8 +1992,8 @@ const AdminPlacement = () => {
                                         <TableRow>
                                             <TableCell>Name</TableCell>
                                             <TableCell>Contact Person</TableCell>
-                                            <TableCell>Email</TableCell>
-                                            <TableCell>Phone</TableCell>
+                                            <TableCell>City</TableCell>
+                                            <TableCell>Country</TableCell>
                                             <TableCell>Status</TableCell>
                                             <TableCell align="right">Actions</TableCell>
                                         </TableRow>
@@ -1753,9 +2002,9 @@ const AdminPlacement = () => {
                                         {filteredCompanies.map((company) => (
                                             <TableRow key={company.id}>
                                                 <TableCell>{company.name}</TableCell>
-                                                <TableCell>{company.contact_person || 'N/A'}</TableCell>
-                                                <TableCell>{company.contact_email || 'N/A'}</TableCell>
-                                                <TableCell>{company.contact_phone || 'N/A'}</TableCell>
+                                                <TableCell>{company.contact_person_name || company.contact_person || 'N/A'}</TableCell>
+                                                <TableCell>{company.city || 'N/A'}</TableCell>
+                                                <TableCell>{company.country || 'N/A'}</TableCell>
                                                 <TableCell>
                                                     <Chip 
                                                         label={company.is_active ? 'Active' : 'Inactive'} 
@@ -1765,6 +2014,11 @@ const AdminPlacement = () => {
                                                 </TableCell>
                                                 <TableCell align="right">
                                                     <Box display="flex" justifyContent="flex-end" gap={0.5}>
+                                                        <Tooltip title="View Details">
+                                                            <IconButton size="small" color="primary" onClick={() => handleViewCompanyDetails(company)}>
+                                                                <ViewIcon fontSize="small" />
+                                                            </IconButton>
+                                                        </Tooltip>
                                                         <Tooltip title="Edit">
                                                             <IconButton size="small" onClick={() => handleOpenDialog('company', company)}>
                                                                 <EditIcon fontSize="small" />
@@ -2927,6 +3181,437 @@ const AdminPlacement = () => {
                                 </Grid>
                             </Grid>
                         </Paper>
+
+                        {/* New Company Details Section */}
+                        <Paper 
+                            elevation={0} 
+                            sx={{ 
+                                p: 3, 
+                                mb: 3,
+                                border: '1px solid #e2e8f0',
+                                borderRadius: 2,
+                                background: '#ffffff',
+                                boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
+                            }}
+                        >
+                            <Box display="flex" alignItems="center" gap={2} mb={3}>
+                                <Avatar sx={{ background: 'linear-gradient(135deg, #059669 0%, #10b981 100%)', width: 32, height: 32 }}>
+                                    🏢
+                                </Avatar>
+                                <Typography variant="h6" fontWeight="600" color="#059669">
+                                    Company Details
+                                </Typography>
+                            </Box>
+                            
+                            <Grid container spacing={3}>
+                                <Grid item xs={12}>
+                                    <TextField
+                                        fullWidth
+                                        required
+                                        multiline
+                                        rows={3}
+                                        label="Company Address"
+                                        value={companyForm.company_address}
+                                        onChange={(e) => handleCompanyFormChange('company_address', e.target.value)}
+                                        onBlur={() => setCompanyFormTouched({ ...companyFormTouched, company_address: true })}
+                                        error={companyFormTouched.company_address && !!companyFormErrors.company_address}
+                                        helperText={companyFormTouched.company_address && companyFormErrors.company_address}
+                                        variant="outlined"
+                                        placeholder="Enter complete company address"
+                                        sx={{
+                                            '& .MuiOutlinedInput-root': {
+                                                borderRadius: 2,
+                                                transition: 'all 0.3s ease',
+                                                '&:hover': {
+                                                    boxShadow: '0 4px 12px rgba(5, 150, 105, 0.15)',
+                                                },
+                                                '&.Mui-focused': {
+                                                    boxShadow: '0 4px 20px rgba(16, 185, 129, 0.25)',
+                                                }
+                                            }
+                                        }}
+                                        InputProps={{
+                                            startAdornment: (
+                                                <InputAdornment position="start" sx={{ alignSelf: 'flex-start', mt: 1 }}>
+                                                    🏢
+                                                </InputAdornment>
+                                            ),
+                                        }}
+                                    />
+                                </Grid>
+
+                                <Grid item xs={12} md={4}>
+                                    <FormControl fullWidth required>
+                                        <InputLabel>Country</InputLabel>
+                                        <Select
+                                            value={companyForm.country || ''}
+                                            label="Country"
+                                            onChange={(e) => handleCountryChange(e.target.value)}
+                                            onBlur={() => setCompanyFormTouched({ ...companyFormTouched, country: true })}
+                                            error={companyFormTouched.country && !!companyFormErrors.country}
+                                            sx={{
+                                                borderRadius: 2,
+                                                '&:hover': {
+                                                    boxShadow: '0 4px 12px rgba(5, 150, 105, 0.15)',
+                                                },
+                                                '&.Mui-focused': {
+                                                    boxShadow: '0 4px 20px rgba(16, 185, 129, 0.25)',
+                                                }
+                                            }}
+                                        >
+                                            <MenuItem value="India">India</MenuItem>
+                                            <MenuItem value="United States">United States</MenuItem>
+                                            <MenuItem value="United Kingdom">United Kingdom</MenuItem>
+                                            <MenuItem value="Canada">Canada</MenuItem>
+                                            <MenuItem value="Australia">Australia</MenuItem>
+                                            <MenuItem value="Germany">Germany</MenuItem>
+                                            <MenuItem value="France">France</MenuItem>
+                                            <MenuItem value="Japan">Japan</MenuItem>
+                                            <MenuItem value="China">China</MenuItem>
+                                            <MenuItem value="Singapore">Singapore</MenuItem>
+                                            <MenuItem value="Other">Other</MenuItem>
+                                        </Select>
+                                        {companyFormTouched.country && companyFormErrors.country && (
+                                            <FormHelperText error>{companyFormErrors.country}</FormHelperText>
+                                        )}
+                                    </FormControl>
+                                </Grid>
+
+                                <Grid item xs={12} md={4}>
+                                    <FormControl fullWidth required>
+                                        <InputLabel>State</InputLabel>
+                                        <Select
+                                            value={companyForm.state || ''}
+                                            label="State"
+                                            onChange={(e) => handleCompanyFormChange('state', e.target.value)}
+                                            onBlur={() => setCompanyFormTouched({ ...companyFormTouched, state: true })}
+                                            error={companyFormTouched.state && !!companyFormErrors.state}
+                                            disabled={!companyForm.country || availableStates.length === 0}
+                                            sx={{
+                                                borderRadius: 2,
+                                                '&:hover': {
+                                                    boxShadow: '0 4px 12px rgba(5, 150, 105, 0.15)',
+                                                },
+                                                '&.Mui-focused': {
+                                                    boxShadow: '0 4px 20px rgba(16, 185, 129, 0.25)',
+                                                }
+                                            }}
+                                        >
+                                            {availableStates.length > 0 ? (
+                                                availableStates.map((state) => (
+                                                    <MenuItem key={state} value={state}>
+                                                        {state}
+                                                    </MenuItem>
+                                                ))
+                                            ) : (
+                                                <MenuItem disabled>
+                                                    {companyForm.country ? 'No states available' : 'Please select a country first'}
+                                                </MenuItem>
+                                            )}
+                                        </Select>
+                                        {companyFormTouched.state && companyFormErrors.state && (
+                                            <FormHelperText error>{companyFormErrors.state}</FormHelperText>
+                                        )}
+                                    </FormControl>
+                                </Grid>
+
+                                <Grid item xs={12} md={4}>
+                                    <TextField
+                                        fullWidth
+                                        required
+                                        label="City"
+                                        value={companyForm.city}
+                                        onChange={(e) => handleCompanyFormChange('city', e.target.value)}
+                                        onBlur={() => setCompanyFormTouched({ ...companyFormTouched, city: true })}
+                                        error={companyFormTouched.city && !!companyFormErrors.city}
+                                        helperText={companyFormTouched.city && companyFormErrors.city}
+                                        variant="outlined"
+                                        placeholder="Enter city"
+                                        sx={{
+                                            '& .MuiOutlinedInput-root': {
+                                                borderRadius: 2,
+                                                transition: 'all 0.3s ease',
+                                                '&:hover': {
+                                                    boxShadow: '0 4px 12px rgba(5, 150, 105, 0.15)',
+                                                },
+                                                '&.Mui-focused': {
+                                                    boxShadow: '0 4px 20px rgba(16, 185, 129, 0.25)',
+                                                }
+                                            }
+                                        }}
+                                        InputProps={{
+                                            startAdornment: (
+                                                <InputAdornment position="start">
+                                                    🏙️
+                                                </InputAdornment>
+                                            ),
+                                        }}
+                                    />
+                                </Grid>
+
+                                <Grid item xs={12}>
+                                    <TextField
+                                        fullWidth
+                                        required
+                                        multiline
+                                        rows={4}
+                                        label="About Company / Company Profile"
+                                        value={companyForm.about_company}
+                                        onChange={(e) => handleCompanyFormChange('about_company', e.target.value)}
+                                        onBlur={() => setCompanyFormTouched({ ...companyFormTouched, about_company: true })}
+                                        error={companyFormTouched.about_company && !!companyFormErrors.about_company}
+                                        helperText={companyFormTouched.about_company && companyFormErrors.about_company}
+                                        variant="outlined"
+                                        placeholder="Brief description about the company"
+                                        sx={{
+                                            '& .MuiOutlinedInput-root': {
+                                                borderRadius: 2,
+                                                transition: 'all 0.3s ease',
+                                                '&:hover': {
+                                                    boxShadow: '0 4px 12px rgba(5, 150, 105, 0.15)',
+                                                },
+                                                '&.Mui-focused': {
+                                                    boxShadow: '0 4px 20px rgba(16, 185, 129, 0.25)',
+                                                }
+                                            }
+                                        }}
+                                        InputProps={{
+                                            startAdornment: (
+                                                <InputAdornment position="start" sx={{ alignSelf: 'flex-start', mt: 1 }}>
+                                                    📋
+                                                </InputAdornment>
+                                            ),
+                                        }}
+                                    />
+                                </Grid>
+
+                                <Grid item xs={12} md={6}>
+                                    <TextField
+                                        fullWidth
+                                        label="LinkedIn Page URL (Optional)"
+                                        value={companyForm.linkedin_url}
+                                        onChange={(e) => handleCompanyFormChange('linkedin_url', e.target.value)}
+                                        onBlur={() => setCompanyFormTouched({ ...companyFormTouched, linkedin_url: true })}
+                                        error={companyFormTouched.linkedin_url && !!companyFormErrors.linkedin_url}
+                                        helperText={companyFormTouched.linkedin_url && companyFormErrors.linkedin_url}
+                                        variant="outlined"
+                                        placeholder="https://linkedin.com/company/..."
+                                        sx={{
+                                            '& .MuiOutlinedInput-root': {
+                                                borderRadius: 2,
+                                                transition: 'all 0.3s ease',
+                                                '&:hover': {
+                                                    boxShadow: '0 4px 12px rgba(5, 150, 105, 0.15)',
+                                                },
+                                                '&.Mui-focused': {
+                                                    boxShadow: '0 4px 20px rgba(16, 185, 129, 0.25)',
+                                                }
+                                            }
+                                        }}
+                                        InputProps={{
+                                            startAdornment: (
+                                                <InputAdornment position="start">
+                                                    💼
+                                                </InputAdornment>
+                                            ),
+                                        }}
+                                    />
+                                </Grid>
+
+                                <Grid item xs={12} md={6}>
+                                    <TextField
+                                        fullWidth
+                                        label="Other Social Media Links (Optional)"
+                                        value={companyForm.social_media_links}
+                                        onChange={(e) => handleCompanyFormChange('social_media_links', e.target.value)}
+                                        onBlur={() => setCompanyFormTouched({ ...companyFormTouched, social_media_links: true })}
+                                        error={companyFormTouched.social_media_links && !!companyFormErrors.social_media_links}
+                                        helperText={companyFormTouched.social_media_links && companyFormErrors.social_media_links}
+                                        variant="outlined"
+                                        placeholder="https://..."
+                                        sx={{
+                                            '& .MuiOutlinedInput-root': {
+                                                borderRadius: 2,
+                                                transition: 'all 0.3s ease',
+                                                '&:hover': {
+                                                    boxShadow: '0 4px 12px rgba(5, 150, 105, 0.15)',
+                                                },
+                                                '&.Mui-focused': {
+                                                    boxShadow: '0 4px 20px rgba(16, 185, 129, 0.25)',
+                                                }
+                                            }
+                                        }}
+                                        InputProps={{
+                                            startAdornment: (
+                                                <InputAdornment position="start">
+                                                    🌐
+                                                </InputAdornment>
+                                            ),
+                                        }}
+                                    />
+                                </Grid>
+                            </Grid>
+                        </Paper>
+
+                        {/* New Contact Information Section */}
+                        <Paper 
+                            elevation={0} 
+                            sx={{ 
+                                p: 3, 
+                                mb: 3,
+                                border: '1px solid #e2e8f0',
+                                borderRadius: 2,
+                                background: '#ffffff',
+                                boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
+                            }}
+                        >
+                            <Box display="flex" alignItems="center" gap={2} mb={3}>
+                                <Avatar sx={{ background: 'linear-gradient(135deg, #dc2626 0%, #ef4444 100%)', width: 32, height: 32 }}>
+                                    📞
+                                </Avatar>
+                                <Typography variant="h6" fontWeight="600" color="#dc2626">
+                                    Contact Information
+                                </Typography>
+                            </Box>
+                            
+                            <Grid container spacing={3}>
+                                <Grid item xs={12} md={6}>
+                                    <TextField
+                                        fullWidth
+                                        required
+                                        label="Contact Person Name"
+                                        value={companyForm.contact_person_name}
+                                        onChange={(e) => handleCompanyFormChange('contact_person_name', e.target.value)}
+                                        onBlur={() => setCompanyFormTouched({ ...companyFormTouched, contact_person_name: true })}
+                                        error={companyFormTouched.contact_person_name && !!companyFormErrors.contact_person_name}
+                                        helperText={companyFormTouched.contact_person_name && companyFormErrors.contact_person_name}
+                                        variant="outlined"
+                                        placeholder="Enter contact person name (alphabets only)"
+                                        sx={{
+                                            '& .MuiOutlinedInput-root': {
+                                                borderRadius: 2,
+                                                transition: 'all 0.3s ease',
+                                                '&:hover': {
+                                                    boxShadow: '0 4px 12px rgba(220, 38, 38, 0.15)',
+                                                },
+                                                '&.Mui-focused': {
+                                                    boxShadow: '0 4px 20px rgba(239, 68, 68, 0.25)',
+                                                }
+                                            }
+                                        }}
+                                        InputProps={{
+                                            startAdornment: (
+                                                <InputAdornment position="start">
+                                                    👤
+                                                </InputAdornment>
+                                            ),
+                                        }}
+                                    />
+                                </Grid>
+
+                                <Grid item xs={12} md={6}>
+                                    <TextField
+                                        fullWidth
+                                        required
+                                        label="Contact Email"
+                                        type="email"
+                                        value={companyForm.contact_email_new}
+                                        onChange={(e) => handleCompanyFormChange('contact_email_new', e.target.value)}
+                                        onBlur={() => setCompanyFormTouched({ ...companyFormTouched, contact_email_new: true })}
+                                        error={companyFormTouched.contact_email_new && !!companyFormErrors.contact_email_new}
+                                        helperText={companyFormTouched.contact_email_new && companyFormErrors.contact_email_new}
+                                        variant="outlined"
+                                        placeholder="Enter valid email address"
+                                        sx={{
+                                            '& .MuiOutlinedInput-root': {
+                                                borderRadius: 2,
+                                                transition: 'all 0.3s ease',
+                                                '&:hover': {
+                                                    boxShadow: '0 4px 12px rgba(220, 38, 38, 0.15)',
+                                                },
+                                                '&.Mui-focused': {
+                                                    boxShadow: '0 4px 20px rgba(239, 68, 68, 0.25)',
+                                                }
+                                            }
+                                        }}
+                                        InputProps={{
+                                            startAdornment: (
+                                                <InputAdornment position="start">
+                                                    ✉️
+                                                </InputAdornment>
+                                            ),
+                                        }}
+                                    />
+                                </Grid>
+
+                                <Grid item xs={12} md={6}>
+                                    <TextField
+                                        fullWidth
+                                        required
+                                        label="Contact Number"
+                                        value={companyForm.contact_number}
+                                        onChange={(e) => handleCompanyFormChange('contact_number', e.target.value)}
+                                        onBlur={() => setCompanyFormTouched({ ...companyFormTouched, contact_number: true })}
+                                        error={companyFormTouched.contact_number && !!companyFormErrors.contact_number}
+                                        helperText={companyFormTouched.contact_number && companyFormErrors.contact_number}
+                                        variant="outlined"
+                                        placeholder="Enter contact number"
+                                        sx={{
+                                            '& .MuiOutlinedInput-root': {
+                                                borderRadius: 2,
+                                                transition: 'all 0.3s ease',
+                                                '&:hover': {
+                                                    boxShadow: '0 4px 12px rgba(220, 38, 38, 0.15)',
+                                                },
+                                                '&.Mui-focused': {
+                                                    boxShadow: '0 4px 20px rgba(239, 68, 68, 0.25)',
+                                                }
+                                            }
+                                        }}
+                                        InputProps={{
+                                            startAdornment: (
+                                                <InputAdornment position="start">
+                                                    📱
+                                                </InputAdornment>
+                                            ),
+                                        }}
+                                    />
+                                </Grid>
+
+                                <Grid item xs={12} md={6}>
+                                    <TextField
+                                        fullWidth
+                                        label="Alternate Contact Number (Optional)"
+                                        value={companyForm.alternate_contact_number}
+                                        onChange={(e) => handleCompanyFormChange('alternate_contact_number', e.target.value)}
+                                        onBlur={() => setCompanyFormTouched({ ...companyFormTouched, alternate_contact_number: true })}
+                                        error={companyFormTouched.alternate_contact_number && !!companyFormErrors.alternate_contact_number}
+                                        helperText={companyFormTouched.alternate_contact_number && companyFormErrors.alternate_contact_number}
+                                        variant="outlined"
+                                        placeholder="Enter alternate contact number"
+                                        sx={{
+                                            '& .MuiOutlinedInput-root': {
+                                                borderRadius: 2,
+                                                transition: 'all 0.3s ease',
+                                                '&:hover': {
+                                                    boxShadow: '0 4px 12px rgba(220, 38, 38, 0.15)',
+                                                },
+                                                '&.Mui-focused': {
+                                                    boxShadow: '0 4px 20px rgba(239, 68, 68, 0.25)',
+                                                }
+                                            }
+                                        }}
+                                        InputProps={{
+                                            startAdornment: (
+                                                <InputAdornment position="start">
+                                                    📞
+                                                </InputAdornment>
+                                            ),
+                                        }}
+                                    />
+                                </Grid>
+                            </Grid>
+                        </Paper>
                     </Box>
                 </DialogContent>
                 
@@ -3514,16 +4199,13 @@ const AdminPlacement = () => {
                             
                             <Grid container spacing={3}>
                                 <Grid item xs={12} md={6}>
-                                    <TextField
-                                        fullWidth
-                                        label="BTech Year of Passout (Min)"
-                                        type="number"
-                                        value={jobPostingForm.btech_year_of_passout_min}
-                                        onChange={e => setJobPostingForm({ ...jobPostingForm, btech_year_of_passout_min: e.target.value })}
-                                        variant="outlined"
-                                        placeholder=""
-                                        sx={{
-                                            '& .MuiOutlinedInput-root': {
+                                    <FormControl fullWidth>
+                                        <InputLabel>BTech Year of Passout (Min)</InputLabel>
+                                        <Select
+                                            value={jobPostingForm.btech_year_of_passout_min}
+                                            onChange={e => setJobPostingForm({ ...jobPostingForm, btech_year_of_passout_min: e.target.value })}
+                                            label="BTech Year of Passout (Min)"
+                                            sx={{
                                                 borderRadius: 2,
                                                 transition: 'all 0.3s ease',
                                                 '&:hover': {
@@ -3532,28 +4214,27 @@ const AdminPlacement = () => {
                                                 '&.Mui-focused': {
                                                     boxShadow: '0 4px 20px rgba(139, 92, 246, 0.25)',
                                                 }
-                                            }
-                                        }}
-                                        InputProps={{
-                                            startAdornment: (
-                                                <InputAdornment position="start">
-                                                    📅
-                                                </InputAdornment>
-                                            ),
-                                        }}
-                                    />
+                                            }}
+                                        >
+                                            <MenuItem value="">
+                                                <em>Select Year</em>
+                                            </MenuItem>
+                                            {yearOptions.map((year) => (
+                                                <MenuItem key={year} value={year}>
+                                                    {year}
+                                                </MenuItem>
+                                            ))}
+                                        </Select>
+                                    </FormControl>
                                 </Grid>
                                 <Grid item xs={12} md={6}>
-                                    <TextField
-                                        fullWidth
-                                        label="BTech Year of Passout (Max)"
-                                        type="number"
-                                        value={jobPostingForm.btech_year_of_passout_max}
-                                        onChange={e => setJobPostingForm({ ...jobPostingForm, btech_year_of_passout_max: e.target.value })}
-                                        variant="outlined"
-                                        placeholder=""
-                                        sx={{
-                                            '& .MuiOutlinedInput-root': {
+                                    <FormControl fullWidth>
+                                        <InputLabel>BTech Year of Passout (Max)</InputLabel>
+                                        <Select
+                                            value={jobPostingForm.btech_year_of_passout_max}
+                                            onChange={e => setJobPostingForm({ ...jobPostingForm, btech_year_of_passout_max: e.target.value })}
+                                            label="BTech Year of Passout (Max)"
+                                            sx={{
                                                 borderRadius: 2,
                                                 transition: 'all 0.3s ease',
                                                 '&:hover': {
@@ -3562,28 +4243,27 @@ const AdminPlacement = () => {
                                                 '&.Mui-focused': {
                                                     boxShadow: '0 4px 20px rgba(139, 92, 246, 0.25)',
                                                 }
-                                            }
-                                        }}
-                                        InputProps={{
-                                            startAdornment: (
-                                                <InputAdornment position="start">
-                                                    📅
-                                                </InputAdornment>
-                                            ),
-                                        }}
-                                    />
+                                            }}
+                                        >
+                                            <MenuItem value="">
+                                                <em>Select Year</em>
+                                            </MenuItem>
+                                            {yearOptions.map((year) => (
+                                                <MenuItem key={year} value={year}>
+                                                    {year}
+                                                </MenuItem>
+                                            ))}
+                                        </Select>
+                                    </FormControl>
                                 </Grid>
                                 <Grid item xs={12} md={6}>
-                                    <TextField
-                                        fullWidth
-                                        label="MTech Year of Passout (Min)"
-                                        type="number"
-                                        value={jobPostingForm.mtech_year_of_passout_min}
-                                        onChange={e => setJobPostingForm({ ...jobPostingForm, mtech_year_of_passout_min: e.target.value })}
-                                        variant="outlined"
-                                        placeholder=""
-                                        sx={{
-                                            '& .MuiOutlinedInput-root': {
+                                    <FormControl fullWidth>
+                                        <InputLabel>MTech Year of Passout (Min)</InputLabel>
+                                        <Select
+                                            value={jobPostingForm.mtech_year_of_passout_min}
+                                            onChange={e => setJobPostingForm({ ...jobPostingForm, mtech_year_of_passout_min: e.target.value })}
+                                            label="MTech Year of Passout (Min)"
+                                            sx={{
                                                 borderRadius: 2,
                                                 transition: 'all 0.3s ease',
                                                 '&:hover': {
@@ -3592,28 +4272,27 @@ const AdminPlacement = () => {
                                                 '&.Mui-focused': {
                                                     boxShadow: '0 4px 20px rgba(139, 92, 246, 0.25)',
                                                 }
-                                            }
-                                        }}
-                                        InputProps={{
-                                            startAdornment: (
-                                                <InputAdornment position="start">
-                                                    📅
-                                                </InputAdornment>
-                                            ),
-                                        }}
-                                    />
+                                            }}
+                                        >
+                                            <MenuItem value="">
+                                                <em>Select Year</em>
+                                            </MenuItem>
+                                            {yearOptions.map((year) => (
+                                                <MenuItem key={year} value={year}>
+                                                    {year}
+                                                </MenuItem>
+                                            ))}
+                                        </Select>
+                                    </FormControl>
                                 </Grid>
                                 <Grid item xs={12} md={6}>
-                                    <TextField
-                                        fullWidth
-                                        label="MTech Year of Passout (Max)"
-                                        type="number"
-                                        value={jobPostingForm.mtech_year_of_passout_max}
-                                        onChange={e => setJobPostingForm({ ...jobPostingForm, mtech_year_of_passout_max: e.target.value })}
-                                        variant="outlined"
-                                        placeholder=""
-                                        sx={{
-                                            '& .MuiOutlinedInput-root': {
+                                    <FormControl fullWidth>
+                                        <InputLabel>MTech Year of Passout (Max)</InputLabel>
+                                        <Select
+                                            value={jobPostingForm.mtech_year_of_passout_max}
+                                            onChange={e => setJobPostingForm({ ...jobPostingForm, mtech_year_of_passout_max: e.target.value })}
+                                            label="MTech Year of Passout (Max)"
+                                            sx={{
                                                 borderRadius: 2,
                                                 transition: 'all 0.3s ease',
                                                 '&:hover': {
@@ -3622,16 +4301,18 @@ const AdminPlacement = () => {
                                                 '&.Mui-focused': {
                                                     boxShadow: '0 4px 20px rgba(139, 92, 246, 0.25)',
                                                 }
-                                            }
-                                        }}
-                                        InputProps={{
-                                            startAdornment: (
-                                                <InputAdornment position="start">
-                                                    📅
-                                                </InputAdornment>
-                                            ),
-                                        }}
-                                    />
+                                            }}
+                                        >
+                                            <MenuItem value="">
+                                                <em>Select Year</em>
+                                            </MenuItem>
+                                            {yearOptions.map((year) => (
+                                                <MenuItem key={year} value={year}>
+                                                    {year}
+                                                </MenuItem>
+                                            ))}
+                                        </Select>
+                                    </FormControl>
                                 </Grid>
                                 <Grid item xs={12} md={6}>
                                     <TextField
@@ -3719,6 +4400,364 @@ const AdminPlacement = () => {
                                             startAdornment: (
                                                 <InputAdornment position="start" sx={{ alignSelf: 'flex-start', mt: 1 }}>
                                                     📝
+                                                </InputAdornment>
+                                            ),
+                                        }}
+                                    />
+                                </Grid>
+                            </Grid>
+                        </Paper>
+
+                        {/* New Job Posting Fields Section */}
+                        <Paper 
+                            elevation={0} 
+                            sx={{ 
+                                p: 4, 
+                                mb: 4,
+                                border: '1px solid #e2e8f0',
+                                borderRadius: 3,
+                                background: '#ffffff',
+                                boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
+                            }}
+                        >
+                            <Box display="flex" alignItems="center" gap={2} mb={4}>
+                                <Avatar sx={{ background: 'linear-gradient(135deg, #dc2626 0%, #ef4444 100%)', width: 36, height: 36 }}>
+                                    🎯
+                                </Avatar>
+                                <Typography variant="h6" fontWeight="600" color="#dc2626">
+                                    Additional Job Details
+                                </Typography>
+                            </Box>
+                            
+                            <Grid container spacing={4}>
+                                {/* Eligible Courses */}
+                                <Grid item xs={12} md={6}>
+                                    <FormControl fullWidth>
+                                        <InputLabel sx={{ fontSize: '0.9rem', fontWeight: 500 }}>Eligible Courses / Programs</InputLabel>
+                                        <Select
+                                            multiple
+                                            value={jobPostingForm.eligible_courses}
+                                            onChange={(e) => setJobPostingForm({...jobPostingForm, eligible_courses: e.target.value})}
+                                            renderValue={(selected) => (
+                                                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+                                                    {selected.map((value) => (
+                                                        <Chip key={value} label={value} size="small" />
+                                                    ))}
+                                                </Box>
+                                            )}
+                                            sx={{
+                                                borderRadius: 2,
+                                                '&:hover': {
+                                                    boxShadow: '0 4px 12px rgba(220, 38, 38, 0.15)',
+                                                },
+                                                '&.Mui-focused': {
+                                                    boxShadow: '0 4px 20px rgba(239, 68, 68, 0.25)',
+                                                }
+                                            }}
+                                        >
+                                            <MenuItem value="B.Tech">B.Tech</MenuItem>
+                                            <MenuItem value="M.Tech">M.Tech</MenuItem>
+                                            <MenuItem value="Diploma">Diploma</MenuItem>
+                                            <MenuItem value="B.Sc">B.Sc</MenuItem>
+                                            <MenuItem value="M.Sc">M.Sc</MenuItem>
+                                        </Select>
+                                    </FormControl>
+                                </Grid>
+
+                                {/* Specializations */}
+                                <Grid item xs={12} md={6}>
+                                    <FormControl fullWidth>
+                                        <InputLabel sx={{ fontSize: '0.9rem', fontWeight: 500 }}>Specializations</InputLabel>
+                                        <Select
+                                            multiple
+                                            value={jobPostingForm.specializations}
+                                            onChange={(e) => setJobPostingForm({...jobPostingForm, specializations: e.target.value})}
+                                            renderValue={(selected) => (
+                                                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+                                                    {selected.map((value) => (
+                                                        <Chip key={value} label={value} size="small" />
+                                                    ))}
+                                                </Box>
+                                            )}
+                                            sx={{
+                                                borderRadius: 2,
+                                                '&:hover': {
+                                                    boxShadow: '0 4px 12px rgba(220, 38, 38, 0.15)',
+                                                },
+                                                '&.Mui-focused': {
+                                                    boxShadow: '0 4px 20px rgba(239, 68, 68, 0.25)',
+                                                }
+                                            }}
+                                        >
+                                            <MenuItem value="ECE">ECE</MenuItem>
+                                            <MenuItem value="EEE">EEE</MenuItem>
+                                            <MenuItem value="EIE">EIE</MenuItem>
+                                        </Select>
+                                    </FormControl>
+                                </Grid>
+
+                                {/* Backlogs Allowed */}
+                                <Grid item xs={12} md={6}>
+                                    <FormControl fullWidth>
+                                        <InputLabel sx={{ fontSize: '0.9rem', fontWeight: 500 }}>Backlogs Allowed</InputLabel>
+                                        <Select
+                                            value={jobPostingForm.backlogs_allowed}
+                                            onChange={(e) => setJobPostingForm({...jobPostingForm, backlogs_allowed: e.target.value})}
+                                            sx={{
+                                                borderRadius: 2,
+                                                '&:hover': {
+                                                    boxShadow: '0 4px 12px rgba(220, 38, 38, 0.15)',
+                                                },
+                                                '&.Mui-focused': {
+                                                    boxShadow: '0 4px 20px rgba(239, 68, 68, 0.25)',
+                                                }
+                                            }}
+                                        >
+                                            <MenuItem value="">Select Option</MenuItem>
+                                            <MenuItem value="Yes">Yes</MenuItem>
+                                            <MenuItem value="No">No</MenuItem>
+                                        </Select>
+                                    </FormControl>
+                                </Grid>
+
+                                {/* Training Period & Stipend */}
+                                <Grid item xs={12} md={6}>
+                                    <TextField
+                                        fullWidth
+                                        label="Training Period & Stipend (if applicable)"
+                                        type="number"
+                                        value={jobPostingForm.training_period_stipend}
+                                        onChange={(e) => setJobPostingForm({...jobPostingForm, training_period_stipend: e.target.value})}
+                                        variant="outlined"
+                                        placeholder="Enter amount in INR"
+                                        sx={{
+                                            '& .MuiOutlinedInput-root': {
+                                                borderRadius: 2,
+                                                transition: 'all 0.3s ease',
+                                                '&:hover': {
+                                                    boxShadow: '0 4px 12px rgba(220, 38, 38, 0.15)',
+                                                },
+                                                '&.Mui-focused': {
+                                                    boxShadow: '0 4px 20px rgba(239, 68, 68, 0.25)',
+                                                }
+                                            },
+                                            '& .MuiInputLabel-root': {
+                                                fontSize: '0.9rem',
+                                                fontWeight: 500
+                                            }
+                                        }}
+                                        InputProps={{
+                                            startAdornment: (
+                                                <InputAdornment position="start">
+                                                    💰
+                                                </InputAdornment>
+                                            ),
+                                        }}
+                                    />
+                                </Grid>
+
+                                {/* Bond / Service Agreement Details */}
+                                <Grid item xs={12}>
+                                    <TextField
+                                        fullWidth
+                                        multiline
+                                        rows={3}
+                                        label="Bond / Service Agreement Details (Optional)"
+                                        value={jobPostingForm.bond_service_agreement}
+                                        onChange={(e) => setJobPostingForm({...jobPostingForm, bond_service_agreement: e.target.value})}
+                                        variant="outlined"
+                                        placeholder="If applicable, describe bond or service agreement terms..."
+                                        sx={{
+                                            '& .MuiOutlinedInput-root': {
+                                                borderRadius: 2,
+                                                transition: 'all 0.3s ease',
+                                                '&:hover': {
+                                                    boxShadow: '0 4px 12px rgba(220, 38, 38, 0.15)',
+                                                },
+                                                '&.Mui-focused': {
+                                                    boxShadow: '0 4px 20px rgba(239, 68, 68, 0.25)',
+                                                }
+                                            }
+                                        }}
+                                        InputProps={{
+                                            startAdornment: (
+                                                <InputAdornment position="start" sx={{ alignSelf: 'flex-start', mt: 1 }}>
+                                                    📋
+                                                </InputAdornment>
+                                            ),
+                                        }}
+                                    />
+                                </Grid>
+
+                                {/* Mandatory Original Documents */}
+                                <Grid item xs={12} md={6}>
+                                    <FormControl fullWidth>
+                                        <InputLabel sx={{ fontSize: '0.9rem', fontWeight: 500 }}>Is It Mandatory to submit all original documents of selected students to recruiters?</InputLabel>
+                                        <Select
+                                            value={jobPostingForm.mandatory_original_documents}
+                                            onChange={(e) => setJobPostingForm({...jobPostingForm, mandatory_original_documents: e.target.value})}
+                                            sx={{
+                                                borderRadius: 2,
+                                                '&:hover': {
+                                                    boxShadow: '0 4px 12px rgba(220, 38, 38, 0.15)',
+                                                },
+                                                '&.Mui-focused': {
+                                                    boxShadow: '0 4px 20px rgba(239, 68, 68, 0.25)',
+                                                }
+                                            }}
+                                        >
+                                            <MenuItem value="">Select Option</MenuItem>
+                                            <MenuItem value="Yes">Yes</MenuItem>
+                                            <MenuItem value="No">No</MenuItem>
+                                        </Select>
+                                    </FormControl>
+                                </Grid>
+
+                                {/* Recruitment Process Steps */}
+                                <Grid item xs={12} md={6}>
+                                    <TextField
+                                        fullWidth
+                                        multiline
+                                        rows={3}
+                                        label="Recruitment Process Steps (optional)"
+                                        value={jobPostingForm.recruitment_process_steps}
+                                        onChange={(e) => setJobPostingForm({...jobPostingForm, recruitment_process_steps: e.target.value})}
+                                        variant="outlined"
+                                        placeholder="E.g. Online Test, Technical Interview, HR Round"
+                                        sx={{
+                                            '& .MuiOutlinedInput-root': {
+                                                borderRadius: 2,
+                                                transition: 'all 0.3s ease',
+                                                '&:hover': {
+                                                    boxShadow: '0 4px 12px rgba(220, 38, 38, 0.15)',
+                                                },
+                                                '&.Mui-focused': {
+                                                    boxShadow: '0 4px 20px rgba(239, 68, 68, 0.25)',
+                                                }
+                                            }
+                                        }}
+                                        InputProps={{
+                                            startAdornment: (
+                                                <InputAdornment position="start" sx={{ alignSelf: 'flex-start', mt: 1 }}>
+                                                    🔄
+                                                </InputAdornment>
+                                            ),
+                                        }}
+                                    />
+                                </Grid>
+
+                                {/* Mode of Recruitment Process */}
+                                <Grid item xs={12} md={6}>
+                                    <FormControl fullWidth>
+                                        <InputLabel sx={{ fontSize: '0.9rem', fontWeight: 500 }}>Mode of Recruitment Process</InputLabel>
+                                        <Select
+                                            value={jobPostingForm.mode_of_recruitment}
+                                            onChange={(e) => setJobPostingForm({...jobPostingForm, mode_of_recruitment: e.target.value})}
+                                            sx={{
+                                                borderRadius: 2,
+                                                '&:hover': {
+                                                    boxShadow: '0 4px 12px rgba(220, 38, 38, 0.15)',
+                                                },
+                                                '&.Mui-focused': {
+                                                    boxShadow: '0 4px 20px rgba(239, 68, 68, 0.25)',
+                                                }
+                                            }}
+                                        >
+                                            <MenuItem value="">Select Mode</MenuItem>
+                                            <MenuItem value="Online">Online</MenuItem>
+                                            <MenuItem value="Offline">Offline</MenuItem>
+                                        </Select>
+                                    </FormControl>
+                                </Grid>
+
+                                {/* Interview Date */}
+                                <Grid item xs={12} md={6}>
+                                    <TextField
+                                        fullWidth
+                                        label="Interview Date(s) (if known)"
+                                        type="date"
+                                        value={jobPostingForm.interview_date}
+                                        onChange={(e) => setJobPostingForm({...jobPostingForm, interview_date: e.target.value})}
+                                        InputLabelProps={{ shrink: true }}
+                                        sx={{
+                                            '& .MuiOutlinedInput-root': {
+                                                borderRadius: 2,
+                                                transition: 'all 0.3s ease',
+                                                '&:hover': {
+                                                    boxShadow: '0 4px 12px rgba(220, 38, 38, 0.15)',
+                                                },
+                                                '&.Mui-focused': {
+                                                    boxShadow: '0 4px 20px rgba(239, 68, 68, 0.25)',
+                                                }
+                                            },
+                                            '& .MuiInputLabel-root': {
+                                                fontSize: '0.9rem',
+                                                fontWeight: 500
+                                            }
+                                        }}
+                                        InputProps={{
+                                            startAdornment: (
+                                                <InputAdornment position="start">
+                                                    📅
+                                                </InputAdornment>
+                                            ),
+                                        }}
+                                    />
+                                </Grid>
+
+                                {/* Interview Mode */}
+                                <Grid item xs={12} md={6}>
+                                    <FormControl fullWidth>
+                                        <InputLabel sx={{ fontSize: '0.9rem', fontWeight: 500 }}>Interview Mode</InputLabel>
+                                        <Select
+                                            value={jobPostingForm.interview_mode}
+                                            onChange={(e) => setJobPostingForm({...jobPostingForm, interview_mode: e.target.value})}
+                                            sx={{
+                                                borderRadius: 2,
+                                                '&:hover': {
+                                                    boxShadow: '0 4px 12px rgba(220, 38, 38, 0.15)',
+                                                },
+                                                '&.Mui-focused': {
+                                                    boxShadow: '0 4px 20px rgba(239, 68, 68, 0.25)',
+                                                }
+                                            }}
+                                        >
+                                            <MenuItem value="">Select Mode</MenuItem>
+                                            <MenuItem value="Online">Online</MenuItem>
+                                            <MenuItem value="Offline">Offline</MenuItem>
+                                        </Select>
+                                    </FormControl>
+                                </Grid>
+
+                                {/* Venue / Link */}
+                                <Grid item xs={12}>
+                                    <TextField
+                                        fullWidth
+                                        label="Venue / Link (if offline or online scheduled)"
+                                        value={jobPostingForm.venue_link}
+                                        onChange={(e) => setJobPostingForm({...jobPostingForm, venue_link: e.target.value})}
+                                        variant="outlined"
+                                        placeholder="Enter venue address or online meeting link"
+                                        sx={{
+                                            '& .MuiOutlinedInput-root': {
+                                                borderRadius: 2,
+                                                transition: 'all 0.3s ease',
+                                                '&:hover': {
+                                                    boxShadow: '0 4px 12px rgba(220, 38, 38, 0.15)',
+                                                },
+                                                '&.Mui-focused': {
+                                                    boxShadow: '0 4px 20px rgba(239, 68, 68, 0.25)',
+                                                }
+                                            },
+                                            '& .MuiInputLabel-root': {
+                                                fontSize: '0.9rem',
+                                                fontWeight: 500
+                                            }
+                                        }}
+                                        InputProps={{
+                                            startAdornment: (
+                                                <InputAdornment position="start">
+                                                    📍
                                                 </InputAdornment>
                                             ),
                                         }}
@@ -4582,6 +5621,1025 @@ const AdminPlacement = () => {
                 <DialogActions sx={{ p: 3, pt: 1 }}>
                     <Button 
                         onClick={handleCloseStudentDetailsDialog}
+                        sx={{ 
+                            textTransform: 'none',
+                            borderRadius: 2,
+                            px: 3
+                        }}
+                    >
+                        Close
+                    </Button>
+                </DialogActions>
+            </Dialog>
+
+            {/* Company Details Dialog */}
+            <Dialog 
+                open={companyDetailsDialog.open} 
+                onClose={handleCloseCompanyDetails} 
+                maxWidth="md" 
+                fullWidth
+                PaperProps={{
+                    sx: {
+                        borderRadius: 3,
+                        boxShadow: '0 24px 38px 3px rgba(0,0,0,0.14), 0 9px 46px 8px rgba(0,0,0,0.12), 0 11px 15px -7px rgba(0,0,0,0.2)',
+                    }
+                }}
+            >
+                <DialogTitle 
+                    sx={{ 
+                        background: 'linear-gradient(135deg, #0f1f3d 0%, #1e3c72 100%)',
+                        color: 'white',
+                        py: 3,
+                        position: 'relative',
+                        '&::after': {
+                            content: '""',
+                            position: 'absolute',
+                            bottom: 0,
+                            left: 0,
+                            right: 0,
+                            height: '4px',
+                            background: 'linear-gradient(270deg, #eb6707 0%, #e42b12 100%)',
+                        }
+                    }}
+                >
+                    <Box display="flex" alignItems="center" gap={2}>
+                        <Avatar sx={{ bgcolor: 'rgba(255,255,255,0.2)', width: 40, height: 40 }}>
+                            <BusinessIcon />
+                        </Avatar>
+                        <Box>
+                            <Typography variant="h5" fontWeight="600">
+                                Company Details
+                            </Typography>
+                            <Typography variant="body2" sx={{ opacity: 0.9, mt: 0.5 }}>
+                                {companyDetailsDialog.company?.name || 'Company Information'}
+                            </Typography>
+                        </Box>
+                    </Box>
+                </DialogTitle>
+                
+                <DialogContent sx={{ p: 0 }}>
+                    <Box sx={{ p: 4 }}>
+                        {companyDetailsDialog.company && (
+                            <>
+                                {/* Basic Information */}
+                                <Paper 
+                                    elevation={0} 
+                                    sx={{ 
+                                        p: 3, 
+                                        mb: 3, 
+                                        border: '1px solid #e2e8f0',
+                                        borderRadius: 2,
+                                        background: '#ffffff',
+                                        boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
+                                    }}
+                                >
+                                    <Box display="flex" alignItems="center" gap={2} mb={3}>
+                                        <Avatar sx={{ background: 'linear-gradient(135deg, #0f1f3d 0%, #1e3c72 100%)', width: 32, height: 32 }}>
+                                            <BusinessIcon fontSize="small" />
+                                        </Avatar>
+                                        <Typography variant="h6" fontWeight="600" color="#0f1f3d">
+                                            Basic Information
+                                        </Typography>
+                                    </Box>
+                                    
+                                    <Grid container spacing={3}>
+                                        <Grid item xs={12} md={6}>
+                                            <Box sx={{ mb: 2 }}>
+                                                <Typography variant="subtitle2" color="text.secondary" gutterBottom>
+                                                    Company Name
+                                                </Typography>
+                                                <Typography variant="body1" fontWeight={500}>
+                                                    {companyDetailsDialog.company.name || 'N/A'}
+                                                </Typography>
+                                            </Box>
+                                        </Grid>
+                                        <Grid item xs={12} md={6}>
+                                            <Box sx={{ mb: 2 }}>
+                                                <Typography variant="subtitle2" color="text.secondary" gutterBottom>
+                                                    Website
+                                                </Typography>
+                                                <Typography variant="body1">
+                                                    {companyDetailsDialog.company.website ? (
+                                                        <a href={companyDetailsDialog.company.website} target="_blank" rel="noopener noreferrer" style={{ color: '#1976d2', textDecoration: 'none' }}>
+                                                            {companyDetailsDialog.company.website}
+                                                        </a>
+                                                    ) : 'N/A'}
+                                                </Typography>
+                                            </Box>
+                                        </Grid>
+                                        <Grid item xs={12} md={6}>
+                                            <Box sx={{ mb: 2 }}>
+                                                <Typography variant="subtitle2" color="text.secondary" gutterBottom>
+                                                    Company Size
+                                                </Typography>
+                                                <Typography variant="body1">
+                                                    {companyDetailsDialog.company.company_size || 'N/A'}
+                                                </Typography>
+                                            </Box>
+                                        </Grid>
+                                        <Grid item xs={12} md={6}>
+                                            <Box sx={{ mb: 2 }}>
+                                                <Typography variant="subtitle2" color="text.secondary" gutterBottom>
+                                                    Industry
+                                                </Typography>
+                                                <Typography variant="body1">
+                                                    {companyDetailsDialog.company.industry || 'N/A'}
+                                                </Typography>
+                                            </Box>
+                                        </Grid>
+                                        <Grid item xs={12}>
+                                            <Box sx={{ mb: 2 }}>
+                                                <Typography variant="subtitle2" color="text.secondary" gutterBottom>
+                                                    Description
+                                                </Typography>
+                                                <Typography variant="body1">
+                                                    {companyDetailsDialog.company.description || 'N/A'}
+                                                </Typography>
+                                            </Box>
+                                        </Grid>
+                                    </Grid>
+                                </Paper>
+
+                                {/* Company Details */}
+                                <Paper 
+                                    elevation={0} 
+                                    sx={{ 
+                                        p: 3, 
+                                        mb: 3, 
+                                        border: '1px solid #e2e8f0',
+                                        borderRadius: 2,
+                                        background: '#ffffff',
+                                        boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
+                                    }}
+                                >
+                                    <Box display="flex" alignItems="center" gap={2} mb={3}>
+                                        <Avatar sx={{ background: 'linear-gradient(135deg, #059669 0%, #10b981 100%)', width: 32, height: 32 }}>
+                                            🏢
+                                        </Avatar>
+                                        <Typography variant="h6" fontWeight="600" color="#059669">
+                                            Company Details
+                                        </Typography>
+                                    </Box>
+                                    
+                                    <Grid container spacing={3}>
+                                        <Grid item xs={12}>
+                                            <Box sx={{ mb: 2 }}>
+                                                <Typography variant="subtitle2" color="text.secondary" gutterBottom>
+                                                    Company Address
+                                                </Typography>
+                                                <Typography variant="body1">
+                                                    {companyDetailsDialog.company.company_address || 'N/A'}
+                                                </Typography>
+                                            </Box>
+                                        </Grid>
+                                        <Grid item xs={12} md={4}>
+                                            <Box sx={{ mb: 2 }}>
+                                                <Typography variant="subtitle2" color="text.secondary" gutterBottom>
+                                                    City
+                                                </Typography>
+                                                <Typography variant="body1">
+                                                    {companyDetailsDialog.company.city || 'N/A'}
+                                                </Typography>
+                                            </Box>
+                                        </Grid>
+                                        <Grid item xs={12} md={4}>
+                                            <Box sx={{ mb: 2 }}>
+                                                <Typography variant="subtitle2" color="text.secondary" gutterBottom>
+                                                    State
+                                                </Typography>
+                                                <Typography variant="body1">
+                                                    {companyDetailsDialog.company.state || 'N/A'}
+                                                </Typography>
+                                            </Box>
+                                        </Grid>
+                                        <Grid item xs={12} md={4}>
+                                            <Box sx={{ mb: 2 }}>
+                                                <Typography variant="subtitle2" color="text.secondary" gutterBottom>
+                                                    Country
+                                                </Typography>
+                                                <Typography variant="body1">
+                                                    {companyDetailsDialog.company.country || 'N/A'}
+                                                </Typography>
+                                            </Box>
+                                        </Grid>
+                                        <Grid item xs={12}>
+                                            <Box sx={{ mb: 2 }}>
+                                                <Typography variant="subtitle2" color="text.secondary" gutterBottom>
+                                                    About Company
+                                                </Typography>
+                                                <Typography variant="body1">
+                                                    {companyDetailsDialog.company.about_company || 'N/A'}
+                                                </Typography>
+                                            </Box>
+                                        </Grid>
+                                        <Grid item xs={12} md={6}>
+                                            <Box sx={{ mb: 2 }}>
+                                                <Typography variant="subtitle2" color="text.secondary" gutterBottom>
+                                                    LinkedIn URL
+                                                </Typography>
+                                                <Typography variant="body1">
+                                                    {companyDetailsDialog.company.linkedin_url ? (
+                                                        <a href={companyDetailsDialog.company.linkedin_url} target="_blank" rel="noopener noreferrer" style={{ color: '#1976d2', textDecoration: 'none' }}>
+                                                            {companyDetailsDialog.company.linkedin_url}
+                                                        </a>
+                                                    ) : 'N/A'}
+                                                </Typography>
+                                            </Box>
+                                        </Grid>
+                                        <Grid item xs={12} md={6}>
+                                            <Box sx={{ mb: 2 }}>
+                                                <Typography variant="subtitle2" color="text.secondary" gutterBottom>
+                                                    Social Media Links
+                                                </Typography>
+                                                <Typography variant="body1">
+                                                    {companyDetailsDialog.company.social_media_links || 'N/A'}
+                                                </Typography>
+                                            </Box>
+                                        </Grid>
+                                    </Grid>
+                                </Paper>
+
+                                {/* Contact Information */}
+                                <Paper 
+                                    elevation={0} 
+                                    sx={{ 
+                                        p: 3, 
+                                        mb: 3, 
+                                        border: '1px solid #e2e8f0',
+                                        borderRadius: 2,
+                                        background: '#ffffff',
+                                        boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
+                                    }}
+                                >
+                                    <Box display="flex" alignItems="center" gap={2} mb={3}>
+                                        <Avatar sx={{ background: 'linear-gradient(135deg, #dc2626 0%, #ef4444 100%)', width: 32, height: 32 }}>
+                                            📞
+                                        </Avatar>
+                                        <Typography variant="h6" fontWeight="600" color="#dc2626">
+                                            Contact Information
+                                        </Typography>
+                                    </Box>
+                                    
+                                    <Grid container spacing={3}>
+                                        <Grid item xs={12} md={6}>
+                                            <Box sx={{ mb: 2 }}>
+                                                <Typography variant="subtitle2" color="text.secondary" gutterBottom>
+                                                    Contact Person Name
+                                                </Typography>
+                                                <Typography variant="body1">
+                                                    {companyDetailsDialog.company.contact_person_name || 'N/A'}
+                                                </Typography>
+                                            </Box>
+                                        </Grid>
+                                        <Grid item xs={12} md={6}>
+                                            <Box sx={{ mb: 2 }}>
+                                                <Typography variant="subtitle2" color="text.secondary" gutterBottom>
+                                                    Contact Email
+                                                </Typography>
+                                                <Typography variant="body1">
+                                                    {companyDetailsDialog.company.contact_email_new ? (
+                                                        <a href={`mailto:${companyDetailsDialog.company.contact_email_new}`} style={{ color: '#1976d2', textDecoration: 'none' }}>
+                                                            {companyDetailsDialog.company.contact_email_new}
+                                                        </a>
+                                                    ) : 'N/A'}
+                                                </Typography>
+                                            </Box>
+                                        </Grid>
+                                        <Grid item xs={12} md={6}>
+                                            <Box sx={{ mb: 2 }}>
+                                                <Typography variant="subtitle2" color="text.secondary" gutterBottom>
+                                                    Contact Number
+                                                </Typography>
+                                                <Typography variant="body1">
+                                                    {companyDetailsDialog.company.contact_number ? (
+                                                        <a href={`tel:${companyDetailsDialog.company.contact_number}`} style={{ color: '#1976d2', textDecoration: 'none' }}>
+                                                            {companyDetailsDialog.company.contact_number}
+                                                        </a>
+                                                    ) : 'N/A'}
+                                                </Typography>
+                                            </Box>
+                                        </Grid>
+                                        <Grid item xs={12} md={6}>
+                                            <Box sx={{ mb: 2 }}>
+                                                <Typography variant="subtitle2" color="text.secondary" gutterBottom>
+                                                    Alternate Contact Number
+                                                </Typography>
+                                                <Typography variant="body1">
+                                                    {companyDetailsDialog.company.alternate_contact_number ? (
+                                                        <a href={`tel:${companyDetailsDialog.company.alternate_contact_number}`} style={{ color: '#1976d2', textDecoration: 'none' }}>
+                                                            {companyDetailsDialog.company.alternate_contact_number}
+                                                        </a>
+                                                    ) : 'N/A'}
+                                                </Typography>
+                                            </Box>
+                                        </Grid>
+                                        <Grid item xs={12} md={6}>
+                                            <Box sx={{ mb: 2 }}>
+                                                <Typography variant="subtitle2" color="text.secondary" gutterBottom>
+                                                    Legacy Contact Person
+                                                </Typography>
+                                                <Typography variant="body1">
+                                                    {companyDetailsDialog.company.contact_person || 'N/A'}
+                                                </Typography>
+                                            </Box>
+                                        </Grid>
+                                        <Grid item xs={12} md={6}>
+                                            <Box sx={{ mb: 2 }}>
+                                                <Typography variant="subtitle2" color="text.secondary" gutterBottom>
+                                                    Legacy Contact Email
+                                                </Typography>
+                                                <Typography variant="body1">
+                                                    {companyDetailsDialog.company.contact_email ? (
+                                                        <a href={`mailto:${companyDetailsDialog.company.contact_email}`} style={{ color: '#1976d2', textDecoration: 'none' }}>
+                                                            {companyDetailsDialog.company.contact_email}
+                                                        </a>
+                                                    ) : 'N/A'}
+                                                </Typography>
+                                            </Box>
+                                        </Grid>
+                                        <Grid item xs={12} md={6}>
+                                            <Box sx={{ mb: 2 }}>
+                                                <Typography variant="subtitle2" color="text.secondary" gutterBottom>
+                                                    Legacy Contact Phone
+                                                </Typography>
+                                                <Typography variant="body1">
+                                                    {companyDetailsDialog.company.contact_phone ? (
+                                                        <a href={`tel:${companyDetailsDialog.company.contact_phone}`} style={{ color: '#1976d2', textDecoration: 'none' }}>
+                                                            {companyDetailsDialog.company.contact_phone}
+                                                        </a>
+                                                    ) : 'N/A'}
+                                                </Typography>
+                                            </Box>
+                                        </Grid>
+                                        <Grid item xs={12} md={6}>
+                                            <Box sx={{ mb: 2 }}>
+                                                <Typography variant="subtitle2" color="text.secondary" gutterBottom>
+                                                    Legacy Address
+                                                </Typography>
+                                                <Typography variant="body1">
+                                                    {companyDetailsDialog.company.address || 'N/A'}
+                                                </Typography>
+                                            </Box>
+                                        </Grid>
+                                    </Grid>
+                                </Paper>
+
+                                {/* Status */}
+                                <Paper 
+                                    elevation={0} 
+                                    sx={{ 
+                                        p: 3, 
+                                        mb: 3, 
+                                        border: '1px solid #e2e8f0',
+                                        borderRadius: 2,
+                                        background: '#ffffff',
+                                        boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
+                                    }}
+                                >
+                                    <Box display="flex" alignItems="center" gap={2} mb={3}>
+                                        <Avatar sx={{ background: 'linear-gradient(135deg, #f59e0b 0%, #f97316 100%)', width: 32, height: 32 }}>
+                                            📊
+                                        </Avatar>
+                                        <Typography variant="h6" fontWeight="600" color="#f59e0b">
+                                            Status Information
+                                        </Typography>
+                                    </Box>
+                                    
+                                    <Grid container spacing={3}>
+                                        <Grid item xs={12} md={6}>
+                                            <Box sx={{ mb: 2 }}>
+                                                <Typography variant="subtitle2" color="text.secondary" gutterBottom>
+                                                    Status
+                                                </Typography>
+                                                <Chip 
+                                                    label={companyDetailsDialog.company.is_active ? 'Active' : 'Inactive'} 
+                                                    color={companyDetailsDialog.company.is_active ? 'success' : 'default'} 
+                                                    size="small" 
+                                                />
+                                            </Box>
+                                        </Grid>
+                                        <Grid item xs={12} md={6}>
+                                            <Box sx={{ mb: 2 }}>
+                                                <Typography variant="subtitle2" color="text.secondary" gutterBottom>
+                                                    Created Date
+                                                </Typography>
+                                                <Typography variant="body1">
+                                                    {companyDetailsDialog.company.created_at ? 
+                                                        new Date(companyDetailsDialog.company.created_at).toLocaleDateString('en-US', {
+                                                            year: 'numeric',
+                                                            month: 'long',
+                                                            day: 'numeric'
+                                                        }) : 'N/A'}
+                                                </Typography>
+                                            </Box>
+                                        </Grid>
+                                    </Grid>
+                                </Paper>
+                            </>
+                        )}
+                    </Box>
+                </DialogContent>
+                
+                <DialogActions sx={{ p: 3, pt: 1 }}>
+                    <Button 
+                        onClick={handleCloseCompanyDetails}
+                        sx={{ 
+                            textTransform: 'none',
+                            borderRadius: 2,
+                            px: 3
+                        }}
+                    >
+                        Close
+                    </Button>
+                </DialogActions>
+            </Dialog>
+
+            {/* Job Posting Details Dialog */}
+            <Dialog 
+                open={jobPostingDetailsDialog.open} 
+                onClose={handleCloseJobPostingDetails} 
+                maxWidth="lg" 
+                fullWidth
+                PaperProps={{
+                    sx: {
+                        borderRadius: 3,
+                        boxShadow: '0 24px 38px 3px rgba(0,0,0,0.14), 0 9px 46px 8px rgba(0,0,0,0.12), 0 11px 15px -7px rgba(0,0,0,0.2)',
+                    }
+                }}
+            >
+                <DialogTitle 
+                    sx={{ 
+                        background: 'linear-gradient(135deg, #0f1f3d 0%, #1e3c72 100%)',
+                        color: 'white',
+                        py: 3,
+                        position: 'relative',
+                        '&::after': {
+                            content: '""',
+                            position: 'absolute',
+                            bottom: 0,
+                            left: 0,
+                            right: 0,
+                            height: '4px',
+                            background: 'linear-gradient(270deg, #eb6707 0%, #e42b12 100%)',
+                        }
+                    }}
+                >
+                    <Box display="flex" alignItems="center" gap={2}>
+                        <Avatar sx={{ bgcolor: 'rgba(255,255,255,0.2)', width: 40, height: 40 }}>
+                            <WorkIcon />
+                        </Avatar>
+                        <Box>
+                            <Typography variant="h5" fontWeight="600">
+                                Job Posting Details
+                            </Typography>
+                            <Typography variant="body2" sx={{ opacity: 0.9, mt: 0.5 }}>
+                                {jobPostingDetailsDialog.jobPosting?.title || 'Job Information'}
+                            </Typography>
+                        </Box>
+                    </Box>
+                </DialogTitle>
+                
+                <DialogContent sx={{ p: 0 }}>
+                    <Box sx={{ p: 4 }}>
+                        {jobPostingDetailsDialog.jobPosting && (
+                            <>
+                                {/* Basic Job Information */}
+                                <Paper 
+                                    elevation={0} 
+                                    sx={{ 
+                                        p: 3, 
+                                        mb: 3, 
+                                        border: '1px solid #e2e8f0',
+                                        borderRadius: 2,
+                                        background: '#ffffff',
+                                        boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
+                                    }}
+                                >
+                                    <Box display="flex" alignItems="center" gap={2} mb={3}>
+                                        <Avatar sx={{ background: 'linear-gradient(135deg, #0f1f3d 0%, #1e3c72 100%)', width: 32, height: 32 }}>
+                                            <WorkIcon fontSize="small" />
+                                        </Avatar>
+                                        <Typography variant="h6" fontWeight="600" color="#0f1f3d">
+                                            Basic Job Information
+                                        </Typography>
+                                    </Box>
+                                    
+                                    <Grid container spacing={3}>
+                                        <Grid item xs={12} md={6}>
+                                            <Box sx={{ mb: 2 }}>
+                                                <Typography variant="subtitle2" color="text.secondary" gutterBottom>
+                                                    Job Title
+                                                </Typography>
+                                                <Typography variant="body1" fontWeight={500}>
+                                                    {jobPostingDetailsDialog.jobPosting.title || 'N/A'}
+                                                </Typography>
+                                            </Box>
+                                        </Grid>
+                                        <Grid item xs={12} md={6}>
+                                            <Box sx={{ mb: 2 }}>
+                                                <Typography variant="subtitle2" color="text.secondary" gutterBottom>
+                                                    Company
+                                                </Typography>
+                                                <Typography variant="body1" fontWeight={500}>
+                                                    {jobPostingDetailsDialog.jobPosting.company?.name || 'N/A'}
+                                                </Typography>
+                                            </Box>
+                                        </Grid>
+                                        <Grid item xs={12} md={6}>
+                                            <Box sx={{ mb: 2 }}>
+                                                <Typography variant="subtitle2" color="text.secondary" gutterBottom>
+                                                    Job Type
+                                                </Typography>
+                                                <Typography variant="body1">
+                                                    {jobPostingDetailsDialog.jobPosting.job_type || 'N/A'}
+                                                </Typography>
+                                            </Box>
+                                        </Grid>
+                                        <Grid item xs={12} md={6}>
+                                            <Box sx={{ mb: 2 }}>
+                                                <Typography variant="subtitle2" color="text.secondary" gutterBottom>
+                                                    Location
+                                                </Typography>
+                                                <Typography variant="body1">
+                                                    {jobPostingDetailsDialog.jobPosting.location || 'N/A'}
+                                                </Typography>
+                                            </Box>
+                                        </Grid>
+                                        <Grid item xs={12} md={6}>
+                                            <Box sx={{ mb: 2 }}>
+                                                <Typography variant="subtitle2" color="text.secondary" gutterBottom>
+                                                    Experience Required
+                                                </Typography>
+                                                <Typography variant="body1">
+                                                    {jobPostingDetailsDialog.jobPosting.experience_required ? 
+                                                        `${jobPostingDetailsDialog.jobPosting.experience_required} years` : 'N/A'}
+                                                </Typography>
+                                            </Box>
+                                        </Grid>
+                                        <Grid item xs={12} md={6}>
+                                            <Box sx={{ mb: 2 }}>
+                                                <Typography variant="subtitle2" color="text.secondary" gutterBottom>
+                                                    Vacancies
+                                                </Typography>
+                                                <Typography variant="body1">
+                                                    {jobPostingDetailsDialog.jobPosting.vacancies || 'N/A'}
+                                                </Typography>
+                                            </Box>
+                                        </Grid>
+                                        <Grid item xs={12}>
+                                            {/* <Box sx={{ mb: 2 }}>
+                                                <Typography variant="subtitle2" color="text.secondary" gutterBottom>
+                                                    J
+                                                </Typography>
+                                                <Typography variant="body1">
+                                                    {jobPostingDetailsDialog.jobPosting.description || 'N/A'}
+                                                </Typography>
+                                            </Box> */}
+                                        </Grid>
+                                        <Grid item xs={12}>
+                                            <Box sx={{ mb: 2 }}>
+                                                <Typography variant="subtitle2" color="text.secondary" gutterBottom>
+                                                   Job Description and Requirements
+                                                </Typography>
+                                                <Typography variant="body1">
+                                                    {jobPostingDetailsDialog.jobPosting.requirements || 'N/A'}
+                                                </Typography>
+                                            </Box>
+                                        </Grid>
+                                    </Grid>
+                                </Paper>
+
+                                {/* Salary */}
+                                <Paper 
+                                    elevation={0} 
+                                    sx={{ 
+                                        p: 3, 
+                                        mb: 3, 
+                                        border: '1px solid #e2e8f0',
+                                        borderRadius: 2,
+                                        background: '#ffffff',
+                                        boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
+                                    }}
+                                >
+                                    <Box display="flex" alignItems="center" gap={2} mb={3}>
+                                        <Avatar sx={{ background: 'linear-gradient(135deg, #059669 0%, #10b981 100%)', width: 32, height: 32 }}>
+                                            💰
+                                        </Avatar>
+                                        <Typography variant="h6" fontWeight="600" color="#059669">
+                                            Salary
+                                        </Typography>
+                                    </Box>
+                                    
+                                    <Grid container spacing={3}>
+                                        <Grid item xs={12}>
+                                            <Box sx={{ mb: 2 }}>
+                                                <Typography variant="subtitle2" color="text.secondary" gutterBottom>
+                                                    Salary Range
+                                                </Typography>
+                                                <Typography variant="body1">
+                                                    {jobPostingDetailsDialog.jobPosting.salary_min && jobPostingDetailsDialog.jobPosting.salary_max ? 
+                                                        `₹${jobPostingDetailsDialog.jobPosting.salary_min}L - ₹${jobPostingDetailsDialog.jobPosting.salary_max}L` : 'N/A'}
+                                                </Typography>
+                                            </Box>
+                                        </Grid>
+                                    </Grid>
+                                </Paper>
+
+                                {/* Eligibility Criteria */}
+                                <Paper 
+                                    elevation={0} 
+                                    sx={{ 
+                                        p: 3, 
+                                        mb: 3, 
+                                        border: '1px solid #e2e8f0',
+                                        borderRadius: 2,
+                                        background: '#ffffff',
+                                        boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
+                                    }}
+                                >
+                                    <Box display="flex" alignItems="center" gap={2} mb={3}>
+                                        <Avatar sx={{ background: 'linear-gradient(135deg, #f59e0b 0%, #f97316 100%)', width: 32, height: 32 }}>
+                                            📋
+                                        </Avatar>
+                                        <Typography variant="h6" fontWeight="600" color="#f59e0b">
+                                            Eligibility Criteria
+                                        </Typography>
+                                    </Box>
+                                    
+                                    <Grid container spacing={3}>
+                                        <Grid item xs={12} md={6}>
+                                            <Box sx={{ mb: 2 }}>
+                                                <Typography variant="subtitle2" color="text.secondary" gutterBottom>
+                                                    B.Tech Percentage (Min)
+                                                </Typography>
+                                                <Typography variant="body1">
+                                                                    {jobPostingDetailsDialog.jobPosting.btech_percentage_min ?
+                `${jobPostingDetailsDialog.jobPosting.btech_percentage_min}%` : 'N/A'}
+                                                </Typography>
+                                            </Box>
+                                        </Grid>
+                                        <Grid item xs={12} md={6}>
+                                            <Box sx={{ mb: 2 }}>
+                                                <Typography variant="subtitle2" color="text.secondary" gutterBottom>
+                                                    M.Tech Percentage (Min)
+                                                </Typography>
+                                                <Typography variant="body1">
+                                                                    {jobPostingDetailsDialog.jobPosting.mtech_percentage_min ?
+                `${jobPostingDetailsDialog.jobPosting.mtech_percentage_min}%` : 'N/A'}
+                                                </Typography>
+                                            </Box>
+                                        </Grid>
+                                        <Grid item xs={12} md={6}>
+                                            <Box sx={{ mb: 2 }}>
+                                                <Typography variant="subtitle2" color="text.secondary" gutterBottom>
+                                                    B.Tech Year of Passout (Min)
+                                                </Typography>
+                                                <Typography variant="body1">
+                                                    {jobPostingDetailsDialog.jobPosting.btech_year_of_passout_min || 'N/A'}
+                                                </Typography>
+                                            </Box>
+                                        </Grid>
+                                        <Grid item xs={12} md={6}>
+                                            <Box sx={{ mb: 2 }}>
+                                                <Typography variant="subtitle2" color="text.secondary" gutterBottom>
+                                                    B.Tech Year of Passout (Max)
+                                                </Typography>
+                                                <Typography variant="body1">
+                                                    {jobPostingDetailsDialog.jobPosting.btech_year_of_passout_max || 'N/A'}
+                                                </Typography>
+                                            </Box>
+                                        </Grid>
+                                        <Grid item xs={12} md={6}>
+                                            <Box sx={{ mb: 2 }}>
+                                                <Typography variant="subtitle2" color="text.secondary" gutterBottom>
+                                                    M.Tech Year of Passout (Min)
+                                                </Typography>
+                                                <Typography variant="body1">
+                                                    {jobPostingDetailsDialog.jobPosting.mtech_year_of_passout_min || 'N/A'}
+                                                </Typography>
+                                            </Box>
+                                        </Grid>
+                                        <Grid item xs={12} md={6}>
+                                            <Box sx={{ mb: 2 }}>
+                                                <Typography variant="subtitle2" color="text.secondary" gutterBottom>
+                                                    M.Tech Year of Passout (Max)
+                                                </Typography>
+                                                <Typography variant="body1">
+                                                    {jobPostingDetailsDialog.jobPosting.mtech_year_of_passout_max || 'N/A'}
+                                                </Typography>
+                                            </Box>
+                                        </Grid>
+                                        <Grid item xs={12} md={6}>
+                                            <Box sx={{ mb: 2 }}>
+                                                <Typography variant="subtitle2" color="text.secondary" gutterBottom>
+                                                    Backlogs Allowed
+                                                </Typography>
+                                                <Typography variant="body1">
+                                                    {jobPostingDetailsDialog.jobPosting.backlogs_allowed || 'N/A'}
+                                                </Typography>
+                                            </Box>
+                                        </Grid>
+                                        <Grid item xs={12} md={6}>
+                                            <Box sx={{ mb: 2 }}>
+                                                <Typography variant="subtitle2" color="text.secondary" gutterBottom>
+                                                    Mandatory Original Documents
+                                                </Typography>
+                                                <Typography variant="body1">
+                                                    {jobPostingDetailsDialog.jobPosting.mandatory_original_documents || 'N/A'}
+                                                </Typography>
+                                            </Box>
+                                        </Grid>
+                                        <Grid item xs={12} md={6}>
+                                            <Box sx={{ mb: 2 }}>
+                                                <Typography variant="subtitle2" color="text.secondary" gutterBottom>
+                                                    Eligible Courses
+                                                </Typography>
+                                                <Typography variant="body1">
+                                                    {(() => {
+                                                        const courses = jobPostingDetailsDialog.jobPosting.eligible_courses;
+                                                        if (!courses) return 'N/A';
+                                                        
+                                                        let coursesArray = [];
+                                                        if (typeof courses === 'string') {
+                                                            try {
+                                                                coursesArray = JSON.parse(courses);
+                                                            } catch (e) {
+                                                                coursesArray = [];
+                                                            }
+                                                        } else if (Array.isArray(courses)) {
+                                                            coursesArray = courses;
+                                                        }
+                                                        
+                                                        return coursesArray.length > 0 ? coursesArray.join(', ') : 'N/A';
+                                                    })()}
+                                                </Typography>
+                                            </Box>
+                                        </Grid>
+                                        <Grid item xs={12} md={6}>
+                                            <Box sx={{ mb: 2 }}>
+                                                <Typography variant="subtitle2" color="text.secondary" gutterBottom>
+                                                    Specializations
+                                                </Typography>
+                                                <Typography variant="body1">
+                                                    {(() => {
+                                                        const specializations = jobPostingDetailsDialog.jobPosting.specializations;
+                                                        if (!specializations) return 'N/A';
+                                                        
+                                                        let specializationsArray = [];
+                                                        if (typeof specializations === 'string') {
+                                                            try {
+                                                                specializationsArray = JSON.parse(specializations);
+                                                            } catch (e) {
+                                                                specializationsArray = [];
+                                                            }
+                                                        } else if (Array.isArray(specializations)) {
+                                                            specializationsArray = specializations;
+                                                        }
+                                                        
+                                                        return specializationsArray.length > 0 ? specializationsArray.join(', ') : 'N/A';
+                                                    })()}
+                                                </Typography>
+                                            </Box>
+                                        </Grid>
+                                        <Grid item xs={12}>
+                                            {/* <Box sx={{ mb: 2 }}>
+                                                <Typography variant="subtitle2" color="text.secondary" gutterBottom>
+                                                    Skills Required
+                                                </Typography>
+                                                <Typography variant="body1">
+                                                    {(() => {
+                                                        const skills = jobPostingDetailsDialog.jobPosting.skills_required;
+                                                        if (!skills) return 'N/A';
+                                                        
+                                                        let skillsArray = [];
+                                                        if (typeof skills === 'string') {
+                                                            try {
+                                                                skillsArray = JSON.parse(skills);
+                                                            } catch (e) {
+                                                                skillsArray = [];
+                                                            }
+                                                        } else if (Array.isArray(skills)) {
+                                                            skillsArray = skills;
+                                                        }
+                                                        
+                                                        return skillsArray.length > 0 ? skillsArray.join(', ') : 'N/A';
+                                                    })()}
+                                                </Typography>
+                                            </Box> */}
+                                        </Grid>
+                                        <Grid item xs={12}>
+                                            <Box sx={{ mb: 2 }}>
+                                                <Typography variant="subtitle2" color="text.secondary" gutterBottom>
+                                                    Additional Criteria
+                                                </Typography>
+                                                <Typography variant="body1">
+                                                    {jobPostingDetailsDialog.jobPosting.additional_criteria || 'N/A'}
+                                                </Typography>
+                                            </Box>
+                                        </Grid>
+                                    </Grid>
+                                </Paper>
+
+                                {/* Recruitment Process */}
+                                <Paper 
+                                    elevation={0} 
+                                    sx={{ 
+                                        p: 3, 
+                                        mb: 3, 
+                                        border: '1px solid #e2e8f0',
+                                        borderRadius: 2,
+                                        background: '#ffffff',
+                                        boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
+                                    }}
+                                >
+                                    <Box display="flex" alignItems="center" gap={2} mb={3}>
+                                        <Avatar sx={{ background: 'linear-gradient(135deg, #8b5cf6 0%, #a855f7 100%)', width: 32, height: 32 }}>
+                                            🎯
+                                        </Avatar>
+                                        <Typography variant="h6" fontWeight="600" color="#8b5cf6">
+                                            Recruitment Process
+                                        </Typography>
+                                    </Box>
+                                    
+                                    <Grid container spacing={3}>
+                                        <Grid item xs={12} md={6}>
+                                            <Box sx={{ mb: 2 }}>
+                                                <Typography variant="subtitle2" color="text.secondary" gutterBottom>
+                                                    Mode of Recruitment
+                                                </Typography>
+                                                <Typography variant="body1">
+                                                    {jobPostingDetailsDialog.jobPosting.mode_of_recruitment || 'N/A'}
+                                                </Typography>
+                                            </Box>
+                                        </Grid>
+                                        <Grid item xs={12} md={6}>
+                                            <Box sx={{ mb: 2 }}>
+                                                <Typography variant="subtitle2" color="text.secondary" gutterBottom>
+                                                    Interview Mode
+                                                </Typography>
+                                                <Typography variant="body1">
+                                                    {jobPostingDetailsDialog.jobPosting.interview_mode || 'N/A'}
+                                                </Typography>
+                                            </Box>
+                                        </Grid>
+                                        <Grid item xs={12} md={6}>
+                                            <Box sx={{ mb: 2 }}>
+                                                <Typography variant="subtitle2" color="text.secondary" gutterBottom>
+                                                    Interview Date
+                                                </Typography>
+                                                <Typography variant="body1">
+                                                    {jobPostingDetailsDialog.jobPosting.interview_date ? 
+                                                        new Date(jobPostingDetailsDialog.jobPosting.interview_date).toLocaleDateString('en-US', {
+                                                            year: 'numeric',
+                                                            month: 'long',
+                                                            day: 'numeric'
+                                                        }) : 'N/A'}
+                                                </Typography>
+                                            </Box>
+                                        </Grid>
+                                        <Grid item xs={12} md={6}>
+                                            <Box sx={{ mb: 2 }}>
+                                                <Typography variant="subtitle2" color="text.secondary" gutterBottom>
+                                                    Application Deadline
+                                                </Typography>
+                                                <Typography variant="body1">
+                                                    {jobPostingDetailsDialog.jobPosting.application_deadline ? 
+                                                        new Date(jobPostingDetailsDialog.jobPosting.application_deadline).toLocaleDateString('en-US', {
+                                                            year: 'numeric',
+                                                            month: 'long',
+                                                            day: 'numeric'
+                                                        }) : 'N/A'}
+                                                </Typography>
+                                            </Box>
+                                        </Grid>
+                                        <Grid item xs={12}>
+                                            <Box sx={{ mb: 2 }}>
+                                                <Typography variant="subtitle2" color="text.secondary" gutterBottom>
+                                                    Recruitment Process Steps
+                                                </Typography>
+                                                <Typography variant="body1">
+                                                    {jobPostingDetailsDialog.jobPosting.recruitment_process_steps || 'N/A'}
+                                                </Typography>
+                                            </Box>
+                                        </Grid>
+                                        <Grid item xs={12}>
+                                            <Box sx={{ mb: 2 }}>
+                                                <Typography variant="subtitle2" color="text.secondary" gutterBottom>
+                                                    Venue / Link
+                                                </Typography>
+                                                <Typography variant="body1">
+                                                    {jobPostingDetailsDialog.jobPosting.venue_link ? (
+                                                        jobPostingDetailsDialog.jobPosting.venue_link.startsWith('http') ? (
+                                                            <a href={jobPostingDetailsDialog.jobPosting.venue_link} target="_blank" rel="noopener noreferrer" style={{ color: '#1976d2', textDecoration: 'none' }}>
+                                                                {jobPostingDetailsDialog.jobPosting.venue_link}
+                                                            </a>
+                                                        ) : jobPostingDetailsDialog.jobPosting.venue_link
+                                                    ) : 'N/A'}
+                                                </Typography>
+                                            </Box>
+                                        </Grid>
+                                    </Grid>
+                                </Paper>
+
+                                {/* Additional Information */}
+                                <Paper 
+                                    elevation={0} 
+                                    sx={{ 
+                                        p: 3, 
+                                        mb: 3, 
+                                        border: '1px solid #e2e8f0',
+                                        borderRadius: 2,
+                                        background: '#ffffff',
+                                        boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
+                                    }}
+                                >
+                                    <Box display="flex" alignItems="center" gap={2} mb={3}>
+                                        <Avatar sx={{ background: 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)', width: 32, height: 32 }}>
+                                            📄
+                                        </Avatar>
+                                        <Typography variant="h6" fontWeight="600" color="#ef4444">
+                                            Additional Information
+                                        </Typography>
+                                    </Box>
+                                    
+                                    <Grid container spacing={3}>
+                                        <Grid item xs={12}>
+                                            <Box sx={{ mb: 2 }}>
+                                                <Typography variant="subtitle2" color="text.secondary" gutterBottom>
+                                                    Bond / Service Agreement Details
+                                                </Typography>
+                                                <Typography variant="body1">
+                                                    {jobPostingDetailsDialog.jobPosting.bond_service_agreement || 'N/A'}
+                                                </Typography>
+                                            </Box>
+                                        </Grid>
+                                    </Grid>
+                                </Paper>
+
+                                {/* Status Information */}
+                                <Paper 
+                                    elevation={0} 
+                                    sx={{ 
+                                        p: 3, 
+                                        mb: 3, 
+                                        border: '1px solid #e2e8f0',
+                                        borderRadius: 2,
+                                        background: '#ffffff',
+                                        boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
+                                    }}
+                                >
+                                    <Box display="flex" alignItems="center" gap={2} mb={3}>
+                                        <Avatar sx={{ background: 'linear-gradient(135deg, #6b7280 0%, #4b5563 100%)', width: 32, height: 32 }}>
+                                            📊
+                                        </Avatar>
+                                        <Typography variant="h6" fontWeight="600" color="#6b7280">
+                                            Status Information
+                                        </Typography>
+                                    </Box>
+                                    
+                                    <Grid container spacing={3}>
+                                        <Grid item xs={12} md={6}>
+                                            <Box sx={{ mb: 2 }}>
+                                                <Typography variant="subtitle2" color="text.secondary" gutterBottom>
+                                                    Status
+                                                </Typography>
+                                                <Chip 
+                                                    label={jobPostingDetailsDialog.jobPosting.status === 'open' ? 'Open' : 
+                                                           jobPostingDetailsDialog.jobPosting.status === 'closed' ? 'Closed' : 
+                                                           jobPostingDetailsDialog.jobPosting.status === 'on_hold' ? 'On Hold' : 
+                                                           jobPostingDetailsDialog.jobPosting.status || 'Unknown'} 
+                                                    color={jobPostingDetailsDialog.jobPosting.status === 'open' ? 'success' : 
+                                                           jobPostingDetailsDialog.jobPosting.status === 'closed' ? 'error' : 
+                                                           jobPostingDetailsDialog.jobPosting.status === 'on_hold' ? 'warning' : 'default'} 
+                                                    size="small" 
+                                                />
+                                            </Box>
+                                        </Grid>
+                                        <Grid item xs={12} md={6}>
+                                            <Box sx={{ mb: 2 }}>
+                                                <Typography variant="subtitle2" color="text.secondary" gutterBottom>
+                                                    Created Date
+                                                </Typography>
+                                                <Typography variant="body1">
+                                                    {jobPostingDetailsDialog.jobPosting.created_at ? 
+                                                        new Date(jobPostingDetailsDialog.jobPosting.created_at).toLocaleDateString('en-US', {
+                                                            year: 'numeric',
+                                                            month: 'long',
+                                                            day: 'numeric'
+                                                        }) : 'N/A'}
+                                                </Typography>
+                                            </Box>
+                                        </Grid>
+                                    </Grid>
+                                </Paper>
+                            </>
+                        )}
+                    </Box>
+                </DialogContent>
+                
+                <DialogActions sx={{ p: 3, pt: 1 }}>
+                    <Button 
+                        onClick={handleCloseJobPostingDetails}
                         sx={{ 
                             textTransform: 'none',
                             borderRadius: 2,

@@ -67,7 +67,34 @@ class CompanyController extends Controller
         \Log::info('Company store request received:', $request->all());
         
         try {
-            $company = Company::create($request->all());
+            $validated = $request->validate([
+                'name' => 'required|string|max:255',
+                'description' => 'nullable|string',
+                'website' => 'nullable|url',
+                'logo_path' => 'nullable|string',
+                'industry' => 'nullable|string',
+                'company_size' => 'nullable|string',
+                'contact_person' => 'nullable|string',
+                'designation' => 'nullable|string',
+                'contact_email' => 'nullable|email',
+                'contact_phone' => 'nullable|string',
+                'address' => 'nullable|string',
+                // New fields validation
+                'company_address' => 'required|string',
+                'city' => 'required|string|max:255',
+                'state' => 'required|string|max:255',
+                'country' => 'required|string|max:255',
+                'contact_person_name' => 'required|string|max:255|regex:/^[A-Za-z\s]+$/',
+                'contact_email_new' => 'required|email',
+                'contact_number' => 'required|string|max:50',
+                'alternate_contact_number' => 'nullable|string|max:50',
+                'about_company' => 'required|string',
+                'linkedin_url' => 'nullable|url|max:500',
+                'social_media_links' => 'nullable|string',
+                'is_active' => 'boolean',
+            ]);
+            
+            $company = Company::create($validated);
             \Log::info('Company created successfully:', $company->toArray());
             return response()->json($company, 201);
         } catch (\Exception $e) {
@@ -96,9 +123,22 @@ class CompanyController extends Controller
             'industry' => 'nullable|string',
             'company_size' => 'nullable|string',
             'contact_person' => 'nullable|string',
+            'designation' => 'nullable|string',
             'contact_email' => 'nullable|email',
             'contact_phone' => 'nullable|string',
             'address' => 'nullable|string',
+            // New fields validation
+            'company_address' => 'required|string',
+            'city' => 'required|string|max:255',
+            'state' => 'required|string|max:255',
+            'country' => 'required|string|max:255',
+            'contact_person_name' => 'required|string|max:255|regex:/^[A-Za-z\s]+$/',
+            'contact_email_new' => 'required|email',
+            'contact_number' => 'required|string|max:50',
+            'alternate_contact_number' => 'nullable|string|max:50',
+            'about_company' => 'required|string',
+            'linkedin_url' => 'nullable|url|max:500',
+            'social_media_links' => 'nullable|string',
             'is_active' => 'boolean',
         ]);
 
