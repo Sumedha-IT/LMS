@@ -69,7 +69,8 @@ class User extends Authenticatable implements HasTenants, FilamentUser, HasAvata
         'course_id',
         'exam_total_marks',
         'exam_last_calculated_at',
-        'exam_last_attempt_id'
+        'exam_last_attempt_id',
+        'placement_center_access'
     ];
 
     /**
@@ -93,7 +94,8 @@ class User extends Authenticatable implements HasTenants, FilamentUser, HasAvata
         'receive_email_notification' => 'boolean',
         'receive_sms_notification' => 'boolean',
         'qualification' => 'array',
-        'exam_last_calculated_at' => 'datetime'
+        'exam_last_calculated_at' => 'datetime',
+        'placement_center_access' => 'boolean'
     ];
 
 
@@ -101,6 +103,7 @@ class User extends Authenticatable implements HasTenants, FilamentUser, HasAvata
     protected $studentGroup = [6];
     protected $tutorGroup = [7];
     protected $coordinatorGroup = [5];
+    protected $placementStudentGroup = [11];
 
 
     public function studentEducation(){
@@ -139,6 +142,11 @@ class User extends Authenticatable implements HasTenants, FilamentUser, HasAvata
     public function getIsCoordinatorAttribute()
     {
         return $this->role && in_array($this->role->id, $this->coordinatorGroup) ? true : false;
+    }
+
+    public function getIsPlacementStudentAttribute()
+    {
+        return $this->role && in_array($this->role->id, $this->placementStudentGroup) ? true : false;
     }
 
     public function user_type()
@@ -377,10 +385,7 @@ class User extends Authenticatable implements HasTenants, FilamentUser, HasAvata
         return $this->role;
     }
 
-    public function placementEligibility()
-    {
-        return $this->hasOne(StudentPlacementEligibility::class);
-    }
+
 
     public function jobApplications()
     {

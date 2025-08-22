@@ -109,7 +109,6 @@ import {
 } from '../store/service/user/UserService';
 import StudentDashboard from './StudentDashboard';
 import axios from 'axios';
-import PlacementStudents from './PlacementStudents';
 
 function TabPanel({ children, value, index, ...other }) {
     return (
@@ -324,14 +323,12 @@ const AdminPlacement = () => {
                 });
                 const students = response.data.data || [];
                 const totalStudents = students.length;
-                const eligibleStudents = students.filter(s => s.placement_status === 'Eligible').length;
                 const placedStudents = students.filter(s => s.placement_status === 'Placed').length;
 
                 const totalCompanies = companies?.length || 0;
                 const activeJobs = jobPostings?.data?.filter(job => job.status === 'open').length || 0;
                 setStats({
                     totalStudents,
-                    eligibleStudents,
                     placedStudents,
                     activeJobs,
                     totalCompanies
@@ -339,7 +336,6 @@ const AdminPlacement = () => {
             } catch (err) {
                 setStats({
                     totalStudents: 0,
-                    eligibleStudents: 0,
                     placedStudents: 0,
                     activeJobs: jobPostings?.data?.filter(job => job.status === 'open').length || 0,
                     totalCompanies: companies?.length || 0
@@ -514,6 +510,7 @@ const AdminPlacement = () => {
             case 'interview_scheduled': return 'warning';
             case 'interviewed': return 'primary';
             case 'selected': return 'success';
+             case 'selected_not_joined': return 'warning';
             case 'rejected': return 'error';
             case 'withdrawn': return 'secondary';
             
@@ -1176,11 +1173,6 @@ const AdminPlacement = () => {
                     value: stats?.totalStudents || 0,
                     icon: <GroupIcon sx={{ color: '#fff' }} />,
                 }, {
-                    key: 'eligibleStudents',
-                    label: 'Eligible Students',
-                    value: stats?.eligibleStudents || 0,
-                    icon: <GroupIcon sx={{ color: '#fff' }} />,
-                }, {
                     key: 'placedStudents',
                     label: 'Placed Students',
                     value: stats?.placedStudents || 0,
@@ -1200,7 +1192,7 @@ const AdminPlacement = () => {
                         ? 'linear-gradient(135deg, #0f1f3d 0%, #1e3c72 100%)' // Blue gradient (dashboard)
                         : 'linear-gradient(270deg, #eb6707 0%, #e42b12 100%)'; // Orange gradient (dashboard)
                     return (
-                    <Grid key={tile.key} item xs={12} md={2.4}>
+                    <Grid key={tile.key} item xs={12} md={3}>
                         <Box
                             sx={{
                                 position: 'relative',
@@ -1275,11 +1267,10 @@ const AdminPlacement = () => {
                             label={`Job Postings (${stats?.activeJobs || 0})`}
                             {...a11yProps(1)}
                         />
-                        <Tab icon={<GroupIcon />} label={`Eligible Students`} {...a11yProps(2)} />
                         <Tab
                             icon={<AssessmentIcon />}
                             label="Reports"
-                            {...a11yProps(3)}
+                            {...a11yProps(2)}
                         />
                     </Tabs>
                 </Box>
@@ -1796,7 +1787,7 @@ const AdminPlacement = () => {
                     </Box>
                 </TabPanel>
 
-                <TabPanel value={tabValue} index={3}>
+                <TabPanel value={tabValue} index={2}>
                     <Box>
                         <Typography variant="h5" gutterBottom sx={{ mb: 3, fontWeight: 600 }}>
                             📊 Placement Analytics & Reports
@@ -1818,11 +1809,6 @@ const AdminPlacement = () => {
                                                             name: 'Total Students',
                                                             value: stats?.totalStudents || 0,
                                                             fill: '#0f1f3d'
-                                                        },
-                                                        {
-                                                            name: 'Eligible Students',
-                                                            value: stats?.eligibleStudents || 0,
-                                                            fill: '#2196f3'
                                                         },
                                                         {
                                                             name: 'Placed Students',
@@ -1985,11 +1971,7 @@ const AdminPlacement = () => {
                                                             A: stats?.totalStudents > 0 ? Math.round((stats?.placedStudents / stats?.totalStudents) * 100) : 0,
                                                             fullMark: 100,
                                                         },
-                                                        {
-                                                            subject: 'Eligibility Rate',
-                                                            A: stats?.totalStudents > 0 ? Math.round((stats?.eligibleStudents / stats?.totalStudents) * 100) : 0,
-                                                            fullMark: 100,
-                                                        },
+
                                                         {
                                                             subject: 'Job Availability',
                                                             A: stats?.activeJobs > 0 ? Math.min(100, (stats?.activeJobs / 10) * 100) : 0,
@@ -1997,7 +1979,7 @@ const AdminPlacement = () => {
                                                         },
                                                         {
                                                             subject: 'Application Rate',
-                                                            A: stats?.eligibleStudents > 0 ? Math.min(100, ((jobApplications?.data?.length || 0) / stats?.eligibleStudents) * 100) : 0,
+                                                            A: stats?.totalStudents > 0 ? Math.min(100, ((jobApplications?.data?.length || 0) / stats?.totalStudents) * 100) : 0,
                                                             fullMark: 100,
                                                         },
                                                         {
@@ -2090,14 +2072,7 @@ const AdminPlacement = () => {
                                             >
                                                 View Job Postings
                                             </Button>
-                                            <Button
-                                                variant="outlined"
-                                                startIcon={<GroupIcon />}
-                                                onClick={() => setTabValue(2)}
-                                                sx={{ textTransform: 'none', borderRadius: 2 }}
-                                            >
-                                                View Eligible Students
-                                            </Button>
+
                                             <Button
                                                 variant="outlined"
                                                 startIcon={<BusinessIcon />}
@@ -2125,10 +2100,7 @@ const AdminPlacement = () => {
                     </Box>
                 </TabPanel>
 
-                {/* Eligible Students */}
-                <TabPanel value={tabValue} index={2}>
-                    <PlacementStudents eligibleOnlyMode={true} />
-                </TabPanel>
+
             </Paper>
 
             {/* Applications Dialog */}
@@ -2242,6 +2214,7 @@ const AdminPlacement = () => {
                                                 <MenuItem value="interview_scheduled">Interview Scheduled</MenuItem>
                                                 <MenuItem value="interviewed">Interviewed</MenuItem>
                                                 <MenuItem value="selected">Selected</MenuItem>
+                                                <MenuItem value="selected_not_joined">Selected Not Joined</MenuItem>
                                                 <MenuItem value="rejected">Rejected</MenuItem>
                                                 <MenuItem value="withdrawn">Withdrawn</MenuItem>
                                             </Select>

@@ -56,8 +56,6 @@ class UserImporter extends Importer
             ImportColumn::make('password')
                 ->requiredMapping()
                 ->rules(['required', 'max:255']),
-            ImportColumn::make('zoho_crm_id')
-                ->rules(['nullable', 'max:255']),
         ];
     }
 
@@ -142,7 +140,7 @@ class UserImporter extends Importer
      */
     public static function getTemplateInstructions(): string
     {
-        return 'Download the template, fill role (name), name, email, country_code, contact_number, gender, password, zoho_crm_id. country_code defaults to +91 if left empty.';
+        return 'Download the template, fill role (name), name, email, country_code, contact_number, gender, password. country_code defaults to +91 if left empty.';
     }
 
 }

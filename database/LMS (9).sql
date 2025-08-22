@@ -3,8 +3,8 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: localhost:3306
--- Generation Time: Jul 11, 2025 at 04:39 AM
--- Server version: 8.0.42-0ubuntu0.24.04.1
+-- Generation Time: Aug 21, 2025 at 09:53 AM
+-- Server version: 8.0.43-0ubuntu0.24.04.1
 -- PHP Version: 8.3.6
 
 SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
@@ -1659,7 +1659,115 @@ INSERT INTO `authentication_log` (`id`, `authenticatable_type`, `authenticatable
 (1583, 'App\\Models\\User', 93, '103.255.145.206', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36', '2025-07-09 22:55:24', 1, '2025-07-09 22:57:35', 0, NULL, NULL),
 (1584, 'App\\Models\\User', 81, '103.255.145.206', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36', '2025-07-09 22:57:44', 1, '2025-07-09 23:02:16', 0, NULL, NULL),
 (1585, 'App\\Models\\User', 93, '103.255.145.206', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36', '2025-07-09 23:02:24', 0, NULL, 0, NULL, NULL),
-(1586, 'App\\Models\\User', 93, '103.255.145.206', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36', '2025-07-09 23:02:29', 1, NULL, 0, NULL, NULL);
+(1586, 'App\\Models\\User', 93, '103.255.145.206', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36', '2025-07-09 23:02:29', 1, NULL, 0, NULL, NULL),
+(1587, 'App\\Models\\User', 93, '103.41.98.114', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36', '2025-07-11 14:47:12', 1, NULL, 0, NULL, NULL),
+(1588, 'App\\Models\\User', 76, '49.204.107.99', 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.0.0 Safari/537.36', '2025-07-11 15:06:39', 1, NULL, 0, NULL, NULL),
+(1589, 'App\\Models\\User', 81, '106.216.193.183', 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36', '2025-07-11 16:33:05', 1, NULL, 0, NULL, NULL),
+(1590, 'App\\Models\\User', 81, '106.216.202.1', 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36', '2025-07-12 17:21:50', 1, NULL, 0, NULL, NULL),
+(1591, 'App\\Models\\User', 81, '103.41.98.114', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36', '2025-07-15 11:10:21', 1, NULL, 0, NULL, NULL),
+(1592, 'App\\Models\\User', 84, '122.175.11.103', 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36', '2025-07-15 12:27:23', 1, NULL, 0, NULL, NULL),
+(1593, 'App\\Models\\User', 81, '103.41.98.114', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36', '2025-07-16 12:11:06', 1, '2025-07-16 12:13:19', 0, NULL, NULL),
+(1594, 'App\\Models\\User', 81, '103.41.98.114', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36', '2025-07-16 12:13:26', 1, '2025-07-16 12:14:03', 0, NULL, NULL),
+(1595, 'App\\Models\\User', 76, '103.41.98.114', 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.0.0 Safari/537.36', '2025-07-16 15:48:45', 1, '2025-07-16 15:49:51', 0, NULL, NULL),
+(1596, 'App\\Models\\User', 76, '103.41.98.114', 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.0.0 Safari/537.36', '2025-07-16 15:49:59', 1, NULL, 0, NULL, NULL),
+(1597, 'App\\Models\\User', 84, '103.41.98.114', 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36', '2025-07-16 18:22:59', 1, NULL, 0, NULL, NULL),
+(1598, 'App\\Models\\User', 81, '117.99.199.188', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36', '2025-07-20 11:38:45', 1, '2025-07-20 11:42:42', 0, NULL, NULL),
+(1599, 'App\\Models\\User', 93, '103.41.98.114', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36', '2025-07-21 10:18:11', 1, NULL, 0, NULL, NULL),
+(1600, 'App\\Models\\User', 84, '122.175.11.103', 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36', '2025-07-22 09:56:05', 1, NULL, 0, NULL, NULL),
+(1601, 'App\\Models\\User', 84, '103.41.98.114', 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36', '2025-07-23 11:08:22', 1, NULL, 0, NULL, NULL),
+(1602, 'App\\Models\\User', 93, '103.41.98.114', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36', '2025-07-23 11:28:44', 1, NULL, 0, NULL, NULL),
+(1603, 'App\\Models\\User', 84, '122.175.11.103', 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36', '2025-07-25 15:08:33', 1, NULL, 0, NULL, NULL),
+(1604, 'App\\Models\\User', 81, '223.237.171.64', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36', '2025-07-28 20:57:57', 1, NULL, 0, NULL, NULL),
+(1605, 'App\\Models\\User', 84, '122.175.11.103', 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36', '2025-07-30 16:04:54', 1, '2025-07-30 16:05:41', 0, NULL, NULL),
+(1606, 'App\\Models\\User', 76, '122.175.11.103', 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36', '2025-07-30 16:05:48', 1, '2025-07-30 16:26:38', 0, NULL, NULL),
+(1607, 'App\\Models\\User', 76, '103.41.98.114', 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36', '2025-07-30 16:26:13', 1, NULL, 0, NULL, NULL),
+(1608, 'App\\Models\\User', 93, '27.61.39.237', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36', '2025-07-31 18:26:01', 1, '2025-07-31 18:29:24', 0, NULL, NULL),
+(1609, 'App\\Models\\User', 11, '27.61.39.237', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36', '2025-07-31 18:29:31', 1, '2025-07-31 18:30:03', 0, NULL, NULL),
+(1610, 'App\\Models\\User', 93, '27.61.39.237', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36', '2025-07-31 18:30:14', 1, NULL, 0, NULL, NULL),
+(1611, 'App\\Models\\User', 93, '106.195.73.127', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36', '2025-08-04 09:54:06', 1, NULL, 0, NULL, NULL),
+(1612, 'App\\Models\\User', 76, '49.204.107.108', 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36', '2025-08-06 20:04:27', 1, NULL, 0, NULL, NULL),
+(1613, 'App\\Models\\User', 84, '122.175.11.103', 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36', '2025-08-07 10:01:54', 1, '2025-08-07 12:07:24', 0, NULL, NULL),
+(1614, 'App\\Models\\User', 93, '122.175.11.103', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36', '2025-08-07 11:07:30', 1, NULL, 0, NULL, NULL),
+(1615, 'App\\Models\\User', 84, '122.175.11.103', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36', '2025-08-07 12:08:45', 0, NULL, 0, NULL, NULL),
+(1616, 'App\\Models\\User', 84, '122.175.11.103', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36', '2025-08-07 12:08:52', 1, NULL, 0, NULL, NULL),
+(1617, 'App\\Models\\User', 84, '122.175.11.103', 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36', '2025-08-07 13:47:59', 1, NULL, 0, NULL, NULL),
+(1618, 'App\\Models\\User', 93, '122.175.11.103', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36', '2025-08-07 14:14:44', 0, NULL, 0, NULL, NULL),
+(1619, 'App\\Models\\User', 93, '122.175.11.103', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36', '2025-08-07 14:14:48', 1, NULL, 0, NULL, NULL),
+(1620, 'App\\Models\\User', 84, '122.175.11.103', 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36', '2025-08-08 11:03:22', 1, NULL, 0, NULL, NULL),
+(1621, 'App\\Models\\User', 81, '122.175.11.103', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36', '2025-08-08 12:27:04', 0, NULL, 0, NULL, NULL),
+(1622, 'App\\Models\\User', 81, '122.175.11.103', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36', '2025-08-08 12:27:09', 0, NULL, 0, NULL, NULL),
+(1623, 'App\\Models\\User', 81, '122.175.11.103', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36', '2025-08-08 12:27:13', 0, NULL, 0, NULL, NULL),
+(1624, 'App\\Models\\User', 81, '122.175.11.103', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36', '2025-08-08 12:27:21', 0, NULL, 0, NULL, NULL),
+(1625, 'App\\Models\\User', 93, '122.175.11.103', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36', '2025-08-08 12:27:29', 0, NULL, 0, NULL, NULL),
+(1626, 'App\\Models\\User', 93, '122.175.11.103', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36', '2025-08-08 12:31:25', 1, '2025-08-08 12:31:54', 0, NULL, NULL),
+(1627, 'App\\Models\\User', 81, '122.175.11.103', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36', '2025-08-08 12:32:03', 1, '2025-08-08 12:32:55', 0, NULL, NULL),
+(1628, 'App\\Models\\User', 81, '122.175.11.103', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36', '2025-08-08 12:33:03', 0, NULL, 0, NULL, NULL),
+(1629, 'App\\Models\\User', 81, '122.175.11.103', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36', '2025-08-08 12:33:11', 1, NULL, 0, NULL, NULL),
+(1630, 'App\\Models\\User', 81, '122.175.11.103', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36', '2025-08-08 15:44:39', 1, '2025-08-08 16:00:44', 0, NULL, NULL),
+(1631, 'App\\Models\\User', 81, '122.175.11.103', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36', '2025-08-08 16:01:52', 1, '2025-08-08 16:04:02', 0, NULL, NULL),
+(1632, 'App\\Models\\User', 76, '122.175.11.103', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36', '2025-08-08 16:03:44', 0, NULL, 0, NULL, NULL),
+(1633, 'App\\Models\\User', 81, '122.175.11.103', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36', '2025-08-08 16:03:55', 1, '2025-08-08 16:09:37', 0, NULL, NULL),
+(1634, 'App\\Models\\User', 93, '122.175.11.103', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36', '2025-08-08 16:09:48', 0, NULL, 0, NULL, NULL),
+(1635, 'App\\Models\\User', 93, '122.175.11.103', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36', '2025-08-08 16:09:54', 1, '2025-08-08 17:41:13', 0, NULL, NULL),
+(1636, 'App\\Models\\User', 93, '122.175.11.103', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36', '2025-08-08 17:34:39', 0, NULL, 0, NULL, NULL),
+(1637, 'App\\Models\\User', 93, '122.175.11.103', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36', '2025-08-08 17:34:44', 1, NULL, 0, NULL, NULL),
+(1638, 'App\\Models\\User', 93, '122.175.11.103', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36', '2025-08-08 17:35:08', 1, '2025-08-08 17:58:50', 0, NULL, NULL),
+(1639, 'App\\Models\\User', 81, '122.175.11.103', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36', '2025-08-08 17:58:59', 0, NULL, 0, NULL, NULL),
+(1640, 'App\\Models\\User', 81, '122.175.11.103', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36', '2025-08-08 17:59:07', 1, '2025-08-08 18:03:37', 0, NULL, NULL),
+(1641, 'App\\Models\\User', 81, '122.175.11.103', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36', '2025-08-08 18:03:57', 1, '2025-08-08 18:05:56', 0, NULL, NULL),
+(1642, 'App\\Models\\User', 93, '122.175.11.103', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36', '2025-08-08 18:04:15', 0, NULL, 0, NULL, NULL),
+(1643, 'App\\Models\\User', 93, '122.175.11.103', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36', '2025-08-08 18:04:19', 1, '2025-08-08 18:05:00', 0, NULL, NULL),
+(1644, 'App\\Models\\User', 93, '122.175.11.103', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36', '2025-08-08 18:05:16', 1, '2025-08-08 18:15:13', 0, NULL, NULL),
+(1645, 'App\\Models\\User', 81, '122.175.11.103', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36', '2025-08-08 18:06:18', 1, '2025-08-08 18:12:20', 0, NULL, NULL),
+(1646, 'App\\Models\\User', 81, '122.175.11.103', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36', '2025-08-08 18:12:29', 1, '2025-08-08 18:14:22', 0, NULL, NULL),
+(1647, 'App\\Models\\User', 93, '117.99.197.207', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36', '2025-08-09 10:48:45', 1, '2025-08-09 10:54:21', 0, NULL, NULL),
+(1648, 'App\\Models\\User', 84, '122.175.11.103', 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36', '2025-08-11 10:47:25', 1, NULL, 0, NULL, NULL),
+(1649, 'App\\Models\\User', 76, '122.175.11.103', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36', '2025-08-11 11:04:59', 1, '2025-08-11 11:06:34', 0, NULL, NULL),
+(1650, 'App\\Models\\User', 76, '122.175.11.103', 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36', '2025-08-11 13:41:50', 1, NULL, 0, NULL, NULL),
+(1651, 'App\\Models\\User', 76, '122.175.11.103', 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.6 Safari/605.1.15', '2025-08-11 13:42:37', 1, '2025-08-11 13:43:16', 0, NULL, NULL),
+(1652, 'App\\Models\\User', 76, '122.175.11.103', 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.6 Safari/605.1.15', '2025-08-11 13:43:26', 1, '2025-08-11 13:43:27', 0, NULL, NULL),
+(1653, 'App\\Models\\User', 76, '122.175.11.103', 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.6 Safari/605.1.15', '2025-08-11 13:43:35', 1, '2025-08-11 13:49:40', 0, NULL, NULL),
+(1654, 'App\\Models\\User', 76, '122.175.11.103', 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.6 Safari/605.1.15', '2025-08-11 13:49:53', 1, NULL, 0, NULL, NULL),
+(1655, 'App\\Models\\User', 93, '122.175.11.103', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36', '2025-08-11 15:21:57', 1, '2025-08-11 16:53:00', 0, NULL, NULL),
+(1656, 'App\\Models\\User', 81, '122.175.11.103', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36', '2025-08-11 15:47:18', 0, NULL, 0, NULL, NULL),
+(1657, 'App\\Models\\User', 81, '122.175.11.103', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36', '2025-08-11 15:47:24', 1, '2025-08-11 15:47:52', 0, NULL, NULL),
+(1658, 'App\\Models\\User', 93, '122.175.11.103', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36', '2025-08-11 16:53:12', 1, NULL, 0, NULL, NULL),
+(1659, 'App\\Models\\User', 84, '122.175.11.103', 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36', '2025-08-12 16:26:39', 1, NULL, 0, NULL, NULL),
+(1660, 'App\\Models\\User', 81, '103.41.98.114', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36', '2025-08-12 19:12:44', 0, NULL, 0, NULL, NULL),
+(1661, 'App\\Models\\User', 81, '103.41.98.114', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36', '2025-08-12 19:12:49', 0, NULL, 0, NULL, NULL),
+(1662, 'App\\Models\\User', 81, '103.41.98.114', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36', '2025-08-12 19:12:50', 1, NULL, 0, NULL, NULL),
+(1663, 'App\\Models\\User', 84, '122.175.11.103', 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36', '2025-08-13 10:49:14', 1, NULL, 0, NULL, NULL),
+(1664, 'App\\Models\\User', 76, '122.175.11.103', 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.6 Safari/605.1.15', '2025-08-13 10:50:42', 1, NULL, 0, NULL, NULL),
+(1665, 'App\\Models\\User', 93, '223.231.185.104', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36', '2025-08-13 12:27:57', 1, '2025-08-13 12:29:26', 0, NULL, NULL),
+(1666, 'App\\Models\\User', 81, '223.231.185.104', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36', '2025-08-13 12:29:37', 1, '2025-08-13 12:31:31', 0, NULL, NULL),
+(1667, 'App\\Models\\User', 93, '223.231.185.104', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36', '2025-08-13 12:31:44', 1, NULL, 0, NULL, NULL),
+(1668, 'App\\Models\\User', 76, '122.175.11.103', 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.6 Safari/605.1.15', '2025-08-13 14:05:26', 1, NULL, 0, NULL, NULL),
+(1669, 'App\\Models\\User', 81, '223.231.137.118', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36', '2025-08-13 17:28:50', 1, NULL, 0, NULL, NULL),
+(1670, 'App\\Models\\User', 81, '171.48.100.64', 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36', '2025-08-14 16:51:24', 1, NULL, 0, NULL, NULL),
+(1671, 'App\\Models\\User', 93, '223.237.169.139', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36', '2025-08-18 11:42:43', 1, NULL, 0, NULL, NULL),
+(1672, 'App\\Models\\User', 93, '223.231.185.98', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36', '2025-08-19 11:00:53', 0, NULL, 0, NULL, NULL),
+(1673, 'App\\Models\\User', 93, '223.231.185.98', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36', '2025-08-19 11:00:59', 1, NULL, 0, NULL, NULL),
+(1674, 'App\\Models\\User', 81, '223.231.185.98', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36', '2025-08-19 11:03:47', 0, NULL, 0, NULL, NULL),
+(1675, 'App\\Models\\User', 81, '223.231.185.98', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36', '2025-08-19 11:03:52', 1, NULL, 0, NULL, NULL),
+(1676, 'App\\Models\\User', 84, '122.175.11.103', 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36', '2025-08-20 11:38:36', 1, '2025-08-20 11:46:46', 0, NULL, NULL),
+(1677, 'App\\Models\\User', 84, '122.175.11.103', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36', '2025-08-20 11:46:42', 1, '2025-08-20 11:46:53', 0, NULL, NULL),
+(1678, 'App\\Models\\User', 84, '122.175.11.103', 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36', '2025-08-20 11:46:53', 1, '2025-08-20 11:47:26', 0, NULL, NULL),
+(1679, 'App\\Models\\User', 84, '122.175.11.103', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36', '2025-08-20 11:47:23', 1, '2025-08-20 11:47:34', 0, NULL, NULL),
+(1680, 'App\\Models\\User', 84, '122.175.11.103', 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36', '2025-08-20 11:47:31', 1, NULL, 0, NULL, NULL),
+(1681, 'App\\Models\\User', 81, '122.175.11.103', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36', '2025-08-20 15:39:35', 1, '2025-08-20 17:06:28', 0, NULL, NULL),
+(1682, 'App\\Models\\User', 93, '122.175.11.103', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36', '2025-08-20 17:06:40', 1, '2025-08-20 17:25:04', 0, NULL, NULL),
+(1683, 'App\\Models\\User', 81, '122.175.11.103', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36', '2025-08-20 17:25:14', 0, NULL, 0, NULL, NULL),
+(1684, 'App\\Models\\User', 81, '122.175.11.103', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36', '2025-08-20 17:25:19', 1, '2025-08-20 18:01:33', 0, NULL, NULL),
+(1685, 'App\\Models\\User', 93, '122.175.11.103', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36', '2025-08-20 18:01:46', 1, NULL, 0, NULL, NULL),
+(1686, 'App\\Models\\User', 93, '122.175.11.103', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36', '2025-08-21 10:38:43', 1, NULL, 0, NULL, NULL),
+(1687, 'App\\Models\\User', 84, '122.175.11.103', 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36', '2025-08-21 11:40:42', 1, NULL, 0, NULL, NULL),
+(1688, 'App\\Models\\User', 81, '122.175.11.103', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36', '2025-08-21 12:17:07', 1, NULL, 0, NULL, NULL),
+(1689, 'App\\Models\\User', 81, '122.175.11.103', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36', '2025-08-21 12:27:35', 1, '2025-08-21 12:27:35', 0, NULL, NULL),
+(1690, 'App\\Models\\User', 81, '122.175.11.103', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36', '2025-08-21 12:27:39', 1, '2025-08-21 12:27:39', 0, NULL, NULL),
+(1691, 'App\\Models\\User', 81, '122.175.11.103', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36', '2025-08-21 12:27:40', 1, '2025-08-21 12:27:40', 0, NULL, NULL),
+(1692, 'App\\Models\\User', 81, '122.175.11.103', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36', '2025-08-21 12:27:41', 1, '2025-08-21 12:27:41', 0, NULL, NULL),
+(1693, 'App\\Models\\User', 81, '122.175.11.103', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36', '2025-08-21 12:27:41', 1, '2025-08-21 12:27:41', 0, NULL, NULL),
+(1694, 'App\\Models\\User', 81, '122.175.11.103', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36', '2025-08-21 12:28:55', 1, NULL, 0, NULL, NULL);
 
 -- --------------------------------------------------------
 
@@ -1690,9 +1798,7 @@ CREATE TABLE `batches` (
 --
 
 INSERT INTO `batches` (`id`, `team_id`, `branch_id`, `course_package_id`, `course_id`, `name`, `manager_id`, `attendance_setting`, `start_date`, `end_date`, `allow_edit_class_time`, `allow_edit_class_date`, `curriculum_data`, `created_at`, `updated_at`) VALUES
-(32, 1, 1, 36, NULL, 'PD Demo May 2025', 90, NULL, '2025-05-01', '2025-06-30', 0, 0, NULL, '2025-05-28 14:24:43', '2025-07-04 17:11:01'),
-(33, 1, 1, 36, NULL, 'PD June Test 2025', 85, NULL, '0000-00-00', '0000-00-00', NULL, NULL, NULL, '2025-06-04 10:41:43', '2025-06-04 10:41:44'),
-(34, 1, 1, 36, NULL, 'new batch for  cloning test', 3, NULL, '2025-06-23', '2025-07-30', NULL, NULL, NULL, '2025-06-23 11:13:59', '2025-06-23 11:14:00');
+(41, 1, 1, 38, NULL, 'AL August\'25', 3, NULL, '2025-08-09', '2025-10-31', 0, 0, NULL, '2025-08-11 13:16:48', '2025-08-11 13:38:46');
 
 -- --------------------------------------------------------
 
@@ -1751,7 +1857,31 @@ INSERT INTO `batch_curriculum` (`id`, `batch_id`, `curriculum_id`, `tutor_id`, `
 (76, 34, 88, 85, '2025-06-23 11:14:01', '2025-06-23 11:14:01'),
 (77, 34, 89, 85, '2025-06-23 11:14:01', '2025-06-23 11:14:01'),
 (78, 34, 90, 85, '2025-06-23 11:14:01', '2025-06-23 11:14:01'),
-(79, 32, 92, 90, '2025-07-04 17:11:01', '2025-07-04 17:11:01');
+(79, 32, 92, 90, '2025-07-04 17:11:01', '2025-07-04 17:11:01'),
+(80, 35, 86, 85, '2025-07-23 11:30:45', '2025-07-23 11:30:45'),
+(81, 36, 86, 85, '2025-07-23 11:31:14', '2025-07-23 11:31:14'),
+(82, 37, 86, 85, '2025-07-23 11:31:52', '2025-07-23 11:31:52'),
+(83, 38, 86, 90, '2025-07-31 18:27:41', '2025-07-31 18:27:41'),
+(84, 39, 86, 90, '2025-07-31 18:28:03', '2025-07-31 18:28:03'),
+(85, 40, 86, 90, '2025-08-08 16:11:40', '2025-08-08 16:11:40'),
+(86, 40, 87, 85, '2025-08-08 16:11:40', '2025-08-08 16:11:40'),
+(87, 40, 88, 85, '2025-08-08 16:11:40', '2025-08-08 16:11:40'),
+(88, 40, 89, 85, '2025-08-08 16:11:40', '2025-08-08 16:11:40'),
+(89, 40, 90, 85, '2025-08-08 16:11:40', '2025-08-08 16:11:40'),
+(90, 40, 92, 90, '2025-08-08 16:11:40', '2025-08-08 16:11:40'),
+(91, 41, 101, 85, '2025-08-11 13:16:49', '2025-08-11 13:16:49'),
+(92, 41, 102, 85, '2025-08-11 13:16:49', '2025-08-11 13:16:49'),
+(93, 41, 103, 85, '2025-08-11 13:16:49', '2025-08-11 13:16:49'),
+(94, 41, 104, 85, '2025-08-11 13:16:50', '2025-08-11 13:16:50'),
+(95, 41, 105, 85, '2025-08-11 13:16:50', '2025-08-11 13:16:50'),
+(96, 41, 106, 85, '2025-08-11 13:16:50', '2025-08-11 13:16:50'),
+(97, 41, 107, 85, '2025-08-11 13:16:50', '2025-08-11 13:16:50'),
+(98, 41, 108, 96, '2025-08-11 13:38:46', '2025-08-11 13:38:46'),
+(99, 41, 109, 96, '2025-08-11 13:38:46', '2025-08-11 13:38:46'),
+(100, 41, 110, 96, '2025-08-11 13:38:46', '2025-08-11 13:38:46'),
+(101, 41, 111, 96, '2025-08-11 13:38:46', '2025-08-11 13:38:46'),
+(102, 41, 112, 96, '2025-08-11 13:38:46', '2025-08-11 13:38:46'),
+(103, 41, 113, 96, '2025-08-11 13:38:46', '2025-08-11 13:38:46');
 
 -- --------------------------------------------------------
 
@@ -1776,52 +1906,44 @@ CREATE TABLE `batch_curriculum_topics` (
 --
 
 INSERT INTO `batch_curriculum_topics` (`id`, `batch_curriculum_id`, `topic_id`, `is_topic_completed`, `is_topic_started`, `topic_completed_at`, `topic_started_at`, `created_at`, `updated_at`) VALUES
-(24, 64, 23, 1, 1, '2025-06-26 11:52:33', '2025-06-26 11:50:38', '2025-05-28 14:24:45', '2025-06-26 11:52:36'),
-(25, 64, 24, 0, 0, NULL, NULL, '2025-05-28 14:24:45', '2025-05-28 14:24:45'),
-(26, 64, 25, 0, 0, NULL, NULL, '2025-05-28 14:24:45', '2025-05-28 14:24:45'),
-(27, 65, 26, 0, 0, NULL, NULL, '2025-05-28 14:24:45', '2025-05-28 14:24:45'),
-(28, 65, 27, 0, 0, NULL, NULL, '2025-05-28 14:24:45', '2025-05-28 14:24:45'),
-(29, 65, 28, 0, 0, NULL, NULL, '2025-05-28 14:24:45', '2025-05-28 14:24:45'),
-(30, 66, 29, 0, 0, NULL, NULL, '2025-05-28 14:24:45', '2025-05-28 14:24:45'),
-(31, 66, 30, 0, 0, NULL, NULL, '2025-05-28 14:24:45', '2025-05-28 14:24:45'),
-(32, 66, 31, 0, 0, NULL, NULL, '2025-05-28 14:24:45', '2025-05-28 14:24:45'),
-(33, 67, 32, 0, 0, NULL, NULL, '2025-05-28 14:24:45', '2025-05-28 14:24:45'),
-(34, 67, 33, 0, 0, NULL, NULL, '2025-05-28 14:24:45', '2025-05-28 14:24:45'),
-(35, 67, 34, 0, 0, NULL, NULL, '2025-05-28 14:24:45', '2025-05-28 14:24:45'),
-(36, 68, 35, 0, 0, NULL, NULL, '2025-05-28 14:24:45', '2025-05-28 14:24:45'),
-(37, 68, 36, 0, 0, NULL, NULL, '2025-05-28 14:24:45', '2025-05-28 14:24:45'),
-(38, 68, 37, 0, 0, NULL, NULL, '2025-05-28 14:24:45', '2025-05-28 14:24:45'),
-(39, 69, 23, 0, 0, NULL, NULL, '2025-06-04 10:41:45', '2025-06-04 10:41:45'),
-(40, 69, 24, 0, 0, NULL, NULL, '2025-06-04 10:41:45', '2025-06-04 10:41:45'),
-(41, 69, 25, 0, 0, NULL, NULL, '2025-06-04 10:41:45', '2025-06-04 10:41:45'),
-(42, 70, 26, 0, 0, NULL, NULL, '2025-06-04 10:41:45', '2025-06-04 10:41:45'),
-(43, 70, 27, 0, 0, NULL, NULL, '2025-06-04 10:41:45', '2025-06-04 10:41:45'),
-(44, 70, 28, 0, 0, NULL, NULL, '2025-06-04 10:41:45', '2025-06-04 10:41:45'),
-(45, 71, 29, 0, 0, NULL, NULL, '2025-06-04 10:41:45', '2025-06-04 10:41:45'),
-(46, 71, 30, 0, 0, NULL, NULL, '2025-06-04 10:41:45', '2025-06-04 10:41:45'),
-(47, 71, 31, 0, 0, NULL, NULL, '2025-06-04 10:41:45', '2025-06-04 10:41:45'),
-(48, 72, 32, 0, 0, NULL, NULL, '2025-06-04 10:41:45', '2025-06-04 10:41:45'),
-(49, 72, 33, 0, 0, NULL, NULL, '2025-06-04 10:41:45', '2025-06-04 10:41:45'),
-(50, 72, 34, 0, 0, NULL, NULL, '2025-06-04 10:41:45', '2025-06-04 10:41:45'),
-(51, 73, 35, 0, 0, NULL, NULL, '2025-06-04 10:41:45', '2025-06-04 10:41:45'),
-(52, 73, 36, 0, 0, NULL, NULL, '2025-06-04 10:41:45', '2025-06-04 10:41:45'),
-(53, 73, 37, 0, 0, NULL, NULL, '2025-06-04 10:41:45', '2025-06-04 10:41:45'),
-(54, 74, 23, 0, 0, NULL, NULL, '2025-06-23 11:14:01', '2025-06-23 11:14:01'),
-(55, 74, 24, 0, 0, NULL, NULL, '2025-06-23 11:14:01', '2025-06-23 11:14:01'),
-(56, 74, 25, 0, 0, NULL, NULL, '2025-06-23 11:14:01', '2025-06-23 11:14:01'),
-(57, 75, 26, 0, 0, NULL, NULL, '2025-06-23 11:14:01', '2025-06-23 11:14:01'),
-(58, 75, 27, 0, 0, NULL, NULL, '2025-06-23 11:14:01', '2025-06-23 11:14:01'),
-(59, 75, 28, 0, 0, NULL, NULL, '2025-06-23 11:14:01', '2025-06-23 11:14:01'),
-(60, 76, 29, 0, 0, NULL, NULL, '2025-06-23 11:14:01', '2025-06-23 11:14:01'),
-(61, 76, 30, 0, 0, NULL, NULL, '2025-06-23 11:14:01', '2025-06-23 11:14:01'),
-(62, 76, 31, 0, 0, NULL, NULL, '2025-06-23 11:14:01', '2025-06-23 11:14:01'),
-(63, 77, 32, 0, 0, NULL, NULL, '2025-06-23 11:14:01', '2025-06-23 11:14:01'),
-(64, 77, 33, 0, 0, NULL, NULL, '2025-06-23 11:14:01', '2025-06-23 11:14:01'),
-(65, 77, 34, 0, 0, NULL, NULL, '2025-06-23 11:14:01', '2025-06-23 11:14:01'),
-(66, 78, 35, 0, 0, NULL, NULL, '2025-06-23 11:14:01', '2025-06-23 11:14:01'),
-(67, 78, 36, 0, 0, NULL, NULL, '2025-06-23 11:14:01', '2025-06-23 11:14:01'),
-(68, 78, 37, 0, 0, NULL, NULL, '2025-06-23 11:14:01', '2025-06-23 11:14:01'),
-(69, 79, 38, 0, 0, NULL, NULL, '2025-07-04 17:11:01', '2025-07-04 17:11:01');
+(70, 91, 41, 0, 0, NULL, NULL, '2025-08-11 13:16:49', '2025-08-11 13:16:49'),
+(71, 91, 42, 0, 0, NULL, NULL, '2025-08-11 13:16:49', '2025-08-11 13:16:49'),
+(72, 91, 43, 0, 0, NULL, NULL, '2025-08-11 13:16:49', '2025-08-11 13:16:49'),
+(73, 92, 44, 0, 0, NULL, NULL, '2025-08-11 13:16:49', '2025-08-11 13:16:49'),
+(74, 92, 45, 0, 0, NULL, NULL, '2025-08-11 13:16:49', '2025-08-11 13:16:49'),
+(75, 92, 46, 0, 0, NULL, NULL, '2025-08-11 13:16:49', '2025-08-11 13:16:49'),
+(76, 93, 47, 0, 0, NULL, NULL, '2025-08-11 13:16:49', '2025-08-11 13:16:49'),
+(77, 93, 48, 0, 0, NULL, NULL, '2025-08-11 13:16:50', '2025-08-11 13:16:50'),
+(78, 93, 49, 0, 0, NULL, NULL, '2025-08-11 13:16:50', '2025-08-11 13:16:50'),
+(79, 93, 50, 0, 0, NULL, NULL, '2025-08-11 13:16:50', '2025-08-11 13:16:50'),
+(80, 93, 51, 0, 0, NULL, NULL, '2025-08-11 13:16:50', '2025-08-11 13:16:50'),
+(81, 93, 52, 0, 0, NULL, NULL, '2025-08-11 13:16:50', '2025-08-11 13:16:50'),
+(82, 94, 53, 0, 0, NULL, NULL, '2025-08-11 13:16:50', '2025-08-11 13:16:50'),
+(83, 94, 54, 0, 0, NULL, NULL, '2025-08-11 13:16:50', '2025-08-11 13:16:50'),
+(84, 94, 55, 0, 0, NULL, NULL, '2025-08-11 13:16:50', '2025-08-11 13:16:50'),
+(85, 94, 56, 0, 0, NULL, NULL, '2025-08-11 13:16:50', '2025-08-11 13:16:50'),
+(86, 95, 57, 0, 0, NULL, NULL, '2025-08-11 13:16:50', '2025-08-11 13:16:50'),
+(87, 95, 58, 0, 0, NULL, NULL, '2025-08-11 13:16:50', '2025-08-11 13:16:50'),
+(88, 95, 59, 0, 0, NULL, NULL, '2025-08-11 13:16:50', '2025-08-11 13:16:50'),
+(89, 95, 60, 0, 0, NULL, NULL, '2025-08-11 13:16:50', '2025-08-11 13:16:50'),
+(90, 95, 61, 0, 0, NULL, NULL, '2025-08-11 13:16:50', '2025-08-11 13:16:50'),
+(91, 96, 62, 0, 0, NULL, NULL, '2025-08-11 13:16:50', '2025-08-11 13:16:50'),
+(92, 96, 63, 0, 0, NULL, NULL, '2025-08-11 13:16:50', '2025-08-11 13:16:50'),
+(93, 96, 64, 0, 0, NULL, NULL, '2025-08-11 13:16:50', '2025-08-11 13:16:50'),
+(94, 96, 65, 0, 0, NULL, NULL, '2025-08-11 13:16:50', '2025-08-11 13:16:50'),
+(95, 97, 66, 0, 0, NULL, NULL, '2025-08-11 13:16:50', '2025-08-11 13:16:50'),
+(96, 98, 67, 0, 0, NULL, NULL, '2025-08-11 13:38:46', '2025-08-11 13:38:46'),
+(97, 99, 68, 0, 0, NULL, NULL, '2025-08-11 13:38:46', '2025-08-11 13:38:46'),
+(98, 99, 69, 0, 0, NULL, NULL, '2025-08-11 13:38:46', '2025-08-11 13:38:46'),
+(99, 99, 70, 0, 0, NULL, NULL, '2025-08-11 13:38:46', '2025-08-11 13:38:46'),
+(100, 99, 71, 0, 0, NULL, NULL, '2025-08-11 13:38:46', '2025-08-11 13:38:46'),
+(101, 100, 72, 0, 0, NULL, NULL, '2025-08-11 13:38:46', '2025-08-11 13:38:46'),
+(102, 101, 73, 0, 0, NULL, NULL, '2025-08-11 13:38:46', '2025-08-11 13:38:46'),
+(103, 101, 74, 0, 0, NULL, NULL, '2025-08-11 13:38:46', '2025-08-11 13:38:46'),
+(104, 102, 75, 0, 0, NULL, NULL, '2025-08-11 13:38:46', '2025-08-11 13:38:46'),
+(105, 102, 76, 0, 0, NULL, NULL, '2025-08-11 13:38:46', '2025-08-11 13:38:46'),
+(106, 102, 77, 0, 0, NULL, NULL, '2025-08-11 13:38:46', '2025-08-11 13:38:46'),
+(107, 103, 78, 0, 0, NULL, NULL, '2025-08-11 13:38:46', '2025-08-11 13:38:46');
 
 -- --------------------------------------------------------
 
@@ -1898,7 +2020,10 @@ INSERT INTO `batch_user` (`id`, `batch_id`, `user_id`, `created_at`, `updated_at
 (61, 32, 80, NULL, NULL),
 (62, 32, 81, NULL, NULL),
 (63, 33, 76, NULL, NULL),
-(64, 33, 11, NULL, NULL);
+(65, 34, 11, NULL, NULL),
+(66, 40, 81, NULL, NULL),
+(67, 41, 76, NULL, NULL),
+(68, 41, 81, NULL, NULL);
 
 -- --------------------------------------------------------
 
@@ -2176,6 +2301,39 @@ CREATE TABLE `classrooms` (
 -- --------------------------------------------------------
 
 --
+-- Table structure for table `companies`
+--
+
+CREATE TABLE `companies` (
+  `id` bigint UNSIGNED NOT NULL,
+  `name` varchar(255) NOT NULL,
+  `description` text,
+  `website` varchar(255) DEFAULT NULL,
+  `logo_path` varchar(255) DEFAULT NULL,
+  `industry` varchar(255) DEFAULT NULL,
+  `company_size` varchar(100) DEFAULT NULL,
+  `contact_person` varchar(255) DEFAULT NULL,
+  `designation` varchar(255) DEFAULT NULL,
+  `contact_email` varchar(255) DEFAULT NULL,
+  `contact_phone` varchar(50) DEFAULT NULL,
+  `address` text,
+  `is_active` tinyint(1) DEFAULT '1',
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+--
+-- Dumping data for table `companies`
+--
+
+INSERT INTO `companies` (`id`, `name`, `description`, `website`, `logo_path`, `industry`, `company_size`, `contact_person`, `designation`, `contact_email`, `contact_phone`, `address`, `is_active`, `created_at`, `updated_at`) VALUES
+(2, 'Intel', 'We deliver AI experiences that power businesses with industry-defining platforms. With 50 years of unmatched innovation and global scale, you get the reliability and resilience you need to launch into a future full of creativity and ingenuity.', 'www,intel.com', NULL, 'Technology', '1000+', 'Vamsi Viswanath', NULL, 'vamsi.k@sumedhait.com', '8121950115', 'Hyderabad JNTU', 1, '2025-08-11 16:31:49', '2025-08-11 16:31:49'),
+(3, 'Risetime Semiconductors', 'Risetime was founded by a group of committed and experienced semiconductor industry professionals with a goal to provide end to end design and engineering services. Founding members have in depth knowledge and decades of experience in Custom Layout Design, ASIC Design, RTL Design, Verification,  post silicon validation, Physical Design, DFT, FPGA Emulation,  Board Design, Analog & Mixed Signal Design and Embedded Software services etc. Since inception the team has been working with various companies in the eco system on engineering services, technology solutions and product development.\n\n \nExperienced technical leads and proactive management ensures our engineers and processes are up to date and ready to work on any complex projects.\n\nThe company is built on back of high quality technical team with a great track record and follow strict corporate values and code of conduct.\n\nMission\n To stand out as a leading services company that can provide end to end solutions in semiconductor industry, i.e concept to silicon.\n\n \nVision\n To be a successful product development company which is capable of providing spec to consumer level product with highest level of quality to automotive, industrial/consumer electronics, storage and telecom verticals.', 'https://risetime.in/', NULL, 'Technology', '51-200', 'Vamsi', NULL, 'vamsi.a@sumedhait.com', '8790905787', 'Risetime Semiconductor OPC Pvt Ltd #302/A, Fortune Signature Towers,\nBeside JNTU Metrostation,\nHyderabad,Telangana – 500085', 1, '2025-08-13 12:32:46', '2025-08-13 12:32:46'),
+(4, 'Chipex', 'Chipex', 'https://sumedhait.com/', NULL, NULL, '11-50', 'Vamsi Kumar', 'HR', 'chipex@gmail.com', '9988776655', 'Hyderabad', 0, '2025-08-21 11:42:01', '2025-08-21 11:42:45');
+
+-- --------------------------------------------------------
+
+--
 -- Table structure for table `countries`
 --
 
@@ -2202,6 +2360,9 @@ INSERT INTO `countries` (`id`, `name`, `created_at`, `updated_at`) VALUES
 CREATE TABLE `courses` (
   `id` bigint UNSIGNED NOT NULL,
   `name` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `start_date` date DEFAULT NULL,
+  `is_completed` tinyint(1) NOT NULL DEFAULT '0',
+  `completed_at` timestamp NULL DEFAULT NULL,
   `is_live_course` tinyint(1) DEFAULT '0',
   `copy_from_existing_course` tinyint(1) DEFAULT NULL,
   `course_type` tinyint(1) DEFAULT '1',
@@ -2222,8 +2383,10 @@ CREATE TABLE `courses` (
 -- Dumping data for table `courses`
 --
 
-INSERT INTO `courses` (`id`, `name`, `is_live_course`, `copy_from_existing_course`, `course_type`, `allow_course_complete`, `is_package`, `course_unenrolling`, `content_access_after_completion`, `online_sale_url`, `image`, `promo_video_url`, `short_description`, `overview`, `created_at`, `updated_at`) VALUES
-(36, 'Physical Design', 0, 0, 1, 1, 0, 0, 0, NULL, NULL, NULL, NULL, NULL, '2025-05-28 13:43:55', '2025-05-28 13:43:55');
+INSERT INTO `courses` (`id`, `name`, `start_date`, `is_completed`, `completed_at`, `is_live_course`, `copy_from_existing_course`, `course_type`, `allow_course_complete`, `is_package`, `course_unenrolling`, `content_access_after_completion`, `online_sale_url`, `image`, `promo_video_url`, `short_description`, `overview`, `created_at`, `updated_at`) VALUES
+(36, 'Physical Design', NULL, 0, NULL, 0, 0, 1, 1, 0, 0, 0, NULL, NULL, NULL, NULL, NULL, '2025-05-28 13:43:55', '2025-05-28 13:43:55'),
+(38, 'Analog Layout', NULL, 1, '2025-08-20 11:47:08', 0, 0, 1, 0, 0, 0, 0, NULL, NULL, NULL, NULL, NULL, '2025-08-11 10:48:59', '2025-08-20 11:47:08'),
+(39, 'Design Verification', NULL, 0, NULL, 0, 0, 1, 0, 0, 0, 0, NULL, NULL, NULL, NULL, NULL, '2025-08-11 11:16:00', '2025-08-11 11:16:00');
 
 -- --------------------------------------------------------
 
@@ -2425,14 +2588,20 @@ INSERT INTO `curricula` (`curriculum_id`, `curricula_type`, `curricula_id`, `tut
 (83, 'App\\Models\\Course', 35, NULL),
 (84, 'App\\Models\\Course', 35, NULL),
 (85, 'App\\Models\\Course', 35, NULL),
-(86, 'App\\Models\\Course', 36, NULL),
-(87, 'App\\Models\\Course', 36, NULL),
-(88, 'App\\Models\\Course', 36, NULL),
-(89, 'App\\Models\\Course', 36, NULL),
-(90, 'App\\Models\\Course', 36, NULL),
-(92, 'App\\Models\\Course', 36, NULL),
-(93, 'App\\Models\\Course', 36, NULL),
-(94, 'App\\Models\\Course', 36, NULL);
+(100, 'App\\Models\\Course', 36, NULL),
+(101, 'App\\Models\\Course', 38, NULL),
+(102, 'App\\Models\\Course', 38, NULL),
+(103, 'App\\Models\\Course', 38, NULL),
+(104, 'App\\Models\\Course', 38, NULL),
+(105, 'App\\Models\\Course', 38, NULL),
+(106, 'App\\Models\\Course', 38, NULL),
+(107, 'App\\Models\\Course', 38, NULL),
+(108, 'App\\Models\\Course', 38, NULL),
+(109, 'App\\Models\\Course', 38, NULL),
+(110, 'App\\Models\\Course', 38, NULL),
+(111, 'App\\Models\\Course', 38, NULL),
+(112, 'App\\Models\\Course', 38, NULL),
+(113, 'App\\Models\\Course', 38, NULL);
 
 -- --------------------------------------------------------
 
@@ -2454,14 +2623,20 @@ CREATE TABLE `curriculum` (
 --
 
 INSERT INTO `curriculum` (`id`, `name`, `short_description`, `image`, `created_at`, `updated_at`) VALUES
-(86, 'Scripting Language_PD', 'This course introduces essential scripting languages used in VLSI design and automation. Students will learn TCL, Python, and Shell scripting to automate EDA tool flows, manage design data, and improve productivity in chip design environments. Ideal for engineers aiming to enhance their scripting skills for real-world VLSI applications.', 'curriculum-images/xYmDH858PTIwD9Hvfs4NrvEMEdebAzGASVafHKtu.png', '2025-05-28 13:49:40', '2025-07-04 17:06:02'),
-(87, 'Digital Design Fundamentals (DDF)', 'This course covers the foundational concepts of digital electronics essential for VLSI design. Topics include number systems, Boolean algebra, combinational and sequential circuits, flip-flops, multiplexers, decoders, counters, and FSMs. Ideal for students beginning their journey into digital logic and circuit design.', 'curriculum-images/by9I6saptJw7LKjzNmUSi7RCr42qM8ySIQgeRrbP.jpg', '2025-05-28 13:52:17', '2025-07-04 17:05:47'),
-(88, 'CMOS Fundamentals (CF)', 'This course provides a solid foundation in CMOS (Complementary Metal-Oxide-Semiconductor) technology, which is the backbone of modern VLSI design. Topics include CMOS device structure, operation, characteristics, inverter design, switching characteristics, noise margins, and power dissipation. Essential for understanding both digital and analog VLSI circuits.', 'curriculum-images/9gfg0hOY6Kdq5HtjZjB1UvXmotju3gbaLeGBwlwN.jpg', '2025-05-28 13:56:18', '2025-07-04 17:05:35'),
-(89, 'Statistical Static Timing Analysis (SSTA)', 'SSTA is an advanced method of timing analysis that accounts for variations in manufacturing processes, voltage, and temperature (PVT) by using statistical models rather than fixed worst-case values.', 'curriculum-images/86t0wVVMh5q3SyobnG4HObBdo0yQq17bFcvVQkGc.jpg', '2025-05-28 14:01:49', '2025-07-04 17:05:20'),
-(90, 'Placement & Routing (PNR)', 'It  is a crucial stage in the physical design flow where the synthesized netlist is physically implemented onto a silicon layout.', 'curriculum-images/XTcTL134YVCfrJKAT2r5kfrie9deJtkhNZk54IXp.png', '2025-05-28 14:02:57', '2025-07-04 17:04:43'),
-(92, 'testing curriculm from curriculm react page', 'new', 'curriculum-images/zMBALx4wmLBbsgjQ3Ano5rJajXxvN7jSzPkLcmz4.jpg', '2025-07-04 17:09:45', '2025-07-04 17:09:45'),
-(93, 'SSTA', NULL, 'curriculum-images/BxzIe5kATaqCOQh4vRWIs917YKHJ2k3BHHSBw4LP.jpg', '2025-07-08 10:20:03', '2025-07-08 10:20:03'),
-(94, 'CL', NULL, 'curriculum-images/4m9NRNHMW08KnhquNB2tDWps8C1M7kJjjMwqQjhI.jpg', '2025-07-08 10:20:27', '2025-07-08 10:20:27');
+(101, 'Scripting', NULL, NULL, '2025-08-11 11:17:20', '2025-08-11 11:17:20'),
+(102, 'Fabrication', NULL, NULL, '2025-08-11 11:19:25', '2025-08-11 11:19:25'),
+(103, 'Basic Electronics', NULL, NULL, '2025-08-11 12:58:22', '2025-08-11 12:58:22'),
+(104, 'The World of VLSI', NULL, NULL, '2025-08-11 13:00:09', '2025-08-11 13:00:09'),
+(105, 'Tool Introduction', NULL, NULL, '2025-08-11 13:02:38', '2025-08-11 13:02:38'),
+(106, 'Physical Verification', NULL, NULL, '2025-08-11 13:04:09', '2025-08-11 13:04:09'),
+(107, 'Different types of Devices', NULL, NULL, '2025-08-11 13:05:10', '2025-08-11 13:05:10'),
+(108, 'Latchup, Antenna', NULL, NULL, '2025-08-11 13:05:59', '2025-08-11 13:05:59'),
+(109, 'Different types of effects', NULL, NULL, '2025-08-11 13:06:29', '2025-08-11 13:06:29'),
+(110, 'EMIR', NULL, NULL, '2025-08-11 13:07:51', '2025-08-11 13:07:51'),
+(111, 'ESD, DFM understanding', NULL, NULL, '2025-08-11 13:08:08', '2025-08-11 13:08:08'),
+(112, 'Fin FET', NULL, NULL, '2025-08-11 13:08:45', '2025-08-11 13:08:45'),
+(113, 'Memory', NULL, NULL, '2025-08-11 13:09:33', '2025-08-11 13:09:33'),
+(114, 'Science', NULL, NULL, '2025-08-18 11:43:15', '2025-08-18 11:43:15');
 
 -- --------------------------------------------------------
 
@@ -2666,26 +2841,6 @@ CREATE TABLE `exam_batches` (
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
---
--- Dumping data for table `exam_batches`
---
-
-INSERT INTO `exam_batches` (`id`, `exam_id`, `batch_id`, `created_at`, `updated_at`) VALUES
-(1, 46, 32, '2025-06-05 10:50:52', '2025-06-05 10:51:22'),
-(2, 47, 32, '2025-06-05 22:37:21', '2025-06-05 22:37:27'),
-(3, 48, 32, '2025-06-06 13:55:16', '2025-06-06 13:56:30'),
-(4, 49, 32, '2025-06-11 15:51:03', '2025-06-11 15:51:11'),
-(5, 50, 32, '2025-06-12 21:30:02', '2025-06-12 21:30:18'),
-(6, 51, 32, '2025-06-13 16:10:15', '2025-06-13 16:10:22'),
-(7, 52, 32, '2025-06-13 16:17:59', '2025-06-13 16:18:06'),
-(8, 53, 32, '2025-06-13 17:21:37', '2025-06-13 17:21:44'),
-(9, 54, 32, '2025-06-13 17:30:25', '2025-06-13 17:30:33'),
-(10, 55, 32, '2025-06-16 10:29:37', '2025-06-16 10:29:43'),
-(11, 56, 32, '2025-06-18 09:51:25', '2025-06-18 09:51:33'),
-(16, 57, 32, NULL, NULL),
-(17, 57, 33, NULL, NULL),
-(18, 58, 32, '2025-06-23 05:52:53', '2025-06-23 05:52:53');
 
 -- --------------------------------------------------------
 
@@ -3177,7 +3332,54 @@ INSERT INTO `imports` (`id`, `completed_at`, `file_name`, `file_path`, `importer
 (13, '2025-05-13 09:41:07', 'import-13-New lMS-failed-rows.csv', 'C:\\Users\\2020r\\LMS\\storage\\app\\livewire-tmp/MKpzJL84k3VcJouQhqHBt02Vj3sZTd-metaaW1wb3J0LTEzLU5ldyBsTVMtZmFpbGVkLXJvd3MuY3N2-.csv', 'App\\Filament\\Imports\\UserImporter', 3, 3, 3, 1, '2025-05-13 09:41:05', '2025-05-13 09:41:07'),
 (14, '2025-06-05 16:35:39', 'question-importer-example.csv', '/var/www/html/LMS/storage/app/livewire-tmp/YkyypkzR4whFFuLcrcpLjfhQEHQbL3-metacXVlc3Rpb24taW1wb3J0ZXItZXhhbXBsZS5jc3Y=-.csv', 'App\\Filament\\Imports\\QuestionImporter', 7, 7, 7, 84, '2025-06-05 16:35:39', '2025-06-05 16:35:39'),
 (15, '2025-06-05 16:37:13', 'question-importer-example.csv', '/var/www/html/LMS/storage/app/livewire-tmp/XIen1u9a92cLzgclDiyz1qZiWsOtQ9-metacXVlc3Rpb24taW1wb3J0ZXItZXhhbXBsZS5jc3Y=-.csv', 'App\\Filament\\Imports\\QuestionImporter', 7, 7, 7, 84, '2025-06-05 16:37:13', '2025-06-05 16:37:13'),
-(16, '2025-06-05 16:38:23', 'question-importer-example.csv', '/var/www/html/LMS/storage/app/livewire-tmp/hiC5WoAaMREibHVbG1tq8w74LncvcL-metacXVlc3Rpb24taW1wb3J0ZXItZXhhbXBsZS5jc3Y=-.csv', 'App\\Filament\\Imports\\QuestionImporter', 7, 7, 7, 84, '2025-06-05 16:38:23', '2025-06-05 16:38:23');
+(16, '2025-06-05 16:38:23', 'question-importer-example.csv', '/var/www/html/LMS/storage/app/livewire-tmp/hiC5WoAaMREibHVbG1tq8w74LncvcL-metacXVlc3Rpb24taW1wb3J0ZXItZXhhbXBsZS5jc3Y=-.csv', 'App\\Filament\\Imports\\QuestionImporter', 7, 7, 7, 84, '2025-06-05 16:38:23', '2025-06-05 16:38:23'),
+(17, '2025-08-08 17:35:09', 'user_import_template (4).csv', '/var/www/html/LMS/storage/app/tmp-for-tests/livewire-tmp/dTaraCZkbZB8PylEQ4s4xtNMHMFmmZ-metadXNlcl9pbXBvcnRfdGVtcGxhdGUgKDQpLmNzdg==-.csv', 'App\\Filament\\Imports\\UserImporter', 2, 2, 2, 93, '2025-08-08 17:35:08', '2025-08-08 17:35:09');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `interview_questions`
+--
+
+CREATE TABLE `interview_questions` (
+  `id` bigint UNSIGNED NOT NULL,
+  `question` text NOT NULL,
+  `category` enum('technical','non_technical','behavioral') DEFAULT 'technical',
+  `difficulty_level` enum('easy','medium','hard') DEFAULT 'medium',
+  `domain_id` bigint UNSIGNED DEFAULT NULL,
+  `is_active` tinyint(1) DEFAULT '1',
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `job_applications`
+--
+
+CREATE TABLE `job_applications` (
+  `id` bigint UNSIGNED NOT NULL,
+  `job_posting_id` bigint UNSIGNED NOT NULL,
+  `user_id` bigint UNSIGNED NOT NULL,
+  `status` enum('applied','shortlisted','interview_scheduled','interviewed','selected','selected_not_joined','rejected','withdrawn') DEFAULT 'applied',
+  `application_date` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `shortlisted_date` timestamp NULL DEFAULT NULL,
+  `interview_date` timestamp NULL DEFAULT NULL,
+  `selection_date` timestamp NULL DEFAULT NULL,
+  `rejection_reason` text,
+  `notes` text,
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+--
+-- Dumping data for table `job_applications`
+--
+
+INSERT INTO `job_applications` (`id`, `job_posting_id`, `user_id`, `status`, `application_date`, `shortlisted_date`, `interview_date`, `selection_date`, `rejection_reason`, `notes`, `created_at`, `updated_at`) VALUES
+(1, 2, 76, 'applied', '2025-08-11 11:45:18', NULL, NULL, NULL, NULL, NULL, '2025-08-11 17:15:18', '2025-08-11 17:15:18'),
+(2, 2, 81, 'selected', '2025-08-13 07:01:16', '2025-08-20 17:11:37', NULL, '2025-08-21 11:54:22', NULL, NULL, '2025-08-13 12:31:17', '2025-08-21 11:54:22');
 
 -- --------------------------------------------------------
 
@@ -3219,7 +3421,72 @@ INSERT INTO `job_batches` (`id`, `name`, `total_jobs`, `pending_jobs`, `failed_j
 ('9ee685ed-e205-45d4-a26b-dbf24961c1a8', '', 1, 0, 0, '[]', 'a:2:{s:13:\"allowFailures\";b:1;s:7:\"finally\";a:1:{i:0;O:47:\"Laravel\\SerializableClosure\\SerializableClosure\":1:{s:12:\"serializable\";O:46:\"Laravel\\SerializableClosure\\Serializers\\Signed\":2:{s:12:\"serializable\";s:4167:\"O:46:\"Laravel\\SerializableClosure\\Serializers\\Native\":5:{s:3:\"use\";a:4:{s:9:\"columnMap\";a:34:{s:4:\"name\";s:4:\"name\";s:5:\"email\";s:5:\"email\";s:5:\"phone\";s:5:\"phone\";s:8:\"password\";s:8:\"password\";s:7:\"role_id\";N;s:19:\"registration_number\";N;s:8:\"birthday\";N;s:14:\"contact_number\";N;s:6:\"gender\";N;s:16:\"qualification_id\";N;s:18:\"year_of_passed_out\";N;s:7:\"address\";N;s:4:\"city\";N;s:8:\"state_id\";N;s:7:\"pincode\";N;s:6:\"school\";N;s:14:\"aadhaar_number\";N;s:16:\"linkedin_profile\";N;s:13:\"upload_resume\";N;s:13:\"upload_aadhar\";N;s:14:\"upload_picture\";N;s:15:\"upload_marklist\";N;s:16:\"upload_agreement\";N;s:11:\"parent_name\";N;s:14:\"parent_contact\";N;s:12:\"parent_email\";N;s:13:\"parent_aadhar\";N;s:17:\"parent_occupation\";N;s:19:\"residential_address\";N;s:14:\"designation_id\";N;s:10:\"experience\";N;s:9:\"domain_id\";N;s:7:\"subject\";N;s:9:\"is_active\";N;}s:6:\"import\";O:45:\"Illuminate\\Contracts\\Database\\ModelIdentifier\":5:{s:5:\"class\";s:38:\"Filament\\Actions\\Imports\\Models\\Import\";s:2:\"id\";i:13;s:9:\"relations\";a:0:{}s:10:\"connection\";s:5:\"mysql\";s:15:\"collectionClass\";N;}s:13:\"jobConnection\";N;s:7:\"options\";a:0:{}}s:8:\"function\";s:2925:\"function () use ($columnMap, $import, $jobConnection, $options) {\n                    $import->touch(\'completed_at\');\n\n                    event(new \\Filament\\Actions\\Imports\\Events\\ImportCompleted($import, $columnMap, $options));\n\n                    if (! $import->user instanceof \\Illuminate\\Contracts\\Auth\\Authenticatable) {\n                        return;\n                    }\n\n                    $failedRowsCount = $import->getFailedRowsCount();\n\n                    \\Filament\\Notifications\\Notification::make()\n                        ->title($import->importer::getCompletedNotificationTitle($import))\n                        ->body($import->importer::getCompletedNotificationBody($import))\n                        ->when(\n                            ! $failedRowsCount,\n                            fn (\\Filament\\Notifications\\Notification $notification) => $notification->success(),\n                        )\n                        ->when(\n                            $failedRowsCount && ($failedRowsCount < $import->total_rows),\n                            fn (\\Filament\\Notifications\\Notification $notification) => $notification->warning(),\n                        )\n                        ->when(\n                            $failedRowsCount === $import->total_rows,\n                            fn (\\Filament\\Notifications\\Notification $notification) => $notification->danger(),\n                        )\n                        ->when(\n                            $failedRowsCount,\n                            fn (\\Filament\\Notifications\\Notification $notification) => $notification->actions([\n                                \\Filament\\Notifications\\Actions\\Action::make(\'downloadFailedRowsCsv\')\n                                    ->label(trans_choice(\'filament-actions::import.notifications.completed.actions.download_failed_rows_csv.label\', $failedRowsCount, [\n                                        \'count\' => \\Illuminate\\Support\\Number::format($failedRowsCount),\n                                    ]))\n                                    ->color(\'danger\')\n                                    ->url(route(\'filament.imports.failed-rows.download\', [\'import\' => $import], absolute: false), shouldOpenInNewTab: true)\n                                    ->markAsRead(),\n                            ]),\n                        )\n                        ->when(\n                            ($jobConnection === \'sync\') ||\n                                (blank($jobConnection) && (config(\'queue.default\') === \'sync\')),\n                            fn (\\Filament\\Notifications\\Notification $notification) => $notification\n                                ->persistent()\n                                ->send(),\n                            fn (\\Filament\\Notifications\\Notification $notification) => $notification->sendToDatabase($import->user, isEventDispatched: true),\n                        );\n                }\";s:5:\"scope\";s:29:\"Filament\\Actions\\ImportAction\";s:4:\"this\";N;s:4:\"self\";s:32:\"00000000000015050000000000000000\";}\";s:4:\"hash\";s:44:\"gAzOOZOyUYy/VrnAmi1gsFsVEafjUd7y1IzBG/++EFc=\";}}}}', NULL, 1747129266, 1747129267),
 ('9f14e8cd-b0ca-4f46-8026-30eba1f36b01', '', 1, 0, 0, '[]', 'a:2:{s:13:\"allowFailures\";b:1;s:7:\"finally\";a:1:{i:0;O:47:\"Laravel\\SerializableClosure\\SerializableClosure\":1:{s:12:\"serializable\";O:46:\"Laravel\\SerializableClosure\\Serializers\\Signed\":2:{s:12:\"serializable\";s:4216:\"O:46:\"Laravel\\SerializableClosure\\Serializers\\Native\":5:{s:3:\"use\";a:4:{s:9:\"columnMap\";a:23:{s:16:\"question_bank_id\";s:16:\"question_bank_id\";s:10:\"audio_file\";s:10:\"audio_file\";s:9:\"paragraph\";s:9:\"paragraph\";s:8:\"question\";s:8:\"question\";s:13:\"question_type\";s:13:\"question_type\";s:5:\"marks\";s:5:\"marks\";s:14:\"negative_marks\";s:14:\"negative_marks\";s:4:\"hint\";s:4:\"hint\";s:11:\"explanation\";s:11:\"explanation\";s:6:\"answer\";s:6:\"answer\";s:20:\"check_capitalization\";s:20:\"check_capitalization\";s:17:\"check_punctuation\";s:17:\"check_punctuation\";s:8:\"option_1\";s:8:\"option_1\";s:8:\"option_2\";s:8:\"option_2\";s:8:\"option_3\";s:8:\"option_3\";s:8:\"option_4\";s:8:\"option_4\";s:8:\"option_5\";s:8:\"option_5\";s:8:\"option_6\";s:8:\"option_6\";s:8:\"option_7\";s:8:\"option_7\";s:8:\"option_8\";s:8:\"option_8\";s:8:\"option_9\";s:8:\"option_9\";s:9:\"option_10\";s:9:\"option_10\";s:14:\"correct_answer\";s:14:\"correct_answer\";}s:6:\"import\";O:45:\"Illuminate\\Contracts\\Database\\ModelIdentifier\":5:{s:5:\"class\";s:38:\"Filament\\Actions\\Imports\\Models\\Import\";s:2:\"id\";i:14;s:9:\"relations\";a:0:{}s:10:\"connection\";s:5:\"mysql\";s:15:\"collectionClass\";N;}s:13:\"jobConnection\";N;s:7:\"options\";a:0:{}}s:8:\"function\";s:2925:\"function () use ($columnMap, $import, $jobConnection, $options) {\n                    $import->touch(\'completed_at\');\n\n                    event(new \\Filament\\Actions\\Imports\\Events\\ImportCompleted($import, $columnMap, $options));\n\n                    if (! $import->user instanceof \\Illuminate\\Contracts\\Auth\\Authenticatable) {\n                        return;\n                    }\n\n                    $failedRowsCount = $import->getFailedRowsCount();\n\n                    \\Filament\\Notifications\\Notification::make()\n                        ->title($import->importer::getCompletedNotificationTitle($import))\n                        ->body($import->importer::getCompletedNotificationBody($import))\n                        ->when(\n                            ! $failedRowsCount,\n                            fn (\\Filament\\Notifications\\Notification $notification) => $notification->success(),\n                        )\n                        ->when(\n                            $failedRowsCount && ($failedRowsCount < $import->total_rows),\n                            fn (\\Filament\\Notifications\\Notification $notification) => $notification->warning(),\n                        )\n                        ->when(\n                            $failedRowsCount === $import->total_rows,\n                            fn (\\Filament\\Notifications\\Notification $notification) => $notification->danger(),\n                        )\n                        ->when(\n                            $failedRowsCount,\n                            fn (\\Filament\\Notifications\\Notification $notification) => $notification->actions([\n                                \\Filament\\Notifications\\Actions\\Action::make(\'downloadFailedRowsCsv\')\n                                    ->label(trans_choice(\'filament-actions::import.notifications.completed.actions.download_failed_rows_csv.label\', $failedRowsCount, [\n                                        \'count\' => \\Illuminate\\Support\\Number::format($failedRowsCount),\n                                    ]))\n                                    ->color(\'danger\')\n                                    ->url(route(\'filament.imports.failed-rows.download\', [\'import\' => $import], absolute: false), shouldOpenInNewTab: true)\n                                    ->markAsRead(),\n                            ]),\n                        )\n                        ->when(\n                            ($jobConnection === \'sync\') ||\n                                (blank($jobConnection) && (config(\'queue.default\') === \'sync\')),\n                            fn (\\Filament\\Notifications\\Notification $notification) => $notification\n                                ->persistent()\n                                ->send(),\n                            fn (\\Filament\\Notifications\\Notification $notification) => $notification->sendToDatabase($import->user, isEventDispatched: true),\n                        );\n                }\";s:5:\"scope\";s:29:\"Filament\\Actions\\ImportAction\";s:4:\"this\";N;s:4:\"self\";s:32:\"000000000000119e0000000000000000\";}\";s:4:\"hash\";s:44:\"D3TN+UeyasWvsOT51ZasfYkmqXQdP6990Gju92jbC2M=\";}}}}', NULL, 1749121539, 1749121539),
 ('9f14e95d-043c-4dce-bfdd-e675df3224cf', '', 1, 0, 0, '[]', 'a:2:{s:13:\"allowFailures\";b:1;s:7:\"finally\";a:1:{i:0;O:47:\"Laravel\\SerializableClosure\\SerializableClosure\":1:{s:12:\"serializable\";O:46:\"Laravel\\SerializableClosure\\Serializers\\Signed\":2:{s:12:\"serializable\";s:4216:\"O:46:\"Laravel\\SerializableClosure\\Serializers\\Native\":5:{s:3:\"use\";a:4:{s:9:\"columnMap\";a:23:{s:16:\"question_bank_id\";s:16:\"question_bank_id\";s:10:\"audio_file\";s:10:\"audio_file\";s:9:\"paragraph\";s:9:\"paragraph\";s:8:\"question\";s:8:\"question\";s:13:\"question_type\";s:13:\"question_type\";s:5:\"marks\";s:5:\"marks\";s:14:\"negative_marks\";s:14:\"negative_marks\";s:4:\"hint\";s:4:\"hint\";s:11:\"explanation\";s:11:\"explanation\";s:6:\"answer\";s:6:\"answer\";s:20:\"check_capitalization\";s:20:\"check_capitalization\";s:17:\"check_punctuation\";s:17:\"check_punctuation\";s:8:\"option_1\";s:8:\"option_1\";s:8:\"option_2\";s:8:\"option_2\";s:8:\"option_3\";s:8:\"option_3\";s:8:\"option_4\";s:8:\"option_4\";s:8:\"option_5\";s:8:\"option_5\";s:8:\"option_6\";s:8:\"option_6\";s:8:\"option_7\";s:8:\"option_7\";s:8:\"option_8\";s:8:\"option_8\";s:8:\"option_9\";s:8:\"option_9\";s:9:\"option_10\";s:9:\"option_10\";s:14:\"correct_answer\";s:14:\"correct_answer\";}s:6:\"import\";O:45:\"Illuminate\\Contracts\\Database\\ModelIdentifier\":5:{s:5:\"class\";s:38:\"Filament\\Actions\\Imports\\Models\\Import\";s:2:\"id\";i:15;s:9:\"relations\";a:0:{}s:10:\"connection\";s:5:\"mysql\";s:15:\"collectionClass\";N;}s:13:\"jobConnection\";N;s:7:\"options\";a:0:{}}s:8:\"function\";s:2925:\"function () use ($columnMap, $import, $jobConnection, $options) {\n                    $import->touch(\'completed_at\');\n\n                    event(new \\Filament\\Actions\\Imports\\Events\\ImportCompleted($import, $columnMap, $options));\n\n                    if (! $import->user instanceof \\Illuminate\\Contracts\\Auth\\Authenticatable) {\n                        return;\n                    }\n\n                    $failedRowsCount = $import->getFailedRowsCount();\n\n                    \\Filament\\Notifications\\Notification::make()\n                        ->title($import->importer::getCompletedNotificationTitle($import))\n                        ->body($import->importer::getCompletedNotificationBody($import))\n                        ->when(\n                            ! $failedRowsCount,\n                            fn (\\Filament\\Notifications\\Notification $notification) => $notification->success(),\n                        )\n                        ->when(\n                            $failedRowsCount && ($failedRowsCount < $import->total_rows),\n                            fn (\\Filament\\Notifications\\Notification $notification) => $notification->warning(),\n                        )\n                        ->when(\n                            $failedRowsCount === $import->total_rows,\n                            fn (\\Filament\\Notifications\\Notification $notification) => $notification->danger(),\n                        )\n                        ->when(\n                            $failedRowsCount,\n                            fn (\\Filament\\Notifications\\Notification $notification) => $notification->actions([\n                                \\Filament\\Notifications\\Actions\\Action::make(\'downloadFailedRowsCsv\')\n                                    ->label(trans_choice(\'filament-actions::import.notifications.completed.actions.download_failed_rows_csv.label\', $failedRowsCount, [\n                                        \'count\' => \\Illuminate\\Support\\Number::format($failedRowsCount),\n                                    ]))\n                                    ->color(\'danger\')\n                                    ->url(route(\'filament.imports.failed-rows.download\', [\'import\' => $import], absolute: false), shouldOpenInNewTab: true)\n                                    ->markAsRead(),\n                            ]),\n                        )\n                        ->when(\n                            ($jobConnection === \'sync\') ||\n                                (blank($jobConnection) && (config(\'queue.default\') === \'sync\')),\n                            fn (\\Filament\\Notifications\\Notification $notification) => $notification\n                                ->persistent()\n                                ->send(),\n                            fn (\\Filament\\Notifications\\Notification $notification) => $notification->sendToDatabase($import->user, isEventDispatched: true),\n                        );\n                }\";s:5:\"scope\";s:29:\"Filament\\Actions\\ImportAction\";s:4:\"this\";N;s:4:\"self\";s:32:\"000000000000119e0000000000000000\";}\";s:4:\"hash\";s:44:\"7HJBQdTz80xxeJfj6zpufOz8NwgPW1Fqpphn6vjrADU=\";}}}}', NULL, 1749121633, 1749121633),
-('9f14e9c7-4286-4863-9fe9-8cc5abc8b020', '', 1, 0, 0, '[]', 'a:2:{s:13:\"allowFailures\";b:1;s:7:\"finally\";a:1:{i:0;O:47:\"Laravel\\SerializableClosure\\SerializableClosure\":1:{s:12:\"serializable\";O:46:\"Laravel\\SerializableClosure\\Serializers\\Signed\":2:{s:12:\"serializable\";s:4216:\"O:46:\"Laravel\\SerializableClosure\\Serializers\\Native\":5:{s:3:\"use\";a:4:{s:9:\"columnMap\";a:23:{s:16:\"question_bank_id\";s:16:\"question_bank_id\";s:10:\"audio_file\";s:10:\"audio_file\";s:9:\"paragraph\";s:9:\"paragraph\";s:8:\"question\";s:8:\"question\";s:13:\"question_type\";s:13:\"question_type\";s:5:\"marks\";s:5:\"marks\";s:14:\"negative_marks\";s:14:\"negative_marks\";s:4:\"hint\";s:4:\"hint\";s:11:\"explanation\";s:11:\"explanation\";s:6:\"answer\";s:6:\"answer\";s:20:\"check_capitalization\";s:20:\"check_capitalization\";s:17:\"check_punctuation\";s:17:\"check_punctuation\";s:8:\"option_1\";s:8:\"option_1\";s:8:\"option_2\";s:8:\"option_2\";s:8:\"option_3\";s:8:\"option_3\";s:8:\"option_4\";s:8:\"option_4\";s:8:\"option_5\";s:8:\"option_5\";s:8:\"option_6\";s:8:\"option_6\";s:8:\"option_7\";s:8:\"option_7\";s:8:\"option_8\";s:8:\"option_8\";s:8:\"option_9\";s:8:\"option_9\";s:9:\"option_10\";s:9:\"option_10\";s:14:\"correct_answer\";s:14:\"correct_answer\";}s:6:\"import\";O:45:\"Illuminate\\Contracts\\Database\\ModelIdentifier\":5:{s:5:\"class\";s:38:\"Filament\\Actions\\Imports\\Models\\Import\";s:2:\"id\";i:16;s:9:\"relations\";a:0:{}s:10:\"connection\";s:5:\"mysql\";s:15:\"collectionClass\";N;}s:13:\"jobConnection\";N;s:7:\"options\";a:0:{}}s:8:\"function\";s:2925:\"function () use ($columnMap, $import, $jobConnection, $options) {\n                    $import->touch(\'completed_at\');\n\n                    event(new \\Filament\\Actions\\Imports\\Events\\ImportCompleted($import, $columnMap, $options));\n\n                    if (! $import->user instanceof \\Illuminate\\Contracts\\Auth\\Authenticatable) {\n                        return;\n                    }\n\n                    $failedRowsCount = $import->getFailedRowsCount();\n\n                    \\Filament\\Notifications\\Notification::make()\n                        ->title($import->importer::getCompletedNotificationTitle($import))\n                        ->body($import->importer::getCompletedNotificationBody($import))\n                        ->when(\n                            ! $failedRowsCount,\n                            fn (\\Filament\\Notifications\\Notification $notification) => $notification->success(),\n                        )\n                        ->when(\n                            $failedRowsCount && ($failedRowsCount < $import->total_rows),\n                            fn (\\Filament\\Notifications\\Notification $notification) => $notification->warning(),\n                        )\n                        ->when(\n                            $failedRowsCount === $import->total_rows,\n                            fn (\\Filament\\Notifications\\Notification $notification) => $notification->danger(),\n                        )\n                        ->when(\n                            $failedRowsCount,\n                            fn (\\Filament\\Notifications\\Notification $notification) => $notification->actions([\n                                \\Filament\\Notifications\\Actions\\Action::make(\'downloadFailedRowsCsv\')\n                                    ->label(trans_choice(\'filament-actions::import.notifications.completed.actions.download_failed_rows_csv.label\', $failedRowsCount, [\n                                        \'count\' => \\Illuminate\\Support\\Number::format($failedRowsCount),\n                                    ]))\n                                    ->color(\'danger\')\n                                    ->url(route(\'filament.imports.failed-rows.download\', [\'import\' => $import], absolute: false), shouldOpenInNewTab: true)\n                                    ->markAsRead(),\n                            ]),\n                        )\n                        ->when(\n                            ($jobConnection === \'sync\') ||\n                                (blank($jobConnection) && (config(\'queue.default\') === \'sync\')),\n                            fn (\\Filament\\Notifications\\Notification $notification) => $notification\n                                ->persistent()\n                                ->send(),\n                            fn (\\Filament\\Notifications\\Notification $notification) => $notification->sendToDatabase($import->user, isEventDispatched: true),\n                        );\n                }\";s:5:\"scope\";s:29:\"Filament\\Actions\\ImportAction\";s:4:\"this\";N;s:4:\"self\";s:32:\"000000000000119e0000000000000000\";}\";s:4:\"hash\";s:44:\"O1MuZEzDMU178DIN5mo0PaWwaR8mUiyomPq5W2D+Tog=\";}}}}', NULL, 1749121703, 1749121703);
+('9f14e9c7-4286-4863-9fe9-8cc5abc8b020', '', 1, 0, 0, '[]', 'a:2:{s:13:\"allowFailures\";b:1;s:7:\"finally\";a:1:{i:0;O:47:\"Laravel\\SerializableClosure\\SerializableClosure\":1:{s:12:\"serializable\";O:46:\"Laravel\\SerializableClosure\\Serializers\\Signed\":2:{s:12:\"serializable\";s:4216:\"O:46:\"Laravel\\SerializableClosure\\Serializers\\Native\":5:{s:3:\"use\";a:4:{s:9:\"columnMap\";a:23:{s:16:\"question_bank_id\";s:16:\"question_bank_id\";s:10:\"audio_file\";s:10:\"audio_file\";s:9:\"paragraph\";s:9:\"paragraph\";s:8:\"question\";s:8:\"question\";s:13:\"question_type\";s:13:\"question_type\";s:5:\"marks\";s:5:\"marks\";s:14:\"negative_marks\";s:14:\"negative_marks\";s:4:\"hint\";s:4:\"hint\";s:11:\"explanation\";s:11:\"explanation\";s:6:\"answer\";s:6:\"answer\";s:20:\"check_capitalization\";s:20:\"check_capitalization\";s:17:\"check_punctuation\";s:17:\"check_punctuation\";s:8:\"option_1\";s:8:\"option_1\";s:8:\"option_2\";s:8:\"option_2\";s:8:\"option_3\";s:8:\"option_3\";s:8:\"option_4\";s:8:\"option_4\";s:8:\"option_5\";s:8:\"option_5\";s:8:\"option_6\";s:8:\"option_6\";s:8:\"option_7\";s:8:\"option_7\";s:8:\"option_8\";s:8:\"option_8\";s:8:\"option_9\";s:8:\"option_9\";s:9:\"option_10\";s:9:\"option_10\";s:14:\"correct_answer\";s:14:\"correct_answer\";}s:6:\"import\";O:45:\"Illuminate\\Contracts\\Database\\ModelIdentifier\":5:{s:5:\"class\";s:38:\"Filament\\Actions\\Imports\\Models\\Import\";s:2:\"id\";i:16;s:9:\"relations\";a:0:{}s:10:\"connection\";s:5:\"mysql\";s:15:\"collectionClass\";N;}s:13:\"jobConnection\";N;s:7:\"options\";a:0:{}}s:8:\"function\";s:2925:\"function () use ($columnMap, $import, $jobConnection, $options) {\n                    $import->touch(\'completed_at\');\n\n                    event(new \\Filament\\Actions\\Imports\\Events\\ImportCompleted($import, $columnMap, $options));\n\n                    if (! $import->user instanceof \\Illuminate\\Contracts\\Auth\\Authenticatable) {\n                        return;\n                    }\n\n                    $failedRowsCount = $import->getFailedRowsCount();\n\n                    \\Filament\\Notifications\\Notification::make()\n                        ->title($import->importer::getCompletedNotificationTitle($import))\n                        ->body($import->importer::getCompletedNotificationBody($import))\n                        ->when(\n                            ! $failedRowsCount,\n                            fn (\\Filament\\Notifications\\Notification $notification) => $notification->success(),\n                        )\n                        ->when(\n                            $failedRowsCount && ($failedRowsCount < $import->total_rows),\n                            fn (\\Filament\\Notifications\\Notification $notification) => $notification->warning(),\n                        )\n                        ->when(\n                            $failedRowsCount === $import->total_rows,\n                            fn (\\Filament\\Notifications\\Notification $notification) => $notification->danger(),\n                        )\n                        ->when(\n                            $failedRowsCount,\n                            fn (\\Filament\\Notifications\\Notification $notification) => $notification->actions([\n                                \\Filament\\Notifications\\Actions\\Action::make(\'downloadFailedRowsCsv\')\n                                    ->label(trans_choice(\'filament-actions::import.notifications.completed.actions.download_failed_rows_csv.label\', $failedRowsCount, [\n                                        \'count\' => \\Illuminate\\Support\\Number::format($failedRowsCount),\n                                    ]))\n                                    ->color(\'danger\')\n                                    ->url(route(\'filament.imports.failed-rows.download\', [\'import\' => $import], absolute: false), shouldOpenInNewTab: true)\n                                    ->markAsRead(),\n                            ]),\n                        )\n                        ->when(\n                            ($jobConnection === \'sync\') ||\n                                (blank($jobConnection) && (config(\'queue.default\') === \'sync\')),\n                            fn (\\Filament\\Notifications\\Notification $notification) => $notification\n                                ->persistent()\n                                ->send(),\n                            fn (\\Filament\\Notifications\\Notification $notification) => $notification->sendToDatabase($import->user, isEventDispatched: true),\n                        );\n                }\";s:5:\"scope\";s:29:\"Filament\\Actions\\ImportAction\";s:4:\"this\";N;s:4:\"self\";s:32:\"000000000000119e0000000000000000\";}\";s:4:\"hash\";s:44:\"O1MuZEzDMU178DIN5mo0PaWwaR8mUiyomPq5W2D+Tog=\";}}}}', NULL, 1749121703, 1749121703),
+('9f95bd0f-61f6-4b13-9c20-508f828d9e47', '', 1, 0, 0, '[]', 'a:2:{s:13:\"allowFailures\";b:1;s:7:\"finally\";a:1:{i:0;O:47:\"Laravel\\SerializableClosure\\SerializableClosure\":1:{s:12:\"serializable\";O:46:\"Laravel\\SerializableClosure\\Serializers\\Signed\":2:{s:12:\"serializable\";s:3627:\"O:46:\"Laravel\\SerializableClosure\\Serializers\\Native\":5:{s:3:\"use\";a:4:{s:9:\"columnMap\";a:7:{s:4:\"role\";s:4:\"role\";s:4:\"name\";s:4:\"name\";s:5:\"email\";s:5:\"email\";s:14:\"contact_number\";s:14:\"contact_number\";s:6:\"gender\";s:6:\"gender\";s:8:\"password\";s:8:\"password\";s:11:\"zoho_crm_id\";s:11:\"zoho_crm_id\";}s:6:\"import\";O:45:\"Illuminate\\Contracts\\Database\\ModelIdentifier\":5:{s:5:\"class\";s:38:\"Filament\\Actions\\Imports\\Models\\Import\";s:2:\"id\";i:17;s:9:\"relations\";a:0:{}s:10:\"connection\";s:5:\"mysql\";s:15:\"collectionClass\";N;}s:13:\"jobConnection\";N;s:7:\"options\";a:0:{}}s:8:\"function\";s:2925:\"function () use ($columnMap, $import, $jobConnection, $options) {\n                    $import->touch(\'completed_at\');\n\n                    event(new \\Filament\\Actions\\Imports\\Events\\ImportCompleted($import, $columnMap, $options));\n\n                    if (! $import->user instanceof \\Illuminate\\Contracts\\Auth\\Authenticatable) {\n                        return;\n                    }\n\n                    $failedRowsCount = $import->getFailedRowsCount();\n\n                    \\Filament\\Notifications\\Notification::make()\n                        ->title($import->importer::getCompletedNotificationTitle($import))\n                        ->body($import->importer::getCompletedNotificationBody($import))\n                        ->when(\n                            ! $failedRowsCount,\n                            fn (\\Filament\\Notifications\\Notification $notification) => $notification->success(),\n                        )\n                        ->when(\n                            $failedRowsCount && ($failedRowsCount < $import->total_rows),\n                            fn (\\Filament\\Notifications\\Notification $notification) => $notification->warning(),\n                        )\n                        ->when(\n                            $failedRowsCount === $import->total_rows,\n                            fn (\\Filament\\Notifications\\Notification $notification) => $notification->danger(),\n                        )\n                        ->when(\n                            $failedRowsCount,\n                            fn (\\Filament\\Notifications\\Notification $notification) => $notification->actions([\n                                \\Filament\\Notifications\\Actions\\Action::make(\'downloadFailedRowsCsv\')\n                                    ->label(trans_choice(\'filament-actions::import.notifications.completed.actions.download_failed_rows_csv.label\', $failedRowsCount, [\n                                        \'count\' => \\Illuminate\\Support\\Number::format($failedRowsCount),\n                                    ]))\n                                    ->color(\'danger\')\n                                    ->url(route(\'filament.imports.failed-rows.download\', [\'import\' => $import], absolute: false), shouldOpenInNewTab: true)\n                                    ->markAsRead(),\n                            ]),\n                        )\n                        ->when(\n                            ($jobConnection === \'sync\') ||\n                                (blank($jobConnection) && (config(\'queue.default\') === \'sync\')),\n                            fn (\\Filament\\Notifications\\Notification $notification) => $notification\n                                ->persistent()\n                                ->send(),\n                            fn (\\Filament\\Notifications\\Notification $notification) => $notification->sendToDatabase($import->user, isEventDispatched: true),\n                        );\n                }\";s:5:\"scope\";s:29:\"Filament\\Actions\\ImportAction\";s:4:\"this\";N;s:4:\"self\";s:32:\"0000000000000bf40000000000000000\";}\";s:4:\"hash\";s:44:\"X8sl+U3LhnTXm2CjdZM/DC6zDk6QMu6tBmdwXj1675Q=\";}}}}', NULL, 1754654708, 1754654709);
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `job_eligibility_criteria`
+--
+
+CREATE TABLE `job_eligibility_criteria` (
+  `id` bigint UNSIGNED NOT NULL,
+  `job_posting_id` bigint UNSIGNED NOT NULL,
+  `btech_year_of_passout_min` int DEFAULT NULL,
+  `btech_year_of_passout_max` int DEFAULT NULL,
+  `mtech_year_of_passout_min` int DEFAULT NULL,
+  `mtech_year_of_passout_max` int DEFAULT NULL,
+  `btech_percentage_min` decimal(5,2) DEFAULT NULL,
+  `mtech_percentage_min` decimal(5,2) DEFAULT NULL,
+  `course_id` bigint UNSIGNED DEFAULT NULL,
+  `skills_required` json DEFAULT NULL,
+  `additional_criteria` text,
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+--
+-- Dumping data for table `job_eligibility_criteria`
+--
+
+INSERT INTO `job_eligibility_criteria` (`id`, `job_posting_id`, `btech_year_of_passout_min`, `btech_year_of_passout_max`, `mtech_year_of_passout_min`, `mtech_year_of_passout_max`, `btech_percentage_min`, `mtech_percentage_min`, `course_id`, `skills_required`, `additional_criteria`, `created_at`, `updated_at`) VALUES
+(2, 2, 2022, 2024, 2020, 2022, 60.00, 55.00, NULL, '[]', NULL, '2025-08-11 17:12:04', '2025-08-11 17:12:04');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `job_postings`
+--
+
+CREATE TABLE `job_postings` (
+  `id` bigint UNSIGNED NOT NULL,
+  `company_id` bigint UNSIGNED NOT NULL,
+  `course_id` bigint UNSIGNED DEFAULT NULL,
+  `posted_by` bigint UNSIGNED NOT NULL,
+  `title` varchar(255) NOT NULL,
+  `description` text NOT NULL,
+  `requirements` text,
+  `responsibilities` text,
+  `job_type` enum('full_time','part_time','contract','internship') DEFAULT 'full_time',
+  `location` varchar(255) DEFAULT NULL,
+  `salary_min` decimal(10,2) DEFAULT NULL,
+  `salary_max` decimal(10,2) DEFAULT NULL,
+  `experience_required` varchar(100) DEFAULT NULL,
+  `vacancies` int DEFAULT '1',
+  `status` enum('open','closed','draft','on_hold') DEFAULT 'open',
+  `application_deadline` datetime DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+--
+-- Dumping data for table `job_postings`
+--
+
+INSERT INTO `job_postings` (`id`, `company_id`, `course_id`, `posted_by`, `title`, `description`, `requirements`, `responsibilities`, `job_type`, `location`, `salary_min`, `salary_max`, `experience_required`, `vacancies`, `status`, `application_deadline`, `created_at`, `updated_at`) VALUES
+(2, 2, 38, 1, 'Analog Layout Engineer', 'Bachelor’s degree in Electrical Engineering, Electronics, or a related field \n3–8 years of experience in analog/mixed-signal layout within deep sub-micron CMOS technologies', 'Bachelor’s degree in Electrical Engineering, Electronics, or a related field \n3–8 years of experience in analog/mixed-signal layout within deep sub-micron CMOS technologies', 'Bachelor’s degree in Electrical Engineering, Electronics, or a related field \n3–8 years of experience in analog/mixed-signal layout within deep sub-micron CMOS technologies', 'full_time', 'Hyderabad', 300000.00, 500000.00, '0', 1, 'open', '2025-08-31 17:10:00', '2025-08-11 17:12:04', '2025-08-11 17:12:04'),
+(3, 4, 36, 1, 'Analog Layout Engineer', '', NULL, NULL, 'full_time', 'Hyderabad', NULL, NULL, NULL, 1, 'open', NULL, '2025-08-21 11:43:42', '2025-08-21 11:43:42');
 
 -- --------------------------------------------------------
 
@@ -3276,6 +3543,44 @@ INSERT INTO `migrations` (`id`, `migration`, `batch`) VALUES
 (17, '2025_04_01_145634_create_batch_curriculum_topics_table', 14),
 (18, '2024_04_12_create_course_students_table', 15),
 (19, '2024_10_24_133804_add_zoho_customer_id_to_user_table', 16);
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `mock_interviews`
+--
+
+CREATE TABLE `mock_interviews` (
+  `id` bigint UNSIGNED NOT NULL,
+  `user_id` bigint UNSIGNED NOT NULL,
+  `interview_type` enum('technical','non_technical','mixed') DEFAULT 'mixed',
+  `duration_minutes` int DEFAULT '30',
+  `status` enum('scheduled','in_progress','completed','cancelled') DEFAULT 'scheduled',
+  `scheduled_at` timestamp NULL DEFAULT NULL,
+  `started_at` timestamp NULL DEFAULT NULL,
+  `completed_at` timestamp NULL DEFAULT NULL,
+  `ai_analysis` json DEFAULT NULL,
+  `score` decimal(5,2) DEFAULT NULL,
+  `feedback` text,
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `mock_interview_responses`
+--
+
+CREATE TABLE `mock_interview_responses` (
+  `id` bigint UNSIGNED NOT NULL,
+  `mock_interview_id` bigint UNSIGNED NOT NULL,
+  `question_id` bigint UNSIGNED NOT NULL,
+  `response` text,
+  `ai_analysis` json DEFAULT NULL,
+  `score` decimal(5,2) DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- --------------------------------------------------------
 
@@ -3355,7 +3660,6 @@ INSERT INTO `notifications` (`id`, `type`, `notifiable_type`, `notifiable_id`, `
 ('0e898ab3-38fa-42e8-a350-71661b9ea80c', 'Filament\\Notifications\\DatabaseNotification', 'App\\Models\\User', 57, '{\"actions\":[],\"body\":null,\"color\":null,\"duration\":\"persistent\",\"icon\":null,\"iconColor\":null,\"status\":null,\"title\":\"test2\",\"view\":\"filament-notifications::notification\",\"viewData\":[],\"format\":\"filament\"}', NULL, '2024-05-21 14:26:05', '2024-05-21 14:26:05'),
 ('0f97125d-d54e-4ee3-9150-6d03660cf51b', 'Filament\\Notifications\\DatabaseNotification', 'App\\Models\\User', 40, '{\"actions\":[],\"body\":\"A new holiday \'Testing 1\' has been created for 2025-06-03.\",\"color\":null,\"duration\":\"persistent\",\"icon\":\"heroicon-o-check-circle\",\"iconColor\":\"success\",\"status\":\"success\",\"title\":\"New Holiday Created\",\"view\":\"filament-notifications::notification\",\"viewData\":[],\"format\":\"filament\"}', NULL, '2025-05-27 11:42:58', '2025-05-27 11:42:58'),
 ('0fbe0427-1348-4ec8-848a-bc45e79f1c9d', 'Filament\\Notifications\\DatabaseNotification', 'App\\Models\\User', 46, '{\"actions\":[],\"body\":null,\"color\":null,\"duration\":\"persistent\",\"icon\":null,\"iconColor\":null,\"status\":null,\"title\":\"fdf\",\"view\":\"filament-notifications::notification\",\"viewData\":[],\"format\":\"filament\"}', NULL, '2024-05-22 05:50:52', '2024-05-22 05:50:52'),
-('0fe5a7be-d5cd-45aa-9d14-d5e0408dcf54', 'Filament\\Notifications\\DatabaseNotification', 'App\\Models\\User', 84, '{\"actions\":[],\"body\":\"A new holiday \'new testing for holiday\' has been created for 2025-05-30.\",\"color\":null,\"duration\":\"persistent\",\"icon\":\"heroicon-o-check-circle\",\"iconColor\":\"success\",\"status\":\"success\",\"title\":\"New Holiday Created\",\"view\":\"filament-notifications::notification\",\"viewData\":[],\"format\":\"filament\"}', '2025-06-04 09:18:52', '2025-05-29 00:15:28', '2025-06-04 09:18:52'),
 ('1066a2ee-4c4c-4c86-b2f4-2ae76d984c45', 'Filament\\Notifications\\DatabaseNotification', 'App\\Models\\User', 39, '{\"actions\":[],\"body\":null,\"color\":null,\"duration\":\"persistent\",\"icon\":null,\"iconColor\":null,\"status\":null,\"title\":\"Welcome to your new Batch\",\"view\":\"filament-notifications::notification\",\"viewData\":[],\"format\":\"filament\"}', NULL, '2025-05-16 14:03:15', '2025-05-16 14:03:15'),
 ('10f8dd48-d10f-4625-b735-088691f5fa67', 'Filament\\Notifications\\DatabaseNotification', 'App\\Models\\User', 70, '{\"actions\":[],\"body\":null,\"color\":null,\"duration\":\"persistent\",\"icon\":null,\"iconColor\":null,\"status\":null,\"title\":\"Welcome to your new Batch\",\"view\":\"filament-notifications::notification\",\"viewData\":[],\"format\":\"filament\"}', NULL, '2025-05-16 14:03:16', '2025-05-16 14:03:16'),
 ('1178645a-a4a6-4acd-a881-ec6e9d005138', 'Filament\\Notifications\\DatabaseNotification', 'App\\Models\\User', 56, '{\"actions\":[],\"body\":null,\"color\":null,\"duration\":\"persistent\",\"icon\":null,\"iconColor\":null,\"status\":null,\"title\":\"Happy Kanuma\",\"view\":\"filament-notifications::notification\",\"viewData\":[],\"format\":\"filament\"}', NULL, '2024-05-23 08:50:04', '2024-05-23 08:50:04'),
@@ -3384,7 +3688,6 @@ INSERT INTO `notifications` (`id`, `type`, `notifiable_type`, `notifiable_id`, `
 ('2282ec70-6305-4529-a587-077a609d7551', 'Filament\\Notifications\\DatabaseNotification', 'App\\Models\\User', 5, '{\"actions\":[],\"body\":\"A new holiday \'Testing 1\' has been created for 2025-06-03.\",\"color\":null,\"duration\":\"persistent\",\"icon\":\"heroicon-o-check-circle\",\"iconColor\":\"success\",\"status\":\"success\",\"title\":\"New Holiday Created\",\"view\":\"filament-notifications::notification\",\"viewData\":[],\"format\":\"filament\"}', NULL, '2025-05-27 11:42:58', '2025-05-27 11:42:58'),
 ('2339ef12-1ad3-4307-9932-47b543f04cd0', 'Filament\\Notifications\\DatabaseNotification', 'App\\Models\\User', 40, '{\"actions\":[],\"body\":null,\"color\":null,\"duration\":\"persistent\",\"icon\":null,\"iconColor\":null,\"status\":null,\"title\":\"new \",\"view\":\"filament-notifications::notification\",\"viewData\":[],\"format\":\"filament\"}', NULL, '2025-06-10 12:27:14', '2025-06-10 12:27:14'),
 ('23b3c900-b789-4cb9-b8ca-e56ddf97a66b', 'Filament\\Notifications\\DatabaseNotification', 'App\\Models\\User', 78, '{\"actions\":[],\"body\":\"A new holiday \'Telangana Formation Day\' has been created for 2025-06-02.\",\"color\":null,\"duration\":\"persistent\",\"icon\":\"heroicon-o-check-circle\",\"iconColor\":\"success\",\"status\":\"success\",\"title\":\"New Holiday Created\",\"view\":\"filament-notifications::notification\",\"viewData\":[],\"format\":\"filament\"}', NULL, '2025-05-27 11:40:51', '2025-05-27 11:40:51'),
-('23e9e558-dc04-44f6-857d-1fdf27495f70', 'Filament\\Notifications\\DatabaseNotification', 'App\\Models\\User', 84, '{\"actions\":[],\"body\":\"A new holiday \'Independence Day \' has been created for 2025-08-15.\",\"color\":null,\"duration\":\"persistent\",\"icon\":\"heroicon-o-check-circle\",\"iconColor\":\"success\",\"status\":\"success\",\"title\":\"New Holiday Created\",\"view\":\"filament-notifications::notification\",\"viewData\":[],\"format\":\"filament\"}', '2025-06-04 09:18:52', '2025-05-29 13:51:52', '2025-06-04 09:18:52'),
 ('24c85c9f-bbb7-4f1b-bc25-4f1cf8ca296f', 'Filament\\Notifications\\DatabaseNotification', 'App\\Models\\User', 85, '{\"actions\":[],\"body\":\"A new holiday \'Independence Day \' has been created for 2025-08-15.\",\"color\":null,\"duration\":\"persistent\",\"icon\":\"heroicon-o-check-circle\",\"iconColor\":\"success\",\"status\":\"success\",\"title\":\"New Holiday Created\",\"view\":\"filament-notifications::notification\",\"viewData\":[],\"format\":\"filament\"}', NULL, '2025-05-29 13:51:52', '2025-05-29 13:51:52'),
 ('250d7066-f631-4cd4-b4a2-45f3c28b6f99', 'Filament\\Notifications\\DatabaseNotification', 'App\\Models\\User', 77, '{\"actions\":[],\"body\":\"A new holiday \'Telangana Formation Day\' has been created for 2025-06-02.\",\"color\":null,\"duration\":\"persistent\",\"icon\":\"heroicon-o-check-circle\",\"iconColor\":\"success\",\"status\":\"success\",\"title\":\"New Holiday Created\",\"view\":\"filament-notifications::notification\",\"viewData\":[],\"format\":\"filament\"}', NULL, '2025-05-27 11:40:51', '2025-05-27 11:40:51'),
 ('2569b651-0276-4a1f-8289-ff2114101644', 'Filament\\Notifications\\DatabaseNotification', 'App\\Models\\User', 60, '{\"actions\":[],\"body\":\"A new holiday \'Testing 1\' has been created for 2025-06-03.\",\"color\":null,\"duration\":\"persistent\",\"icon\":\"heroicon-o-check-circle\",\"iconColor\":\"success\",\"status\":\"success\",\"title\":\"New Holiday Created\",\"view\":\"filament-notifications::notification\",\"viewData\":[],\"format\":\"filament\"}', NULL, '2025-05-27 11:42:58', '2025-05-27 11:42:58'),
@@ -3435,16 +3738,15 @@ INSERT INTO `notifications` (`id`, `type`, `notifiable_type`, `notifiable_id`, `
 ('4a6cadf6-1c49-44f5-a201-271e84967f1a', 'Filament\\Notifications\\DatabaseNotification', 'App\\Models\\User', 56, '{\"actions\":[],\"body\":null,\"color\":null,\"duration\":\"persistent\",\"icon\":null,\"iconColor\":null,\"status\":null,\"title\":\"fdf\",\"view\":\"filament-notifications::notification\",\"viewData\":[],\"format\":\"filament\"}', NULL, '2024-05-22 05:50:53', '2024-05-22 05:50:53'),
 ('4c3ba7bc-2795-493c-b917-6b57303a8970', 'Filament\\Notifications\\DatabaseNotification', 'App\\Models\\User', 5, '{\"actions\":[],\"body\":null,\"color\":null,\"duration\":\"persistent\",\"icon\":null,\"iconColor\":null,\"status\":null,\"title\":\"Welcome to your new Batch\",\"view\":\"filament-notifications::notification\",\"viewData\":[],\"format\":\"filament\"}', NULL, '2025-05-16 14:03:15', '2025-05-16 14:03:15'),
 ('4d6607ae-34e3-465d-b2fd-1c1f76c3d73e', 'Filament\\Notifications\\DatabaseNotification', 'App\\Models\\User', 78, '{\"actions\":[],\"body\":\"A new holiday \'Telangana Formation Day\' has been created for 2025-06-02.\",\"color\":null,\"duration\":\"persistent\",\"icon\":\"heroicon-o-check-circle\",\"iconColor\":\"success\",\"status\":\"success\",\"title\":\"New Holiday Created\",\"view\":\"filament-notifications::notification\",\"viewData\":[],\"format\":\"filament\"}', NULL, '2025-05-29 13:51:25', '2025-05-29 13:51:25'),
-('4d7ba56b-6399-442f-9dd7-4bbaafcda1c9', 'Filament\\Notifications\\DatabaseNotification', 'App\\Models\\User', 84, '{\"actions\":[],\"body\":null,\"color\":null,\"duration\":\"persistent\",\"icon\":null,\"iconColor\":null,\"status\":null,\"title\":\"new \",\"view\":\"filament-notifications::notification\",\"viewData\":[],\"format\":\"filament\"}', NULL, '2025-06-10 12:27:14', '2025-06-10 12:27:14'),
 ('4da9311f-66a5-45b7-a9b9-f0b61a147cea', 'Filament\\Notifications\\DatabaseNotification', 'App\\Models\\User', 57, '{\"actions\":[],\"body\":\"A new holiday \'Testing 1\' has been created for 2025-06-03.\",\"color\":null,\"duration\":\"persistent\",\"icon\":\"heroicon-o-check-circle\",\"iconColor\":\"success\",\"status\":\"success\",\"title\":\"New Holiday Created\",\"view\":\"filament-notifications::notification\",\"viewData\":[],\"format\":\"filament\"}', NULL, '2025-05-27 11:42:58', '2025-05-27 11:42:58'),
 ('4e0ee130-078e-4288-b70d-55a6fa4e1b59', 'Filament\\Notifications\\DatabaseNotification', 'App\\Models\\User', 1, '{\"actions\":[],\"body\":\"A new holiday \'Independence Day \' has been created for 2025-08-15.\",\"color\":null,\"duration\":\"persistent\",\"icon\":\"heroicon-o-check-circle\",\"iconColor\":\"success\",\"status\":\"success\",\"title\":\"New Holiday Created\",\"view\":\"filament-notifications::notification\",\"viewData\":[],\"format\":\"filament\"}', NULL, '2025-05-29 13:51:52', '2025-05-29 13:51:52'),
 ('4eaf7da0-09ce-4a53-bae2-952f8534fe39', 'Filament\\Notifications\\DatabaseNotification', 'App\\Models\\User', 3, '{\"actions\":[],\"body\":null,\"color\":null,\"duration\":\"persistent\",\"icon\":null,\"iconColor\":null,\"status\":null,\"title\":\"test2\",\"view\":\"filament-notifications::notification\",\"viewData\":[],\"format\":\"filament\"}', '2024-06-10 03:07:04', '2024-05-21 14:26:04', '2024-06-10 03:07:04'),
 ('4f90ceaf-bf97-47c1-bf88-ef334f3edab5', 'Filament\\Notifications\\DatabaseNotification', 'App\\Models\\User', 11, '{\"actions\":[],\"body\":\"A new holiday \'Telangana Formation Day\' has been created for 2025-06-02.\",\"color\":null,\"duration\":\"persistent\",\"icon\":\"heroicon-o-check-circle\",\"iconColor\":\"success\",\"status\":\"success\",\"title\":\"New Holiday Created\",\"view\":\"filament-notifications::notification\",\"viewData\":[],\"format\":\"filament\"}', NULL, '2025-05-27 11:40:51', '2025-05-27 11:40:51'),
 ('50c2aa38-b0c6-4bf3-b0f7-3c9924a70c75', 'Filament\\Notifications\\DatabaseNotification', 'App\\Models\\User', 63, '{\"actions\":[],\"body\":\"A new holiday \'Testing 1\' has been created for 2025-06-03.\",\"color\":null,\"duration\":\"persistent\",\"icon\":\"heroicon-o-check-circle\",\"iconColor\":\"success\",\"status\":\"success\",\"title\":\"New Holiday Created\",\"view\":\"filament-notifications::notification\",\"viewData\":[],\"format\":\"filament\"}', NULL, '2025-05-27 11:42:58', '2025-05-27 11:42:58'),
 ('50eae20c-15d5-4f17-9466-e6f67695fd1b', 'Filament\\Notifications\\DatabaseNotification', 'App\\Models\\User', 67, '{\"actions\":[],\"body\":\"A new holiday \'Telangana Formation Day\' has been created for 2025-06-02.\",\"color\":null,\"duration\":\"persistent\",\"icon\":\"heroicon-o-check-circle\",\"iconColor\":\"success\",\"status\":\"success\",\"title\":\"New Holiday Created\",\"view\":\"filament-notifications::notification\",\"viewData\":[],\"format\":\"filament\"}', NULL, '2025-05-27 11:40:51', '2025-05-27 11:40:51'),
-('526936ff-511c-448b-9c48-69f249f40ec1', 'Filament\\Notifications\\DatabaseNotification', 'App\\Models\\User', 56, '{\"actions\":[],\"body\":null,\"color\":null,\"duration\":\"persistent\",\"icon\":null,\"iconColor\":null,\"status\":null,\"title\":\"gfdg\",\"view\":\"filament-notifications::notification\",\"viewData\":[],\"format\":\"filament\"}', NULL, '2024-05-21 13:10:02', '2024-05-21 13:10:02');
+('526936ff-511c-448b-9c48-69f249f40ec1', 'Filament\\Notifications\\DatabaseNotification', 'App\\Models\\User', 56, '{\"actions\":[],\"body\":null,\"color\":null,\"duration\":\"persistent\",\"icon\":null,\"iconColor\":null,\"status\":null,\"title\":\"gfdg\",\"view\":\"filament-notifications::notification\",\"viewData\":[],\"format\":\"filament\"}', NULL, '2024-05-21 13:10:02', '2024-05-21 13:10:02'),
+('5312627c-4f85-48fd-8f21-a67fbea101f9', 'Filament\\Notifications\\DatabaseNotification', 'App\\Models\\User', 48, '{\"actions\":[],\"body\":null,\"color\":null,\"duration\":\"persistent\",\"icon\":null,\"iconColor\":null,\"status\":null,\"title\":\"gfdg\",\"view\":\"filament-notifications::notification\",\"viewData\":[],\"format\":\"filament\"}', NULL, '2024-05-21 13:10:02', '2024-05-21 13:10:02');
 INSERT INTO `notifications` (`id`, `type`, `notifiable_type`, `notifiable_id`, `data`, `read_at`, `created_at`, `updated_at`) VALUES
-('5312627c-4f85-48fd-8f21-a67fbea101f9', 'Filament\\Notifications\\DatabaseNotification', 'App\\Models\\User', 48, '{\"actions\":[],\"body\":null,\"color\":null,\"duration\":\"persistent\",\"icon\":null,\"iconColor\":null,\"status\":null,\"title\":\"gfdg\",\"view\":\"filament-notifications::notification\",\"viewData\":[],\"format\":\"filament\"}', NULL, '2024-05-21 13:10:02', '2024-05-21 13:10:02'),
 ('538518ee-4a53-4518-b0ef-d67674ff817c', 'Filament\\Notifications\\DatabaseNotification', 'App\\Models\\User', 1, '{\"actions\":[{\"name\":\"download_csv\",\"color\":null,\"event\":null,\"eventData\":[],\"dispatchDirection\":false,\"dispatchToComponent\":null,\"extraAttributes\":[],\"icon\":null,\"iconPosition\":\"before\",\"iconSize\":null,\"isOutlined\":false,\"isDisabled\":false,\"label\":\"Download .csv\",\"shouldClose\":false,\"shouldMarkAsRead\":true,\"shouldMarkAsUnread\":false,\"shouldOpenUrlInNewTab\":true,\"size\":\"sm\",\"tooltip\":null,\"url\":\"\\/filament\\/exports\\/1\\/download?format=csv\",\"view\":\"filament-actions::link-action\"},{\"name\":\"download_xlsx\",\"color\":null,\"event\":null,\"eventData\":[],\"dispatchDirection\":false,\"dispatchToComponent\":null,\"extraAttributes\":[],\"icon\":null,\"iconPosition\":\"before\",\"iconSize\":null,\"isOutlined\":false,\"isDisabled\":false,\"label\":\"Download .xlsx\",\"shouldClose\":false,\"shouldMarkAsRead\":true,\"shouldMarkAsUnread\":false,\"shouldOpenUrlInNewTab\":true,\"size\":\"sm\",\"tooltip\":null,\"url\":\"\\/filament\\/exports\\/1\\/download?format=xlsx\",\"view\":\"filament-actions::link-action\"}],\"body\":\"Your question export has completed and 13 rows exported.\",\"color\":null,\"duration\":\"persistent\",\"icon\":\"heroicon-o-check-circle\",\"iconColor\":\"success\",\"status\":\"success\",\"title\":\"Export completed\",\"view\":\"filament-notifications::notification\",\"viewData\":[],\"format\":\"filament\"}', '2024-06-14 04:33:24', '2024-06-14 04:10:18', '2024-06-14 04:33:24'),
 ('54d624f5-2e90-4d20-8e5d-94f9438c4e5e', 'Filament\\Notifications\\DatabaseNotification', 'App\\Models\\User', 57, '{\"actions\":[],\"body\":null,\"color\":null,\"duration\":\"persistent\",\"icon\":null,\"iconColor\":null,\"status\":null,\"title\":\"Welcome to your new Batch\",\"view\":\"filament-notifications::notification\",\"viewData\":[],\"format\":\"filament\"}', NULL, '2025-05-16 14:03:16', '2025-05-16 14:03:16'),
 ('56e597f3-ac89-4891-9933-5ae8ff321d9f', 'Filament\\Notifications\\DatabaseNotification', 'App\\Models\\User', 73, '{\"actions\":[],\"body\":\"A new holiday \'Telangana Formation Day\' has been created for 2025-06-02.\",\"color\":null,\"duration\":\"persistent\",\"icon\":\"heroicon-o-check-circle\",\"iconColor\":\"success\",\"status\":\"success\",\"title\":\"New Holiday Created\",\"view\":\"filament-notifications::notification\",\"viewData\":[],\"format\":\"filament\"}', NULL, '2025-05-27 11:40:51', '2025-05-27 11:40:51'),
@@ -3515,7 +3817,6 @@ INSERT INTO `notifications` (`id`, `type`, `notifiable_type`, `notifiable_id`, `
 ('90e47672-96dc-4e0d-a730-401301848deb', 'Filament\\Notifications\\DatabaseNotification', 'App\\Models\\User', 10, '{\"actions\":[],\"body\":\"A new holiday \'Telangana Formation Day\' has been created for 2025-06-02.\",\"color\":null,\"duration\":\"persistent\",\"icon\":\"heroicon-o-check-circle\",\"iconColor\":\"success\",\"status\":\"success\",\"title\":\"New Holiday Created\",\"view\":\"filament-notifications::notification\",\"viewData\":[],\"format\":\"filament\"}', NULL, '2025-05-27 11:40:51', '2025-05-27 11:40:51'),
 ('928e651d-735e-4ea3-ba31-eba7edcb3eed', 'Filament\\Notifications\\DatabaseNotification', 'App\\Models\\User', 56, '{\"actions\":[],\"body\":null,\"color\":null,\"duration\":\"persistent\",\"icon\":null,\"iconColor\":null,\"status\":null,\"title\":\"hello\",\"view\":\"filament-notifications::notification\",\"viewData\":[],\"format\":\"filament\"}', NULL, '2024-05-22 06:40:28', '2024-05-22 06:40:28'),
 ('92fff785-99c6-4618-923a-320c6d549fc3', 'Filament\\Notifications\\DatabaseNotification', 'App\\Models\\User', 40, '{\"actions\":[],\"body\":\"A new holiday \'new testing for holiday\' has been created for 2025-05-30.\",\"color\":null,\"duration\":\"persistent\",\"icon\":\"heroicon-o-check-circle\",\"iconColor\":\"success\",\"status\":\"success\",\"title\":\"New Holiday Created\",\"view\":\"filament-notifications::notification\",\"viewData\":[],\"format\":\"filament\"}', NULL, '2025-05-29 00:15:28', '2025-05-29 00:15:28'),
-('9304b8ed-fdb4-4be3-9cdc-1194ab9e689b', 'Filament\\Notifications\\DatabaseNotification', 'App\\Models\\User', 84, '{\"actions\":[],\"body\":\"A new holiday \'Telangana Formation Day\' has been created for 2025-06-02.\",\"color\":null,\"duration\":\"persistent\",\"icon\":\"heroicon-o-check-circle\",\"iconColor\":\"success\",\"status\":\"success\",\"title\":\"New Holiday Created\",\"view\":\"filament-notifications::notification\",\"viewData\":[],\"format\":\"filament\"}', '2025-06-04 09:18:52', '2025-05-29 13:51:25', '2025-06-04 09:18:52'),
 ('9388e04a-7c8d-4573-8db3-4f737ae4d1d0', 'Filament\\Notifications\\DatabaseNotification', 'App\\Models\\User', 6, '{\"actions\":[],\"body\":null,\"color\":null,\"duration\":\"persistent\",\"icon\":null,\"iconColor\":null,\"status\":null,\"title\":\"fdf\",\"view\":\"filament-notifications::notification\",\"viewData\":[],\"format\":\"filament\"}', NULL, '2024-05-22 05:50:52', '2024-05-22 05:50:52'),
 ('941e320c-1226-4565-9f4d-412b54d3576f', 'Filament\\Notifications\\DatabaseNotification', 'App\\Models\\User', 72, '{\"actions\":[],\"body\":null,\"color\":null,\"duration\":\"persistent\",\"icon\":null,\"iconColor\":null,\"status\":null,\"title\":\"Welcome to your new Batch\",\"view\":\"filament-notifications::notification\",\"viewData\":[],\"format\":\"filament\"}', NULL, '2025-05-16 14:03:16', '2025-05-16 14:03:16'),
 ('94b76c8f-eebc-49a0-aaab-9ee78d9fcd93', 'Filament\\Notifications\\DatabaseNotification', 'App\\Models\\User', 46, '{\"actions\":[],\"body\":null,\"color\":null,\"duration\":\"persistent\",\"icon\":null,\"iconColor\":null,\"status\":null,\"title\":\"Happy Kanuma\",\"view\":\"filament-notifications::notification\",\"viewData\":[],\"format\":\"filament\"}', NULL, '2024-05-23 08:50:04', '2024-05-23 08:50:04'),
@@ -3551,10 +3852,10 @@ INSERT INTO `notifications` (`id`, `type`, `notifiable_type`, `notifiable_id`, `
 ('a43d5113-a49e-462d-908b-3a50350cd917', 'Filament\\Notifications\\DatabaseNotification', 'App\\Models\\User', 57, '{\"actions\":[],\"body\":null,\"color\":null,\"duration\":\"persistent\",\"icon\":null,\"iconColor\":null,\"status\":null,\"title\":\"Happy thursday\",\"view\":\"filament-notifications::notification\",\"viewData\":[],\"format\":\"filament\"}', NULL, '2024-05-23 10:01:05', '2024-05-23 10:01:05'),
 ('a44dbf0d-795b-469c-94f9-a95e256c3d67', 'Filament\\Notifications\\DatabaseNotification', 'App\\Models\\User', 6, '{\"actions\":[],\"body\":null,\"color\":null,\"duration\":\"persistent\",\"icon\":null,\"iconColor\":null,\"status\":null,\"title\":\"Test\",\"view\":\"filament-notifications::notification\",\"viewData\":[],\"format\":\"filament\"}', NULL, '2024-05-21 14:21:38', '2024-05-21 14:21:38'),
 ('a46bffe0-b66a-4592-aa0e-0122c5ffbfd5', 'Filament\\Notifications\\DatabaseNotification', 'App\\Models\\User', 47, '{\"actions\":[],\"body\":null,\"color\":null,\"duration\":\"persistent\",\"icon\":null,\"iconColor\":null,\"status\":null,\"title\":\"Happy thursday\",\"view\":\"filament-notifications::notification\",\"viewData\":[],\"format\":\"filament\"}', NULL, '2024-05-23 10:01:05', '2024-05-23 10:01:05'),
-('a4f12456-11a4-47fb-8809-cdef2eb40db9', 'Filament\\Notifications\\DatabaseNotification', 'App\\Models\\User', 39, '{\"actions\":[],\"body\":null,\"color\":null,\"duration\":\"persistent\",\"icon\":null,\"iconColor\":null,\"status\":null,\"title\":\"Happy Kanuma\",\"view\":\"filament-notifications::notification\",\"viewData\":[],\"format\":\"filament\"}', NULL, '2024-05-23 08:50:04', '2024-05-23 08:50:04');
-INSERT INTO `notifications` (`id`, `type`, `notifiable_type`, `notifiable_id`, `data`, `read_at`, `created_at`, `updated_at`) VALUES
+('a4f12456-11a4-47fb-8809-cdef2eb40db9', 'Filament\\Notifications\\DatabaseNotification', 'App\\Models\\User', 39, '{\"actions\":[],\"body\":null,\"color\":null,\"duration\":\"persistent\",\"icon\":null,\"iconColor\":null,\"status\":null,\"title\":\"Happy Kanuma\",\"view\":\"filament-notifications::notification\",\"viewData\":[],\"format\":\"filament\"}', NULL, '2024-05-23 08:50:04', '2024-05-23 08:50:04'),
 ('a5bd0a3e-5e36-4c18-98f9-d919e516c344', 'Filament\\Notifications\\DatabaseNotification', 'App\\Models\\User', 1, '{\"actions\":[],\"body\":\"A new holiday \'new testing for holiday\' has been created for 2025-05-30.\",\"color\":null,\"duration\":\"persistent\",\"icon\":\"heroicon-o-check-circle\",\"iconColor\":\"success\",\"status\":\"success\",\"title\":\"New Holiday Created\",\"view\":\"filament-notifications::notification\",\"viewData\":[],\"format\":\"filament\"}', NULL, '2025-05-29 00:15:28', '2025-05-29 00:15:28'),
-('a6e73804-8521-467f-8c50-60eaa34c1ebd', 'Filament\\Notifications\\DatabaseNotification', 'App\\Models\\User', 79, '{\"actions\":[],\"body\":null,\"color\":null,\"duration\":\"persistent\",\"icon\":null,\"iconColor\":null,\"status\":null,\"title\":\"testing \",\"view\":\"filament-notifications::notification\",\"viewData\":[],\"format\":\"filament\"}', NULL, '2025-05-29 00:14:58', '2025-05-29 00:14:58'),
+('a6e73804-8521-467f-8c50-60eaa34c1ebd', 'Filament\\Notifications\\DatabaseNotification', 'App\\Models\\User', 79, '{\"actions\":[],\"body\":null,\"color\":null,\"duration\":\"persistent\",\"icon\":null,\"iconColor\":null,\"status\":null,\"title\":\"testing \",\"view\":\"filament-notifications::notification\",\"viewData\":[],\"format\":\"filament\"}', NULL, '2025-05-29 00:14:58', '2025-05-29 00:14:58');
+INSERT INTO `notifications` (`id`, `type`, `notifiable_type`, `notifiable_id`, `data`, `read_at`, `created_at`, `updated_at`) VALUES
 ('a78c3a65-bbe0-418b-b2c4-ca31abb515ea', 'Filament\\Notifications\\DatabaseNotification', 'App\\Models\\User', 68, '{\"actions\":[],\"body\":null,\"color\":null,\"duration\":\"persistent\",\"icon\":null,\"iconColor\":null,\"status\":null,\"title\":\"Welcome to your new Batch\",\"view\":\"filament-notifications::notification\",\"viewData\":[],\"format\":\"filament\"}', NULL, '2025-05-16 14:03:16', '2025-05-16 14:03:16'),
 ('a9afbbef-2c0e-40a1-8a2a-b360543924bd', 'Filament\\Notifications\\DatabaseNotification', 'App\\Models\\User', 5, '{\"actions\":[],\"body\":null,\"color\":null,\"duration\":\"persistent\",\"icon\":null,\"iconColor\":null,\"status\":null,\"title\":\"Happy thursday\",\"view\":\"filament-notifications::notification\",\"viewData\":[],\"format\":\"filament\"}', NULL, '2024-05-23 10:01:05', '2024-05-23 10:01:05'),
 ('aa3c614c-4db1-4bb2-ad84-99680aa9ebff', 'Filament\\Notifications\\DatabaseNotification', 'App\\Models\\User', 40, '{\"actions\":[],\"body\":null,\"color\":null,\"duration\":\"persistent\",\"icon\":null,\"iconColor\":null,\"status\":null,\"title\":\"Test\",\"view\":\"filament-notifications::notification\",\"viewData\":[],\"format\":\"filament\"}', NULL, '2024-05-21 14:21:38', '2024-05-21 14:21:38'),
@@ -3665,11 +3966,11 @@ INSERT INTO `notifications` (`id`, `type`, `notifiable_type`, `notifiable_id`, `
 ('edbcc47c-d814-4936-9d67-fbe6f1b3f32a', 'Filament\\Notifications\\DatabaseNotification', 'App\\Models\\User', 6, '{\"actions\":[],\"body\":null,\"color\":null,\"duration\":\"persistent\",\"icon\":null,\"iconColor\":null,\"status\":null,\"title\":\"Happy Kanuma\",\"view\":\"filament-notifications::notification\",\"viewData\":[],\"format\":\"filament\"}', NULL, '2024-05-23 08:50:04', '2024-05-23 08:50:04'),
 ('ee0b7a0f-a76e-4bc1-ac00-1afd6ea1ce77', 'Filament\\Notifications\\DatabaseNotification', 'App\\Models\\User', 6, '{\"actions\":[],\"body\":null,\"color\":null,\"duration\":\"persistent\",\"icon\":null,\"iconColor\":null,\"status\":null,\"title\":\"hello\",\"view\":\"filament-notifications::notification\",\"viewData\":[],\"format\":\"filament\"}', NULL, '2024-05-22 06:40:28', '2024-05-22 06:40:28'),
 ('eea3f3ae-9cec-4a95-b1d9-613601a0f086', 'Filament\\Notifications\\DatabaseNotification', 'App\\Models\\User', 39, '{\"actions\":[],\"body\":null,\"color\":null,\"duration\":\"persistent\",\"icon\":null,\"iconColor\":null,\"status\":null,\"title\":\"Happy thursday\",\"view\":\"filament-notifications::notification\",\"viewData\":[],\"format\":\"filament\"}', NULL, '2024-05-23 10:01:05', '2024-05-23 10:01:05'),
-('eea7d738-883a-4722-8c26-a04d60d299b7', 'Filament\\Notifications\\DatabaseNotification', 'App\\Models\\User', 85, '{\"actions\":[],\"body\":null,\"color\":null,\"duration\":\"persistent\",\"icon\":null,\"iconColor\":null,\"status\":null,\"title\":\"new \",\"view\":\"filament-notifications::notification\",\"viewData\":[],\"format\":\"filament\"}', NULL, '2025-06-10 12:27:14', '2025-06-10 12:27:14');
-INSERT INTO `notifications` (`id`, `type`, `notifiable_type`, `notifiable_id`, `data`, `read_at`, `created_at`, `updated_at`) VALUES
+('eea7d738-883a-4722-8c26-a04d60d299b7', 'Filament\\Notifications\\DatabaseNotification', 'App\\Models\\User', 85, '{\"actions\":[],\"body\":null,\"color\":null,\"duration\":\"persistent\",\"icon\":null,\"iconColor\":null,\"status\":null,\"title\":\"new \",\"view\":\"filament-notifications::notification\",\"viewData\":[],\"format\":\"filament\"}', NULL, '2025-06-10 12:27:14', '2025-06-10 12:27:14'),
 ('f0d4fd3b-e8b3-40eb-9119-fef0d1f94c84', 'Filament\\Notifications\\DatabaseNotification', 'App\\Models\\User', 64, '{\"actions\":[],\"body\":null,\"color\":null,\"duration\":\"persistent\",\"icon\":null,\"iconColor\":null,\"status\":null,\"title\":\"Welcome to your new Batch\",\"view\":\"filament-notifications::notification\",\"viewData\":[],\"format\":\"filament\"}', NULL, '2025-05-16 14:03:16', '2025-05-16 14:03:16'),
 ('f1e52eff-6c8f-4fe4-8c22-aaac7c29f11f', 'Filament\\Notifications\\DatabaseNotification', 'App\\Models\\User', 6, '{\"actions\":[],\"body\":null,\"color\":null,\"duration\":\"persistent\",\"icon\":null,\"iconColor\":null,\"status\":null,\"title\":\"gfdg\",\"view\":\"filament-notifications::notification\",\"viewData\":[],\"format\":\"filament\"}', NULL, '2024-05-21 13:10:02', '2024-05-21 13:10:02'),
-('f26d33b9-801c-443d-b1e1-1b15233cf405', 'Filament\\Notifications\\DatabaseNotification', 'App\\Models\\User', 5, '{\"actions\":[],\"body\":null,\"color\":null,\"duration\":\"persistent\",\"icon\":null,\"iconColor\":null,\"status\":null,\"title\":\"hello\",\"view\":\"filament-notifications::notification\",\"viewData\":[],\"format\":\"filament\"}', NULL, '2024-05-22 12:09:04', '2024-05-22 12:09:04'),
+('f26d33b9-801c-443d-b1e1-1b15233cf405', 'Filament\\Notifications\\DatabaseNotification', 'App\\Models\\User', 5, '{\"actions\":[],\"body\":null,\"color\":null,\"duration\":\"persistent\",\"icon\":null,\"iconColor\":null,\"status\":null,\"title\":\"hello\",\"view\":\"filament-notifications::notification\",\"viewData\":[],\"format\":\"filament\"}', NULL, '2024-05-22 12:09:04', '2024-05-22 12:09:04');
+INSERT INTO `notifications` (`id`, `type`, `notifiable_type`, `notifiable_id`, `data`, `read_at`, `created_at`, `updated_at`) VALUES
 ('f2c22f29-9fa3-46cd-bcfc-a7d0d5d75ad1', 'Filament\\Notifications\\DatabaseNotification', 'App\\Models\\User', 4, '{\"actions\":[],\"body\":null,\"color\":null,\"duration\":\"persistent\",\"icon\":null,\"iconColor\":null,\"status\":null,\"title\":\"Happy thursday\",\"view\":\"filament-notifications::notification\",\"viewData\":[],\"format\":\"filament\"}', NULL, '2024-05-23 10:01:04', '2024-05-23 10:01:04'),
 ('f2d3689f-7c5d-489f-8615-8f5bb0c59d43', 'Filament\\Notifications\\DatabaseNotification', 'App\\Models\\User', 87, '{\"actions\":[],\"body\":null,\"color\":null,\"duration\":\"persistent\",\"icon\":null,\"iconColor\":null,\"status\":null,\"title\":\"new \",\"view\":\"filament-notifications::notification\",\"viewData\":[],\"format\":\"filament\"}', NULL, '2025-06-10 12:27:15', '2025-06-10 12:27:15'),
 ('f4b4c635-9638-4238-8129-ebc7d749d309', 'Filament\\Notifications\\DatabaseNotification', 'App\\Models\\User', 48, '{\"actions\":[],\"body\":null,\"color\":null,\"duration\":\"persistent\",\"icon\":null,\"iconColor\":null,\"status\":null,\"title\":\"Happy Kanuma\",\"view\":\"filament-notifications::notification\",\"viewData\":[],\"format\":\"filament\"}', NULL, '2024-05-23 08:50:04', '2024-05-23 08:50:04'),
@@ -4278,7 +4579,93 @@ INSERT INTO `personal_access_tokens` (`id`, `tokenable_type`, `tokenable_id`, `n
 (883, 'App\\Models\\User', 81, 'app_token', 'e925fe2ba4913ab85953740089feeb1d5ef8062e3688a4de1a2448ed91055d9c', '[\"*\"]', '2025-07-07 17:15:40', NULL, '2025-07-07 12:15:53', '2025-07-07 17:15:40'),
 (884, 'App\\Models\\User', 93, 'app_token', 'd45b7aa61d774e35ac556f8f0c12268a84896caa5a42737bf48554ca5f475663', '[\"*\"]', '2025-07-07 14:36:00', NULL, '2025-07-07 13:12:07', '2025-07-07 14:36:00'),
 (885, 'App\\Models\\User', 84, 'app_token', 'd0117c2a14434aae96708b96f8cea85c02952cb8ebdb49e825a6f74a2edd03af', '[\"*\"]', '2025-07-08 10:25:13', NULL, '2025-07-08 10:18:59', '2025-07-08 10:25:13'),
-(888, 'App\\Models\\User', 93, 'app_token', '89d2895b7d788ce663907ef27ac4a92865d148e1ab30750edf15f75f543f78e9', '[\"*\"]', '2025-07-09 23:03:08', NULL, '2025-07-09 23:02:29', '2025-07-09 23:03:08');
+(888, 'App\\Models\\User', 93, 'app_token', '89d2895b7d788ce663907ef27ac4a92865d148e1ab30750edf15f75f543f78e9', '[\"*\"]', '2025-07-09 23:03:08', NULL, '2025-07-09 23:02:29', '2025-07-09 23:03:08'),
+(889, 'App\\Models\\User', 93, 'app_token', 'edc8acab67811d03873a44eabd64314a58cb588b77cce4e0e6ac94e55967f07d', '[\"*\"]', '2025-07-11 14:48:11', NULL, '2025-07-11 14:47:13', '2025-07-11 14:48:11'),
+(890, 'App\\Models\\User', 76, 'app_token', '0bdc56bd57d237f2d51dd6b1bf046606c8b7194efda3bb69535d73b5585559d7', '[\"*\"]', '2025-07-12 08:51:55', NULL, '2025-07-11 15:06:39', '2025-07-12 08:51:55'),
+(891, 'App\\Models\\User', 81, 'app_token', 'f644a991187a7fd30abee79c2a1a551b90fd5d9cee385cb22eeea511fed3cbf0', '[\"*\"]', '2025-07-11 16:38:53', NULL, '2025-07-11 16:33:05', '2025-07-11 16:38:53'),
+(892, 'App\\Models\\User', 81, 'app_token', '9fa1782284dd0752d6f4c810dc30893839d6b12fc748e427c5eb8eb200ef4a52', '[\"*\"]', '2025-07-12 17:21:57', NULL, '2025-07-12 17:21:51', '2025-07-12 17:21:57'),
+(893, 'App\\Models\\User', 81, 'app_token', 'a008a333ab650498547d23db3e619619974805fe881d7c15eabdee734fc8ddbe', '[\"*\"]', '2025-07-15 11:11:55', NULL, '2025-07-15 11:10:21', '2025-07-15 11:11:55'),
+(894, 'App\\Models\\User', 84, 'app_token', '4352daec14ecc9761bd47e85483f275980e50843a56598eaa9c4fd37bab752db', '[\"*\"]', '2025-07-15 12:27:52', NULL, '2025-07-15 12:27:23', '2025-07-15 12:27:52'),
+(898, 'App\\Models\\User', 76, 'app_token', '143c03dfa8f5be6ed9bb628f92a038a6398b1f20a635ab2761b8793535ec73d0', '[\"*\"]', '2025-07-16 15:55:56', NULL, '2025-07-16 15:49:59', '2025-07-16 15:55:56'),
+(899, 'App\\Models\\User', 84, 'app_token', '9d1e9cb56d96560b9879ff150d9c2ac7ddcec64952126390b91415e33dc727dc', '[\"*\"]', '2025-07-16 18:27:12', NULL, '2025-07-16 18:23:00', '2025-07-16 18:27:12'),
+(901, 'App\\Models\\User', 93, 'app_token', '9c3c2976e4f44866b1516fe35ac95c1314ff2993fcc1bfa131e9b47f9d90cd33', '[\"*\"]', NULL, NULL, '2025-07-21 10:18:11', '2025-07-21 10:18:11'),
+(902, 'App\\Models\\User', 84, 'app_token', '66021726558e03e40c141ed99bfb8afd0c6df472cc0c80a0d2ae96ae9fffcc79', '[\"*\"]', '2025-07-22 10:34:55', NULL, '2025-07-22 09:56:05', '2025-07-22 10:34:55'),
+(903, 'App\\Models\\User', 84, 'app_token', '337803af2d519525bd6f493b06815a6b2a7f70029cfbcb3fc236fd99eb896a8a', '[\"*\"]', '2025-07-23 11:58:24', NULL, '2025-07-23 11:08:22', '2025-07-23 11:58:24'),
+(904, 'App\\Models\\User', 93, 'app_token', 'a5cd3dc66c04a27367af3adf0ddf4d2e785a9a4653721685150457089f5097fd', '[\"*\"]', '2025-07-23 12:09:33', NULL, '2025-07-23 11:28:44', '2025-07-23 12:09:33'),
+(905, 'App\\Models\\User', 84, 'app_token', 'f5abc12514ef1997a767cb871b79f9cf69206a70100dcc26385bdd63110074f4', '[\"*\"]', '2025-07-25 15:09:44', NULL, '2025-07-25 15:08:33', '2025-07-25 15:09:44'),
+(906, 'App\\Models\\User', 81, 'app_token', '9e833594974574c01074c708bed554acde397cfbc50946dc31eee059eaf0eaa4', '[\"*\"]', '2025-07-28 21:01:08', NULL, '2025-07-28 20:57:58', '2025-07-28 21:01:08'),
+(909, 'App\\Models\\User', 76, 'app_token', '422a10d1fc8ab900d35cd056ff8de6c7e5db7364fb3b2ff57fa1233ba0eef2dd', '[\"*\"]', '2025-07-30 17:16:01', NULL, '2025-07-30 16:26:14', '2025-07-30 17:16:01'),
+(912, 'App\\Models\\User', 93, 'app_token', '702a2bff2c5dc9772f38fede615f5b17e8d51f36ccfeeb7e59541e2ea855d8db', '[\"*\"]', NULL, NULL, '2025-07-31 18:30:14', '2025-07-31 18:30:14'),
+(913, 'App\\Models\\User', 93, 'app_token', '6cfb211c1f2bea6e6c0334ba78b1687d350eca0eb11690ba582fb06a078abcab', '[\"*\"]', NULL, NULL, '2025-08-04 09:54:07', '2025-08-04 09:54:07'),
+(914, 'App\\Models\\User', 76, 'app_token', '544d3ca3dd4cf2e93617d9269d097159add1c1e29123e409f014c208b9f961ed', '[\"*\"]', '2025-08-06 20:04:37', NULL, '2025-08-06 20:04:28', '2025-08-06 20:04:37'),
+(916, 'App\\Models\\User', 93, 'app_token', '3c64e7c4ff1b9809999d9a72470689329f5c2e30ee6075850bfe14aa1aafd27e', '[\"*\"]', '2025-08-07 11:58:40', NULL, '2025-08-07 11:07:31', '2025-08-07 11:58:40'),
+(917, 'App\\Models\\User', 84, 'app_token', 'ae392e2df702950bd4126df88c3adcec00faf964f3ede85ac4cabca0aed1a429', '[\"*\"]', '2025-08-07 12:09:00', NULL, '2025-08-07 12:08:52', '2025-08-07 12:09:00'),
+(918, 'App\\Models\\User', 84, 'app_token', '7c46fc96fbd564edd5157ec764ba5c42ec0edfd580e0e6094fc3013f9506f5a5', '[\"*\"]', '2025-08-07 14:10:07', NULL, '2025-08-07 13:47:59', '2025-08-07 14:10:07'),
+(919, 'App\\Models\\User', 93, 'app_token', '88a5f90fcc76dcf3733a96c58b3491de13db6f47e25ef22d9fcbe570a13f76ba', '[\"*\"]', '2025-08-07 14:57:06', NULL, '2025-08-07 14:14:49', '2025-08-07 14:57:06'),
+(920, 'App\\Models\\User', 84, 'app_token', 'ce2e56e85a70f1f4fdee130fb62d97d6a3266706f1d9d91db3bbf3db9a4950a4', '[\"*\"]', '2025-08-08 11:10:46', NULL, '2025-08-08 11:03:22', '2025-08-08 11:10:46'),
+(923, 'App\\Models\\User', 81, 'app_token', 'a335b8e2104e78fa6785db2033f7a7725c3afb76962bb45375b00ddf41b9fd01', '[\"*\"]', '2025-08-08 12:41:13', NULL, '2025-08-08 12:33:11', '2025-08-08 12:41:13'),
+(928, 'App\\Models\\User', 93, 'app_token', 'c7e791af588c097e1f71159391692f14d8200f89092994192fb1c8874a98cc9e', '[\"*\"]', NULL, NULL, '2025-08-08 17:34:44', '2025-08-08 17:34:44'),
+(937, 'App\\Models\\User', 84, 'app_token', '2ebf707e2551c1d77ecc1f913a979bc2a9b76ea939503b25994c59484637a09c', '[\"*\"]', '2025-08-11 17:52:11', NULL, '2025-08-11 10:47:25', '2025-08-11 17:52:11'),
+(939, 'App\\Models\\User', 76, 'app_token', 'f1f298d760c99012c0832fb0cc3ff448793bf34c2f0b096402cbcad7718d16d7', '[\"*\"]', NULL, NULL, '2025-08-11 13:41:50', '2025-08-11 13:41:50'),
+(943, 'App\\Models\\User', 76, 'app_token', '4dcc25d7ed4a1765cd6a6d20028df0e8e71fbc1c86f7224e6bf3015bf36c5354', '[\"*\"]', '2025-08-11 14:06:38', NULL, '2025-08-11 13:49:53', '2025-08-11 14:06:38'),
+(946, 'App\\Models\\User', 93, 'app_token', '2a7f73a0104d8d3f923fe0d8c564fc54739b61645b6fc22259f01f08ac557774', '[\"*\"]', NULL, NULL, '2025-08-11 16:53:12', '2025-08-11 16:53:12'),
+(947, 'App\\Models\\User', 84, 'app_token', 'a9fe7419acc3e04dc985c01ca327402b3eb76d50426c60c92f06833e9bac68d6', '[\"*\"]', '2025-08-12 16:27:27', NULL, '2025-08-12 16:26:39', '2025-08-12 16:27:27'),
+(948, 'App\\Models\\User', 81, 'app_token', '05f24077f2e316e62d5127f1f8eed00195c43fe7f970d0b6e4de3a455696ceb4', '[\"*\"]', '2025-08-12 19:40:34', NULL, '2025-08-12 19:12:51', '2025-08-12 19:40:34'),
+(949, 'App\\Models\\User', 84, 'app_token', '644c67b41fd6f23d7d98dd8bd45e4c2d91a06566c42fcdbd5d7cc13de840d842', '[\"*\"]', '2025-08-13 14:11:33', NULL, '2025-08-13 10:49:14', '2025-08-13 14:11:33'),
+(950, 'App\\Models\\User', 76, 'app_token', '53f19c70be3f2c15727cb7157ef616eab8a4fd137578b0eca6429bb386c4ba5b', '[\"*\"]', '2025-08-13 10:50:48', NULL, '2025-08-13 10:50:42', '2025-08-13 10:50:48'),
+(953, 'App\\Models\\User', 93, 'app_token', 'dd7b5c885fdb5201153ca25b50843508a958471afe5a0d85221c6c4e1f722b23', '[\"*\"]', '2025-08-13 12:33:27', NULL, '2025-08-13 12:31:44', '2025-08-13 12:33:27'),
+(954, 'App\\Models\\User', 76, 'app_token', '8a7581ceab97ff46f4c7f4db110446442041342210865a07d079c75f1dcb64fb', '[\"*\"]', '2025-08-13 14:05:30', NULL, '2025-08-13 14:05:26', '2025-08-13 14:05:30'),
+(955, 'App\\Models\\User', 81, 'app_token', '1f49e83d323d2f4a0d1cb89d85f6e433341b560c77a244d4cfa8e0f4f87c6a62', '[\"*\"]', '2025-08-13 17:58:59', NULL, '2025-08-13 17:28:51', '2025-08-13 17:58:59'),
+(956, 'App\\Models\\User', 81, 'app_token', 'f96621f0c7c7a157f29de5b7156511393084d197858c5e4b73f2f21cfb014157', '[\"*\"]', '2025-08-14 16:51:35', NULL, '2025-08-14 16:51:25', '2025-08-14 16:51:35'),
+(957, 'App\\Models\\User', 93, 'app_token', '316d3215e73fb016acd9a5b6021ab3c18be007123812d698c3c4e4b4bfc02425', '[\"*\"]', '2025-08-18 11:43:46', NULL, '2025-08-18 11:42:43', '2025-08-18 11:43:46'),
+(958, 'App\\Models\\User', 93, 'app_token', '0ce2e6d02e72171fb4d477e3e0415c6ea0be50dfdc14e4f4d2f68d62ce785ab7', '[\"*\"]', '2025-08-19 11:01:11', NULL, '2025-08-19 11:01:00', '2025-08-19 11:01:11'),
+(959, 'App\\Models\\User', 81, 'app_token', '7af577aa29a94e60915f8011f6226ba8dbdbc97389488921bfcbdf6597c7c15a', '[\"*\"]', '2025-08-19 11:03:59', NULL, '2025-08-19 11:03:52', '2025-08-19 11:03:59'),
+(964, 'App\\Models\\User', 84, 'app_token', 'd197a78308e06afa9054df1ebf09a073e4d7c7ad5117bd06f706e00bce788ef8', '[\"*\"]', '2025-08-20 11:47:40', NULL, '2025-08-20 11:47:31', '2025-08-20 11:47:40'),
+(968, 'App\\Models\\User', 93, 'app_token', '9c498a279a796d1c16392562ad51dce5eaf442d9cdec55065294a727286c526b', '[\"*\"]', NULL, NULL, '2025-08-20 18:01:46', '2025-08-20 18:01:46'),
+(969, 'App\\Models\\User', 93, 'app_token', '6288d08070f3e71210b868b58d0261b85776f7a736189a4f2f9bd56adfbe6806', '[\"*\"]', NULL, NULL, '2025-08-21 10:38:43', '2025-08-21 10:38:43'),
+(970, 'App\\Models\\User', 84, 'app_token', 'c8729c6d6075892b7854419aaa504aa75646efc4a8cba5abc31ae971f4b43437', '[\"*\"]', NULL, NULL, '2025-08-21 11:40:42', '2025-08-21 11:40:42'),
+(971, 'App\\Models\\User', 81, 'app_token', 'ecb4e38e8b47a76c7f12c2a7901c4b21654fa2e8a3b58d3b58d22cac0ffe20f4', '[\"*\"]', NULL, NULL, '2025-08-21 12:17:07', '2025-08-21 12:17:07'),
+(977, 'App\\Models\\User', 81, 'app_token', '4262c9b9c89486dfadeb827df192a4e027e0f769de43655ed2e0c896c4e51747', '[\"*\"]', NULL, NULL, '2025-08-21 12:28:55', '2025-08-21 12:28:55');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `placement_criteria`
+--
+
+CREATE TABLE `placement_criteria` (
+  `id` bigint UNSIGNED NOT NULL,
+  `name` varchar(255) NOT NULL,
+  `profile_completion_percentage` decimal(5,2) DEFAULT '90.00',
+  `course_completion_required` tinyint(1) DEFAULT '1',
+  `exam_standards_required` tinyint(1) DEFAULT '1',
+  `attendance_percentage` decimal(5,2) DEFAULT '75.00',
+  `fees_payment_required` tinyint(1) DEFAULT '1',
+  `lab_test_cases_required` tinyint(1) DEFAULT '1',
+  `assignments_required` tinyint(1) DEFAULT '1',
+  `is_active` tinyint(1) DEFAULT '1',
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `placement_notifications`
+--
+
+CREATE TABLE `placement_notifications` (
+  `id` bigint UNSIGNED NOT NULL,
+  `user_id` bigint UNSIGNED DEFAULT NULL,
+  `job_posting_id` bigint UNSIGNED DEFAULT NULL,
+  `type` enum('job_posting','application_status','interview_scheduled','placement_confirmed','payment_reminder') DEFAULT 'job_posting',
+  `title` varchar(255) NOT NULL,
+  `message` text NOT NULL,
+  `notification_type` enum('email','sms','whatsapp','push') DEFAULT 'email',
+  `sent_at` timestamp NULL DEFAULT NULL,
+  `status` enum('pending','sent','failed') DEFAULT 'pending',
+  `created_at` timestamp NULL DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- --------------------------------------------------------
 
@@ -4344,6 +4731,7 @@ CREATE TABLE `questions` (
   `id` bigint UNSIGNED NOT NULL,
   `question_bank_id` int NOT NULL,
   `audio_file` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `image` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `paragraph` longtext COLLATE utf8mb4_unicode_ci,
   `question` longtext COLLATE utf8mb4_unicode_ci NOT NULL,
   `question_type` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
@@ -4364,58 +4752,120 @@ CREATE TABLE `questions` (
 -- Dumping data for table `questions`
 --
 
-INSERT INTO `questions` (`id`, `question_bank_id`, `audio_file`, `paragraph`, `question`, `question_type`, `difficulty`, `topic`, `marks`, `negative_marks`, `hint`, `explanation`, `answer`, `check_capitalization`, `check_punctuation`, `created_at`, `updated_at`) VALUES
-(1, 1, NULL, '<p>Voluptas delectus, e.</p>', '<p>Dolor ipsam ipsum et.</p>', 'MCQ - Single Correct', 'Intermediate', 'Neque ad et aut voluptas obcaecati consectetur quia at perferendis ut et aliqua Ut elit repellendus', 1.0, 0.5, '<p>Unde soluta ipsum, p.</p>', '<p>Ut et beatae quia mi.</p>', 'new', NULL, NULL, '2024-06-02 22:07:09', '2024-06-02 22:09:07'),
-(2, 8, NULL, NULL, '<p>How many NOR gates are required (least number) to design a half subtractor using only NOR gates and what is the equation for borrow?</p>', 'MCQ - Single Correct', 'Intermediate', 'Week 1', 1.0, 0.5, NULL, NULL, NULL, NULL, NULL, '2024-06-03 01:00:06', '2024-06-03 01:00:06'),
-(3, 8, NULL, NULL, '<p>For the design of 3x3 multiplier circuit using RCA as a block, how many RCA blocks and AND gates are used respectively?</p>', 'MCQ - Single Correct', 'Intermediate', 'Week 1', 1.0, 0.5, NULL, NULL, 'mm', NULL, NULL, '2024-06-03 01:00:58', '2024-06-03 01:00:58'),
-(4, 8, NULL, NULL, '<p><br>In 3x3 multiplier design using single bit adder, how many HA and FA are required respectively?</p>', 'MCQ - Single Correct', 'Intermediate', 'Week 1', 1.0, 0.0, NULL, NULL, NULL, NULL, NULL, '2024-06-03 01:02:24', '2024-06-03 01:02:24'),
-(5, 3, NULL, NULL, '<p>Consider the following statements which explains the enhancement n-type MOSFET. Which of the following is/are correct?</p>', 'MCQ - Single Correct', 'Intermediate', 'Week 3', 1.0, 0.5, NULL, NULL, NULL, NULL, NULL, '2024-06-03 01:17:04', '2024-06-03 01:17:04'),
-(6, 3, NULL, NULL, '<p>Consider the enhancement n-type MOSFET.Which of the following is/are correct with regards to channel formation?</p>', 'MCQ - Single Correct', 'Beginner', 'Week 3', 1.0, 0.0, NULL, NULL, NULL, NULL, NULL, '2024-06-03 01:18:01', '2024-06-03 01:18:01'),
-(7, 3, NULL, NULL, '<p>The current in the enhancement n type MOSFET can be found by</p>', 'MCQ - Single Correct', 'Intermediate', 'Week 3', 1.0, 0.5, NULL, NULL, NULL, NULL, NULL, '2024-06-03 01:19:18', '2024-06-03 01:19:18'),
-(8, 7, NULL, NULL, '<p>In NMOS fabrication , dry etching is done using__________</p>', 'MCQ - Single Correct', 'Intermediate', 'Week 5', 1.0, 0.0, NULL, NULL, NULL, NULL, NULL, '2024-06-03 01:29:52', '2024-06-03 01:29:52'),
-(9, 7, NULL, NULL, '<p>Etching refers to the removal of material from________</p>', 'MCQ - Single Correct', 'Intermediate', 'Week 5', 1.0, 0.0, NULL, NULL, NULL, NULL, NULL, '2024-06-03 01:30:41', '2024-06-03 01:30:41'),
-(10, 7, NULL, NULL, '<p>In wet etching material is removed by_____</p>', 'MCQ - Single Correct', 'Intermediate', 'Week 5', 1.0, 0.0, NULL, NULL, NULL, NULL, NULL, '2024-06-03 01:31:59', '2024-06-03 01:31:59'),
-(11, 4, NULL, NULL, '<p>An important objective in the design of digital VLSI circuits is the minimization of silicon area per logic gate. Area reduction can be achieved by&nbsp;</p>', 'MCQ - Single Correct', 'Intermediate', 'Week 5', 1.0, 0.0, NULL, NULL, NULL, NULL, NULL, '2024-06-03 01:35:05', '2024-06-03 01:35:05'),
-(12, 4, NULL, NULL, '<p>By what factor does the propagation delay change if device dimensions, W, L, tox and Vdd &amp; Vt are scaled by a factor 1/S</p>', 'MCQ - Single Correct', 'Beginner', 'Week 3', 1.0, 0.0, NULL, NULL, NULL, NULL, NULL, '2024-06-03 01:35:42', '2024-06-03 01:35:42'),
-(13, 4, NULL, NULL, '<p>Due to the technology scaling, the power per unit area will be</p>', 'MCQ - Single Correct', 'Intermediate', 'Week 5', 1.0, 0.5, NULL, NULL, NULL, NULL, NULL, '2024-06-03 01:36:36', '2024-06-03 01:36:36'),
-(14, 11, NULL, NULL, '<p>Question write here 1406</p>', '2', NULL, NULL, 1.0, 0.5, NULL, NULL, NULL, NULL, NULL, '2024-06-14 04:30:39', '2024-06-14 04:30:39'),
-(15, 12, NULL, NULL, '<p>What is VLSI?</p>', '1', NULL, NULL, 1.0, 0.5, NULL, NULL, NULL, NULL, NULL, '2025-05-30 15:02:56', '2025-05-30 15:02:56'),
-(16, 12, NULL, NULL, '<p>What is SSTA?</p>', '1', NULL, NULL, 1.0, 0.5, NULL, NULL, NULL, NULL, NULL, '2025-05-30 15:05:25', '2025-05-30 15:05:25'),
-(17, 13, NULL, NULL, '<p>&nbsp;1.Which of the following statements correctly differentiates a FET from a BJT?&nbsp;</p>', '1', NULL, NULL, 1.0, 0.5, NULL, NULL, NULL, NULL, NULL, '2025-06-05 00:14:39', '2025-06-05 00:14:39'),
-(18, 13, NULL, NULL, '<p>&nbsp;2. In a MOSFET, what controls the conductivity of the channel?&nbsp;</p>', '1', NULL, NULL, 1.0, 0.5, NULL, NULL, NULL, NULL, NULL, '2025-06-05 00:25:01', '2025-06-05 00:25:01'),
-(19, 13, NULL, NULL, '<h3><strong>3. What is the main advantage of using a MOSFET over a BJT in digital circuits?</strong></h3><p><br></p><p><br></p><p><br></p>', '1', NULL, NULL, 1.0, 0.5, NULL, NULL, NULL, NULL, NULL, '2025-06-05 00:47:19', '2025-06-05 00:47:19'),
-(20, 13, NULL, NULL, '<p>what is new one&nbsp;</p>', '1', NULL, NULL, 1.0, 0.5, NULL, NULL, NULL, NULL, NULL, '2025-06-05 13:33:37', '2025-06-05 13:33:37'),
-(21, 3, NULL, NULL, 'The forbidden energy band gap in metals, semiconductors and insulators are EG1, EG2, and EG3 respectively. The relation among them is,', 'Single Correct', NULL, NULL, 1.0, 0.5, NULL, NULL, '2', NULL, NULL, '2025-06-05 16:35:39', '2025-06-05 16:35:39'),
-(22, 3, NULL, NULL, 'As the doping to a pure semiconductor increases, the bulk resistance of the semiconductor ________________.', 'Single Correct', NULL, NULL, 1.0, 0.5, NULL, NULL, '2', NULL, NULL, '2025-06-05 16:35:39', '2025-06-05 16:35:39'),
-(23, 3, NULL, NULL, 'In an intrinsic semiconductor, the number of free electrons ______________.', 'Single Correct', NULL, NULL, 1.0, 0.5, NULL, NULL, '1', NULL, NULL, '2025-06-05 16:35:39', '2025-06-05 16:35:39'),
-(24, 3, NULL, NULL, 'In semiconductor, fermi level lies:(a) close to the valence band (VB) in p-type(b) close to conduction band (CB) in p-type(c) close to conduction band in n-type (d) close to valence band in n-type Which is correct? ', 'Single Correct', NULL, NULL, 1.0, 0.5, NULL, NULL, '3', NULL, NULL, '2025-06-05 16:35:39', '2025-06-05 16:35:39'),
-(25, 3, NULL, NULL, 'In N-type semiconductor material, the majority and minority carriers are', 'Single Correct', NULL, NULL, 1.0, 0.5, NULL, NULL, '1', NULL, NULL, '2025-06-05 16:35:39', '2025-06-05 16:35:39'),
-(26, 3, NULL, NULL, 'The electron and hole concentration in an intrinsic semiconductor are ni per cm3 at 300 K. Now, if acceptor impurities are introduced with a concentration of NA per cm3 (where NA ≫ ni) the electron concentration per cm3 at 300 K will be,', 'Single Correct', NULL, NULL, 1.0, 0.5, NULL, NULL, '4', NULL, NULL, '2025-06-05 16:35:39', '2025-06-05 16:35:39'),
-(27, 3, NULL, NULL, 'A silicon sample is uniformly doped with 10^16 phosphorus atoms/cm3 and 2x10^16 atoms/cm3 Boron atoms. If all the dopants are fully ionized, the material is', 'Single Correct', NULL, NULL, 1.0, 0.5, NULL, NULL, '2', NULL, NULL, '2025-06-05 16:35:39', '2025-06-05 16:35:39'),
-(28, 3, NULL, NULL, 'The forbidden energy band gap in metals, semiconductors and insulators are EG1, EG2, and EG3 respectively. The relation among them is,', 'Single Correct', NULL, NULL, 1.0, 0.5, NULL, NULL, '2', NULL, NULL, '2025-06-05 16:37:13', '2025-06-05 16:37:13'),
-(29, 3, NULL, NULL, 'As the doping to a pure semiconductor increases, the bulk resistance of the semiconductor ________________.', 'Single Correct', NULL, NULL, 1.0, 0.5, NULL, NULL, '2', NULL, NULL, '2025-06-05 16:37:13', '2025-06-05 16:37:13'),
-(30, 3, NULL, NULL, 'In an intrinsic semiconductor, the number of free electrons ______________.', 'Single Correct', NULL, NULL, 1.0, 0.5, NULL, NULL, '1', NULL, NULL, '2025-06-05 16:37:13', '2025-06-05 16:37:13'),
-(31, 3, NULL, NULL, 'In semiconductor, fermi level lies:(a) close to the valence band (VB) in p-type(b) close to conduction band (CB) in p-type(c) close to conduction band in n-type (d) close to valence band in n-type Which is correct? ', 'Single Correct', NULL, NULL, 1.0, 0.5, NULL, NULL, '3', NULL, NULL, '2025-06-05 16:37:13', '2025-06-05 16:37:13'),
-(32, 3, NULL, NULL, 'In N-type semiconductor material, the majority and minority carriers are', 'Single Correct', NULL, NULL, 1.0, 0.5, NULL, NULL, '1', NULL, NULL, '2025-06-05 16:37:13', '2025-06-05 16:37:13'),
-(33, 3, NULL, NULL, 'The electron and hole concentration in an intrinsic semiconductor are ni per cm3 at 300 K. Now, if acceptor impurities are introduced with a concentration of NA per cm3 (where NA ≫ ni) the electron concentration per cm3 at 300 K will be,', 'Single Correct', NULL, NULL, 1.0, 0.5, NULL, NULL, '4', NULL, NULL, '2025-06-05 16:37:13', '2025-06-05 16:37:13'),
-(34, 3, NULL, NULL, 'A silicon sample is uniformly doped with 10^16 phosphorus atoms/cm3 and 2x10^16 atoms/cm3 Boron atoms. If all the dopants are fully ionized, the material is', 'Single Correct', NULL, NULL, 1.0, 0.5, NULL, NULL, '2', NULL, NULL, '2025-06-05 16:37:13', '2025-06-05 16:37:13'),
-(35, 14, NULL, NULL, 'The forbidden energy band gap in metals, semiconductors and insulators are EG1, EG2, and EG3 respectively. The relation among them is,', 'Single Correct', NULL, NULL, 1.0, 0.5, NULL, NULL, '2', NULL, NULL, '2025-06-05 16:38:23', '2025-06-05 16:38:23'),
-(36, 14, NULL, NULL, 'As the doping to a pure semiconductor increases, the bulk resistance of the semiconductor ________________.', 'Single Correct', NULL, NULL, 1.0, 0.5, NULL, NULL, '2', NULL, NULL, '2025-06-05 16:38:23', '2025-06-05 16:38:23'),
-(37, 14, NULL, NULL, 'In an intrinsic semiconductor, the number of free electrons ______________.', 'Single Correct', NULL, NULL, 1.0, 0.5, NULL, NULL, '1', NULL, NULL, '2025-06-05 16:38:23', '2025-06-05 16:38:23'),
-(38, 14, NULL, NULL, 'In semiconductor, fermi level lies:(a) close to the valence band (VB) in p-type(b) close to conduction band (CB) in p-type(c) close to conduction band in n-type (d) close to valence band in n-type Which is correct? ', 'Single Correct', NULL, NULL, 1.0, 0.5, NULL, NULL, '3', NULL, NULL, '2025-06-05 16:38:23', '2025-06-05 16:38:23'),
-(39, 14, NULL, NULL, 'In N-type semiconductor material, the majority and minority carriers are', 'Single Correct', NULL, NULL, 1.0, 0.5, NULL, NULL, '1', NULL, NULL, '2025-06-05 16:38:23', '2025-06-05 16:38:23'),
-(40, 14, NULL, NULL, 'The electron and hole concentration in an intrinsic semiconductor are ni per cm3 at 300 K. Now, if acceptor impurities are introduced with a concentration of NA per cm3 (where NA ≫ ni) the electron concentration per cm3 at 300 K will be,', 'Single Correct', NULL, NULL, 1.0, 0.5, NULL, NULL, '4', NULL, NULL, '2025-06-05 16:38:23', '2025-06-05 16:38:23'),
-(41, 14, NULL, NULL, 'A silicon sample is uniformly doped with 10^16 phosphorus atoms/cm3 and 2x10^16 atoms/cm3 Boron atoms. If all the dopants are fully ionized, the material is', 'Single Correct', NULL, NULL, 1.0, 0.5, NULL, NULL, '2', NULL, NULL, '2025-06-05 16:38:23', '2025-06-05 16:38:23'),
-(42, 15, NULL, NULL, 'Which of the following is a scripting language?', 'MCQ - Single Correct', NULL, NULL, 1.0, 0.0, NULL, NULL, NULL, NULL, NULL, '2025-06-26 11:49:57', '2025-06-26 11:49:57'),
-(43, 15, NULL, NULL, 'Which symbol is used to denote a comment in Python?', 'MCQ - Single Correct', NULL, NULL, 1.0, 0.0, NULL, NULL, NULL, NULL, NULL, '2025-06-26 11:49:57', '2025-06-26 11:49:57'),
-(44, 15, NULL, NULL, 'Which method is used to print output in JavaScript?', 'MCQ - Single Correct', NULL, NULL, 1.0, 0.0, NULL, NULL, NULL, NULL, NULL, '2025-06-26 11:49:57', '2025-06-26 11:49:57'),
-(45, 15, NULL, NULL, 'Which scripting language is primarily used for web browsers?', 'MCQ - Single Correct', NULL, NULL, 1.0, 0.5, NULL, NULL, NULL, NULL, NULL, '2025-06-26 11:49:57', '2025-06-26 11:49:57'),
-(46, 15, NULL, NULL, 'What is the file extension for a Bash script?', 'MCQ - Single Correct', NULL, NULL, 1.0, 0.5, NULL, NULL, NULL, NULL, NULL, '2025-06-26 11:49:57', '2025-06-26 11:49:57'),
-(47, 15, NULL, NULL, 'Which of the following is NOT a scripting language?', 'MCQ - Single Correct', NULL, NULL, 1.0, 0.5, NULL, NULL, NULL, NULL, NULL, '2025-06-26 11:49:57', '2025-06-26 11:49:57'),
-(48, 15, NULL, NULL, 'Which function is used to read input from the user in Python 3?', 'MCQ - Single Correct', NULL, NULL, 1.0, 0.0, NULL, NULL, NULL, NULL, NULL, '2025-06-26 11:49:57', '2025-06-26 11:49:57'),
-(49, 15, NULL, NULL, 'Which of these is a server-side scripting language?', 'MCQ - Single Correct', NULL, NULL, 1.0, 0.0, NULL, NULL, NULL, NULL, NULL, '2025-06-26 11:49:57', '2025-06-26 11:49:57'),
-(50, 15, NULL, NULL, 'Which keyword is used to define a function in JavaScript?', 'MCQ - Single Correct', NULL, NULL, 1.0, 0.0, NULL, NULL, NULL, NULL, NULL, '2025-06-26 11:49:58', '2025-06-26 11:49:58'),
-(51, 15, NULL, NULL, 'Which of the following is used to execute a shell script in Linux?', 'MCQ - Single Correct', NULL, NULL, 1.0, 0.0, NULL, NULL, NULL, NULL, NULL, '2025-06-26 11:49:58', '2025-06-26 11:49:58');
+INSERT INTO `questions` (`id`, `question_bank_id`, `audio_file`, `image`, `paragraph`, `question`, `question_type`, `difficulty`, `topic`, `marks`, `negative_marks`, `hint`, `explanation`, `answer`, `check_capitalization`, `check_punctuation`, `created_at`, `updated_at`) VALUES
+(1, 1, NULL, NULL, '<p>Voluptas delectus, e.</p>', '<p>Dolor ipsam ipsum et.</p>', 'MCQ - Single Correct', 'Intermediate', 'Neque ad et aut voluptas obcaecati consectetur quia at perferendis ut et aliqua Ut elit repellendus', 1.0, 0.5, '<p>Unde soluta ipsum, p.</p>', '<p>Ut et beatae quia mi.</p>', 'new', NULL, NULL, '2024-06-02 22:07:09', '2024-06-02 22:09:07'),
+(2, 8, NULL, NULL, NULL, '<p>How many NOR gates are required (least number) to design a half subtractor using only NOR gates and what is the equation for borrow?</p>', 'MCQ - Single Correct', 'Intermediate', 'Week 1', 1.0, 0.5, NULL, NULL, NULL, NULL, NULL, '2024-06-03 01:00:06', '2024-06-03 01:00:06'),
+(3, 8, NULL, NULL, NULL, '<p>For the design of 3x3 multiplier circuit using RCA as a block, how many RCA blocks and AND gates are used respectively?</p>', 'MCQ - Single Correct', 'Intermediate', 'Week 1', 1.0, 0.5, NULL, NULL, 'mm', NULL, NULL, '2024-06-03 01:00:58', '2024-06-03 01:00:58'),
+(4, 8, NULL, NULL, NULL, '<p><br>In 3x3 multiplier design using single bit adder, how many HA and FA are required respectively?</p>', 'MCQ - Single Correct', 'Intermediate', 'Week 1', 1.0, 0.0, NULL, NULL, NULL, NULL, NULL, '2024-06-03 01:02:24', '2024-06-03 01:02:24'),
+(5, 3, NULL, NULL, NULL, '<p>Consider the following statements which explains the enhancement n-type MOSFET. Which of the following is/are correct?</p>', 'MCQ - Single Correct', 'Intermediate', 'Week 3', 1.0, 0.5, NULL, NULL, NULL, NULL, NULL, '2024-06-03 01:17:04', '2024-06-03 01:17:04'),
+(6, 3, NULL, NULL, NULL, '<p>Consider the enhancement n-type MOSFET.Which of the following is/are correct with regards to channel formation?</p>', 'MCQ - Single Correct', 'Beginner', 'Week 3', 1.0, 0.0, NULL, NULL, NULL, NULL, NULL, '2024-06-03 01:18:01', '2024-06-03 01:18:01'),
+(7, 3, NULL, NULL, NULL, '<p>The current in the enhancement n type MOSFET can be found by</p>', 'MCQ - Single Correct', 'Intermediate', 'Week 3', 1.0, 0.5, NULL, NULL, NULL, NULL, NULL, '2024-06-03 01:19:18', '2024-06-03 01:19:18'),
+(8, 7, NULL, NULL, NULL, '<p>In NMOS fabrication , dry etching is done using__________</p>', 'MCQ - Single Correct', 'Intermediate', 'Week 5', 1.0, 0.0, NULL, NULL, NULL, NULL, NULL, '2024-06-03 01:29:52', '2024-06-03 01:29:52'),
+(9, 7, NULL, NULL, NULL, '<p>Etching refers to the removal of material from________</p>', 'MCQ - Single Correct', 'Intermediate', 'Week 5', 1.0, 0.0, NULL, NULL, NULL, NULL, NULL, '2024-06-03 01:30:41', '2024-06-03 01:30:41'),
+(10, 7, NULL, NULL, NULL, '<p>In wet etching material is removed by_____</p>', 'MCQ - Single Correct', 'Intermediate', 'Week 5', 1.0, 0.0, NULL, NULL, NULL, NULL, NULL, '2024-06-03 01:31:59', '2024-06-03 01:31:59'),
+(11, 4, NULL, NULL, NULL, '<p>An important objective in the design of digital VLSI circuits is the minimization of silicon area per logic gate. Area reduction can be achieved by&nbsp;</p>', 'MCQ - Single Correct', 'Intermediate', 'Week 5', 1.0, 0.0, NULL, NULL, NULL, NULL, NULL, '2024-06-03 01:35:05', '2024-06-03 01:35:05'),
+(12, 4, NULL, NULL, NULL, '<p>By what factor does the propagation delay change if device dimensions, W, L, tox and Vdd &amp; Vt are scaled by a factor 1/S</p>', 'MCQ - Single Correct', 'Beginner', 'Week 3', 1.0, 0.0, NULL, NULL, NULL, NULL, NULL, '2024-06-03 01:35:42', '2024-06-03 01:35:42'),
+(13, 4, NULL, NULL, NULL, '<p>Due to the technology scaling, the power per unit area will be</p>', 'MCQ - Single Correct', 'Intermediate', 'Week 5', 1.0, 0.5, NULL, NULL, NULL, NULL, NULL, '2024-06-03 01:36:36', '2024-06-03 01:36:36'),
+(14, 11, NULL, NULL, NULL, '<p>Question write here 1406</p>', '2', NULL, NULL, 1.0, 0.5, NULL, NULL, NULL, NULL, NULL, '2024-06-14 04:30:39', '2024-06-14 04:30:39'),
+(15, 12, NULL, NULL, NULL, '<p>What is VLSI?</p>', '1', NULL, NULL, 1.0, 0.5, NULL, NULL, NULL, NULL, NULL, '2025-05-30 15:02:56', '2025-05-30 15:02:56'),
+(16, 12, NULL, NULL, NULL, '<p>What is SSTA?</p>', '1', NULL, NULL, 1.0, 0.5, NULL, NULL, NULL, NULL, NULL, '2025-05-30 15:05:25', '2025-05-30 15:05:25'),
+(17, 13, NULL, NULL, NULL, '<p>&nbsp;1.Which of the following statements correctly differentiates a FET from a BJT?&nbsp;</p>', '1', NULL, NULL, 1.0, 0.5, NULL, NULL, NULL, NULL, NULL, '2025-06-05 00:14:39', '2025-06-05 00:14:39'),
+(18, 13, NULL, NULL, NULL, '<p>&nbsp;2. In a MOSFET, what controls the conductivity of the channel?&nbsp;</p>', '1', NULL, NULL, 1.0, 0.5, NULL, NULL, NULL, NULL, NULL, '2025-06-05 00:25:01', '2025-06-05 00:25:01'),
+(19, 13, NULL, NULL, NULL, '<h3><strong>3. What is the main advantage of using a MOSFET over a BJT in digital circuits?</strong></h3><p><br></p><p><br></p><p><br></p>', '1', NULL, NULL, 1.0, 0.5, NULL, NULL, NULL, NULL, NULL, '2025-06-05 00:47:19', '2025-06-05 00:47:19'),
+(20, 13, NULL, NULL, NULL, '<p>what is new one&nbsp;</p>', '1', NULL, NULL, 1.0, 0.5, NULL, NULL, NULL, NULL, NULL, '2025-06-05 13:33:37', '2025-06-05 13:33:37'),
+(21, 3, NULL, NULL, NULL, 'The forbidden energy band gap in metals, semiconductors and insulators are EG1, EG2, and EG3 respectively. The relation among them is,', 'Single Correct', NULL, NULL, 1.0, 0.5, NULL, NULL, '2', NULL, NULL, '2025-06-05 16:35:39', '2025-06-05 16:35:39'),
+(22, 3, NULL, NULL, NULL, 'As the doping to a pure semiconductor increases, the bulk resistance of the semiconductor ________________.', 'Single Correct', NULL, NULL, 1.0, 0.5, NULL, NULL, '2', NULL, NULL, '2025-06-05 16:35:39', '2025-06-05 16:35:39'),
+(23, 3, NULL, NULL, NULL, 'In an intrinsic semiconductor, the number of free electrons ______________.', 'Single Correct', NULL, NULL, 1.0, 0.5, NULL, NULL, '1', NULL, NULL, '2025-06-05 16:35:39', '2025-06-05 16:35:39'),
+(24, 3, NULL, NULL, NULL, 'In semiconductor, fermi level lies:(a) close to the valence band (VB) in p-type(b) close to conduction band (CB) in p-type(c) close to conduction band in n-type (d) close to valence band in n-type Which is correct? ', 'Single Correct', NULL, NULL, 1.0, 0.5, NULL, NULL, '3', NULL, NULL, '2025-06-05 16:35:39', '2025-06-05 16:35:39'),
+(25, 3, NULL, NULL, NULL, 'In N-type semiconductor material, the majority and minority carriers are', 'Single Correct', NULL, NULL, 1.0, 0.5, NULL, NULL, '1', NULL, NULL, '2025-06-05 16:35:39', '2025-06-05 16:35:39'),
+(26, 3, NULL, NULL, NULL, 'The electron and hole concentration in an intrinsic semiconductor are ni per cm3 at 300 K. Now, if acceptor impurities are introduced with a concentration of NA per cm3 (where NA ≫ ni) the electron concentration per cm3 at 300 K will be,', 'Single Correct', NULL, NULL, 1.0, 0.5, NULL, NULL, '4', NULL, NULL, '2025-06-05 16:35:39', '2025-06-05 16:35:39'),
+(27, 3, NULL, NULL, NULL, 'A silicon sample is uniformly doped with 10^16 phosphorus atoms/cm3 and 2x10^16 atoms/cm3 Boron atoms. If all the dopants are fully ionized, the material is', 'Single Correct', NULL, NULL, 1.0, 0.5, NULL, NULL, '2', NULL, NULL, '2025-06-05 16:35:39', '2025-06-05 16:35:39'),
+(28, 3, NULL, NULL, NULL, 'The forbidden energy band gap in metals, semiconductors and insulators are EG1, EG2, and EG3 respectively. The relation among them is,', 'Single Correct', NULL, NULL, 1.0, 0.5, NULL, NULL, '2', NULL, NULL, '2025-06-05 16:37:13', '2025-06-05 16:37:13'),
+(29, 3, NULL, NULL, NULL, 'As the doping to a pure semiconductor increases, the bulk resistance of the semiconductor ________________.', 'Single Correct', NULL, NULL, 1.0, 0.5, NULL, NULL, '2', NULL, NULL, '2025-06-05 16:37:13', '2025-06-05 16:37:13'),
+(30, 3, NULL, NULL, NULL, 'In an intrinsic semiconductor, the number of free electrons ______________.', 'Single Correct', NULL, NULL, 1.0, 0.5, NULL, NULL, '1', NULL, NULL, '2025-06-05 16:37:13', '2025-06-05 16:37:13'),
+(31, 3, NULL, NULL, NULL, 'In semiconductor, fermi level lies:(a) close to the valence band (VB) in p-type(b) close to conduction band (CB) in p-type(c) close to conduction band in n-type (d) close to valence band in n-type Which is correct? ', 'Single Correct', NULL, NULL, 1.0, 0.5, NULL, NULL, '3', NULL, NULL, '2025-06-05 16:37:13', '2025-06-05 16:37:13'),
+(32, 3, NULL, NULL, NULL, 'In N-type semiconductor material, the majority and minority carriers are', 'Single Correct', NULL, NULL, 1.0, 0.5, NULL, NULL, '1', NULL, NULL, '2025-06-05 16:37:13', '2025-06-05 16:37:13'),
+(33, 3, NULL, NULL, NULL, 'The electron and hole concentration in an intrinsic semiconductor are ni per cm3 at 300 K. Now, if acceptor impurities are introduced with a concentration of NA per cm3 (where NA ≫ ni) the electron concentration per cm3 at 300 K will be,', 'Single Correct', NULL, NULL, 1.0, 0.5, NULL, NULL, '4', NULL, NULL, '2025-06-05 16:37:13', '2025-06-05 16:37:13'),
+(34, 3, NULL, NULL, NULL, 'A silicon sample is uniformly doped with 10^16 phosphorus atoms/cm3 and 2x10^16 atoms/cm3 Boron atoms. If all the dopants are fully ionized, the material is', 'Single Correct', NULL, NULL, 1.0, 0.5, NULL, NULL, '2', NULL, NULL, '2025-06-05 16:37:13', '2025-06-05 16:37:13'),
+(35, 14, NULL, NULL, NULL, 'The forbidden energy band gap in metals, semiconductors and insulators are EG1, EG2, and EG3 respectively. The relation among them is,', 'Single Correct', NULL, NULL, 1.0, 0.5, NULL, NULL, '2', NULL, NULL, '2025-06-05 16:38:23', '2025-06-05 16:38:23'),
+(36, 14, NULL, NULL, NULL, 'As the doping to a pure semiconductor increases, the bulk resistance of the semiconductor ________________.', 'Single Correct', NULL, NULL, 1.0, 0.5, NULL, NULL, '2', NULL, NULL, '2025-06-05 16:38:23', '2025-06-05 16:38:23'),
+(37, 14, NULL, NULL, NULL, 'In an intrinsic semiconductor, the number of free electrons ______________.', 'Single Correct', NULL, NULL, 1.0, 0.5, NULL, NULL, '1', NULL, NULL, '2025-06-05 16:38:23', '2025-06-05 16:38:23'),
+(38, 14, NULL, NULL, NULL, 'In semiconductor, fermi level lies:(a) close to the valence band (VB) in p-type(b) close to conduction band (CB) in p-type(c) close to conduction band in n-type (d) close to valence band in n-type Which is correct? ', 'Single Correct', NULL, NULL, 1.0, 0.5, NULL, NULL, '3', NULL, NULL, '2025-06-05 16:38:23', '2025-06-05 16:38:23'),
+(39, 14, NULL, NULL, NULL, 'In N-type semiconductor material, the majority and minority carriers are', 'Single Correct', NULL, NULL, 1.0, 0.5, NULL, NULL, '1', NULL, NULL, '2025-06-05 16:38:23', '2025-06-05 16:38:23'),
+(40, 14, NULL, NULL, NULL, 'The electron and hole concentration in an intrinsic semiconductor are ni per cm3 at 300 K. Now, if acceptor impurities are introduced with a concentration of NA per cm3 (where NA ≫ ni) the electron concentration per cm3 at 300 K will be,', 'Single Correct', NULL, NULL, 1.0, 0.5, NULL, NULL, '4', NULL, NULL, '2025-06-05 16:38:23', '2025-06-05 16:38:23'),
+(41, 14, NULL, NULL, NULL, 'A silicon sample is uniformly doped with 10^16 phosphorus atoms/cm3 and 2x10^16 atoms/cm3 Boron atoms. If all the dopants are fully ionized, the material is', 'Single Correct', NULL, NULL, 1.0, 0.5, NULL, NULL, '2', NULL, NULL, '2025-06-05 16:38:23', '2025-06-05 16:38:23'),
+(42, 15, NULL, NULL, NULL, 'Which of the following is a scripting language?', 'MCQ - Single Correct', NULL, NULL, 1.0, 0.0, NULL, NULL, NULL, NULL, NULL, '2025-06-26 11:49:57', '2025-06-26 11:49:57'),
+(43, 15, NULL, NULL, NULL, 'Which symbol is used to denote a comment in Python?', 'MCQ - Single Correct', NULL, NULL, 1.0, 0.0, NULL, NULL, NULL, NULL, NULL, '2025-06-26 11:49:57', '2025-06-26 11:49:57'),
+(44, 15, NULL, NULL, NULL, 'Which method is used to print output in JavaScript?', 'MCQ - Single Correct', NULL, NULL, 1.0, 0.0, NULL, NULL, NULL, NULL, NULL, '2025-06-26 11:49:57', '2025-06-26 11:49:57'),
+(45, 15, NULL, NULL, NULL, 'Which scripting language is primarily used for web browsers?', 'MCQ - Single Correct', NULL, NULL, 1.0, 0.5, NULL, NULL, NULL, NULL, NULL, '2025-06-26 11:49:57', '2025-06-26 11:49:57'),
+(46, 15, NULL, NULL, NULL, 'What is the file extension for a Bash script?', 'MCQ - Single Correct', NULL, NULL, 1.0, 0.5, NULL, NULL, NULL, NULL, NULL, '2025-06-26 11:49:57', '2025-06-26 11:49:57'),
+(47, 15, NULL, NULL, NULL, 'Which of the following is NOT a scripting language?', 'MCQ - Single Correct', NULL, NULL, 1.0, 0.5, NULL, NULL, NULL, NULL, NULL, '2025-06-26 11:49:57', '2025-06-26 11:49:57'),
+(48, 15, NULL, NULL, NULL, 'Which function is used to read input from the user in Python 3?', 'MCQ - Single Correct', NULL, NULL, 1.0, 0.0, NULL, NULL, NULL, NULL, NULL, '2025-06-26 11:49:57', '2025-06-26 11:49:57'),
+(49, 15, NULL, NULL, NULL, 'Which of these is a server-side scripting language?', 'MCQ - Single Correct', NULL, NULL, 1.0, 0.0, NULL, NULL, NULL, NULL, NULL, '2025-06-26 11:49:57', '2025-06-26 11:49:57'),
+(50, 15, NULL, NULL, NULL, 'Which keyword is used to define a function in JavaScript?', 'MCQ - Single Correct', NULL, NULL, 1.0, 0.0, NULL, NULL, NULL, NULL, NULL, '2025-06-26 11:49:58', '2025-06-26 11:49:58'),
+(51, 15, NULL, NULL, NULL, 'Which of the following is used to execute a shell script in Linux?', 'MCQ - Single Correct', NULL, NULL, 1.0, 0.0, NULL, NULL, NULL, NULL, NULL, '2025-06-26 11:49:58', '2025-06-26 11:49:58'),
+(52, 16, NULL, NULL, NULL, 'What is the boiling point of water?', 'MCQ - Single Correct', NULL, NULL, 1.0, 0.0, NULL, NULL, NULL, NULL, NULL, '2025-08-07 11:58:39', '2025-08-07 11:58:39'),
+(53, 16, NULL, NULL, NULL, 'What planet is known as the Red Planet?', 'MCQ - Single Correct', NULL, NULL, 1.0, 0.0, NULL, NULL, NULL, NULL, NULL, '2025-08-07 11:58:39', '2025-08-07 11:58:39'),
+(54, 16, NULL, NULL, NULL, 'What gas do plants breathe in?', 'MCQ - Single Correct', NULL, NULL, 1.0, 0.0, NULL, NULL, NULL, NULL, NULL, '2025-08-07 11:58:40', '2025-08-07 11:58:40'),
+(55, 17, NULL, NULL, NULL, 'What is the boiling point of water?', 'MCQ - Single Correct', NULL, NULL, 1.0, 0.0, NULL, NULL, NULL, NULL, NULL, '2025-08-07 12:00:50', '2025-08-07 12:00:50'),
+(56, 17, NULL, NULL, NULL, 'What planet is known as the Red Planet?', 'MCQ - Single Correct', NULL, NULL, 1.0, 0.0, NULL, NULL, NULL, NULL, NULL, '2025-08-07 12:00:50', '2025-08-07 12:00:50'),
+(57, 17, NULL, NULL, NULL, 'What gas do plants breathe in?', 'MCQ - Single Correct', NULL, NULL, 1.0, 0.0, NULL, NULL, NULL, NULL, NULL, '2025-08-07 12:00:50', '2025-08-07 12:00:50'),
+(58, 17, NULL, NULL, NULL, 'Which of the following is the first step in the VLSI design flow?', 'MCQ - Single Correct', NULL, NULL, 1.0, 0.5, NULL, NULL, NULL, NULL, NULL, '2025-08-07 12:00:50', '2025-08-07 12:00:50'),
+(59, 17, NULL, NULL, NULL, 'What is the purpose of logic synthesis in the VLSI design flow?', 'MCQ - Single Correct', NULL, NULL, 1.0, 0.5, NULL, NULL, NULL, NULL, NULL, '2025-08-07 12:00:50', '2025-08-07 12:00:50'),
+(60, 17, NULL, NULL, NULL, 'What is the purpose of a testbench in VLSI design?', 'MCQ - Single Correct', NULL, NULL, 1.0, 0.5, NULL, NULL, NULL, NULL, NULL, '2025-08-07 12:00:50', '2025-08-07 12:00:50'),
+(61, 17, NULL, NULL, NULL, 'Which of the following is the correct sequence of steps in the VLSI design flow?', 'MCQ - Single Correct', NULL, NULL, 1.0, 0.5, NULL, NULL, NULL, NULL, NULL, '2025-08-07 12:00:50', '2025-08-07 12:00:50'),
+(62, 17, NULL, NULL, NULL, 'What is module in HDL', 'MCQ - Single Correct', NULL, NULL, 1.0, 0.5, NULL, NULL, NULL, NULL, NULL, '2025-08-07 12:00:50', '2025-08-07 12:00:50'),
+(63, 17, NULL, NULL, NULL, 'Which are the legal identifiers in verilog', 'MCQ - Single Correct', NULL, NULL, 1.0, 0.5, NULL, NULL, NULL, NULL, NULL, '2025-08-07 12:00:50', '2025-08-07 12:00:50'),
+(64, 17, NULL, NULL, NULL, 'What is the primary responsibility of a Design Verification Engineer in the VLSI design flow?', 'MCQ - Single Correct', NULL, NULL, 1.0, 0.5, NULL, NULL, NULL, NULL, NULL, '2025-08-07 12:00:50', '2025-08-07 12:00:50'),
+(65, 17, NULL, NULL, NULL, 'At which stage of the VLSI flow does the Design Verification (DV) team primarily focus on ensuring the functional correctness of', 'MCQ - Single Correct', NULL, NULL, 1.0, 0.5, NULL, NULL, NULL, NULL, NULL, '2025-08-07 12:00:50', '2025-08-07 12:00:50'),
+(66, 17, NULL, NULL, NULL, 'What is the primary responsibility of an RTL (Register Transfer Level) Engineer in the VLSI design flow?', 'MCQ - Single Correct', NULL, NULL, 1.0, 0.5, NULL, NULL, NULL, NULL, NULL, '2025-08-07 12:00:50', '2025-08-07 12:00:50'),
+(67, 17, NULL, NULL, NULL, 'What happens immediately after Design Verification in the VLSI design flow?', 'MCQ - Single Correct', NULL, NULL, 1.0, 0.5, NULL, NULL, NULL, NULL, NULL, '2025-08-07 12:00:50', '2025-08-07 12:00:50'),
+(68, 18, NULL, NULL, NULL, 'Which of the following is the first step in the VLSI design flow?', 'MCQ - Single Correct', NULL, NULL, 1.0, 0.5, NULL, NULL, NULL, NULL, NULL, '2025-08-07 12:03:43', '2025-08-07 12:03:43'),
+(69, 18, NULL, NULL, NULL, 'What is the purpose of logic synthesis in the VLSI design flow?', 'MCQ - Single Correct', NULL, NULL, 1.0, 0.5, NULL, NULL, NULL, NULL, NULL, '2025-08-07 12:03:43', '2025-08-07 12:03:43'),
+(70, 18, NULL, NULL, NULL, 'What is the purpose of a testbench in VLSI design?', 'MCQ - Single Correct', NULL, NULL, 1.0, 0.5, NULL, NULL, NULL, NULL, NULL, '2025-08-07 12:03:43', '2025-08-07 12:03:43'),
+(71, 18, NULL, NULL, NULL, 'Which of the following is the correct sequence of steps in the VLSI design flow?', 'MCQ - Single Correct', NULL, NULL, 1.0, 0.5, NULL, NULL, NULL, NULL, NULL, '2025-08-07 12:03:43', '2025-08-07 12:03:43'),
+(72, 18, NULL, NULL, NULL, 'What is module in HDL', 'MCQ - Single Correct', NULL, NULL, 1.0, 0.5, NULL, NULL, NULL, NULL, NULL, '2025-08-07 12:03:43', '2025-08-07 12:03:43'),
+(73, 18, NULL, NULL, NULL, 'Which are the legal identifiers in verilog', 'MCQ - Single Correct', NULL, NULL, 1.0, 0.5, NULL, NULL, NULL, NULL, NULL, '2025-08-07 12:03:43', '2025-08-07 12:03:43'),
+(74, 18, NULL, NULL, NULL, 'What is the primary responsibility of a Design Verification Engineer in the VLSI design flow?', 'MCQ - Single Correct', NULL, NULL, 1.0, 0.5, NULL, NULL, NULL, NULL, NULL, '2025-08-07 12:03:43', '2025-08-07 12:03:43'),
+(75, 18, NULL, NULL, NULL, 'At which stage of the VLSI flow does the Design Verification (DV) team primarily focus on ensuring the functional correctness of', 'MCQ - Single Correct', NULL, NULL, 1.0, 0.5, NULL, NULL, NULL, NULL, NULL, '2025-08-07 12:03:43', '2025-08-07 12:03:43'),
+(76, 18, NULL, NULL, NULL, 'What is the primary responsibility of an RTL (Register Transfer Level) Engineer in the VLSI design flow?', 'MCQ - Single Correct', NULL, NULL, 1.0, 0.5, NULL, NULL, NULL, NULL, NULL, '2025-08-07 12:03:43', '2025-08-07 12:03:43'),
+(77, 18, NULL, NULL, NULL, 'What happens immediately after Design Verification in the VLSI design flow?', 'MCQ - Single Correct', NULL, NULL, 1.0, 0.5, NULL, NULL, NULL, NULL, NULL, '2025-08-07 12:03:43', '2025-08-07 12:03:43'),
+(78, 19, NULL, NULL, NULL, 'What will be the output of the below snippet.\n', '', NULL, NULL, 0.0, 0.0, NULL, NULL, NULL, NULL, NULL, '2025-08-07 14:02:36', '2025-08-07 14:02:36'),
+(79, 20, NULL, NULL, NULL, 'What will be the output of the below snippet.\n', '', NULL, NULL, 0.0, 0.0, NULL, NULL, NULL, NULL, NULL, '2025-08-07 14:03:09', '2025-08-07 14:03:09'),
+(80, 21, NULL, NULL, NULL, 'What will be the output of the below snippet.\n', '', NULL, NULL, 0.0, 0.0, NULL, NULL, NULL, NULL, NULL, '2025-08-07 14:08:26', '2025-08-07 14:08:26'),
+(81, 21, NULL, NULL, NULL, 'module tb;\n', '', NULL, NULL, 0.0, 0.0, NULL, NULL, NULL, NULL, NULL, '2025-08-07 14:08:26', '2025-08-07 14:08:26'),
+(82, 21, NULL, NULL, NULL, 'module tb;\n', '', NULL, NULL, 0.0, 0.0, NULL, NULL, NULL, NULL, NULL, '2025-08-07 14:08:26', '2025-08-07 14:08:26'),
+(83, 21, NULL, NULL, NULL, 'What will the following code snippet print?\n', '', NULL, NULL, 0.0, 0.0, NULL, NULL, NULL, NULL, NULL, '2025-08-07 14:08:26', '2025-08-07 14:08:26'),
+(84, 21, NULL, NULL, NULL, 'What will the following code snippet print?\n', '', NULL, NULL, 0.0, 0.0, NULL, NULL, NULL, NULL, NULL, '2025-08-07 14:08:26', '2025-08-07 14:08:26'),
+(85, 21, NULL, NULL, NULL, 'What happens if a task or function in SystemVerilog does not have a return statement?', 'MCQ - Single Correct', NULL, NULL, 1.0, 0.5, NULL, NULL, NULL, NULL, NULL, '2025-08-07 14:08:26', '2025-08-07 14:08:26'),
+(86, 21, NULL, NULL, NULL, 'Which function in SystemVerilog mailbox operations can be used to retrieve data without waiting for the mailbox to be non-empty', 'MCQ - Single Correct', NULL, NULL, 1.0, 0.5, NULL, NULL, NULL, NULL, NULL, '2025-08-07 14:08:26', '2025-08-07 14:08:26'),
+(87, 21, NULL, NULL, NULL, 'default initial value for variables of \"logic type is \"X\" while variables of \"bit\" data type are iniitialized to \"0\".\n', '', NULL, NULL, 0.0, 0.0, NULL, NULL, NULL, NULL, NULL, '2025-08-07 14:08:26', '2025-08-07 14:08:26'),
+(88, 21, NULL, NULL, NULL, 'What does the indexOf() method return if the specified element is not found in the array', 'MCQ - Single Correct', NULL, NULL, 1.0, 0.5, NULL, NULL, NULL, NULL, NULL, '2025-08-07 14:08:26', '2025-08-07 14:08:26'),
+(89, 21, NULL, NULL, NULL, 'What does the \'void\' keyword indicate in a function declaration in SystemVerilog?', 'MCQ - Single Correct', NULL, NULL, 1.0, 0.5, NULL, NULL, NULL, NULL, NULL, '2025-08-07 14:08:26', '2025-08-07 14:08:26'),
+(90, 22, NULL, NULL, NULL, 'What planet is known as the Red Planet?', 'MCQ - Single Correct', NULL, NULL, 1.0, 0.0, NULL, NULL, NULL, NULL, NULL, '2025-08-07 14:50:21', '2025-08-07 14:50:21'),
+(91, 22, NULL, NULL, NULL, 'What gas do plants breathe in?', 'MCQ - Single Correct', NULL, NULL, 1.0, 0.0, NULL, NULL, NULL, NULL, NULL, '2025-08-07 14:50:21', '2025-08-07 14:50:21'),
+(92, 23, NULL, NULL, NULL, '', '', NULL, NULL, 0.0, 0.0, NULL, NULL, NULL, NULL, NULL, '2025-08-07 14:50:21', '2025-08-07 14:50:21'),
+(93, 23, NULL, NULL, NULL, '', '', NULL, NULL, 0.0, 0.0, NULL, NULL, NULL, NULL, NULL, '2025-08-07 14:50:21', '2025-08-07 14:50:21'),
+(94, 23, NULL, NULL, NULL, '', '', NULL, NULL, 0.0, 0.0, NULL, NULL, NULL, NULL, NULL, '2025-08-07 14:50:21', '2025-08-07 14:50:21'),
+(95, 24, NULL, NULL, NULL, 'What planet is known as the Red Planet?', 'MCQ - Single Correct', NULL, NULL, 1.0, 0.0, NULL, NULL, NULL, NULL, NULL, '2025-08-07 14:54:09', '2025-08-07 14:54:09'),
+(96, 24, NULL, NULL, NULL, 'What gas do plants breathe in?', 'MCQ - Single Correct', NULL, NULL, 1.0, 0.0, NULL, NULL, NULL, NULL, NULL, '2025-08-07 14:54:09', '2025-08-07 14:54:09'),
+(97, 25, NULL, NULL, NULL, '', '', NULL, NULL, 0.0, 0.0, NULL, NULL, NULL, NULL, NULL, '2025-08-07 14:54:09', '2025-08-07 14:54:09'),
+(98, 25, NULL, NULL, NULL, '', '', NULL, NULL, 0.0, 0.0, NULL, NULL, NULL, NULL, NULL, '2025-08-07 14:54:09', '2025-08-07 14:54:09'),
+(99, 25, NULL, NULL, NULL, '', '', NULL, NULL, 0.0, 0.0, NULL, NULL, NULL, NULL, NULL, '2025-08-07 14:54:09', '2025-08-07 14:54:09'),
+(100, 26, NULL, NULL, NULL, 'What planet is known as the Red Planet?', 'MCQ - Single Correct', NULL, NULL, 1.0, 0.0, NULL, NULL, NULL, NULL, NULL, '2025-08-07 14:55:11', '2025-08-07 14:55:11'),
+(101, 26, NULL, NULL, NULL, 'What gas do plants breathe in?', 'MCQ - Single Correct', NULL, NULL, 1.0, 0.0, NULL, NULL, NULL, NULL, NULL, '2025-08-07 14:55:11', '2025-08-07 14:55:11'),
+(102, 27, NULL, NULL, NULL, '', '', NULL, NULL, 0.0, 0.0, NULL, NULL, NULL, NULL, NULL, '2025-08-07 14:55:11', '2025-08-07 14:55:11'),
+(103, 27, NULL, NULL, NULL, '', '', NULL, NULL, 0.0, 0.0, NULL, NULL, NULL, NULL, NULL, '2025-08-07 14:55:11', '2025-08-07 14:55:11'),
+(104, 27, NULL, NULL, NULL, '', '', NULL, NULL, 0.0, 0.0, NULL, NULL, NULL, NULL, NULL, '2025-08-07 14:55:11', '2025-08-07 14:55:11'),
+(105, 28, NULL, NULL, NULL, 'class Base; \n', '', NULL, NULL, 0.0, 0.0, NULL, NULL, NULL, NULL, NULL, '2025-08-07 14:57:00', '2025-08-07 14:57:00'),
+(106, 28, NULL, NULL, NULL, 'What planet is known as the Red Planet?', 'MCQ - Single Correct', NULL, NULL, 1.0, 0.0, NULL, NULL, NULL, NULL, NULL, '2025-08-07 14:57:00', '2025-08-07 14:57:00'),
+(107, 28, NULL, NULL, NULL, 'What gas do plants breathe in?', 'MCQ - Single Correct', NULL, NULL, 1.0, 0.0, NULL, NULL, NULL, NULL, NULL, '2025-08-07 14:57:00', '2025-08-07 14:57:00'),
+(108, 29, NULL, NULL, NULL, 'class Base; \n', '', NULL, NULL, 0.0, 0.0, NULL, NULL, NULL, NULL, NULL, '2025-08-18 11:43:15', '2025-08-18 11:43:15'),
+(109, 29, NULL, NULL, NULL, 'What planet is known as the Red Planet?', 'MCQ - Single Correct', NULL, NULL, 1.0, 0.0, NULL, NULL, NULL, NULL, NULL, '2025-08-18 11:43:15', '2025-08-18 11:43:15'),
+(110, 29, NULL, NULL, NULL, 'What gas do plants breathe in?', 'MCQ - Single Correct', NULL, NULL, 1.0, 0.0, NULL, NULL, NULL, NULL, NULL, '2025-08-18 11:43:15', '2025-08-18 11:43:15'),
+(111, 30, NULL, 'uploads/questions/1755690833_selection list clients.gif', NULL, '<pre style=\"background-color: #f8f9fa; padding: 16px; border-radius: 8px; font-family: monospace; font-size: 14px; border: 1px solid #e9ecef; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word; margin: 8px 0; line-height: 1.4;\">class Base; \r\n virtual function void display(); \r\n $display(&quot;Base Class&quot;); \r\n endfunction \r\nendclass \r\n \r\nclass Derived extends Base; \r\n virtual function void display(); \r\n $display(&quot;Derived Class&quot;); \r\n endfunction \r\nendclass \r\n \r\ninitial begin \r\n Base b; \r\n Derived d; \r\n \r\n b = d; \r\n b.display(); \r\nend \r\n``` \r\n \r\nWhat will be displayed when the above SystemVerilog code is executed?</pre>', 'MCQ - Single Correct', NULL, NULL, 1.0, 0.0, NULL, NULL, NULL, NULL, NULL, '2025-08-20 17:13:15', '2025-08-20 17:23:53'),
+(112, 30, NULL, NULL, NULL, 'What planet is known as the Red Planet?', 'MCQ - Single Correct', NULL, NULL, 1.0, 0.0, NULL, NULL, NULL, NULL, NULL, '2025-08-20 17:13:15', '2025-08-20 17:13:15'),
+(113, 30, NULL, NULL, NULL, 'What gas do plants breathe in?', 'MCQ - Single Correct', NULL, NULL, 1.0, 0.0, NULL, NULL, NULL, NULL, NULL, '2025-08-20 17:13:15', '2025-08-20 17:13:15');
 
 -- --------------------------------------------------------
 
@@ -4630,7 +5080,21 @@ INSERT INTO `question_banks` (`id`, `name`, `question_bank_subject_id`, `questio
 (12, 'May 2025 New Q bank', 88, 'CMOS', 3, 1, NULL, '2025-05-30 14:59:40', '2025-05-30 14:59:40'),
 (13, 'RAKESH', 88, 'MOSFET : Introduction to Transistor, FET and MOSFET. Basics of FET and MOSFET qualitative analysis.', 1, 1, 'testing', '2025-06-05 00:10:53', '2025-06-05 00:10:53'),
 (14, 'Q Bank Testing', 88, 'CMOS', 3, 1, NULL, '2025-06-05 16:36:39', '2025-06-05 16:36:39'),
-(15, 'TEST ING IMPORT QUESTION ', 91, 'Programming', 1, 1, 'Questions about scripting languages', '2025-06-26 11:49:57', '2025-06-26 11:49:57');
+(15, 'TEST ING IMPORT QUESTION ', 91, 'Programming', 1, 1, 'Questions about scripting languages', '2025-06-26 11:49:57', '2025-06-26 11:49:57'),
+(16, 'Science Quiz', 97, 'Physics', 1, 1, 'Basic science questions', '2025-08-07 11:58:39', '2025-08-07 11:58:39'),
+(17, 'Science Quiz', 97, 'Physics', 1, 1, 'Basic science questions', '2025-08-07 12:00:50', '2025-08-07 12:00:50'),
+(18, 'Aug Verilog', 98, 'DV', 1, 1, 'VERILOG', '2025-08-07 12:03:43', '2025-08-07 12:03:43'),
+(19, 'Science Quiz', 97, 'Physics', 1, 1, 'Basic science questions', '2025-08-07 14:02:36', '2025-08-07 14:02:36'),
+(20, 'Science Quiz', 97, 'Physics', 1, 1, 'Basic science questions', '2025-08-07 14:03:09', '2025-08-07 14:03:09'),
+(21, 'Aug Verilog', 98, 'DV', 1, 1, 'VERILOG', '2025-08-07 14:08:26', '2025-08-07 14:08:26'),
+(22, 'Science Quiz', 97, 'Physics', 1, 1, 'Basic science questions', '2025-08-07 14:50:21', '2025-08-07 14:50:21'),
+(23, 'Math Quiz', 99, '', 4, 7, '', '2025-08-07 14:50:21', '2025-08-07 14:50:21'),
+(24, 'Science Quiz', 97, 'Physics', 1, 1, 'Basic science questions', '2025-08-07 14:54:09', '2025-08-07 14:54:09'),
+(25, 'Math Quiz', 99, '', 4, 7, '', '2025-08-07 14:54:09', '2025-08-07 14:54:09'),
+(26, 'Science Quiz', 97, 'Physics', 1, 1, 'Basic science questions', '2025-08-07 14:55:11', '2025-08-07 14:55:11'),
+(27, 'Math Quiz', 99, '', 4, 7, '', '2025-08-07 14:55:11', '2025-08-07 14:55:11'),
+(28, 'Science Quiz', 97, 'Physics', 1, 1, 'Basic science questions', '2025-08-07 14:57:00', '2025-08-07 14:57:00'),
+(30, 'Science Quiz', 114, 'Physics', 1, 1, 'Basic science questions', '2025-08-20 17:13:15', '2025-08-20 17:13:15');
 
 -- --------------------------------------------------------
 
@@ -4673,7 +5137,8 @@ CREATE TABLE `question_bank_difficulties` (
 INSERT INTO `question_bank_difficulties` (`id`, `name`, `created_at`, `updated_at`) VALUES
 (1, 'Beginner', '2024-04-04 03:05:41', '2024-04-04 03:05:41'),
 (2, 'Intermediate', '2024-04-04 03:07:33', '2024-04-04 03:07:33'),
-(3, 'Difficult', '2024-04-04 03:07:49', '2024-04-04 03:07:49');
+(3, 'Difficult', '2024-04-04 03:07:49', '2024-04-04 03:07:49'),
+(4, '', '2025-08-07 14:50:21', '2025-08-07 14:50:21');
 
 -- --------------------------------------------------------
 
@@ -4718,7 +5183,8 @@ INSERT INTO `question_bank_types` (`id`, `name`, `created_at`, `updated_at`) VAL
 (3, 'Fill The Blank', '2024-04-04 03:06:20', '2024-04-04 03:06:20'),
 (4, 'Subjective', '2024-04-04 03:06:29', '2024-04-04 03:06:29'),
 (5, 'True/False', '2024-04-04 03:06:38', '2024-04-04 03:06:38'),
-(6, 'English Transcript', '2024-04-04 03:06:46', '2024-04-04 03:06:46');
+(6, 'English Transcript', '2024-04-04 03:06:46', '2024-04-04 03:06:46'),
+(7, '', '2025-08-07 14:50:21', '2025-08-07 14:50:21');
 
 -- --------------------------------------------------------
 
@@ -4931,7 +5397,178 @@ INSERT INTO `question_options` (`id`, `question_id`, `option`, `is_correct`, `cr
 (197, 51, 'bash filename.sh', 1, '2025-06-26 11:49:58', '2025-06-26 11:49:58'),
 (198, 51, 'run filename.sh', 0, '2025-06-26 11:49:58', '2025-06-26 11:49:58'),
 (199, 51, 'execute filename.sh', 0, '2025-06-26 11:49:58', '2025-06-26 11:49:58'),
-(200, 51, 'open filename.sh', 0, '2025-06-26 11:49:58', '2025-06-26 11:49:58');
+(200, 51, 'open filename.sh', 0, '2025-06-26 11:49:58', '2025-06-26 11:49:58'),
+(201, 52, '90°C', 0, '2025-08-07 11:58:39', '2025-08-07 11:58:39'),
+(202, 52, '100°C', 1, '2025-08-07 11:58:39', '2025-08-07 11:58:39'),
+(203, 52, '110°C', 0, '2025-08-07 11:58:39', '2025-08-07 11:58:39'),
+(204, 52, '120°C', 0, '2025-08-07 11:58:39', '2025-08-07 11:58:39'),
+(205, 53, 'Earth', 0, '2025-08-07 11:58:39', '2025-08-07 11:58:39'),
+(206, 53, 'Mars', 1, '2025-08-07 11:58:40', '2025-08-07 11:58:40'),
+(207, 53, 'Venus', 0, '2025-08-07 11:58:40', '2025-08-07 11:58:40'),
+(208, 53, 'Jupiter', 0, '2025-08-07 11:58:40', '2025-08-07 11:58:40'),
+(209, 54, 'Oxygen', 0, '2025-08-07 11:58:40', '2025-08-07 11:58:40'),
+(210, 54, 'Nitrogen', 0, '2025-08-07 11:58:40', '2025-08-07 11:58:40'),
+(211, 54, 'Carbon Dioxide', 1, '2025-08-07 11:58:40', '2025-08-07 11:58:40'),
+(212, 54, 'Hydrogen', 0, '2025-08-07 11:58:40', '2025-08-07 11:58:40'),
+(213, 55, '90', 0, '2025-08-07 12:00:50', '2025-08-07 12:00:50'),
+(214, 55, '100', 1, '2025-08-07 12:00:50', '2025-08-07 12:00:50'),
+(215, 55, '110', 0, '2025-08-07 12:00:50', '2025-08-07 12:00:50'),
+(216, 55, '120', 0, '2025-08-07 12:00:50', '2025-08-07 12:00:50'),
+(217, 56, 'Earth', 0, '2025-08-07 12:00:50', '2025-08-07 12:00:50'),
+(218, 56, 'Mars', 1, '2025-08-07 12:00:50', '2025-08-07 12:00:50'),
+(219, 56, 'Venus', 0, '2025-08-07 12:00:50', '2025-08-07 12:00:50'),
+(220, 56, 'Jupiter', 0, '2025-08-07 12:00:50', '2025-08-07 12:00:50'),
+(221, 57, 'Oxygen', 0, '2025-08-07 12:00:50', '2025-08-07 12:00:50'),
+(222, 57, 'Nitrogen', 0, '2025-08-07 12:00:50', '2025-08-07 12:00:50'),
+(223, 57, 'Carbon Dioxide', 1, '2025-08-07 12:00:50', '2025-08-07 12:00:50'),
+(224, 57, 'Hydrogen', 0, '2025-08-07 12:00:50', '2025-08-07 12:00:50'),
+(225, 58, 'Physical Design', 0, '2025-08-07 12:00:50', '2025-08-07 12:00:50'),
+(226, 58, 'Logic Synthesis', 0, '2025-08-07 12:00:50', '2025-08-07 12:00:50'),
+(227, 58, 'Specification and Architecture Design', 1, '2025-08-07 12:00:50', '2025-08-07 12:00:50'),
+(228, 58, 'Verification', 0, '2025-08-07 12:00:50', '2025-08-07 12:00:50'),
+(229, 59, 'To convert RTL code into gate-level netlist', 1, '2025-08-07 12:00:50', '2025-08-07 12:00:50'),
+(230, 59, 'To perform timing analysis', 0, '2025-08-07 12:00:50', '2025-08-07 12:00:50'),
+(231, 59, 'To create the layout of the chip', 0, '2025-08-07 12:00:50', '2025-08-07 12:00:50'),
+(232, 59, 'To verify the functionality of the design', 0, '2025-08-07 12:00:50', '2025-08-07 12:00:50'),
+(233, 60, 'To perform logic synthesis', 0, '2025-08-07 12:00:50', '2025-08-07 12:00:50'),
+(234, 60, 'To verify the functionality of the design', 1, '2025-08-07 12:00:50', '2025-08-07 12:00:50'),
+(235, 60, 'To create the layout of the chip', 0, '2025-08-07 12:00:50', '2025-08-07 12:00:50'),
+(236, 60, 'To optimize power consumption', 0, '2025-08-07 12:00:50', '2025-08-07 12:00:50'),
+(237, 61, 'System Specification _ Layout Design _ Physical Design _ Fabrication', 0, '2025-08-07 12:00:50', '2025-08-07 12:00:50'),
+(238, 61, 'Layout Design _ Fabrication _ Logic Synthesis _ System Specification', 0, '2025-08-07 12:00:50', '2025-08-07 12:00:50'),
+(239, 61, 'RTL Design _ Logic Synthesis _ System Specification _ Fabrication', 0, '2025-08-07 12:00:50', '2025-08-07 12:00:50'),
+(240, 61, 'System Specification _ RTL Design _ Logic Synthesis _ Physical Design _ Fabrication', 1, '2025-08-07 12:00:50', '2025-08-07 12:00:50'),
+(241, 62, 'Basic building block', 0, '2025-08-07 12:00:50', '2025-08-07 12:00:50'),
+(242, 62, 'Hides the logic', 0, '2025-08-07 12:00:50', '2025-08-07 12:00:50'),
+(243, 62, 'Both Basic building block & Hides the logic', 1, '2025-08-07 12:00:50', '2025-08-07 12:00:50'),
+(244, 62, 'None', 0, '2025-08-07 12:00:50', '2025-08-07 12:00:50'),
+(245, 63, '1a', 0, '2025-08-07 12:00:50', '2025-08-07 12:00:50'),
+(246, 63, '$1.00 ', 0, '2025-08-07 12:00:50', '2025-08-07 12:00:50'),
+(247, 63, 'a_b', 1, '2025-08-07 12:00:50', '2025-08-07 12:00:50'),
+(248, 63, 'None of the above', 0, '2025-08-07 12:00:50', '2025-08-07 12:00:50'),
+(249, 64, 'Verifying the functional correctness of the design', 1, '2025-08-07 12:00:50', '2025-08-07 12:00:50'),
+(250, 64, 'Writing RTL code to describe the hardware logic', 0, '2025-08-07 12:00:50', '2025-08-07 12:00:50'),
+(251, 64, 'Running functional simulations on the RTL design', 0, '2025-08-07 12:00:50', '2025-08-07 12:00:50'),
+(252, 64, 'Creating the layout of the chip, including placement and routing', 0, '2025-08-07 12:00:50', '2025-08-07 12:00:50'),
+(253, 65, 'Synthesis', 0, '2025-08-07 12:00:50', '2025-08-07 12:00:50'),
+(254, 65, 'RTL Design', 1, '2025-08-07 12:00:50', '2025-08-07 12:00:50'),
+(255, 65, 'Gate-Level Simulation', 0, '2025-08-07 12:00:50', '2025-08-07 12:00:50'),
+(256, 65, 'Physical Design', 0, '2025-08-07 12:00:50', '2025-08-07 12:00:50'),
+(257, 66, 'To perform physical design and layout of the chip', 0, '2025-08-07 12:00:50', '2025-08-07 12:00:50'),
+(258, 66, 'To run simulations on the synthesized gate-level netlist', 0, '2025-08-07 12:00:50', '2025-08-07 12:00:50'),
+(259, 66, 'To verify the functionality of the design post-synthesis', 0, '2025-08-07 12:00:50', '2025-08-07 12:00:50'),
+(260, 66, 'To write and optimize the code describing the hardware logic', 1, '2025-08-07 12:00:50', '2025-08-07 12:00:50'),
+(261, 67, 'Synthesis of the RTL design', 1, '2025-08-07 12:00:50', '2025-08-07 12:00:50'),
+(262, 67, 'Layout versus Schematic (LVS) check', 0, '2025-08-07 12:00:50', '2025-08-07 12:00:50'),
+(263, 67, 'Physical Design of the chip', 0, '2025-08-07 12:00:50', '2025-08-07 12:00:50'),
+(264, 67, 'Timing Analysis and Sign-off', 0, '2025-08-07 12:00:50', '2025-08-07 12:00:50'),
+(265, 68, 'Physical Design', 0, '2025-08-07 12:03:43', '2025-08-07 12:03:43'),
+(266, 68, 'Logic Synthesis', 0, '2025-08-07 12:03:43', '2025-08-07 12:03:43'),
+(267, 68, 'Specification and Architecture Design', 1, '2025-08-07 12:03:43', '2025-08-07 12:03:43'),
+(268, 68, 'Verification', 0, '2025-08-07 12:03:43', '2025-08-07 12:03:43'),
+(269, 69, 'To convert RTL code into gate-level netlist', 1, '2025-08-07 12:03:43', '2025-08-07 12:03:43'),
+(270, 69, 'To perform timing analysis', 0, '2025-08-07 12:03:43', '2025-08-07 12:03:43'),
+(271, 69, 'To create the layout of the chip', 0, '2025-08-07 12:03:43', '2025-08-07 12:03:43'),
+(272, 69, 'To verify the functionality of the design', 0, '2025-08-07 12:03:43', '2025-08-07 12:03:43'),
+(273, 70, 'To perform logic synthesis', 0, '2025-08-07 12:03:43', '2025-08-07 12:03:43'),
+(274, 70, 'To verify the functionality of the design', 1, '2025-08-07 12:03:43', '2025-08-07 12:03:43'),
+(275, 70, 'To create the layout of the chip', 0, '2025-08-07 12:03:43', '2025-08-07 12:03:43'),
+(276, 70, 'To optimize power consumption', 0, '2025-08-07 12:03:43', '2025-08-07 12:03:43'),
+(277, 71, 'System Specification _ Layout Design _ Physical Design _ Fabrication', 0, '2025-08-07 12:03:43', '2025-08-07 12:03:43'),
+(278, 71, 'Layout Design _ Fabrication _ Logic Synthesis _ System Specification', 0, '2025-08-07 12:03:43', '2025-08-07 12:03:43'),
+(279, 71, 'RTL Design _ Logic Synthesis _ System Specification _ Fabrication', 0, '2025-08-07 12:03:43', '2025-08-07 12:03:43'),
+(280, 71, 'System Specification _ RTL Design _ Logic Synthesis _ Physical Design _ Fabrication', 1, '2025-08-07 12:03:43', '2025-08-07 12:03:43'),
+(281, 72, 'Basic building block', 0, '2025-08-07 12:03:43', '2025-08-07 12:03:43'),
+(282, 72, 'Hides the logic', 0, '2025-08-07 12:03:43', '2025-08-07 12:03:43'),
+(283, 72, 'Both Basic building block & Hides the logic', 1, '2025-08-07 12:03:43', '2025-08-07 12:03:43'),
+(284, 72, 'None', 0, '2025-08-07 12:03:43', '2025-08-07 12:03:43'),
+(285, 73, '1a', 0, '2025-08-07 12:03:43', '2025-08-07 12:03:43'),
+(286, 73, '$1.00 ', 0, '2025-08-07 12:03:43', '2025-08-07 12:03:43'),
+(287, 73, 'a_b', 1, '2025-08-07 12:03:43', '2025-08-07 12:03:43'),
+(288, 73, 'None of the above', 0, '2025-08-07 12:03:43', '2025-08-07 12:03:43'),
+(289, 74, 'Verifying the functional correctness of the design', 1, '2025-08-07 12:03:43', '2025-08-07 12:03:43'),
+(290, 74, 'Writing RTL code to describe the hardware logic', 0, '2025-08-07 12:03:43', '2025-08-07 12:03:43'),
+(291, 74, 'Running functional simulations on the RTL design', 0, '2025-08-07 12:03:43', '2025-08-07 12:03:43'),
+(292, 74, 'Creating the layout of the chip, including placement and routing', 0, '2025-08-07 12:03:43', '2025-08-07 12:03:43'),
+(293, 75, 'Synthesis', 0, '2025-08-07 12:03:43', '2025-08-07 12:03:43'),
+(294, 75, 'RTL Design', 1, '2025-08-07 12:03:43', '2025-08-07 12:03:43'),
+(295, 75, 'Gate-Level Simulation', 0, '2025-08-07 12:03:43', '2025-08-07 12:03:43'),
+(296, 75, 'Physical Design', 0, '2025-08-07 12:03:43', '2025-08-07 12:03:43'),
+(297, 76, 'To perform physical design and layout of the chip', 0, '2025-08-07 12:03:43', '2025-08-07 12:03:43'),
+(298, 76, 'To run simulations on the synthesized gate-level netlist', 0, '2025-08-07 12:03:43', '2025-08-07 12:03:43'),
+(299, 76, 'To verify the functionality of the design post-synthesis', 0, '2025-08-07 12:03:43', '2025-08-07 12:03:43'),
+(300, 76, 'To write and optimize the code describing the hardware logic', 1, '2025-08-07 12:03:43', '2025-08-07 12:03:43'),
+(301, 77, 'Synthesis of the RTL design', 1, '2025-08-07 12:03:43', '2025-08-07 12:03:43'),
+(302, 77, 'Layout versus Schematic (LVS) check', 0, '2025-08-07 12:03:43', '2025-08-07 12:03:43'),
+(303, 77, 'Physical Design of the chip', 0, '2025-08-07 12:03:43', '2025-08-07 12:03:43'),
+(304, 77, 'Timing Analysis and Sign-off', 0, '2025-08-07 12:03:43', '2025-08-07 12:03:43'),
+(305, 85, 'Compilation error', 0, '2025-08-07 14:08:26', '2025-08-07 14:08:26'),
+(306, 85, 'Simulation error', 0, '2025-08-07 14:08:26', '2025-08-07 14:08:26'),
+(307, 85, 'The task or function implicitly returns void', 1, '2025-08-07 14:08:26', '2025-08-07 14:08:26'),
+(308, 85, '*8*0- Depends on the context of the task or function', 0, '2025-08-07 14:08:26', '2025-08-07 14:08:26'),
+(309, 86, ' get()', 1, '2025-08-07 14:08:26', '2025-08-07 14:08:26'),
+(310, 86, 'peek()', 0, '2025-08-07 14:08:26', '2025-08-07 14:08:26'),
+(311, 86, 'try_get()', 0, '2025-08-07 14:08:26', '2025-08-07 14:08:26'),
+(312, 86, 'read()', 0, '2025-08-07 14:08:26', '2025-08-07 14:08:26'),
+(313, 88, '-1', 0, '2025-08-07 14:08:26', '2025-08-07 14:08:26'),
+(314, 88, 'undefined', 0, '2025-08-07 14:08:26', '2025-08-07 14:08:26'),
+(315, 88, 'null', 1, '2025-08-07 14:08:26', '2025-08-07 14:08:26'),
+(316, 89, 'Specifies that the function has no return value', 1, '2025-08-07 14:08:26', '2025-08-07 14:08:26'),
+(317, 89, 'Prevents the function from being called', 0, '2025-08-07 14:08:26', '2025-08-07 14:08:26'),
+(318, 89, 'indicates a recursive function', 0, '2025-08-07 14:08:26', '2025-08-07 14:08:26'),
+(319, 89, 'Specifies that the function is private', 0, '2025-08-07 14:08:26', '2025-08-07 14:08:26'),
+(320, 90, 'Earth', 0, '2025-08-07 14:50:21', '2025-08-07 14:50:21'),
+(321, 90, 'Mars', 1, '2025-08-07 14:50:21', '2025-08-07 14:50:21'),
+(322, 90, 'Venus', 0, '2025-08-07 14:50:21', '2025-08-07 14:50:21'),
+(323, 90, 'Jupiter', 0, '2025-08-07 14:50:21', '2025-08-07 14:50:21'),
+(324, 91, 'Oxygen', 0, '2025-08-07 14:50:21', '2025-08-07 14:50:21'),
+(325, 91, 'Nitrogen', 0, '2025-08-07 14:50:21', '2025-08-07 14:50:21'),
+(326, 91, 'Carbon Dioxide', 1, '2025-08-07 14:50:21', '2025-08-07 14:50:21'),
+(327, 91, 'Hydrogen', 0, '2025-08-07 14:50:21', '2025-08-07 14:50:21'),
+(328, 95, 'Earth', 0, '2025-08-07 14:54:09', '2025-08-07 14:54:09'),
+(329, 95, 'Mars', 1, '2025-08-07 14:54:09', '2025-08-07 14:54:09'),
+(330, 95, 'Venus', 0, '2025-08-07 14:54:09', '2025-08-07 14:54:09'),
+(331, 95, 'Jupiter', 0, '2025-08-07 14:54:09', '2025-08-07 14:54:09'),
+(332, 96, 'Oxygen', 0, '2025-08-07 14:54:09', '2025-08-07 14:54:09'),
+(333, 96, 'Nitrogen', 0, '2025-08-07 14:54:09', '2025-08-07 14:54:09'),
+(334, 96, 'Carbon Dioxide', 1, '2025-08-07 14:54:09', '2025-08-07 14:54:09'),
+(335, 96, 'Hydrogen', 0, '2025-08-07 14:54:09', '2025-08-07 14:54:09'),
+(336, 100, 'Earth', 0, '2025-08-07 14:55:11', '2025-08-07 14:55:11'),
+(337, 100, 'Mars', 1, '2025-08-07 14:55:11', '2025-08-07 14:55:11'),
+(338, 100, 'Venus', 0, '2025-08-07 14:55:11', '2025-08-07 14:55:11'),
+(339, 100, 'Jupiter', 0, '2025-08-07 14:55:11', '2025-08-07 14:55:11'),
+(340, 101, 'Oxygen', 0, '2025-08-07 14:55:11', '2025-08-07 14:55:11'),
+(341, 101, 'Nitrogen', 0, '2025-08-07 14:55:11', '2025-08-07 14:55:11'),
+(342, 101, 'Carbon Dioxide', 1, '2025-08-07 14:55:11', '2025-08-07 14:55:11'),
+(343, 101, 'Hydrogen', 0, '2025-08-07 14:55:11', '2025-08-07 14:55:11'),
+(344, 106, 'Earth', 0, '2025-08-07 14:57:00', '2025-08-07 14:57:00'),
+(345, 106, 'Mars', 1, '2025-08-07 14:57:00', '2025-08-07 14:57:00'),
+(346, 106, 'Venus', 0, '2025-08-07 14:57:00', '2025-08-07 14:57:00'),
+(347, 106, 'Jupiter', 0, '2025-08-07 14:57:00', '2025-08-07 14:57:00'),
+(348, 107, 'Oxygen', 0, '2025-08-07 14:57:00', '2025-08-07 14:57:00'),
+(349, 107, 'Nitrogen', 0, '2025-08-07 14:57:00', '2025-08-07 14:57:00'),
+(350, 107, 'Carbon Dioxide', 1, '2025-08-07 14:57:00', '2025-08-07 14:57:00'),
+(351, 107, 'Hydrogen', 0, '2025-08-07 14:57:00', '2025-08-07 14:57:00'),
+(352, 109, 'Earth', 0, '2025-08-18 11:43:15', '2025-08-18 11:43:15'),
+(353, 109, 'Mars', 1, '2025-08-18 11:43:15', '2025-08-18 11:43:15'),
+(354, 109, 'Venus', 0, '2025-08-18 11:43:15', '2025-08-18 11:43:15'),
+(355, 109, 'Jupiter', 0, '2025-08-18 11:43:15', '2025-08-18 11:43:15'),
+(356, 110, 'Oxygen', 0, '2025-08-18 11:43:15', '2025-08-18 11:43:15'),
+(357, 110, 'Nitrogen', 0, '2025-08-18 11:43:15', '2025-08-18 11:43:15'),
+(358, 110, 'Carbon Dioxide', 1, '2025-08-18 11:43:15', '2025-08-18 11:43:15'),
+(359, 110, 'Hydrogen', 0, '2025-08-18 11:43:15', '2025-08-18 11:43:15'),
+(360, 111, '90', 0, '2025-08-20 17:13:15', '2025-08-20 17:23:53'),
+(361, 111, '100', 1, '2025-08-20 17:13:15', '2025-08-20 17:23:53'),
+(362, 111, '110', 0, '2025-08-20 17:13:15', '2025-08-20 17:23:53'),
+(363, 111, '120', 0, '2025-08-20 17:13:15', '2025-08-20 17:23:53'),
+(364, 112, 'Earth', 0, '2025-08-20 17:13:15', '2025-08-20 17:13:15'),
+(365, 112, 'Mars', 1, '2025-08-20 17:13:15', '2025-08-20 17:13:15'),
+(366, 112, 'Venus', 0, '2025-08-20 17:13:15', '2025-08-20 17:13:15'),
+(367, 112, 'Jupiter', 0, '2025-08-20 17:13:15', '2025-08-20 17:13:15'),
+(368, 113, 'Oxygen', 0, '2025-08-20 17:13:15', '2025-08-20 17:13:15'),
+(369, 113, 'Nitrogen', 0, '2025-08-20 17:13:15', '2025-08-20 17:13:15'),
+(370, 113, 'Carbon Dioxide', 1, '2025-08-20 17:13:15', '2025-08-20 17:13:15'),
+(371, 113, 'Hydrogen', 0, '2025-08-20 17:13:15', '2025-08-20 17:13:15');
 
 -- --------------------------------------------------------
 
@@ -4962,7 +5599,8 @@ INSERT INTO `roles` (`id`, `name`, `guard_name`, `team_id`, `created_at`, `updat
 (7, 'Tutor', 'web', NULL, '2024-02-22 14:01:12', '2024-02-22 14:01:12'),
 (8, 'HR', 'web', NULL, '2024-02-22 14:01:12', '2024-02-22 14:01:12'),
 (9, 'Mentor', 'web', NULL, '2024-02-22 14:01:12', '2024-02-22 14:01:12'),
-(10, 'Placement Coordinator', 'web', NULL, '2024-02-27 15:43:09', '2024-03-15 11:52:56');
+(10, 'Placement Coordinator', 'web', NULL, '2024-02-27 15:43:09', '2024-03-15 11:52:56'),
+(11, 'Placement Student', 'web', NULL, '2025-08-21 07:55:11', '2025-08-21 07:55:11');
 
 -- --------------------------------------------------------
 
@@ -5147,7 +5785,10 @@ INSERT INTO `role_has_permissions` (`permission_id`, `role_id`) VALUES
 (121, 7),
 (122, 7),
 (123, 7),
-(124, 7);
+(124, 7),
+(58, 11),
+(59, 11),
+(122, 11);
 
 -- --------------------------------------------------------
 
@@ -5195,12 +5836,7 @@ INSERT INTO `sections` (`id`, `name`, `move_next`, `short_description`, `curricu
 (66, 'Scripting Language Material', 1, 'Scripting Language', 81, 1, '2024-06-27 23:28:28', '2025-05-16 08:40:25', 1),
 (69, 'DDF Material', 0, 'DDF', 82, 1, '2024-06-27 23:34:25', '2025-05-16 08:46:37', 1),
 (70, 'SSTA Material', 1, NULL, 84, 1, '2025-05-16 08:53:39', '2025-05-16 08:53:39', 1),
-(71, 'PNR Material', 1, NULL, 85, 1, '2025-05-16 09:00:18', '2025-05-16 09:00:18', 1),
-(72, 'SL Material', 1, NULL, 86, 1, '2025-05-28 14:17:47', '2025-05-28 14:18:58', 1),
-(73, 'DDF Material', 1, NULL, 87, 1, '2025-05-28 14:18:36', '2025-05-28 14:19:21', 1),
-(74, 'CF Material', 1, NULL, 88, 1, '2025-05-28 14:19:38', '2025-05-28 14:19:38', 1),
-(75, 'SSTA Material', 1, NULL, 89, 1, '2025-05-28 14:19:54', '2025-05-28 14:19:54', 1),
-(76, 'PNR Material', 1, NULL, 90, 1, '2025-05-28 14:20:16', '2025-05-28 14:20:16', 1);
+(71, 'PNR Material', 1, NULL, 85, 1, '2025-05-16 09:00:18', '2025-05-16 09:00:18', 1);
 
 -- --------------------------------------------------------
 
@@ -5222,28 +5858,25 @@ CREATE TABLE `sessions` (
 --
 
 INSERT INTO `sessions` (`id`, `user_id`, `ip_address`, `user_agent`, `payload`, `last_activity`) VALUES
-('2t4qeokPHL0y5l5xvebILVGiiHHpUlpeJ0TZOvRN', NULL, '117.55.202.168', 'python-requests/2.32.4', 'YTo0OntzOjY6Il90b2tlbiI7czo0MDoiQlNPWVBVb1dHd0c2RTBwRVZrTVk3YmgwOGR5U0xUVERBMEplS20yYyI7czozOiJ1cmwiO2E6MTp7czo4OiJpbnRlbmRlZCI7czozNToiaHR0cHM6Ly8xMy4yMDMuMjAwLjUxL2FkbWluaXN0cmF0b3IiO31zOjk6Il9wcmV2aW91cyI7YToxOntzOjM6InVybCI7czozNToiaHR0cHM6Ly8xMy4yMDMuMjAwLjUxL2FkbWluaXN0cmF0b3IiO31zOjY6Il9mbGFzaCI7YToyOntzOjM6Im9sZCI7YTowOnt9czozOiJuZXciO2E6MDp7fX19', 1752202989),
-('6vaCGVs8xr8B7LN5GVdjCbXncjO8kGhuMBBwFndz', NULL, '194.163.152.77', 'Mozilla/5.0 (Windows NT 6.3; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/76.0.3809.87 Safari/537.36', 'YTozOntzOjY6Il90b2tlbiI7czo0MDoiQUNZazRtZ3ZlSm5Eb3dKMms0ZkJZQnFhMlRkOEdDSXZsbklObkgyQSI7czo5OiJfcHJldmlvdXMiO2E6MTp7czozOiJ1cmwiO3M6MzE6Imh0dHBzOi8vc3RhZ2UtbG1zLnN1bWVkaGFpdC5jb20iO31zOjY6Il9mbGFzaCI7YToyOntzOjM6Im9sZCI7YTowOnt9czozOiJuZXciO2E6MDp7fX19', 1752203287),
-('8EJGiPaSVI1ea9vDSSkF2zGwios8tTfhtY8OpKZU', NULL, '198.235.24.73', 'Expanse, a Palo Alto Networks company, searches across the global IPv4 space multiple times per day to identify customers&#39; presences on the Internet. If you would like to be excluded from our scans, please send IP addresses/domains to: scaninfo@paloaltonetworks.com', 'YTozOntzOjY6Il90b2tlbiI7czo0MDoiWldWN25SejVsazB1RFNLYWVXMTZ6d0NUVlFRS3RRMlhxcXZudWtpSyI7czo5OiJfcHJldmlvdXMiO2E6MTp7czozOiJ1cmwiO3M6MzE6Imh0dHBzOi8vc3RhZ2UtbG1zLnN1bWVkaGFpdC5jb20iO31zOjY6Il9mbGFzaCI7YToyOntzOjM6Im9sZCI7YTowOnt9czozOiJuZXciO2E6MDp7fX19', 1752199661),
-('bZqhVdW25HlEzkFzqMZq5ZdsYubATADqL1tpDga9', NULL, '45.156.128.41', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/60.0.3112.113 Safari/537.36', 'YTo0OntzOjY6Il90b2tlbiI7czo0MDoiN2h1MkpiNzNqWUhRd1Vwbkp4MWE5RWhlU0dDMFl6eXdxdlBicXltRiI7czozOiJ1cmwiO2E6MTp7czo4OiJpbnRlbmRlZCI7czozNToiaHR0cHM6Ly8xMy4yMDMuMjAwLjUxL2FkbWluaXN0cmF0b3IiO31zOjk6Il9wcmV2aW91cyI7YToxOntzOjM6InVybCI7czozNToiaHR0cHM6Ly8xMy4yMDMuMjAwLjUxL2FkbWluaXN0cmF0b3IiO31zOjY6Il9mbGFzaCI7YToyOntzOjM6Im9sZCI7YTowOnt9czozOiJuZXciO2E6MDp7fX19', 1752190697),
-('c7msEeXMtOreRx6FW6yfrP0vf9KUi6DCD7KVeLRH', NULL, '162.142.125.197', 'Mozilla/5.0 (compatible; CensysInspect/1.1; +https://about.censys.io/)', 'YTozOntzOjY6Il90b2tlbiI7czo0MDoiTWoyRkRUaUtWNlVYa1BLdWxobkxSRFVRZ1A2MFh6eHRYblg5Um1HYSI7czo5OiJfcHJldmlvdXMiO2E6MTp7czozOiJ1cmwiO3M6MzE6Imh0dHBzOi8vc3RhZ2UtbG1zLnN1bWVkaGFpdC5jb20iO31zOjY6Il9mbGFzaCI7YToyOntzOjM6Im9sZCI7YTowOnt9czozOiJuZXciO2E6MDp7fX19', 1752197432),
-('D1KYFXuYhH0R8owojJTfCaTKEfkwl7BSwh7mVdgB', NULL, '117.55.202.168', 'python-requests/2.32.4', 'YTo0OntzOjY6Il90b2tlbiI7czo0MDoiZjhxMkdWV1FMYWN4eXRhVmlqbk5pUGo0MGk4WDcwREFLM3I2aVgzQSI7czo5OiJfcHJldmlvdXMiO2E6MTp7czozOiJ1cmwiO3M6NTE6Imh0dHBzOi8vc3RhZ2UtbG1zLnN1bWVkaGFpdC5jb20vYWRtaW5pc3RyYXRvci9sb2dpbiI7fXM6NjoiX2ZsYXNoIjthOjI6e3M6Mzoib2xkIjthOjA6e31zOjM6Im5ldyI7YTowOnt9fXM6MzoidXJsIjthOjE6e3M6ODoiaW50ZW5kZWQiO3M6NDU6Imh0dHBzOi8vc3RhZ2UtbG1zLnN1bWVkaGFpdC5jb20vYWRtaW5pc3RyYXRvciI7fX0=', 1752184960),
-('E2XSxADLcTqi4xhvrhtirpQ1pDKiLko4GbsrFdBo', NULL, '47.82.60.32', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36 Edg/114.0.1823.43', 'YTozOntzOjY6Il90b2tlbiI7czo0MDoiM0NBMGJzZTVJdWxoVEdrWGpPYlpHYVdFT1Z6WXNNS2xnc3lQek9qcSI7czo5OiJfcHJldmlvdXMiO2E6MTp7czozOiJ1cmwiO3M6MzE6Imh0dHBzOi8vc3RhZ2UtbG1zLnN1bWVkaGFpdC5jb20iO31zOjY6Il9mbGFzaCI7YToyOntzOjM6Im9sZCI7YTowOnt9czozOiJuZXciO2E6MDp7fX19', 1752186274),
-('egDhzvp48YkSBpwebwPHX88OCm1IYGqW2X0jMtdf', NULL, '35.93.162.80', 'Mozilla/5.0 (iPad; CPU OS 12_2 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/12.1 Mobile/15E148 Safari/604.1', 'YTozOntzOjY6Il90b2tlbiI7czo0MDoiWWVmUXNJQUVvVVVZVkg5emc4R3hWTFY0VjNTSlJVRmhaN1NZdkUyRCI7czo5OiJfcHJldmlvdXMiO2E6MTp7czozOiJ1cmwiO3M6MjE6Imh0dHBzOi8vMTMuMjAzLjIwMC41MSI7fXM6NjoiX2ZsYXNoIjthOjI6e3M6Mzoib2xkIjthOjA6e31zOjM6Im5ldyI7YTowOnt9fX0=', 1752190046),
-('GOKZlcEW3gi8xR9KwEUz8XkuyAbJZnlFRr67Riu4', NULL, '45.156.128.41', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/60.0.3112.113 Safari/537.36', 'YTozOntzOjY6Il90b2tlbiI7czo0MDoiUlpRSHZpcENWUnlTMHJJS0ttVERnWVc3aks5czF6cDlTMEJFNUZlWiI7czo5OiJfcHJldmlvdXMiO2E6MTp7czozOiJ1cmwiO3M6NDE6Imh0dHBzOi8vMTMuMjAzLjIwMC41MS9hZG1pbmlzdHJhdG9yL2xvZ2luIjt9czo2OiJfZmxhc2giO2E6Mjp7czozOiJvbGQiO2E6MDp7fXM6MzoibmV3IjthOjA6e319fQ==', 1752190697),
-('ILmBt6LD5qjYEvznlEi7YXrPZuq1fl7YDLtIFoU2', NULL, '45.156.128.41', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/60.0.3112.113 Safari/537.36', 'YTozOntzOjY6Il90b2tlbiI7czo0MDoiTGw2anRreENjb1hvakxXc09ISWk2RjVQejZLdWdkbVo4OXh1ZTd0WiI7czo5OiJfcHJldmlvdXMiO2E6MTp7czozOiJ1cmwiO3M6MjE6Imh0dHBzOi8vMTMuMjAzLjIwMC41MSI7fXM6NjoiX2ZsYXNoIjthOjI6e3M6Mzoib2xkIjthOjA6e31zOjM6Im5ldyI7YTowOnt9fX0=', 1752190697),
-('Lwk7xrlQayWGr7m2su4NrzeLDPvtId7QET1PGvgH', NULL, '135.237.126.195', 'Mozilla/5.0 zgrab/0.x', 'YTozOntzOjY6Il90b2tlbiI7czo0MDoiWnV6dHBnVk1mNGlZY1RmTm9wMHBHZnBFNkpTM0lWTTR3cEx3RkNqRyI7czo5OiJfcHJldmlvdXMiO2E6MTp7czozOiJ1cmwiO3M6MjE6Imh0dHBzOi8vMTMuMjAzLjIwMC41MSI7fXM6NjoiX2ZsYXNoIjthOjI6e3M6Mzoib2xkIjthOjA6e31zOjM6Im5ldyI7YTowOnt9fX0=', 1752185105),
-('negoJoUvKGbrRF26NhEO9nk9u4Sd7H6tmF8WD2fh', NULL, '206.168.34.211', 'Mozilla/5.0 (compatible; CensysInspect/1.1; +https://about.censys.io/)', 'YTo0OntzOjY6Il90b2tlbiI7czo0MDoiUjZDbkNzc1ZWVkZHdjBCajRNMXVmNExITTJWbEkxaUpQYUpiRElRRSI7czozOiJ1cmwiO2E6MTp7czo4OiJpbnRlbmRlZCI7czo0NToiaHR0cHM6Ly9zdGFnZS1sbXMuc3VtZWRoYWl0LmNvbS9hZG1pbmlzdHJhdG9yIjt9czo5OiJfcHJldmlvdXMiO2E6MTp7czozOiJ1cmwiO3M6NDU6Imh0dHBzOi8vc3RhZ2UtbG1zLnN1bWVkaGFpdC5jb20vYWRtaW5pc3RyYXRvciI7fXM6NjoiX2ZsYXNoIjthOjI6e3M6Mzoib2xkIjthOjA6e31zOjM6Im5ldyI7YTowOnt9fX0=', 1752202953),
-('oNkckOhx8RmvRtD3dO55STNGS4cJYqrz8R7hn9j4', NULL, '206.168.34.211', 'Mozilla/5.0 (compatible; CensysInspect/1.1; +https://about.censys.io/)', 'YTozOntzOjY6Il90b2tlbiI7czo0MDoiTzVvbWVkUlhhVVRTdkxBTEs2NzJOU0VNbXRLQkpPQjNmRWxOQjc3WiI7czo5OiJfcHJldmlvdXMiO2E6MTp7czozOiJ1cmwiO3M6NTE6Imh0dHBzOi8vc3RhZ2UtbG1zLnN1bWVkaGFpdC5jb20vYWRtaW5pc3RyYXRvci9sb2dpbiI7fXM6NjoiX2ZsYXNoIjthOjI6e3M6Mzoib2xkIjthOjA6e31zOjM6Im5ldyI7YTowOnt9fX0=', 1752202976),
-('pEIgbLMRX6ciRAJc8gehYWjhnoDz4Pt4oYpNm9p4', NULL, '117.55.202.168', 'python-requests/2.32.4', 'YTozOntzOjY6Il90b2tlbiI7czo0MDoiOXAwMkFuZ1lkcXFtbXlOWU1qelVkYjJ2c3E2eVdhYjhMVXd5TGpvUyI7czo5OiJfcHJldmlvdXMiO2E6MTp7czozOiJ1cmwiO3M6MjE6Imh0dHBzOi8vMTMuMjAzLjIwMC41MSI7fXM6NjoiX2ZsYXNoIjthOjI6e3M6Mzoib2xkIjthOjA6e31zOjM6Im5ldyI7YTowOnt9fX0=', 1752202989),
-('Pli3HgUojSPfsrEHXws1WhnspFLOLGrrXPAfvYB6', NULL, '162.142.125.197', 'Mozilla/5.0 (compatible; CensysInspect/1.1; +https://about.censys.io/)', 'YTo0OntzOjY6Il90b2tlbiI7czo0MDoicmFlV3pkYnJwUFJoQlVuVUp2UWtlVnN2MjlzRDg3UUxlVzB4RXRNMCI7czozOiJ1cmwiO2E6MTp7czo4OiJpbnRlbmRlZCI7czo0NToiaHR0cHM6Ly9zdGFnZS1sbXMuc3VtZWRoYWl0LmNvbS9hZG1pbmlzdHJhdG9yIjt9czo5OiJfcHJldmlvdXMiO2E6MTp7czozOiJ1cmwiO3M6NDU6Imh0dHBzOi8vc3RhZ2UtbG1zLnN1bWVkaGFpdC5jb20vYWRtaW5pc3RyYXRvciI7fXM6NjoiX2ZsYXNoIjthOjI6e3M6Mzoib2xkIjthOjA6e31zOjM6Im5ldyI7YTowOnt9fX0=', 1752197462),
-('PMVUbvPJy29zn049zO4dIBdFbsLnrfcdCsu5KPig', NULL, '45.156.130.46', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/60.0.3112.113 Safari/537.36', 'YTozOntzOjY6Il90b2tlbiI7czo0MDoiMWNPSVFhQmZ6a3NsNTFIWFRkM2RIMWlZcnVDNUFOejlkSUhHdFFzTiI7czo5OiJfcHJldmlvdXMiO2E6MTp7czozOiJ1cmwiO3M6MzE6Imh0dHBzOi8vc3RhZ2UtbG1zLnN1bWVkaGFpdC5jb20iO31zOjY6Il9mbGFzaCI7YToyOntzOjM6Im9sZCI7YTowOnt9czozOiJuZXciO2E6MDp7fX19', 1752189534),
-('qQ2kYYpj5XNC2iJ5cTr4gmGXeoKXZ3enHQ9yPIci', NULL, '117.55.202.168', 'python-requests/2.32.4', 'YTozOntzOjY6Il90b2tlbiI7czo0MDoiY0I1R1VFa2dreUNrTkZKTzV2UkhhRFVKWnh5bWRsUEFuQnJBc3NQRyI7czo5OiJfcHJldmlvdXMiO2E6MTp7czozOiJ1cmwiO3M6NDE6Imh0dHBzOi8vMTMuMjAzLjIwMC41MS9hZG1pbmlzdHJhdG9yL2xvZ2luIjt9czo2OiJfZmxhc2giO2E6Mjp7czozOiJvbGQiO2E6MDp7fXM6MzoibmV3IjthOjA6e319fQ==', 1752202990),
-('S36piDmoiC3jT00WbHtSYz7EMlSAjBPeGJvvgPeS', NULL, '35.93.162.80', 'Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) coc_coc_browser/80.0.180 Chrome/74.0.3729.180 Safari/537.36', 'YTozOntzOjY6Il90b2tlbiI7czo0MDoic2p2cmFHSFI1MEFVYzhydHFxM25Qb0Q2dGV1ZWdINDJwdzhKcFF1WSI7czo5OiJfcHJldmlvdXMiO2E6MTp7czozOiJ1cmwiO3M6MjE6Imh0dHBzOi8vMTMuMjAzLjIwMC41MSI7fXM6NjoiX2ZsYXNoIjthOjI6e3M6Mzoib2xkIjthOjA6e31zOjM6Im5ldyI7YTowOnt9fX0=', 1752198911),
-('TTWoXFV7yT1hvxUJOrVE6yjmmLpqKqRG8vcIGqNq', NULL, '206.168.34.211', 'Mozilla/5.0 (compatible; CensysInspect/1.1; +https://about.censys.io/)', 'YTozOntzOjY6Il90b2tlbiI7czo0MDoib1h4cGM4RGQwczdZRXAxbDBXM2N4Y0pxVDhWOWlwbzhSZml6RmVIMiI7czo5OiJfcHJldmlvdXMiO2E6MTp7czozOiJ1cmwiO3M6MzE6Imh0dHBzOi8vc3RhZ2UtbG1zLnN1bWVkaGFpdC5jb20iO31zOjY6Il9mbGFzaCI7YToyOntzOjM6Im9sZCI7YTowOnt9czozOiJuZXciO2E6MDp7fX19', 1752202906),
-('Vn7xHguRYLmXOgHtuPDsoNUDsLiyYTFzMlUO5usk', NULL, '162.142.125.197', 'Mozilla/5.0 (compatible; CensysInspect/1.1; +https://about.censys.io/)', 'YTozOntzOjY6Il90b2tlbiI7czo0MDoiNDRIWWs3cXRiRGhMYVJvRGFUVEtoZ1ZENFJhRlJMRk9GeDZTOHVsMiI7czo5OiJfcHJldmlvdXMiO2E6MTp7czozOiJ1cmwiO3M6NTE6Imh0dHBzOi8vc3RhZ2UtbG1zLnN1bWVkaGFpdC5jb20vYWRtaW5pc3RyYXRvci9sb2dpbiI7fXM6NjoiX2ZsYXNoIjthOjI6e3M6Mzoib2xkIjthOjA6e31zOjM6Im5ldyI7YTowOnt9fX0=', 1752197485),
-('xh8GY6LmQzvmDk3FREYvYaKVNYVyvBdgalzquv9L', NULL, '45.156.130.46', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/60.0.3112.113 Safari/537.36', 'YTozOntzOjY6Il90b2tlbiI7czo0MDoiTW95aVFYdWdjdmZleGNtMUduZWJiZlUxZ2h5Z2dBQUhkVDZLU0thViI7czo5OiJfcHJldmlvdXMiO2E6MTp7czozOiJ1cmwiO3M6NTE6Imh0dHBzOi8vc3RhZ2UtbG1zLnN1bWVkaGFpdC5jb20vYWRtaW5pc3RyYXRvci9sb2dpbiI7fXM6NjoiX2ZsYXNoIjthOjI6e3M6Mzoib2xkIjthOjA6e31zOjM6Im5ldyI7YTowOnt9fX0=', 1752189535),
-('yjrTwLRrBRXU04rPH1r4hSZj853v0OWiX2rJAHew', NULL, '45.156.130.46', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/60.0.3112.113 Safari/537.36', 'YTo0OntzOjY6Il90b2tlbiI7czo0MDoiUktYT3N1bVRHZkpaWlhiQkVZc01MV2NLbFRSc1llWUxseWUybk9OYyI7czozOiJ1cmwiO2E6MTp7czo4OiJpbnRlbmRlZCI7czo0NToiaHR0cHM6Ly9zdGFnZS1sbXMuc3VtZWRoYWl0LmNvbS9hZG1pbmlzdHJhdG9yIjt9czo5OiJfcHJldmlvdXMiO2E6MTp7czozOiJ1cmwiO3M6NDU6Imh0dHBzOi8vc3RhZ2UtbG1zLnN1bWVkaGFpdC5jb20vYWRtaW5pc3RyYXRvciI7fXM6NjoiX2ZsYXNoIjthOjI6e3M6Mzoib2xkIjthOjA6e31zOjM6Im5ldyI7YTowOnt9fX0=', 1752189535);
+('03IlwmUwZ6CjZBKqSMkZ6Y2adM3M05I09rvMG2mC', 81, '122.175.11.103', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36', 'YTo3OntzOjY6Il90b2tlbiI7czo0MDoiVTdUTnE3RXJhNW5veGRwRzZTUVF1WmJHM2p1eG1LTWlua3MxQzducyI7czo5OiJfcHJldmlvdXMiO2E6MTp7czozOiJ1cmwiO3M6NDU6Imh0dHBzOi8vc3RhZ2UtbG1zLnN1bWVkaGFpdC5jb20vYWRtaW5pc3RyYXRvciI7fXM6NjoiX2ZsYXNoIjthOjI6e3M6Mzoib2xkIjthOjA6e31zOjM6Im5ldyI7YTowOnt9fXM6NTA6ImxvZ2luX3dlYl81OWJhMzZhZGRjMmIyZjk0MDE1ODBmMDE0YzdmNThlYTRlMzA5ODlkIjtpOjgxO3M6MTE6ImxvZ2luX3Rva2VuIjtzOjE2OiJhZGJDdEg2eWJRWG83ekt6IjtzOjI6ImlkIjthOjI6e2k6MDtzOjM6Ijk3MSI7aToxO3M6NDg6ImtXajljblVucjM0aWFNcGdKTDRxUERPNVJyVHJIVWNDQmlLdEFsY3U5YjI3OGY1ZCI7fXM6MTc6InBhc3N3b3JkX2hhc2hfd2ViIjtzOjYwOiIkMnkkMTIkMXhxbklMRWFyL01OM0lES2RhdnptdUtuOVFPaUE4M3dZWHoyZ1dpYWVRWHR0MHhBV2lQeGEiO30=', 1755759430),
+('2cZvA0e4ALrjLaXb8OjkFgaejZsb0ugFjbjaw3v6', NULL, '43.153.49.151', 'Mozilla/5.0 (iPhone; CPU iPhone OS 13_2_3 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/13.0.3 Mobile/15E148 Safari/604.1', 'YTo0OntzOjY6Il90b2tlbiI7czo0MDoiczdzV0NKUjhIc0RRZFBpcW16eURZdHpaN29JV2NKdGtacUwzejdTVyI7czozOiJ1cmwiO2E6MTp7czo4OiJpbnRlbmRlZCI7czo0NToiaHR0cHM6Ly9zdGFnZS1sbXMuc3VtZWRoYWl0LmNvbS9hZG1pbmlzdHJhdG9yIjt9czo5OiJfcHJldmlvdXMiO2E6MTp7czozOiJ1cmwiO3M6NDU6Imh0dHBzOi8vc3RhZ2UtbG1zLnN1bWVkaGFpdC5jb20vYWRtaW5pc3RyYXRvciI7fXM6NjoiX2ZsYXNoIjthOjI6e3M6Mzoib2xkIjthOjA6e31zOjM6Im5ldyI7YTowOnt9fX0=', 1755762313),
+('3cKNCIsYhZ6eQev2ER6bDXjQA4n4p8vCbb1eGorT', NULL, '43.133.69.37', 'Mozilla/5.0 (iPhone; CPU iPhone OS 13_2_3 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/13.0.3 Mobile/15E148 Safari/604.1', 'YTozOntzOjY6Il90b2tlbiI7czo0MDoidHNrd1ZQbDlJc3VSVEVYTHlpOHJvSU5MbHBJc0lWb1JWTWJFVkNRTiI7czo5OiJfcHJldmlvdXMiO2E6MTp7czozOiJ1cmwiO3M6NTE6Imh0dHBzOi8vc3RhZ2UtbG1zLnN1bWVkaGFpdC5jb20vYWRtaW5pc3RyYXRvci9sb2dpbiI7fXM6NjoiX2ZsYXNoIjthOjI6e3M6Mzoib2xkIjthOjA6e31zOjM6Im5ldyI7YTowOnt9fX0=', 1755768968),
+('aWvmF5j63QQmgMhrwdRxufqkOoLtiTefZR1Ro9Uq', NULL, '43.153.49.151', 'Mozilla/5.0 (iPhone; CPU iPhone OS 13_2_3 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/13.0.3 Mobile/15E148 Safari/604.1', 'YTozOntzOjY6Il90b2tlbiI7czo0MDoiSklyYko0VDFNaWYzSXZ3RHBZeUxWV0s5MW9ydG9MRGtMdVFkM055ayI7czo5OiJfcHJldmlvdXMiO2E6MTp7czozOiJ1cmwiO3M6MzE6Imh0dHBzOi8vc3RhZ2UtbG1zLnN1bWVkaGFpdC5jb20iO31zOjY6Il9mbGFzaCI7YToyOntzOjM6Im9sZCI7YTowOnt9czozOiJuZXciO2E6MDp7fX19', 1755762312),
+('bJfFczUwr4BhQwCIw8msHsA92Ud4mkFVIF89CjLT', NULL, '43.133.69.37', 'Mozilla/5.0 (iPhone; CPU iPhone OS 13_2_3 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/13.0.3 Mobile/15E148 Safari/604.1', 'YTozOntzOjY6Il90b2tlbiI7czo0MDoiaFB4cVczc3BNWUFWM1NwRXkxNFZueDBDZFZ6QWhNaXpLY2twQlJSRyI7czo5OiJfcHJldmlvdXMiO2E6MTp7czozOiJ1cmwiO3M6MzE6Imh0dHBzOi8vc3RhZ2UtbG1zLnN1bWVkaGFpdC5jb20iO31zOjY6Il9mbGFzaCI7YToyOntzOjM6Im9sZCI7YTowOnt9czozOiJuZXciO2E6MDp7fX19', 1755768965),
+('BouEdR0pm4EgMnnE0ueD3M1th5ys0VUbzCcj5KYO', NULL, '43.133.69.37', 'Mozilla/5.0 (iPhone; CPU iPhone OS 13_2_3 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/13.0.3 Mobile/15E148 Safari/604.1', 'YTo0OntzOjY6Il90b2tlbiI7czo0MDoiU25TWmlCZzVISzlhYUEyWjVUdGd3YWhTTThsYjNOQnRaQ3hCWW1iNCI7czozOiJ1cmwiO2E6MTp7czo4OiJpbnRlbmRlZCI7czo0NToiaHR0cHM6Ly9zdGFnZS1sbXMuc3VtZWRoYWl0LmNvbS9hZG1pbmlzdHJhdG9yIjt9czo5OiJfcHJldmlvdXMiO2E6MTp7czozOiJ1cmwiO3M6NDU6Imh0dHBzOi8vc3RhZ2UtbG1zLnN1bWVkaGFpdC5jb20vYWRtaW5pc3RyYXRvciI7fXM6NjoiX2ZsYXNoIjthOjI6e3M6Mzoib2xkIjthOjA6e31zOjM6Im5ldyI7YTowOnt9fX0=', 1755768967),
+('f4Q85cZrsaSVbMoBX5aLUdreqFlqgfQgdZ3OHKOk', NULL, '185.242.226.120', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/88.0.4324.190 Safari/537.36', 'YTozOntzOjY6Il90b2tlbiI7czo0MDoic1VvcjNsSnlqSXdvckMyUHUzNnZ6Vkl3MFc1a2sySDJob29Qb3BKVyI7czo5OiJfcHJldmlvdXMiO2E6MTp7czozOiJ1cmwiO3M6MjE6Imh0dHBzOi8vMTMuMjAzLjIwMC41MSI7fXM6NjoiX2ZsYXNoIjthOjI6e3M6Mzoib2xkIjthOjA6e31zOjM6Im5ldyI7YTowOnt9fX0=', 1755769859),
+('hjDMCeQnSJCSwdyMTruf9EUSwkFS9E2dEIzEhy85', 81, '122.175.11.103', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36', 'YTo4OntzOjY6Il90b2tlbiI7czo0MDoiVXNjQm5DVnZIajZrd3FEOERmeExQaU0waDE5UGRYejVOQ2cwM2RiYyI7czo5OiJfcHJldmlvdXMiO2E6MTp7czozOiJ1cmwiO3M6NjE6Imh0dHBzOi8vc3RhZ2UtbG1zLnN1bWVkaGFpdC5jb20vYXBpL3N0dWRlbnQtYXR0ZW5kYW5jZS9zdGF0dXMiO31zOjY6Il9mbGFzaCI7YToyOntzOjM6Im9sZCI7YTowOnt9czozOiJuZXciO2E6MDp7fX1zOjM6InVybCI7YTowOnt9czoxMToibG9naW5fdG9rZW4iO3M6MTY6ImZJUkFTYWNMTm1EaHJnZjMiO3M6NTA6ImxvZ2luX3dlYl81OWJhMzZhZGRjMmIyZjk0MDE1ODBmMDE0YzdmNThlYTRlMzA5ODlkIjtpOjgxO3M6MjoiaWQiO2E6Mjp7aTowO3M6MzoiOTc3IjtpOjE7czo0ODoiZmVpdDVtcTl4aGNxVjl0ZWp3THYzcGRoNG9nMnFpU1Y1d3V0MGVZNjkzYmU2MTExIjt9czoxNzoicGFzc3dvcmRfaGFzaF93ZWIiO3M6NjA6IiQyeSQxMiQxeHFuSUxFYXIvTU4zSURLZGF2em11S245UU9pQTgzd1lYejJnV2lhZVFYdHQweEFXaVB4YSI7fQ==', 1755759780),
+('huiF9rv8mUkLosXLZP2LJVTZotZbZlyWIRRXPIgY', NULL, '77.110.113.96', 'Mozilla/5.0 zgrab/0.x', 'YTozOntzOjY6Il90b2tlbiI7czo0MDoiUlE5bFF5a2N1OFNqYjFGUG9WUVRvcHRnNUpUcGk0eHlWZllZZW9sOSI7czo5OiJfcHJldmlvdXMiO2E6MTp7czozOiJ1cmwiO3M6MjE6Imh0dHBzOi8vMTMuMjAzLjIwMC41MSI7fXM6NjoiX2ZsYXNoIjthOjI6e3M6Mzoib2xkIjthOjA6e31zOjM6Im5ldyI7YTowOnt9fX0=', 1755762129),
+('JL5d5hVBKx0wr6VJfKB68hjftSdAZly6c83hvp3g', NULL, '185.242.226.113', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/88.0.4324.190 Safari/537.36', 'YTo0OntzOjY6Il90b2tlbiI7czo0MDoibTQxaHl1VmZ3R0dRWlR3YzVkUnZBbGlvdGVFU2tWbGtFQ1hWOXlEVSI7czozOiJ1cmwiO2E6MTp7czo4OiJpbnRlbmRlZCI7czo0NToiaHR0cHM6Ly9zdGFnZS1sbXMuc3VtZWRoYWl0LmNvbS9hZG1pbmlzdHJhdG9yIjt9czo5OiJfcHJldmlvdXMiO2E6MTp7czozOiJ1cmwiO3M6NDU6Imh0dHBzOi8vc3RhZ2UtbG1zLnN1bWVkaGFpdC5jb20vYWRtaW5pc3RyYXRvciI7fXM6NjoiX2ZsYXNoIjthOjI6e3M6Mzoib2xkIjthOjA6e31zOjM6Im5ldyI7YTowOnt9fX0=', 1755766530),
+('KwsOht75aTVtmQbZIMZJz8v6bFcUQtPX5rYT13jB', NULL, '185.242.226.120', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/88.0.4324.190 Safari/537.36', 'YTo0OntzOjY6Il90b2tlbiI7czo0MDoibTBzVUtabnVZZjl0R0VIb2JwRFZ5blMzZlZOR3RSSE5TYVBoclNVUSI7czozOiJ1cmwiO2E6MTp7czo4OiJpbnRlbmRlZCI7czozNToiaHR0cHM6Ly8xMy4yMDMuMjAwLjUxL2FkbWluaXN0cmF0b3IiO31zOjk6Il9wcmV2aW91cyI7YToxOntzOjM6InVybCI7czozNToiaHR0cHM6Ly8xMy4yMDMuMjAwLjUxL2FkbWluaXN0cmF0b3IiO31zOjY6Il9mbGFzaCI7YToyOntzOjM6Im9sZCI7YTowOnt9czozOiJuZXciO2E6MDp7fX19', 1755769860),
+('KYTTIepHHmFHSBHEvowmWcQZWy6CmgHQCf7v1DZZ', NULL, '77.110.113.96', 'Mozilla/5.0 zgrab/0.x', 'YTo0OntzOjY6Il90b2tlbiI7czo0MDoiZVdxN2duMmp1aWdsd3A5T1pNNUJna0QxelBxY3JTRktSa1plbU9NaCI7czozOiJ1cmwiO2E6MTp7czo4OiJpbnRlbmRlZCI7czozNToiaHR0cHM6Ly8xMy4yMDMuMjAwLjUxL2FkbWluaXN0cmF0b3IiO31zOjk6Il9wcmV2aW91cyI7YToxOntzOjM6InVybCI7czozNToiaHR0cHM6Ly8xMy4yMDMuMjAwLjUxL2FkbWluaXN0cmF0b3IiO31zOjY6Il9mbGFzaCI7YToyOntzOjM6Im9sZCI7YTowOnt9czozOiJuZXciO2E6MDp7fX19', 1755762129),
+('my47t8NGfdnXTyC0n5BYhhbfKnFBLRL7WsTxYiMV', NULL, '185.242.226.120', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/88.0.4324.190 Safari/537.36', 'YTozOntzOjY6Il90b2tlbiI7czo0MDoieldNU3IySDNObzF6Tm9vRGZOQVl2YzI1cFdOdHdyVXpkWXZBWldFMCI7czo5OiJfcHJldmlvdXMiO2E6MTp7czozOiJ1cmwiO3M6NDE6Imh0dHBzOi8vMTMuMjAzLjIwMC41MS9hZG1pbmlzdHJhdG9yL2xvZ2luIjt9czo2OiJfZmxhc2giO2E6Mjp7czozOiJvbGQiO2E6MDp7fXM6MzoibmV3IjthOjA6e319fQ==', 1755769860),
+('pQin72oNjOdy2rKukoqBlA3UARu0SkipN9na59kE', NULL, '43.153.49.151', 'Mozilla/5.0 (iPhone; CPU iPhone OS 13_2_3 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/13.0.3 Mobile/15E148 Safari/604.1', 'YTozOntzOjY6Il90b2tlbiI7czo0MDoidGo5TVNSYVY1M2dyRVgxeWxDWlRBVlRBUlBFVkFuZ3N4Q200VUF5ZSI7czo5OiJfcHJldmlvdXMiO2E6MTp7czozOiJ1cmwiO3M6NTE6Imh0dHBzOi8vc3RhZ2UtbG1zLnN1bWVkaGFpdC5jb20vYWRtaW5pc3RyYXRvci9sb2dpbiI7fXM6NjoiX2ZsYXNoIjthOjI6e3M6Mzoib2xkIjthOjA6e31zOjM6Im5ldyI7YTowOnt9fX0=', 1755762315),
+('qt19OMdkiB6Ep0kUohJIvDjTCLD4ObBZV9HlDrKg', NULL, '185.242.226.113', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/88.0.4324.190 Safari/537.36', 'YTozOntzOjY6Il90b2tlbiI7czo0MDoibGx3Y2VqZ0Q3VUU3M2ZDUk5BVndKaG40NjFmYVRTdU5GdXpzdUtUeCI7czo5OiJfcHJldmlvdXMiO2E6MTp7czozOiJ1cmwiO3M6MzE6Imh0dHBzOi8vc3RhZ2UtbG1zLnN1bWVkaGFpdC5jb20iO31zOjY6Il9mbGFzaCI7YToyOntzOjM6Im9sZCI7YTowOnt9czozOiJuZXciO2E6MDp7fX19', 1755766529),
+('r3VtJ5yylgBDuIDZFIf7d4BMN5bR9FKuoGLRBkjy', NULL, '185.242.226.113', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/88.0.4324.190 Safari/537.36', 'YTozOntzOjY6Il90b2tlbiI7czo0MDoiRWZIZVRZQXM2VUo5Ukl1SzhWNGI2QXBYbU9jdlJrbjhsNWhGRm8yNCI7czo5OiJfcHJldmlvdXMiO2E6MTp7czozOiJ1cmwiO3M6NTE6Imh0dHBzOi8vc3RhZ2UtbG1zLnN1bWVkaGFpdC5jb20vYWRtaW5pc3RyYXRvci9sb2dpbiI7fXM6NjoiX2ZsYXNoIjthOjI6e3M6Mzoib2xkIjthOjA6e31zOjM6Im5ldyI7YTowOnt9fX0=', 1755766531),
+('VybKBlFL1c5P7BXakGcY33PkWR1GN1rxWVCEigME', NULL, '77.110.113.96', 'Mozilla/5.0 zgrab/0.x', 'YTozOntzOjY6Il90b2tlbiI7czo0MDoiVm11aW0wbzFlWG9RdEwweVpzMkliUjhSQVI5MTNCRHoyU3I3OGtTeiI7czo5OiJfcHJldmlvdXMiO2E6MTp7czozOiJ1cmwiO3M6NDE6Imh0dHBzOi8vMTMuMjAzLjIwMC41MS9hZG1pbmlzdHJhdG9yL2xvZ2luIjt9czo2OiJfZmxhc2giO2E6Mjp7czozOiJvbGQiO2E6MDp7fXM6MzoibmV3IjthOjA6e319fQ==', 1755762130),
+('wGpOy0xhlF9pepsu7WPSA9CHmB6k8MHHkMBd7sis', 84, '122.175.11.103', 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36', 'YTo5OntzOjY6Il90b2tlbiI7czo0MDoib3l4UGQzWlF2OHRZZkpaM3ZObTdib1E2WEUzaUluUEQ2RU95VDFTbyI7czozOiJ1cmwiO2E6MDp7fXM6OToiX3ByZXZpb3VzIjthOjE6e3M6MzoidXJsIjtzOjY4OiJodHRwczovL3N0YWdlLWxtcy5zdW1lZGhhaXQuY29tL2FwaS9qb2ItcG9zdGluZ3M/aGFzX3ZhY2FuY2llcz1mYWxzZSI7fXM6NjoiX2ZsYXNoIjthOjI6e3M6Mzoib2xkIjthOjA6e31zOjM6Im5ldyI7YTowOnt9fXM6NTA6ImxvZ2luX3dlYl81OWJhMzZhZGRjMmIyZjk0MDE1ODBmMDE0YzdmNThlYTRlMzA5ODlkIjtpOjg0O3M6MTE6ImxvZ2luX3Rva2VuIjtzOjE2OiJnWUNzb1psam84c2dxRmg5IjtzOjI6ImlkIjthOjI6e2k6MDtzOjM6Ijk3MCI7aToxO3M6NDg6IkkxVG5Cdm50SUY3Z05JME1URTYxM3Fwbmk0T0NjV05lVkVmU05SVUthYTVjYmU0OSI7fXM6MTc6InBhc3N3b3JkX2hhc2hfd2ViIjtzOjYwOiIkMnkkMTIkNHg3Z2tjNndkdFQuVUg3eEJLZnNwT3pMSjRvUko2c0xuZjcyOHVPU3Z4SXJhdmZLNXoub0MiO3M6NDA6IjQ4MDQwZWY3ZjI1NDJiMzliOWJhOWE3Mjk4M2IwZDg4X2ZpbHRlcnMiO2E6NDp7czo2OiJjb3Vyc2UiO047czo1OiJiYXRjaCI7TjtzOjk6InN0YXJ0RGF0ZSI7czoxOToiMjAyNS0wOC0xNCAwMDowMDowMCI7czo3OiJlbmREYXRlIjtzOjE5OiIyMDI1LTA4LTIxIDAwOjAwOjAwIjt9fQ==', 1755769953),
+('XQFtNn3Lihb8Kt4AYwY3quR5Za47rbsG2d5a6oRf', 93, '122.175.11.103', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36', 'YTo5OntzOjY6Il90b2tlbiI7czo0MDoiRm9xWlVYQkJTWXZhTFhnbUg5T1dBbXM3dGpmSzhqYUpUbUFQQ1dWaCI7czo5OiJfcHJldmlvdXMiO2E6MTp7czozOiJ1cmwiO3M6NTI6Imh0dHBzOi8vc3RhZ2UtbG1zLnN1bWVkaGFpdC5jb20vYXBpL2pvYi1hcHBsaWNhdGlvbnMiO31zOjY6Il9mbGFzaCI7YToyOntzOjM6Im9sZCI7YTowOnt9czozOiJuZXciO2E6MDp7fX1zOjM6InVybCI7YTowOnt9czo1MDoibG9naW5fd2ViXzU5YmEzNmFkZGMyYjJmOTQwMTU4MGYwMTRjN2Y1OGVhNGUzMDk4OWQiO2k6OTM7czoxMToibG9naW5fdG9rZW4iO3M6MTY6ImxlVzBVVVcxd1Q2MGFGMUwiO3M6MjoiaWQiO2E6Mjp7aTowO3M6MzoiOTY5IjtpOjE7czo0ODoiQmZqcTZjaDdIem4zeFZqQjdvSDBWQm1NMzlRaGttVXEwR3RsTFJyWDI4YTJhZWJiIjt9czoxNzoicGFzc3dvcmRfaGFzaF93ZWIiO3M6NjA6IiQyeSQxMiR0OEVnNVhObnNaUjFOUnplQmVlTUxPYjZscHZvbml5NDZPREppRVZYTDBZMC84VHc5VjFkTyI7czo0MDoiNDgwNDBlZjdmMjU0MmIzOWI5YmE5YTcyOTgzYjBkODhfZmlsdGVycyI7YTo0OntzOjY6ImNvdXJzZSI7TjtzOjU6ImJhdGNoIjtOO3M6OToic3RhcnREYXRlIjtzOjE5OiIyMDI1LTA4LTE0IDAwOjAwOjAwIjtzOjc6ImVuZERhdGUiO3M6MTk6IjIwMjUtMDgtMjEgMDA6MDA6MDAiO319', 1755767920);
 
 -- --------------------------------------------------------
 
@@ -5417,7 +6050,8 @@ CREATE TABLE `student_attendances` (
 --
 
 INSERT INTO `student_attendances` (`id`, `user_id`, `check_in_datetime`, `check_out_datetime`, `status`, `created_at`, `updated_at`) VALUES
-(42, 81, '2025-07-07 11:30:02', '2025-07-07 14:30:06', 'Present', '2025-07-07 11:30:02', '2025-07-07 14:30:06');
+(43, 81, '2025-08-08 18:12:34', '2025-08-08 18:13:21', 'Absent', '2025-08-08 18:12:34', '2025-08-08 18:13:21'),
+(44, 76, '2025-08-11 11:05:21', NULL, 'Present', '2025-08-11 11:05:21', '2025-08-11 11:05:21');
 
 -- --------------------------------------------------------
 
@@ -5443,7 +6077,8 @@ CREATE TABLE `student_device_registrations` (
 --
 
 INSERT INTO `student_device_registrations` (`id`, `user_id`, `device_fingerprint`, `device_name`, `device_type`, `device_info`, `is_active`, `last_used_at`, `created_at`, `updated_at`) VALUES
-(20, 81, '572b05adc8082e07fb68bbc57e0363f43c041b8212552b48df7c57caa5ae820d', 'Win32 - Mozilla/5.0', 'browser', '{\"screen\": {\"width\": 1920, \"height\": 1080}, \"platform\": \"Win32\", \"userAgent\": \"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.0.0 Safari/537.36\"}', 1, '2025-07-07 11:30:02', '2025-07-07 11:30:02', '2025-07-07 11:30:02');
+(21, 81, 'b6695ed1475dd11f54e87ee71ee1b98fa21ad5faeb9e9fb65de3e01aa683ed90', 'Win32 - Mozilla/5.0', 'browser', '{\"screen\": {\"width\": 1920, \"height\": 1080}, \"platform\": \"Win32\", \"userAgent\": \"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36\"}', 1, '2025-08-08 18:12:34', '2025-08-08 18:12:34', '2025-08-08 18:12:34'),
+(22, 76, 'a134ee3bd3bc0204939398b683dac44675cd0b7fbbd213e4ac99a86d2df8585b', 'Win32 - Mozilla/5.0', 'browser', '{\"screen\": {\"width\": 1920, \"height\": 1080}, \"platform\": \"Win32\", \"userAgent\": \"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36\"}', 1, '2025-08-11 11:05:21', '2025-08-11 11:05:21', '2025-08-11 11:05:21');
 
 -- --------------------------------------------------------
 
@@ -5471,11 +6106,48 @@ CREATE TABLE `student_education` (
 --
 
 INSERT INTO `student_education` (`id`, `user_id`, `degree_type_id`, `specialization_id`, `other_specialization`, `percentage_cgpa`, `institute_name`, `location`, `duration_from`, `duration_to`, `created_at`, `updated_at`) VALUES
-(12, 76, 3, 6, NULL, 78.00, 'SVHCollege', 'Machilipatnam', '2021-11-01', '2025-04-30', '2025-05-29 14:15:19', '2025-05-29 14:15:19'),
-(13, 76, 2, NULL, NULL, 78.00, 'Narayana', 'Hyderabad', '2019-05-09', '2021-06-09', '2025-05-29 14:17:15', '2025-05-29 14:18:22'),
+(12, 76, 3, 6, NULL, 78.00, 'SVHCollege', 'Machilipatnam', '2021-11-01', '2025-04-30', '2025-05-29 14:15:19', '2025-08-11 14:08:05'),
 (15, 79, 1, NULL, NULL, 85.00, 'Little flower school', 'Nalgonda', '2001-06-30', '2002-04-30', '2025-05-30 15:08:13', '2025-05-30 15:08:43'),
 (16, 79, 3, 6, NULL, 71.00, 'SRTIST', 'Nalgonda', '2004-06-01', '2008-05-30', '2025-05-30 15:09:57', '2025-05-30 15:10:25'),
 (17, 81, 3, 14, NULL, 67.00, 'n', 'j', '2025-06-17', '2025-06-27', '2025-06-12 21:25:08', '2025-06-13 11:37:18');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `student_placement_eligibility`
+--
+
+CREATE TABLE `student_placement_eligibility` (
+  `id` bigint UNSIGNED NOT NULL,
+  `user_id` bigint UNSIGNED NOT NULL,
+  `is_eligible` tinyint(1) DEFAULT '0',
+  `eligibility_reasons` text,
+  `profile_completion_percentage` decimal(5,2) DEFAULT '0.00',
+  `course_completion_status` tinyint(1) DEFAULT '0',
+  `exam_standards_met` tinyint(1) DEFAULT '0',
+  `attendance_percentage` decimal(5,2) DEFAULT '0.00',
+  `fees_payment_status` tinyint(1) DEFAULT '0',
+  `lab_test_cases_completed` tinyint(1) DEFAULT '0',
+  `assignments_completed` tinyint(1) DEFAULT '0',
+  `is_placed` tinyint(1) DEFAULT '0',
+  `placement_date` timestamp NULL DEFAULT NULL,
+  `placement_salary` decimal(10,2) DEFAULT NULL,
+  `placement_company` varchar(255) DEFAULT NULL,
+  `is_pap_student` tinyint(1) DEFAULT '0',
+  `remaining_fee_amount` decimal(10,2) DEFAULT NULL,
+  `google_review_status` enum('pending','completed','declined') DEFAULT 'pending',
+  `google_review_link` varchar(500) DEFAULT NULL,
+  `last_eligibility_check` timestamp NULL DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+--
+-- Dumping data for table `student_placement_eligibility`
+--
+
+INSERT INTO `student_placement_eligibility` (`id`, `user_id`, `is_eligible`, `eligibility_reasons`, `profile_completion_percentage`, `course_completion_status`, `exam_standards_met`, `attendance_percentage`, `fees_payment_status`, `lab_test_cases_completed`, `assignments_completed`, `is_placed`, `placement_date`, `placement_salary`, `placement_company`, `is_pap_student`, `remaining_fee_amount`, `google_review_status`, `google_review_link`, `last_eligibility_check`, `created_at`, `updated_at`) VALUES
+(1, 81, 1, NULL, 0.00, 0, 0, 0.00, 0, 0, 0, 1, '2025-08-21 11:54:22', NULL, 'Intel', 0, NULL, 'pending', NULL, '2025-08-21 11:54:22', '2025-08-21 11:54:22', '2025-08-21 11:54:22');
 
 -- --------------------------------------------------------
 
@@ -5554,7 +6226,7 @@ INSERT INTO `syllabi` (`id`, `day`, `batch_id`, `course_id`, `syllabus`, `subjec
 
 CREATE TABLE `teaching_materials` (
   `id` bigint UNSIGNED NOT NULL,
-  `section_id` bigint UNSIGNED DEFAULT NULL,
+  `section_id` int DEFAULT NULL,
   `topic_id` bigint DEFAULT NULL,
   `name` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
   `material_source` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
@@ -5604,7 +6276,11 @@ INSERT INTO `teaching_materials` (`id`, `section_id`, `topic_id`, `name`, `mater
 (140, 76, 37, 'Topic 3', 'other', '01JWDHWSDXKR9GEMEA9X39MP9W.pdf', NULL, NULL, NULL, NULL, 'Topic 3', NULL, NULL, NULL, NULL, '2025-05-29 13:47:46', '2025-05-29 13:47:46', 1, NULL, NULL, NULL, NULL, NULL, NULL, NULL),
 (142, 72, 23, 'Week 1', NULL, '01JWY3J8A5R4H8XAVYA1AZGX70.pdf', NULL, NULL, NULL, NULL, 'q3r3', NULL, NULL, NULL, NULL, '2025-06-05 00:04:26', '2025-06-05 00:04:26', 2, NULL, NULL, NULL, NULL, NULL, '2025-06-05 00:03:18', '2025-06-06 00:03:18'),
 (143, 72, 23, 'new one tetsing', 'other', 'teaching-materials/bzGvOJDIkVN9BWdmW5iLNjmrGcuaUHqOFYFNidlQ.pdf', NULL, NULL, NULL, NULL, 'wf', NULL, NULL, NULL, NULL, '2025-07-04 17:07:09', '2025-07-04 17:07:09', 1, NULL, NULL, NULL, NULL, NULL, NULL, NULL),
-(144, NULL, 38, 'test', 'other', 'teaching-materials/3TcTXpuB4bwaC420ChO9oShE5pRseUAFB6J843Qr.pdf', NULL, NULL, NULL, NULL, 'nagyg', NULL, NULL, NULL, NULL, '2025-07-04 17:19:42', '2025-07-04 17:19:42', 1, NULL, NULL, NULL, NULL, NULL, NULL, NULL);
+(144, NULL, 38, 'test', 'other', 'teaching-materials/3TcTXpuB4bwaC420ChO9oShE5pRseUAFB6J843Qr.pdf', NULL, NULL, NULL, NULL, 'nagyg', NULL, NULL, NULL, NULL, '2025-07-04 17:19:42', '2025-07-04 17:19:42', 1, NULL, NULL, NULL, NULL, NULL, NULL, NULL),
+(146, NULL, 41, 'Unix Basics', 'other', 'teaching-materials/mR95Kbmhx0YB9LXTL7vNJGTiGK7pzdVraeig4DyX.pdf', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2025-08-11 15:24:14', '2025-08-11 15:24:14', 1, NULL, NULL, NULL, NULL, NULL, NULL, NULL),
+(147, NULL, 42, 'Material 2', 'other', 'teaching-materials/B09GUQ83w8IgnmBfQ3Cx7AHF1tWJdknKtSgNxgvt.pdf', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2025-08-11 15:25:28', '2025-08-11 15:25:28', 1, NULL, NULL, NULL, NULL, NULL, NULL, NULL),
+(148, NULL, 43, 'Materil 3', 'other', 'teaching-materials/jPGpXECV370GcXxDbyC5BfoiWjkLUN3cwF0VzMb5.pdf', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2025-08-11 15:25:51', '2025-08-11 15:25:51', 1, NULL, NULL, NULL, NULL, NULL, NULL, NULL),
+(149, NULL, 78, 'Test 1', 'other', 'teaching-materials/w0Suo1Hndi0nMCFtSuvQHSQvc0rPnf3Q7qsbirRY.pdf', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2025-08-11 17:46:18', '2025-08-11 17:46:18', 1, NULL, NULL, NULL, NULL, NULL, NULL, NULL);
 
 -- --------------------------------------------------------
 
@@ -5830,7 +6506,17 @@ INSERT INTO `team_user` (`id`, `team_id`, `user_id`, `created_at`, `updated_at`)
 (145, 1, 91, NULL, NULL),
 (146, 1, 92, NULL, NULL),
 (147, 1, 34, NULL, NULL),
-(148, 1, 93, NULL, NULL);
+(148, 1, 93, NULL, NULL),
+(149, 1, 35, NULL, NULL),
+(150, 1, 36, NULL, NULL),
+(151, 1, 37, NULL, NULL),
+(152, 1, 38, NULL, NULL),
+(153, 1, 39, NULL, NULL),
+(154, 1, 40, NULL, NULL),
+(155, 1, 94, NULL, NULL),
+(156, 1, 95, NULL, NULL),
+(157, 1, 41, NULL, NULL),
+(158, 1, 96, NULL, NULL);
 
 -- --------------------------------------------------------
 
@@ -5851,23 +6537,44 @@ CREATE TABLE `topics` (
 --
 
 INSERT INTO `topics` (`id`, `curriculum_id`, `name`, `created_at`, `updated_at`) VALUES
-(23, 86, 'Introduction to Unix OS, directories structure, simple commands like cat, cp, mv, rm, mkdir, clear by learning how to use the shell prompt', '2025-05-28 14:09:13', '2025-05-28 14:09:13'),
-(24, 86, 'next set of commands such as ls with different options, display commands such as cat, more, less, head, tail, grep, piping', '2025-05-28 14:09:38', '2025-05-28 14:09:38'),
-(25, 86, 'redirection operators \"> >> < <<\", wc, sort, wildcards: * , ?, change of permissions of directories and files', '2025-05-28 14:09:58', '2025-05-28 14:09:58'),
-(26, 87, 'Digital System design: Combinational and Sequential blocks in a system, Combinational circuits: Basic standard cells(Logic gates), Half adder, Full Adder.', '2025-05-28 14:11:14', '2025-05-28 14:11:14'),
-(27, 87, 'Parallel adders, BCD Adder, problems related to adders and understanding propagation delays in designs, Carry Look Ahead Adder concept as a faster adder', '2025-05-28 14:11:31', '2025-05-28 14:11:31'),
-(28, 87, 'Subtractor circuits: Half and Full substractor, Design of Multiplier circuit', '2025-05-28 14:11:48', '2025-05-28 14:11:48'),
-(29, 88, 'MOSFET : Introduction to Transistor, FET and MOSFET. Basics of FET and MOSFET qualitative analysis.', '2025-05-28 14:12:17', '2025-05-28 14:12:17'),
-(30, 88, 'MOSFET : ENMOSFET qualitative analysis.', '2025-05-28 14:12:30', '2025-05-28 14:12:30'),
-(31, 88, 'MOSFET : ENMOSFET quantitative analysis, drain/transfer characteristics', '2025-05-28 14:12:45', '2025-05-28 14:12:45'),
-(32, 89, 'Overall ASIC flow description', '2025-05-28 14:13:54', '2025-05-28 14:13:54'),
-(33, 89, 'Physical Design Theory : Inputs to PD Flow at each stage List of inputs (libraries, technology files, netlist, timing constraints, IO placement) to the PD flow', '2025-05-28 14:14:15', '2025-05-28 14:14:15'),
-(34, 89, 'Overview of ASIC flow to take into synthesis topic. Definition of Synthesis, Need for Logic Synthesis, the need for RTL before Synthesis, input & outputs of synthesis. Terminology of input/ouput ports,nets and instances. Conecpt of area/power/performance.', '2025-05-28 14:14:50', '2025-05-28 14:14:50'),
-(35, 90, 'Overall Physical design flow description', '2025-05-28 14:15:09', '2025-05-28 14:15:09'),
-(36, 90, 'Physical Design Theory : Inputs to PD Flow List of inputs (libraries, technology files, netlist,ITF, IO placement) to the PD flow', '2025-05-28 14:15:24', '2025-05-28 14:15:24'),
-(37, 90, 'List of inputs (libraries, technology files, netlist,ITF, IO placement) to the PD flow', '2025-05-28 14:15:46', '2025-05-28 14:15:46'),
-(38, 92, 'tetsinbg', '2025-07-04 17:10:33', '2025-07-04 17:10:33'),
-(39, 94, 'Routing', '2025-07-08 10:20:39', '2025-07-08 10:20:39');
+(41, 101, 'Unix Basics', '2025-08-11 11:18:38', '2025-08-11 11:18:38'),
+(42, 101, 'Gvim editor basics', '2025-08-11 11:18:55', '2025-08-11 11:18:55'),
+(43, 101, 'File Handling Procedures', '2025-08-11 11:19:07', '2025-08-11 11:19:07'),
+(44, 102, 'Materials Introduction', '2025-08-11 12:57:45', '2025-08-11 12:57:45'),
+(45, 102, 'IC Fabrication Steps', '2025-08-11 12:57:53', '2025-08-11 12:57:53'),
+(46, 102, 'Inverter cell fabrication process', '2025-08-11 12:58:02', '2025-08-11 12:58:02'),
+(47, 103, 'Introduction to MOSFET & its operation', '2025-08-11 12:58:39', '2025-08-11 12:58:39'),
+(48, 103, 'CMOS Inverter', '2025-08-11 12:58:56', '2025-08-11 12:58:56'),
+(49, 103, 'Transistor Sizing', '2025-08-11 12:59:09', '2025-08-11 12:59:09'),
+(50, 103, 'Transmission gates', '2025-08-11 12:59:20', '2025-08-11 12:59:20'),
+(51, 103, 'Propagation Delay', '2025-08-11 12:59:29', '2025-08-11 12:59:50'),
+(52, 103, 'Power Dissipations', '2025-08-11 12:59:41', '2025-08-11 12:59:41'),
+(53, 104, 'VLSI Industry overview', '2025-08-11 13:00:21', '2025-08-11 13:00:21'),
+(54, 104, 'Necessity of IC Design', '2025-08-11 13:00:30', '2025-08-11 13:00:30'),
+(55, 104, 'Technology Trends', '2025-08-11 13:00:40', '2025-08-11 13:00:40'),
+(56, 104, 'ASIC Design Flow', '2025-08-11 13:00:54', '2025-08-11 13:00:54'),
+(57, 105, 'Tools Introduction', '2025-08-11 13:02:51', '2025-08-11 13:02:51'),
+(58, 105, 'Tool commands', '2025-08-11 13:02:59', '2025-08-11 13:02:59'),
+(59, 105, 'DRC basics', '2025-08-11 13:03:07', '2025-08-11 13:03:07'),
+(60, 105, 'Netlist understanding', '2025-08-11 13:03:13', '2025-08-11 13:03:13'),
+(61, 105, 'Std cells', '2025-08-11 13:03:20', '2025-08-11 13:03:20'),
+(62, 106, 'DRC', '2025-08-11 13:04:21', '2025-08-11 13:04:21'),
+(63, 106, 'LVS', '2025-08-11 13:04:25', '2025-08-11 13:04:25'),
+(64, 106, 'Antenna', '2025-08-11 13:04:42', '2025-08-11 13:04:42'),
+(65, 106, 'ERC Overview', '2025-08-11 13:04:53', '2025-08-11 13:04:53'),
+(66, 107, 'Understanding about different types devices', '2025-08-11 13:05:22', '2025-08-11 13:05:22'),
+(67, 108, 'Concepts understanding and applying it to solve errors', '2025-08-11 13:06:12', '2025-08-11 13:06:12'),
+(68, 109, 'WPE', '2025-08-11 13:06:40', '2025-08-11 13:06:40'),
+(69, 109, 'STI', '2025-08-11 13:06:47', '2025-08-11 13:06:47'),
+(70, 109, 'LOD', '2025-08-11 13:06:51', '2025-08-11 13:06:51'),
+(71, 109, 'CMP and Density', '2025-08-11 13:07:01', '2025-08-11 13:07:19'),
+(72, 110, 'Concepts understanding and applying to solve errors', '2025-08-11 13:07:56', '2025-08-11 13:07:56'),
+(73, 111, 'ESD Concepts', '2025-08-11 13:08:26', '2025-08-11 13:08:26'),
+(74, 111, 'DFM Concepts', '2025-08-11 13:08:33', '2025-08-11 13:08:33'),
+(75, 112, 'Introduction', '2025-08-11 13:09:02', '2025-08-11 13:09:02'),
+(76, 112, 'Comparison with Planar technology', '2025-08-11 13:09:12', '2025-08-11 13:09:12'),
+(77, 112, 'Dual pattern', '2025-08-11 13:09:18', '2025-08-11 13:09:18'),
+(78, 113, 'Understanding memory layout design concepts', '2025-08-11 13:09:50', '2025-08-11 13:09:50');
 
 -- --------------------------------------------------------
 
@@ -5919,6 +6626,7 @@ CREATE TABLE `users` (
   `domain_id` int DEFAULT NULL,
   `subject` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin,
   `is_active` tinyint(1) DEFAULT '1',
+  `placement_center_access` tinyint(1) DEFAULT '0',
   `receive_email_notification` tinyint(1) DEFAULT '0',
   `receive_sms_notification` tinyint(1) DEFAULT '0',
   `avatar_url` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
@@ -5931,27 +6639,30 @@ CREATE TABLE `users` (
 -- Dumping data for table `users`
 --
 
-INSERT INTO `users` (`id`, `name`, `email`, `email_verified_at`, `session_id`, `password`, `country_code`, `phone`, `role_id`, `remember_token`, `created_at`, `updated_at`, `registration_number`, `birthday`, `contact_number`, `gender`, `qualification_id`, `qualification`, `year_of_passed_out`, `address`, `city_id`, `city`, `state_id`, `pincode`, `school`, `aadhaar_number`, `linkedin_profile`, `upload_resume`, `upload_aadhar`, `upload_picture`, `upload_marklist`, `upload_agreement`, `parent_name`, `parent_contact`, `parent_email`, `parent_aadhar`, `parent_occupation`, `residential_address`, `designation_id`, `experience`, `domain_id`, `subject`, `is_active`, `receive_email_notification`, `receive_sms_notification`, `avatar_url`, `passport_photo_path`, `deleted_at`, `zoho_crm_id`) VALUES
-(1, 'Admin', 'admin@mylearning.live', NULL, 'Z3PqXgu6iOJXKpUC', '$2y$12$v.coChxRBUfLm4j5hMkRsupMOO1L9zZnfJ/A17p17Qe1fpiOWsb4C', '+91', '7984966990', 1, 'yaUjEhiFYzwzrBSFLznWgN0KZrJmff0e063ix3HsJ0WRFSXPGDinaiNbV2Vq', '2024-02-21 18:44:06', '2025-07-07 09:42:09', NULL, NULL, NULL, NULL, NULL, '[{\"qualification\":\"MBA\",\"year\":\"2022\",\"institute_name\":\"Rk College\",\"qualification_id\":\"1\",\"percentage\":\"100\"}]', NULL, NULL, NULL, NULL, NULL, NULL, NULL, '987654321012', NULL, '01J08JSVC1HJCHGY0JZM9N0JZY.jpg', '01J08JSVC5VJH8C4PJFJC7Z961.jpg', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 1, 1, 1, 'avatars/GdnB7fUprMjCanGEg9PNAoKFlrXmrXUi2012kGuS.jpg', NULL, NULL, NULL),
-(3, 'tutor', 'tutor@mylearning.live', NULL, 'y9xmQ66dy2u2qTg5', '$2y$12$QIjIjXpakwXdli0MPSpvZ.9AoLwPnN4XXBjSRDOu1Otn8guFPbkcu', '+91', '9876543210', 7, NULL, '2024-02-24 15:26:20', '2025-05-28 13:07:21', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 1, 0, 0, NULL, NULL, '2025-05-28 13:07:21', NULL),
-(11, 'studnet testing', 'student@mylearning.live', NULL, 'ZySiEP73Xn89XfUP', '$2y$12$0AUzgzPh1NMJuhg5Ldx9HuVtCu8HeF.4/TA3mRSfZea6i/2cOZ5Xy', '+91', '', 6, 'xOmPfRTIJC6QcyCHNZzIP1UGYJa66O8tZd7ZHtDfJJ5LUwfNdvfQS7n64HYE', '2024-04-01 12:12:46', '2025-06-19 10:52:50', '123', '2025-05-22', NULL, 'Male', 1, '[{\"year\":\"2010\",\"institute_name\":\"Ipu\",\"percentage\":\"65\",\"qualification_name\":\"Diploma\",\"qualification_id\":\"4\"},{\"year\":\"2013\",\"institute_name\":\"RK \",\"percentage\":\"90\",\"qualification_name\":\"Master of Science\",\"qualification_id\":\"1\"}]', '2015', 'khg', 1, 'New delhi', 1, '387755', 'Abc', '789456123555', 'http://localhost:8000/administrator/1/my-profile', 'resumes/QLWpRqlDiJgXrnDIRZNpITS6oQ6STIYuzwIJ2efx.pdf', 'documents/sMkRShP4AP4mSmZsIGDCpsKLsrga98QaYTqAcXiV.pdf', NULL, NULL, NULL, 'mbm', NULL, 'gghgh@1.com', '777777777777', 'mngv', 'jhf', NULL, NULL, NULL, NULL, 1, 0, 1, 'avatars/uAOUFF88buOHJ8orBI1X7uccH6y8M3gWCLMaUZLC.jpg', 'passport_photos/QGN50sjp0mTElhsGa6DpiLWYre5p6J6z0v7wHxuf.jpg', NULL, NULL),
-(40, 'test', 'test@test.com', NULL, '73z15YIj4a6Kiukj', '$2y$12$YjRwp.PVbjLzWuqMAnOja.XAn7nW8lP2VU5yrAqiM9QpHmvn7Ajsy', '+91', '5789456130', 6, NULL, '2024-04-22 01:03:09', '2025-06-03 12:25:24', '46240772', '2001-11-01', NULL, 'Male', NULL, NULL, '2001', 'ffffew324423', 1, NULL, 2, '110051', 'gurmeetgewrger3423', 'fwefewgwvdsvs', NULL, '01HW28E87VRK3FPT8R6W8DHSAN.pdf', '01HW28E87XY2TBTSH49PFP45AY.pdf', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 1, 1, 0, NULL, NULL, NULL, NULL),
-(76, 'SASHI CHALLA', 'sashi.challa@sumedhait.com', NULL, 'VgCJxhMZux3Hb5TT', '$2y$12$0wu4xQVaTbGsRJ9uWrNngeFUj0ZFVcgEhlwFgfrm3JZszVQJ9lWza', '+91', '9014399514', 6, '4lafSxlMgYrWRqwaSoQDi4zYmhGyQSlqlDG2XRECshFxtlwUnOlozgU4PF2m', '2025-05-16 09:09:01', '2025-07-01 16:48:46', NULL, '2019-08-01', NULL, 'Male', NULL, NULL, NULL, 'Kukatpally, Hyderabad', NULL, 'Hyderabad', 1, '500072', NULL, '123456789000', 'https://www.linkedin.com/in/sumedha-it-156857280/', 'resumes/PEzqzkGALVzDjfBSmHdOUSx0Aw647fwyg2bnG2wg.pdf', 'documents/Ndr1UdwDg9KPnfLtOA31BKEbfbaj0YdWh4fTXnzZ.pdf', NULL, NULL, NULL, 'Harish', NULL, 'harish@gmail.com', '123344556677', 'Farmer', 'Kukatpally, Hyderabad', NULL, NULL, NULL, NULL, 1, 0, 0, 'avatars/K5ubSVXyRJAlHAiHs6A53d6d2PUKbehS2ODMaqSf.jpg', 'passport_photos/duBiECCjtMaoL3G5IZvGTD42gIf57d4H3zTPYMeg.jpg', NULL, NULL),
-(77, 'Sudheer Anala', 'sudheer.a@sumedhait.com', NULL, 'iDZVs1JN2TvKX5YV', '$2y$12$wOJ4oUWs60v/p24/cmhUOu70ZptLTavFTeuM67tXmVNIOCe/9bery', '+91', '9959073574', 6, NULL, '2025-05-16 13:45:08', '2025-05-30 15:32:29', NULL, NULL, NULL, 'Male', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 1, 0, 0, NULL, NULL, NULL, NULL),
-(78, 'Shaik Shabbir ', 'shabbir.s@sumedhait.com', NULL, 'bpgzeNSdAvEEq0vE', '$2y$12$sg74kHCqEJqAZCD8H/DUdeT2Ns1.Bvw5C8UJV0HzUPOa5fSuV5gPy', '+91', '9885521477', 6, NULL, '2025-05-16 13:53:28', '2025-05-16 13:55:17', NULL, NULL, NULL, 'Male', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 1, 0, 0, NULL, NULL, NULL, NULL),
-(79, 'Bharath Devireddy', 'bharath.d@sumedhait.com', NULL, 'pSddUpOURy1PE90O', '$2y$12$AueA/FG9ADDHa/bX6De5ZOs2p2Q8p0toPbRlhJ8eqigc.y75opKt2', '+91', '9542424212', 6, 'J5aLRqmGVsD6KmvYSIJJhicDFQqEE8IynjrMJuAlNVIxGfYQHi0VT4pkcAUI', '2025-05-16 13:54:25', '2025-05-30 15:38:33', NULL, NULL, NULL, 'Male', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 1, 0, 0, 'avatars/kt02ZSqBhRle3UO9xmS1UHa84S7QAEXS5UMwr8Li.jpg', NULL, NULL, NULL),
-(80, 'Srikanth Anumalashetty', 'srikanth.a@sumedhait.com', NULL, 'E9ll1Oagymwb1v6R', '$2y$12$w4NE5g.DSJpZE4k887Q7uesM6M1N3hTOCuKP/g3/eqncqTaFp5cq2', '+91', '8095443974', 6, NULL, '2025-05-16 13:55:08', '2025-06-03 12:09:17', NULL, '2025-05-29', NULL, 'Male', NULL, NULL, NULL, 'rgrgewg', NULL, 'wwwtrw', 1, '543532', NULL, '234567898766', 'wertw', 'resumes/IrJ74QutodmJRfy4t7e8tdBIHve2ONiFC32UIO96.pdf', 'documents/nz2WyonyODKO13s7jF854G8bJ3TyLp2jwbwtS5WK.pdf', NULL, NULL, NULL, 'eergr', NULL, 'sdgwdg', '143435454534', 'dfgvdvdsds', 'sdfvsdfvdfvfvfdvfd', NULL, NULL, NULL, NULL, 1, 0, 0, NULL, 'passport_photos/0tvV5aIHhJyhgcsWCzNKl8mSx5P1pnjJ1YcooDqm.png', NULL, NULL),
-(81, 'RAKESH  chawan', 'rakesh@1.com', NULL, 'mNAfchfEfouJT18W', '$2y$12$HtM89n2749mdTl2kOvGCsORzu2XfGsL.bg15i5yKOi6Z8rNuSEdjS', '+91', '11122', 6, 'AbDqsu5zzj1rFtfmnnc6UPfE5m6pfbMRLsYaSijmdvGZf5spEpG6pm7YIhg8', '2025-05-20 15:10:14', '2025-07-09 22:57:44', NULL, '1996-01-02', NULL, 'Male', NULL, NULL, NULL, 'gdhfgjhds', NULL, 'dffgfhj', 16, '859768', NULL, '123456789085', 'http://test.stage-lms.sumedhait.com/administrator/1/my-profile', 'resumes/n9D9poDJwXqMAmUQx6YK9D3iiXLSPtQXQC5jFTGl.pdf', 'documents/wtDQ9EO8TZztjNZy7RIxnokGTL8YpyeBfHZbYPqR.pdf', NULL, NULL, NULL, 'wertyu', NULL, '', '123456789023', 'dfghjk', 'gfhjkl', NULL, NULL, NULL, NULL, 1, 0, 0, 'avatars/skvNSuWMoFTHcrGQJcdO7nGLupSip3YenJLsOBLe.jpg', 'passport_photos/3BHefG4qfDJAKOyE1N7MCfiyYYs8rjVT7SuGLLbF.png', NULL, '12'),
-(84, 'vamsikumar', 'vamsi.a@sumedhait.com', NULL, '1T6u8hXSCxlHZ0Er', '$2y$12$4x7gkc6wdtT.UH7xBKfspOzLJ4oRJ6sLnf728uOSvxIravfK5z.oC', '+91', '9100098488', 1, NULL, '2025-05-28 13:05:26', '2025-07-08 10:18:59', NULL, NULL, NULL, 'Male', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 1, 0, 0, NULL, NULL, NULL, NULL),
-(85, 'Trainer', 'trainer@student.sumedhait.com', NULL, 'OnwXjjRz1IBYKM8h', '$2y$12$dgLIPkJhdAGSyriyO9k5iu9lMeZWGz.iuFwtF0IFN2XkjQ6Nzx6sW', '+91', '9988776655', 7, 'jma0XfhOn34QeRX1XUh98vY1Btk8jFmLGOWDDXSSozHD4vYRgxg8QSCH3AbB', '2025-05-28 14:07:35', '2025-07-01 10:27:28', NULL, NULL, NULL, 'Male', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 1, 0, 0, NULL, NULL, NULL, NULL),
-(86, 'student', '2120rakeshraki@gmail.com', NULL, 'c7E7xFkTKw197BPs', '$2y$12$879If.TADl/86bB7Oahqou6Dd.BIz9DRqqEixvvN.9h62BKss42O.', '+91', '134567', 6, NULL, '2025-05-28 23:10:03', '2025-05-28 23:13:19', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 1, 0, 0, NULL, NULL, NULL, NULL),
-(87, 'Ravi Ch', 'ravicha@sumedhait.com', NULL, NULL, '$2y$12$/hHydwsaAAfVDHS1D8iR9.NXYEsWd1gwsY0bbvAlkfblRKAL2RIXe', '+91', '8008231768', 6, NULL, '2025-05-30 12:23:52', '2025-05-30 12:23:52', NULL, NULL, NULL, 'Male', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 1, 0, 0, NULL, NULL, NULL, NULL),
-(88, 'Srikanth A', 'srikanth0203@gmail.com', NULL, 'NjUju9ni8FdKwYzQ', '$2y$12$iJi838l3E37n.eih.JBp7uvmTQ51Qk7HWP.EdxpBv9DphBhRmEqzW', '+91', '7766668899', 1, NULL, '2025-05-30 13:53:29', '2025-06-04 11:01:42', NULL, NULL, NULL, 'Male', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 1, 0, 0, NULL, NULL, NULL, NULL),
-(89, 'new test', 'placement@1.com', NULL, 'r4ysWetOX94qw7qc', '$2y$12$NNr2JuwUITqsvU1SGU7/M.iyMK4NJ34lHhrjDCHnW5yzrRM7HaL/.', '+91', '852', 10, NULL, '2025-05-30 16:36:57', '2025-05-30 16:38:27', NULL, NULL, NULL, 'Male', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 1, 0, 0, NULL, NULL, NULL, NULL),
-(90, 'tutor', 'tutor@1.com', NULL, 'Xia5ClQ3QiS72Eo7', '$2y$12$vFGU3AlNb/hFldCB/3O9mev58cU2y7vOdcgkGmHtzxExP4RR3t9QC', '+91', '122', 7, NULL, '2025-06-07 10:13:57', '2025-06-26 11:52:04', NULL, NULL, NULL, 'Male', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 1, 0, 0, NULL, NULL, NULL, NULL),
-(91, 'Test AC', 'test1@test.com', NULL, 'T2zWrGl7mE5oEW5A', '$2y$12$qsMCFx2WHjjcwS8xWF3sOud3T7OchnISqjH3Pw/KUY0LzHGnfHvg.', '+91', '123456789', 5, NULL, '2025-06-09 15:26:09', '2025-06-09 15:26:30', NULL, NULL, NULL, 'Male', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 1, 0, 0, NULL, NULL, NULL, NULL),
-(92, 'academic', 'run@1.com', NULL, 'evcgwFRw6ORKGSpI', '$2y$12$xs0qQOLI6sifqY1EmLY99uZWd6mkVCyAYTFR8ZnxI1q89snDxO7Y.', '+91', '8529', 5, NULL, '2025-06-12 21:37:33', '2025-06-12 21:37:53', NULL, NULL, NULL, 'Male', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 1, 0, 0, NULL, NULL, NULL, '1112'),
-(93, 'admin 2', 'admin@1.com', NULL, 'FLTbo1jMxIpURNC7', '$2y$12$t8Eg5XNnsZR1NRzeBeeMLOb6lpvoniy46ODJiEVXL0Y0/8Tw9V1dO', '+91', '753159', 1, NULL, '2025-07-01 10:45:21', '2025-07-09 23:02:29', NULL, NULL, NULL, 'Male', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 1, 0, 0, NULL, NULL, NULL, '43');
+INSERT INTO `users` (`id`, `name`, `email`, `email_verified_at`, `session_id`, `password`, `country_code`, `phone`, `role_id`, `remember_token`, `created_at`, `updated_at`, `registration_number`, `birthday`, `contact_number`, `gender`, `qualification_id`, `qualification`, `year_of_passed_out`, `address`, `city_id`, `city`, `state_id`, `pincode`, `school`, `aadhaar_number`, `linkedin_profile`, `upload_resume`, `upload_aadhar`, `upload_picture`, `upload_marklist`, `upload_agreement`, `parent_name`, `parent_contact`, `parent_email`, `parent_aadhar`, `parent_occupation`, `residential_address`, `designation_id`, `experience`, `domain_id`, `subject`, `is_active`, `placement_center_access`, `receive_email_notification`, `receive_sms_notification`, `avatar_url`, `passport_photo_path`, `deleted_at`, `zoho_crm_id`) VALUES
+(1, 'Admin', 'admin@mylearning.live', NULL, 'Z3PqXgu6iOJXKpUC', '$2y$12$v.coChxRBUfLm4j5hMkRsupMOO1L9zZnfJ/A17p17Qe1fpiOWsb4C', '+91', '7984966990', 1, 'yaUjEhiFYzwzrBSFLznWgN0KZrJmff0e063ix3HsJ0WRFSXPGDinaiNbV2Vq', '2024-02-21 18:44:06', '2025-07-07 09:42:09', NULL, NULL, NULL, NULL, NULL, '[{\"qualification\":\"MBA\",\"year\":\"2022\",\"institute_name\":\"Rk College\",\"qualification_id\":\"1\",\"percentage\":\"100\"}]', NULL, NULL, NULL, NULL, NULL, NULL, NULL, '987654321012', NULL, '01J08JSVC1HJCHGY0JZM9N0JZY.jpg', '01J08JSVC5VJH8C4PJFJC7Z961.jpg', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 1, 0, 1, 1, 'avatars/GdnB7fUprMjCanGEg9PNAoKFlrXmrXUi2012kGuS.jpg', NULL, NULL, NULL),
+(3, 'tutor', 'tutor@mylearning.live', NULL, 'y9xmQ66dy2u2qTg5', '$2y$12$QIjIjXpakwXdli0MPSpvZ.9AoLwPnN4XXBjSRDOu1Otn8guFPbkcu', '+91', '9876543210', 7, NULL, '2024-02-24 15:26:20', '2025-05-28 13:07:21', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 1, 0, 0, 0, NULL, NULL, '2025-05-28 13:07:21', NULL),
+(11, 'studnet testing', 'student@mylearning.live', NULL, 'Ze4maj5O7amK5wI5', '$2y$12$0AUzgzPh1NMJuhg5Ldx9HuVtCu8HeF.4/TA3mRSfZea6i/2cOZ5Xy', '+91', '', 6, 'ZzBj4pI4NJa8WNPQJQ8zz67jUxYMSOQ2oub3w7YfJNzozltLhDuTXuOLBP7d', '2024-04-01 12:12:46', '2025-07-31 18:29:32', '123', '2025-05-22', NULL, 'Male', 1, '[{\"year\":\"2010\",\"institute_name\":\"Ipu\",\"percentage\":\"65\",\"qualification_name\":\"Diploma\",\"qualification_id\":\"4\"},{\"year\":\"2013\",\"institute_name\":\"RK \",\"percentage\":\"90\",\"qualification_name\":\"Master of Science\",\"qualification_id\":\"1\"}]', '2015', 'khg', 1, 'New delhi', 1, '387755', 'Abc', '789456123555', 'http://localhost:8000/administrator/1/my-profile', 'resumes/QLWpRqlDiJgXrnDIRZNpITS6oQ6STIYuzwIJ2efx.pdf', 'documents/sMkRShP4AP4mSmZsIGDCpsKLsrga98QaYTqAcXiV.pdf', NULL, NULL, NULL, 'mbm', NULL, 'gghgh@1.com', '777777777777', 'mngv', 'jhf', NULL, NULL, NULL, NULL, 1, 0, 0, 1, 'avatars/uAOUFF88buOHJ8orBI1X7uccH6y8M3gWCLMaUZLC.jpg', 'passport_photos/QGN50sjp0mTElhsGa6DpiLWYre5p6J6z0v7wHxuf.jpg', NULL, NULL),
+(40, 'test', 'test@test.com', NULL, '73z15YIj4a6Kiukj', '$2y$12$YjRwp.PVbjLzWuqMAnOja.XAn7nW8lP2VU5yrAqiM9QpHmvn7Ajsy', '+91', '5789456130', 6, NULL, '2024-04-22 01:03:09', '2025-06-03 12:25:24', '46240772', '2001-11-01', NULL, 'Male', NULL, NULL, '2001', 'ffffew324423', 1, NULL, 2, '110051', 'gurmeetgewrger3423', 'fwefewgwvdsvs', NULL, '01HW28E87VRK3FPT8R6W8DHSAN.pdf', '01HW28E87XY2TBTSH49PFP45AY.pdf', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 1, 0, 1, 0, NULL, NULL, NULL, NULL),
+(76, 'SASHI CHALLA', 'sashi.challa@sumedhait.com', NULL, '9a9IUL2aqz0YH2eX', '$2y$12$0wu4xQVaTbGsRJ9uWrNngeFUj0ZFVcgEhlwFgfrm3JZszVQJ9lWza', '+91', '9014399514', 6, 'QJuUd4652CXgcHgW1JUzdF6XAsqLiXTwbpkpRMkJeFkxncDQdFWuiHhl0mlX', '2025-05-16 09:09:01', '2025-08-13 14:05:26', NULL, '2019-08-01', NULL, 'Male', NULL, NULL, NULL, 'Kukatpally, Hyderabad', NULL, 'Hyderabad', 1, '500072', NULL, '123456789000', 'https://www.linkedin.com/in/sumedha-it-156857280/', 'resumes/PEzqzkGALVzDjfBSmHdOUSx0Aw647fwyg2bnG2wg.pdf', 'documents/Ndr1UdwDg9KPnfLtOA31BKEbfbaj0YdWh4fTXnzZ.pdf', NULL, NULL, NULL, 'Harish', NULL, 'harish@gmail.com', '123344556677', 'Farmer', 'Kukatpally, Hyderabad', NULL, NULL, NULL, NULL, 1, 0, 0, 0, 'avatars/K5ubSVXyRJAlHAiHs6A53d6d2PUKbehS2ODMaqSf.jpg', 'passport_photos/duBiECCjtMaoL3G5IZvGTD42gIf57d4H3zTPYMeg.jpg', NULL, NULL),
+(77, 'Sudheer Anala', 'sudheer.a@sumedhait.com', NULL, 'iDZVs1JN2TvKX5YV', '$2y$12$wOJ4oUWs60v/p24/cmhUOu70ZptLTavFTeuM67tXmVNIOCe/9bery', '+91', '9959073574', 6, NULL, '2025-05-16 13:45:08', '2025-05-30 15:32:29', NULL, NULL, NULL, 'Male', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 1, 0, 0, 0, NULL, NULL, NULL, NULL),
+(78, 'Shaik Shabbir ', 'shabbir.s@sumedhait.com', NULL, 'bpgzeNSdAvEEq0vE', '$2y$12$sg74kHCqEJqAZCD8H/DUdeT2Ns1.Bvw5C8UJV0HzUPOa5fSuV5gPy', '+91', '9885521477', 6, NULL, '2025-05-16 13:53:28', '2025-05-16 13:55:17', NULL, NULL, NULL, 'Male', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 1, 0, 0, 0, NULL, NULL, NULL, NULL),
+(79, 'Bharath Devireddy', 'bharath.d@sumedhait.com', NULL, 'pSddUpOURy1PE90O', '$2y$12$AueA/FG9ADDHa/bX6De5ZOs2p2Q8p0toPbRlhJ8eqigc.y75opKt2', '+91', '9542424212', 6, 'J5aLRqmGVsD6KmvYSIJJhicDFQqEE8IynjrMJuAlNVIxGfYQHi0VT4pkcAUI', '2025-05-16 13:54:25', '2025-05-30 15:38:33', NULL, NULL, NULL, 'Male', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 1, 0, 0, 0, 'avatars/kt02ZSqBhRle3UO9xmS1UHa84S7QAEXS5UMwr8Li.jpg', NULL, NULL, NULL),
+(80, 'Srikanth Anumalashetty', 'srikanth.a@sumedhait.com', NULL, 'E9ll1Oagymwb1v6R', '$2y$12$w4NE5g.DSJpZE4k887Q7uesM6M1N3hTOCuKP/g3/eqncqTaFp5cq2', '+91', '8095443974', 6, NULL, '2025-05-16 13:55:08', '2025-06-03 12:09:17', NULL, '2025-05-29', NULL, 'Male', NULL, NULL, NULL, 'rgrgewg', NULL, 'wwwtrw', 1, '543532', NULL, '234567898766', 'wertw', 'resumes/IrJ74QutodmJRfy4t7e8tdBIHve2ONiFC32UIO96.pdf', 'documents/nz2WyonyODKO13s7jF854G8bJ3TyLp2jwbwtS5WK.pdf', NULL, NULL, NULL, 'eergr', NULL, 'sdgwdg', '143435454534', 'dfgvdvdsds', 'sdfvsdfvdfvfvfdvfd', NULL, NULL, NULL, NULL, 1, 0, 0, 0, NULL, 'passport_photos/0tvV5aIHhJyhgcsWCzNKl8mSx5P1pnjJ1YcooDqm.png', NULL, NULL),
+(81, 'RAKESH  chawan', 'rakesh@1.com', NULL, 'fIRASacLNmDhrgf3', '$2y$12$1xqnILEar/MN3IDKdavzmuKn9QOiA83wYXz2gWiaeQXtt0xAWiPxa', '+91', '11122', 6, 'AFpmL5znDVqwHL3q616lTEtZryBwThvtInOAjo0fBeUvzlrxXOQJP3JyXxhd', '2025-05-20 15:10:14', '2025-08-21 12:28:55', NULL, '1996-01-02', NULL, 'Male', NULL, NULL, NULL, 'gdhfgjhds', NULL, 'dffgfhj', 16, '859768', NULL, '123456789085', 'http://test.stage-lms.sumedhait.com/administrator/1/my-profile', 'resumes/QeBXXusCpHiPXBeLaV7PyF1wNPOdwbtVRRPVsDEX.pdf', 'documents/wtDQ9EO8TZztjNZy7RIxnokGTL8YpyeBfHZbYPqR.pdf', NULL, NULL, NULL, 'wertyu', NULL, '', '123456789023', 'dfghjk', 'gfhjkl', NULL, NULL, NULL, NULL, 1, 0, 0, 0, 'avatars/CE82ihLd0qEKG4e7cjUbaW3AMH2ILKLpVgluzCm6.png', 'passport_photos/3BHefG4qfDJAKOyE1N7MCfiyYYs8rjVT7SuGLLbF.png', NULL, '12'),
+(84, 'vamsikumar', 'vamsi.a@sumedhait.com', NULL, 'gYCsoZljo8sgqFh9', '$2y$12$4x7gkc6wdtT.UH7xBKfspOzLJ4oRJ6sLnf728uOSvxIravfK5z.oC', '+91', '9100098488', 1, 'A4xmx6OVaBLyptm1FeZpFV7XGhy1IOEnFAD3b6hWLJyAjYlYI7Q13itwVB52', '2025-05-28 13:05:26', '2025-08-21 11:40:42', NULL, NULL, NULL, 'Male', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 1, 0, 0, 0, NULL, NULL, NULL, NULL),
+(85, 'Trainer', 'trainer@student.sumedhait.com', NULL, 'OnwXjjRz1IBYKM8h', '$2y$12$dgLIPkJhdAGSyriyO9k5iu9lMeZWGz.iuFwtF0IFN2XkjQ6Nzx6sW', '+91', '9988776655', 7, 'jma0XfhOn34QeRX1XUh98vY1Btk8jFmLGOWDDXSSozHD4vYRgxg8QSCH3AbB', '2025-05-28 14:07:35', '2025-07-01 10:27:28', NULL, NULL, NULL, 'Male', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 1, 0, 0, 0, NULL, NULL, NULL, NULL),
+(86, 'student', '2120rakeshraki@gmail.com', NULL, 'c7E7xFkTKw197BPs', '$2y$12$879If.TADl/86bB7Oahqou6Dd.BIz9DRqqEixvvN.9h62BKss42O.', '+91', '134567', 6, NULL, '2025-05-28 23:10:03', '2025-05-28 23:13:19', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 1, 0, 0, 0, NULL, NULL, NULL, NULL),
+(87, 'Ravi Ch', 'ravicha@sumedhait.com', NULL, NULL, '$2y$12$/hHydwsaAAfVDHS1D8iR9.NXYEsWd1gwsY0bbvAlkfblRKAL2RIXe', '+91', '8008231768', 6, NULL, '2025-05-30 12:23:52', '2025-05-30 12:23:52', NULL, NULL, NULL, 'Male', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 1, 0, 0, 0, NULL, NULL, NULL, NULL),
+(88, 'Srikanth A', 'srikanth0203@gmail.com', NULL, 'NjUju9ni8FdKwYzQ', '$2y$12$iJi838l3E37n.eih.JBp7uvmTQ51Qk7HWP.EdxpBv9DphBhRmEqzW', '+91', '7766668899', 1, NULL, '2025-05-30 13:53:29', '2025-06-04 11:01:42', NULL, NULL, NULL, 'Male', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 1, 0, 0, 0, NULL, NULL, NULL, NULL),
+(89, 'new test', 'placement@1.com', NULL, 'r4ysWetOX94qw7qc', '$2y$12$NNr2JuwUITqsvU1SGU7/M.iyMK4NJ34lHhrjDCHnW5yzrRM7HaL/.', '+91', '852', 10, NULL, '2025-05-30 16:36:57', '2025-05-30 16:38:27', NULL, NULL, NULL, 'Male', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 1, 0, 0, 0, NULL, NULL, NULL, NULL),
+(90, 'tutor', 'tutor@1.com', NULL, 'Xia5ClQ3QiS72Eo7', '$2y$12$vFGU3AlNb/hFldCB/3O9mev58cU2y7vOdcgkGmHtzxExP4RR3t9QC', '+91', '122', 7, NULL, '2025-06-07 10:13:57', '2025-06-26 11:52:04', NULL, NULL, NULL, 'Male', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 1, 0, 0, 0, NULL, NULL, NULL, NULL),
+(91, 'Test AC', 'test1@test.com', NULL, 'T2zWrGl7mE5oEW5A', '$2y$12$qsMCFx2WHjjcwS8xWF3sOud3T7OchnISqjH3Pw/KUY0LzHGnfHvg.', '+91', '123456789', 5, NULL, '2025-06-09 15:26:09', '2025-06-09 15:26:30', NULL, NULL, NULL, 'Male', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 1, 0, 0, 0, NULL, NULL, NULL, NULL),
+(92, 'academic', 'run@1.com', NULL, 'evcgwFRw6ORKGSpI', '$2y$12$xs0qQOLI6sifqY1EmLY99uZWd6mkVCyAYTFR8ZnxI1q89snDxO7Y.', '+91', '8529', 5, NULL, '2025-06-12 21:37:33', '2025-06-12 21:37:53', NULL, NULL, NULL, 'Male', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 1, 0, 0, 0, NULL, NULL, NULL, '1112'),
+(93, 'admin 2', 'admin@1.com', NULL, 'leW0UUW1wT60aF1L', '$2y$12$t8Eg5XNnsZR1NRzeBeeMLOb6lpvoniy46ODJiEVXL0Y0/8Tw9V1dO', '+91', '753159', 1, NULL, '2025-07-01 10:45:21', '2025-08-21 10:38:43', NULL, NULL, NULL, 'Male', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 1, 0, 0, 0, NULL, NULL, NULL, '43'),
+(94, 'rr3', 'r@3.com', NULL, NULL, '$2y$12$MxQenjJxxU6xe2bR4J471.z4pihqctoLEDpyZmUi9cxUMAXR66Gk2', '+91', '8975265264', 6, NULL, '2025-08-08 17:35:08', '2025-08-08 17:35:08', NULL, NULL, '8975265264', 'Male', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 1, 0, 0, 0, NULL, NULL, NULL, 'CRM0089'),
+(95, 'r6', 'r@4.com', NULL, NULL, '$2y$12$2s99iCrDZFM6F2ArCAW/R.2DmUWDrPfkZv/0IGReshWhTxyf.3sEa', '+91', '7496543212', 6, NULL, '2025-08-08 17:35:09', '2025-08-08 17:35:09', NULL, NULL, '7496543212', 'Female', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 1, 0, 0, 0, NULL, NULL, NULL, 'CRM0075'),
+(96, 'Bhavani', 'bhavani.p@sumedhait.com', NULL, NULL, '$2y$12$o5c7UVfgw1mVWJWdBigTWesKSI1w9S8DrdFETXVDMO4Jpvr3FoKia', '+91', '9154024371', 7, NULL, '2025-08-11 13:18:21', '2025-08-11 13:18:21', NULL, NULL, NULL, 'Female', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 1, 0, 0, 0, NULL, NULL, NULL, '12345');
 
 -- --------------------------------------------------------
 
@@ -6087,6 +6798,12 @@ ALTER TABLE `classrooms`
   ADD PRIMARY KEY (`id`);
 
 --
+-- Indexes for table `companies`
+--
+ALTER TABLE `companies`
+  ADD PRIMARY KEY (`id`);
+
+--
 -- Indexes for table `countries`
 --
 ALTER TABLE `countries`
@@ -6198,10 +6915,41 @@ ALTER TABLE `imports`
   ADD KEY `imports_user_id_foreign` (`user_id`);
 
 --
+-- Indexes for table `interview_questions`
+--
+ALTER TABLE `interview_questions`
+  ADD PRIMARY KEY (`id`);
+
+--
+-- Indexes for table `job_applications`
+--
+ALTER TABLE `job_applications`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `unique_application` (`job_posting_id`,`user_id`),
+  ADD KEY `user_id` (`user_id`),
+  ADD KEY `status` (`status`);
+
+--
 -- Indexes for table `job_batches`
 --
 ALTER TABLE `job_batches`
   ADD PRIMARY KEY (`id`);
+
+--
+-- Indexes for table `job_eligibility_criteria`
+--
+ALTER TABLE `job_eligibility_criteria`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `job_posting_id` (`job_posting_id`);
+
+--
+-- Indexes for table `job_postings`
+--
+ALTER TABLE `job_postings`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `company_id` (`company_id`),
+  ADD KEY `posted_by` (`posted_by`),
+  ADD KEY `status` (`status`);
 
 --
 -- Indexes for table `leaves`
@@ -6214,6 +6962,21 @@ ALTER TABLE `leaves`
 --
 ALTER TABLE `migrations`
   ADD PRIMARY KEY (`id`);
+
+--
+-- Indexes for table `mock_interviews`
+--
+ALTER TABLE `mock_interviews`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `user_id` (`user_id`);
+
+--
+-- Indexes for table `mock_interview_responses`
+--
+ALTER TABLE `mock_interview_responses`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `mock_interview_id` (`mock_interview_id`),
+  ADD KEY `question_id` (`question_id`);
 
 --
 -- Indexes for table `model_has_permissions`
@@ -6268,6 +7031,20 @@ ALTER TABLE `personal_access_tokens`
   ADD PRIMARY KEY (`id`),
   ADD UNIQUE KEY `personal_access_tokens_token_unique` (`token`),
   ADD KEY `personal_access_tokens_tokenable_type_tokenable_id_index` (`tokenable_type`,`tokenable_id`);
+
+--
+-- Indexes for table `placement_criteria`
+--
+ALTER TABLE `placement_criteria`
+  ADD PRIMARY KEY (`id`);
+
+--
+-- Indexes for table `placement_notifications`
+--
+ALTER TABLE `placement_notifications`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `user_id` (`user_id`),
+  ADD KEY `job_posting_id` (`job_posting_id`);
 
 --
 -- Indexes for table `projects`
@@ -6393,6 +7170,15 @@ ALTER TABLE `student_education`
   ADD PRIMARY KEY (`id`);
 
 --
+-- Indexes for table `student_placement_eligibility`
+--
+ALTER TABLE `student_placement_eligibility`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `user_id` (`user_id`),
+  ADD KEY `is_eligible` (`is_eligible`),
+  ADD KEY `is_placed` (`is_placed`);
+
+--
 -- Indexes for table `subjects`
 --
 ALTER TABLE `subjects`
@@ -6478,25 +7264,25 @@ ALTER TABLE `attendances`
 -- AUTO_INCREMENT for table `authentication_log`
 --
 ALTER TABLE `authentication_log`
-  MODIFY `id` bigint UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=1587;
+  MODIFY `id` bigint UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=1695;
 
 --
 -- AUTO_INCREMENT for table `batches`
 --
 ALTER TABLE `batches`
-  MODIFY `id` bigint UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=35;
+  MODIFY `id` bigint UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=42;
 
 --
 -- AUTO_INCREMENT for table `batch_curriculum`
 --
 ALTER TABLE `batch_curriculum`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=80;
+  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=104;
 
 --
 -- AUTO_INCREMENT for table `batch_curriculum_topics`
 --
 ALTER TABLE `batch_curriculum_topics`
-  MODIFY `id` bigint UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=70;
+  MODIFY `id` bigint UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=108;
 
 --
 -- AUTO_INCREMENT for table `batch_section`
@@ -6514,7 +7300,7 @@ ALTER TABLE `batch_teaching_materials`
 -- AUTO_INCREMENT for table `batch_user`
 --
 ALTER TABLE `batch_user`
-  MODIFY `id` bigint UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=65;
+  MODIFY `id` bigint UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=69;
 
 --
 -- AUTO_INCREMENT for table `branches`
@@ -6565,6 +7351,12 @@ ALTER TABLE `classrooms`
   MODIFY `id` bigint UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
 
 --
+-- AUTO_INCREMENT for table `companies`
+--
+ALTER TABLE `companies`
+  MODIFY `id` bigint UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
+
+--
 -- AUTO_INCREMENT for table `countries`
 --
 ALTER TABLE `countries`
@@ -6574,13 +7366,13 @@ ALTER TABLE `countries`
 -- AUTO_INCREMENT for table `courses`
 --
 ALTER TABLE `courses`
-  MODIFY `id` bigint UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=37;
+  MODIFY `id` bigint UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=40;
 
 --
 -- AUTO_INCREMENT for table `curriculum`
 --
 ALTER TABLE `curriculum`
-  MODIFY `id` bigint UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=95;
+  MODIFY `id` bigint UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=115;
 
 --
 -- AUTO_INCREMENT for table `degree_types`
@@ -6658,7 +7450,31 @@ ALTER TABLE `holidays`
 -- AUTO_INCREMENT for table `imports`
 --
 ALTER TABLE `imports`
-  MODIFY `id` bigint UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=17;
+  MODIFY `id` bigint UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=18;
+
+--
+-- AUTO_INCREMENT for table `interview_questions`
+--
+ALTER TABLE `interview_questions`
+  MODIFY `id` bigint UNSIGNED NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `job_applications`
+--
+ALTER TABLE `job_applications`
+  MODIFY `id` bigint UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+
+--
+-- AUTO_INCREMENT for table `job_eligibility_criteria`
+--
+ALTER TABLE `job_eligibility_criteria`
+  MODIFY `id` bigint UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+
+--
+-- AUTO_INCREMENT for table `job_postings`
+--
+ALTER TABLE `job_postings`
+  MODIFY `id` bigint UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
 
 --
 -- AUTO_INCREMENT for table `leaves`
@@ -6671,6 +7487,18 @@ ALTER TABLE `leaves`
 --
 ALTER TABLE `migrations`
   MODIFY `id` int UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=20;
+
+--
+-- AUTO_INCREMENT for table `mock_interviews`
+--
+ALTER TABLE `mock_interviews`
+  MODIFY `id` bigint UNSIGNED NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `mock_interview_responses`
+--
+ALTER TABLE `mock_interview_responses`
+  MODIFY `id` bigint UNSIGNED NOT NULL AUTO_INCREMENT;
 
 --
 -- AUTO_INCREMENT for table `old_teams`
@@ -6694,7 +7522,19 @@ ALTER TABLE `permissions`
 -- AUTO_INCREMENT for table `personal_access_tokens`
 --
 ALTER TABLE `personal_access_tokens`
-  MODIFY `id` bigint UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=889;
+  MODIFY `id` bigint UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=978;
+
+--
+-- AUTO_INCREMENT for table `placement_criteria`
+--
+ALTER TABLE `placement_criteria`
+  MODIFY `id` bigint UNSIGNED NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `placement_notifications`
+--
+ALTER TABLE `placement_notifications`
+  MODIFY `id` bigint UNSIGNED NOT NULL AUTO_INCREMENT;
 
 --
 -- AUTO_INCREMENT for table `projects`
@@ -6712,7 +7552,7 @@ ALTER TABLE `qualifications`
 -- AUTO_INCREMENT for table `questions`
 --
 ALTER TABLE `questions`
-  MODIFY `id` bigint UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=52;
+  MODIFY `id` bigint UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=114;
 
 --
 -- AUTO_INCREMENT for table `question_attempt_logs`
@@ -6724,7 +7564,7 @@ ALTER TABLE `question_attempt_logs`
 -- AUTO_INCREMENT for table `question_banks`
 --
 ALTER TABLE `question_banks`
-  MODIFY `id` bigint UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=16;
+  MODIFY `id` bigint UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=31;
 
 --
 -- AUTO_INCREMENT for table `question_bank_chapters`
@@ -6736,7 +7576,7 @@ ALTER TABLE `question_bank_chapters`
 -- AUTO_INCREMENT for table `question_bank_difficulties`
 --
 ALTER TABLE `question_bank_difficulties`
-  MODIFY `id` bigint UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
+  MODIFY `id` bigint UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
 
 --
 -- AUTO_INCREMENT for table `question_bank_subjects`
@@ -6748,19 +7588,19 @@ ALTER TABLE `question_bank_subjects`
 -- AUTO_INCREMENT for table `question_bank_types`
 --
 ALTER TABLE `question_bank_types`
-  MODIFY `id` bigint UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
+  MODIFY `id` bigint UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=8;
 
 --
 -- AUTO_INCREMENT for table `question_options`
 --
 ALTER TABLE `question_options`
-  MODIFY `id` bigint UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=201;
+  MODIFY `id` bigint UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=372;
 
 --
 -- AUTO_INCREMENT for table `roles`
 --
 ALTER TABLE `roles`
-  MODIFY `id` bigint UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=11;
+  MODIFY `id` bigint UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=12;
 
 --
 -- AUTO_INCREMENT for table `sections`
@@ -6784,19 +7624,25 @@ ALTER TABLE `states`
 -- AUTO_INCREMENT for table `student_attendances`
 --
 ALTER TABLE `student_attendances`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=43;
+  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=45;
 
 --
 -- AUTO_INCREMENT for table `student_device_registrations`
 --
 ALTER TABLE `student_device_registrations`
-  MODIFY `id` bigint UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=21;
+  MODIFY `id` bigint UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=23;
 
 --
 -- AUTO_INCREMENT for table `student_education`
 --
 ALTER TABLE `student_education`
   MODIFY `id` bigint UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=19;
+
+--
+-- AUTO_INCREMENT for table `student_placement_eligibility`
+--
+ALTER TABLE `student_placement_eligibility`
+  MODIFY `id` bigint UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
 
 --
 -- AUTO_INCREMENT for table `subjects`
@@ -6820,7 +7666,7 @@ ALTER TABLE `syllabi`
 -- AUTO_INCREMENT for table `teaching_materials`
 --
 ALTER TABLE `teaching_materials`
-  MODIFY `id` bigint UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=145;
+  MODIFY `id` bigint UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=150;
 
 --
 -- AUTO_INCREMENT for table `teaching_material_statuses`
@@ -6838,13 +7684,13 @@ ALTER TABLE `teams`
 -- AUTO_INCREMENT for table `team_user`
 --
 ALTER TABLE `team_user`
-  MODIFY `id` bigint UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=149;
+  MODIFY `id` bigint UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=159;
 
 --
 -- AUTO_INCREMENT for table `topics`
 --
 ALTER TABLE `topics`
-  MODIFY `id` bigint UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=40;
+  MODIFY `id` bigint UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=79;
 
 --
 -- AUTO_INCREMENT for table `users`
@@ -6912,6 +7758,39 @@ ALTER TABLE `imports`
   ADD CONSTRAINT `imports_user_id_foreign` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE;
 
 --
+-- Constraints for table `job_applications`
+--
+ALTER TABLE `job_applications`
+  ADD CONSTRAINT `job_applications_ibfk_1` FOREIGN KEY (`job_posting_id`) REFERENCES `job_postings` (`id`) ON DELETE CASCADE,
+  ADD CONSTRAINT `job_applications_ibfk_2` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE;
+
+--
+-- Constraints for table `job_eligibility_criteria`
+--
+ALTER TABLE `job_eligibility_criteria`
+  ADD CONSTRAINT `job_eligibility_criteria_ibfk_1` FOREIGN KEY (`job_posting_id`) REFERENCES `job_postings` (`id`) ON DELETE CASCADE;
+
+--
+-- Constraints for table `job_postings`
+--
+ALTER TABLE `job_postings`
+  ADD CONSTRAINT `job_postings_ibfk_1` FOREIGN KEY (`company_id`) REFERENCES `companies` (`id`),
+  ADD CONSTRAINT `job_postings_ibfk_2` FOREIGN KEY (`posted_by`) REFERENCES `users` (`id`);
+
+--
+-- Constraints for table `mock_interviews`
+--
+ALTER TABLE `mock_interviews`
+  ADD CONSTRAINT `mock_interviews_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE;
+
+--
+-- Constraints for table `mock_interview_responses`
+--
+ALTER TABLE `mock_interview_responses`
+  ADD CONSTRAINT `mock_interview_responses_ibfk_1` FOREIGN KEY (`mock_interview_id`) REFERENCES `mock_interviews` (`id`) ON DELETE CASCADE,
+  ADD CONSTRAINT `mock_interview_responses_ibfk_2` FOREIGN KEY (`question_id`) REFERENCES `interview_questions` (`id`);
+
+--
 -- Constraints for table `model_has_permissions`
 --
 ALTER TABLE `model_has_permissions`
@@ -6922,6 +7801,13 @@ ALTER TABLE `model_has_permissions`
 --
 ALTER TABLE `model_has_roles`
   ADD CONSTRAINT `model_has_roles_role_id_foreign` FOREIGN KEY (`role_id`) REFERENCES `roles` (`id`) ON DELETE CASCADE;
+
+--
+-- Constraints for table `placement_notifications`
+--
+ALTER TABLE `placement_notifications`
+  ADD CONSTRAINT `placement_notifications_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE,
+  ADD CONSTRAINT `placement_notifications_ibfk_2` FOREIGN KEY (`job_posting_id`) REFERENCES `job_postings` (`id`) ON DELETE CASCADE;
 
 --
 -- Constraints for table `projects`
@@ -6941,6 +7827,12 @@ ALTER TABLE `role_has_permissions`
 --
 ALTER TABLE `student_device_registrations`
   ADD CONSTRAINT `student_device_registrations_user_id_foreign` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE;
+
+--
+-- Constraints for table `student_placement_eligibility`
+--
+ALTER TABLE `student_placement_eligibility`
+  ADD CONSTRAINT `student_placement_eligibility_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE;
 COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;

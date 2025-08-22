@@ -93,8 +93,8 @@ class ListUsers extends ListRecords
     public function getTabs(): array
     {
         return [
-            'Students' => ListRecords\Tab::make()->query(fn($query) => User::whereHas('teams')->where('role_id', 6)),
-            'Others' => ListRecords\Tab::make()->query(fn($query) => User::where('role_id', '<>', 6)
+            'Students & Placement Students' => ListRecords\Tab::make()->query(fn($query) => User::whereHas('teams')->whereIn('role_id', [6, 11])),
+            'Others' => ListRecords\Tab::make()->query(fn($query) => User::whereNotIn('role_id', [6, 11])
 //                ->whereHas('teams', function ($query) {
 //                    $query->where('id', Filament::getTenant());
 //                })

@@ -138,10 +138,7 @@ export const adminApi = createApi({
                 method: 'DELETE',
             })
         }),
-        // Job Eligible Students API
-        getJobEligibleStudents: builder.query({
-            query: (jobPostingId) => `job-postings/${jobPostingId}/eligible-students`,
-        }),
+
     }),
 })
 
@@ -173,6 +170,4 @@ export const {
     useCreateCompanyMutation,
     useUpdateCompanyMutation,
     useDeleteCompanyMutation,
-    // Job Eligible Students hook
-    useGetJobEligibleStudentsQuery,
 } = adminApi

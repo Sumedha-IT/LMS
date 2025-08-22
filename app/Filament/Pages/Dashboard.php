@@ -18,8 +18,8 @@ class Dashboard extends BaseDashboard
 
     public static function shouldRegisterNavigation(): bool
     {
-        // Hide the default Dashboard for student users
-        return !(Auth::check() && Auth::user()->is_student);
+        // Hide the default Dashboard for student users and placement students
+        return !(Auth::check() && (Auth::user()->is_student || Auth::user()->is_placement_student));
     }
 
     public function filtersForm(Form $form): Form

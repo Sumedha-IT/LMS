@@ -4,7 +4,7 @@ namespace App\Http\Controllers\api;
 
 use App\Http\Controllers\Controller;
 use App\Models\JobApplication;
-use App\Models\StudentPlacementEligibility;
+
 use Illuminate\Http\Request;
 
 class JobApplicationController extends Controller
@@ -564,7 +564,7 @@ class JobApplicationController extends Controller
             $request->validate([
                 'application_ids' => 'required|array',
                 'application_ids.*' => 'required|integer|exists:job_applications,id',
-                'status' => 'required|string|in:applied,shortlisted,interview_scheduled,interviewed,selected,rejected,withdrawn',
+                'status' => 'required|string|in:applied,shortlisted,interview_scheduled,interviewed,selected,selected_not_joined,rejected,withdrawn',
                 'job_posting_id' => 'required|integer|exists:job_postings,id'
             ]);
 
@@ -620,10 +620,7 @@ class JobApplicationController extends Controller
                 $application->update($updateData);
                 $updatedCount++;
 
-                // Update placement eligibility if status is 'selected'
-                if ($newStatus === 'selected') {
-                    $this->updatePlacementEligibility($application->user_id, $application->jobPosting);
-                }
+
 
                 // Prepare email data
                 $emailData[] = [
@@ -736,10 +733,7 @@ class JobApplicationController extends Controller
                     $application->update($updateData);
                     $revertedCount++;
 
-                    // If we're reverting from 'selected' status, update placement eligibility
-                    if ($currentStatus === 'selected' && $previousData['status'] !== 'selected') {
-                        $this->revertPlacementEligibility($application->user_id);
-                    }
+
 
                     // Prepare email data for reversion notification
                     $emailData[] = [
@@ -860,69 +854,7 @@ class JobApplicationController extends Controller
         }
     }
 
-    /**
-     * Update placement eligibility when a student is selected
-     */
-    private function updatePlacementEligibility($userId, $jobPosting)
-    {
-        try {
-            // Find or create placement eligibility record
-            $eligibility = StudentPlacementEligibility::firstOrCreate(
-                ['user_id' => $userId],
-                [
-                    'is_eligible' => true,
-                    'is_placed' => false,
-                    'profile_completion_percentage' => 0,
-                    'course_completion_status' => false,
-                    'exam_standards_met' => false,
-                    'attendance_percentage' => 0,
-                    'fees_payment_status' => false,
-                    'lab_test_cases_completed' => false,
-                    'assignments_completed' => false,
-                ]
-            );
 
-            // Update placement information
-            $eligibility->update([
-                'is_placed' => true,
-                'placement_date' => now(),
-                'placement_company' => $jobPosting->company ? $jobPosting->company->name : 'Unknown Company',
-                'placement_salary' => $jobPosting->salary ? $jobPosting->salary : null,
-                'is_eligible' => true, // Student is eligible since they got placed
-                'last_eligibility_check' => now(),
-            ]);
-
-            \Log::info("Updated placement eligibility for user {$userId}: placed at " . ($jobPosting->company ? $jobPosting->company->name : 'Unknown Company'));
-
-        } catch (\Exception $e) {
-            \Log::error("Error updating placement eligibility for user {$userId}: " . $e->getMessage());
-        }
-    }
-
-    /**
-     * Revert placement eligibility when a student's selection is undone
-     */
-    private function revertPlacementEligibility($userId)
-    {
-        try {
-            $eligibility = StudentPlacementEligibility::where('user_id', $userId)->first();
-            
-            if ($eligibility) {
-                $eligibility->update([
-                    'is_placed' => false,
-                    'placement_date' => null,
-                    'placement_company' => null,
-                    'placement_salary' => null,
-                    'last_eligibility_check' => now(),
-                ]);
-
-                \Log::info("Reverted placement eligibility for user {$userId}: placement status removed");
-            }
-
-        } catch (\Exception $e) {
-            \Log::error("Error reverting placement eligibility for user {$userId}: " . $e->getMessage());
-        }
-    }
 
     /**
      * Get email content for status updates
