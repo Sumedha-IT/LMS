@@ -510,7 +510,7 @@ const AdminPlacement = () => {
             case 'interview_scheduled': return 'warning';
             case 'interviewed': return 'primary';
             case 'selected': return 'success';
-             case 'selected_not_joined': return 'warning';
+            case 'selected_not_joined': return 'warning';
             case 'rejected': return 'error';
             case 'withdrawn': return 'secondary';
             
