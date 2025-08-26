@@ -4,20 +4,36 @@ namespace App\Http\Controllers\api;
 
 use App\Http\Controllers\Controller;
 use App\Models\JobApplication;
-
+use App\Services\ProfileCompletionService;
 use Illuminate\Http\Request;
 
 class JobApplicationController extends Controller
 {
-    public function __construct()
+    protected $profileCompletionService;
+
+    public function __construct(ProfileCompletionService $profileCompletionService)
     {
-        // Temporarily removed authentication for testing
-        // $this->middleware('auth:sanctum')->except(['index', 'store', 'show', 'update', 'destroy']);
+        $this->profileCompletionService = $profileCompletionService;
+        // Add authentication middleware for all methods
+        $this->middleware('auth:sanctum');
     }
 
     public function index(Request $request)
     {
         try {
+            $user = \Auth::user();
+            
+            // Check if user has admin/coordinator/placement coordinator permissions
+            // OR if they are requesting their own applications (students)
+            if (!$user->is_admin && !$user->is_coordinator && !$user->is_placement_coordinator) {
+                // If it's a student, they can only view their own applications
+                if ($request->filled('user_id') && $request->get('user_id') == $user->id) {
+                    // Allow access to own applications
+                } else {
+                    return response()->json(['error' => 'Unauthorized'], 403);
+                }
+            }
+            
             // Test if job_applications table exists
             $tableExists = \Schema::hasTable('job_applications');
             
@@ -184,7 +200,23 @@ class JobApplicationController extends Controller
 
     public function show($id)
     {
-        return JobApplication::with('jobPosting', 'user')->findOrFail($id);
+        try {
+            $user = \Auth::user();
+            $jobApplication = JobApplication::with('jobPosting', 'user')->findOrFail($id);
+            
+            // Check if user has admin/coordinator/placement coordinator permissions
+            // OR if they are viewing their own application (students)
+            if (!$user->is_admin && !$user->is_coordinator && !$user->is_placement_coordinator) {
+                if ($jobApplication->user_id != $user->id) {
+                    return response()->json(['error' => 'Unauthorized'], 403);
+                }
+            }
+            
+            return response()->json($jobApplication);
+        } catch (\Exception $e) {
+            \Log::error('Error in job application show:', ['error' => $e->getMessage()]);
+            return response()->json(['error' => $e->getMessage()], 500);
+        }
     }
 
     public function store(Request $request)
@@ -192,8 +224,55 @@ class JobApplicationController extends Controller
         try {
             \Log::info('Job application store request received:', $request->all());
             
-        $jobApplication = JobApplication::create($request->all());
-        return response()->json($jobApplication, 201);
+            // Get the authenticated user
+            $user = auth()->user();
+            if (!$user) {
+                return response()->json(['error' => 'Authentication required'], 401);
+            }
+
+            // Check if user is a student
+            if (!$user->is_student && !$user->is_placement_student) {
+                return response()->json(['error' => 'Only students can apply for jobs'], 403);
+            }
+
+            // Validate profile completion before allowing application
+            $profileValidation = $this->profileCompletionService->canApplyForPlacements($user);
+            
+            if (!$profileValidation['can_apply']) {
+                return response()->json([
+                    'error' => 'Profile completion requirement not met',
+                    'message' => $profileValidation['message'],
+                    'completion_percentage' => $profileValidation['completion_percentage'],
+                    'missing_sections' => $profileValidation['missing_sections'],
+                    'required_percentage' => 90
+                ], 422);
+            }
+
+            // Check if user has already applied for this job
+            $existingApplication = JobApplication::where('user_id', $user->id)
+                ->where('job_posting_id', $request->job_posting_id)
+                ->first();
+
+            if ($existingApplication) {
+                return response()->json([
+                    'error' => 'You have already applied for this job',
+                    'application_id' => $existingApplication->id
+                ], 409);
+            }
+
+            // Create the job application
+            $jobApplication = JobApplication::create([
+                'job_posting_id' => $request->job_posting_id,
+                'user_id' => $user->id,
+                'status' => 'applied',
+                'application_date' => now(),
+            ]);
+
+            return response()->json([
+                'message' => 'Job application submitted successfully',
+                'data' => $jobApplication
+            ], 201);
+            
         } catch (\Exception $e) {
             \Log::error('Error creating job application:', [
                 'message' => $e->getMessage(),
@@ -205,16 +284,46 @@ class JobApplicationController extends Controller
 
     public function update(Request $request, $id)
     {
-        $jobApplication = JobApplication::findOrFail($id);
-        $jobApplication->update($request->all());
-        return response()->json($jobApplication);
+        try {
+            $user = \Auth::user();
+            $jobApplication = JobApplication::findOrFail($id);
+            
+            // Check if user has admin/coordinator/placement coordinator permissions
+            // OR if they are updating their own application (students)
+            if (!$user->is_admin && !$user->is_coordinator && !$user->is_placement_coordinator) {
+                if ($jobApplication->user_id != $user->id) {
+                    return response()->json(['error' => 'Unauthorized'], 403);
+                }
+            }
+            
+            $jobApplication->update($request->all());
+            return response()->json($jobApplication);
+        } catch (\Exception $e) {
+            \Log::error('Error updating job application:', ['error' => $e->getMessage()]);
+            return response()->json(['error' => $e->getMessage()], 500);
+        }
     }
 
     public function destroy($id)
     {
-        $jobApplication = JobApplication::findOrFail($id);
-        $jobApplication->delete();
-        return response()->json(null, 204);
+        try {
+            $user = \Auth::user();
+            $jobApplication = JobApplication::findOrFail($id);
+            
+            // Check if user has admin/coordinator/placement coordinator permissions
+            // OR if they are deleting their own application (students)
+            if (!$user->is_admin && !$user->is_coordinator && !$user->is_placement_coordinator) {
+                if ($jobApplication->user_id != $user->id) {
+                    return response()->json(['error' => 'Unauthorized'], 403);
+                }
+            }
+            
+            $jobApplication->delete();
+            return response()->json(null, 204);
+        } catch (\Exception $e) {
+            \Log::error('Error deleting job application:', ['error' => $e->getMessage()]);
+            return response()->json(['error' => $e->getMessage()], 500);
+        }
     }
 
     /**
@@ -223,6 +332,19 @@ class JobApplicationController extends Controller
     public function search(Request $request)
     {
         try {
+            $user = \Auth::user();
+            
+            // Check if user has admin/coordinator/placement coordinator permissions
+            // OR if they are searching their own applications (students)
+            if (!$user->is_admin && !$user->is_coordinator && !$user->is_placement_coordinator) {
+                // If it's a student, they can only search their own applications
+                if ($request->filled('user_id') && $request->get('user_id') == $user->id) {
+                    // Allow access to own applications
+                } else {
+                    return response()->json(['error' => 'Unauthorized'], 403);
+                }
+            }
+            
             $query = JobApplication::with(['jobPosting.company', 'jobPosting.course', 'user']);
 
             // Apply advanced search filters
@@ -396,6 +518,13 @@ class JobApplicationController extends Controller
     public function getStatistics(Request $request)
     {
         try {
+            $user = \Auth::user();
+            
+            // Only admin, coordinator, or placement coordinator can view statistics
+            if (!$user->is_admin && !$user->is_coordinator && !$user->is_placement_coordinator) {
+                return response()->json(['error' => 'Unauthorized'], 403);
+            }
+            
             // Create date filter conditions
             $dateConditions = [];
             if ($request->filled('date_from')) {
@@ -456,6 +585,13 @@ class JobApplicationController extends Controller
     public function filterByJobPostingAndSearch(Request $request, $job_posting_id)
     {
         try {
+            $user = \Auth::user();
+            
+            // Only admin, coordinator, or placement coordinator can filter applications
+            if (!$user->is_admin && !$user->is_coordinator && !$user->is_placement_coordinator) {
+                return response()->json(['error' => 'Unauthorized'], 403);
+            }
+            
             // Validate request parameters
             $validated = $request->validate([
                 'company_name' => 'nullable|string|max:255',
@@ -560,6 +696,13 @@ class JobApplicationController extends Controller
     public function bulkUpdate(Request $request)
     {
         try {
+            $user = \Auth::user();
+            
+            // Check if user has admin/coordinator/placement coordinator permissions
+            if (!$user->is_admin && !$user->is_coordinator && !$user->is_placement_coordinator) {
+                return response()->json(['error' => 'Unauthorized'], 403);
+            }
+            
             // Validate request
             $request->validate([
                 'application_ids' => 'required|array',
@@ -682,6 +825,13 @@ class JobApplicationController extends Controller
     public function undoBulkUpdate(Request $request)
     {
         try {
+            $user = \Auth::user();
+            
+            // Check if user has admin/coordinator/placement coordinator permissions
+            if (!$user->is_admin && !$user->is_coordinator && !$user->is_placement_coordinator) {
+                return response()->json(['error' => 'Unauthorized'], 403);
+            }
+            
             // Validate request
             $request->validate([
                 'undo_key' => 'required|string'
@@ -788,6 +938,13 @@ class JobApplicationController extends Controller
     public function getUndoOperations(Request $request, $job_posting_id)
     {
         try {
+            $user = \Auth::user();
+            
+            // Check if user has admin/coordinator/placement coordinator permissions
+            if (!$user->is_admin && !$user->is_coordinator && !$user->is_placement_coordinator) {
+                return response()->json(['error' => 'Unauthorized'], 403);
+            }
+            
             $undoOperations = [];
             
             // Get all cache keys that match the pattern for this job posting

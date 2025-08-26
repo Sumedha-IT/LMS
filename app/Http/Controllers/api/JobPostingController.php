@@ -11,8 +11,8 @@ class JobPostingController extends Controller
 {
     public function __construct()
     {
-        // Temporarily removed authentication for testing
-        // $this->middleware('auth:sanctum')->except(['index', 'show', 'search', 'getStatistics']);
+        // Require authentication for all methods
+        $this->middleware('auth:sanctum');
     }
 
     /**
@@ -21,8 +21,16 @@ class JobPostingController extends Controller
     public function index(Request $request)
     {
         try {
-            // Start with base query - show all jobs for admin
+            $user = \Auth::user();
+            
+            // Start with base query - show all jobs for admin/coordinator/placement coordinator
+            // For students, show only open jobs
             $query = JobPosting::with(['company', 'course', 'postedBy']);
+            
+            // If user is not admin/coordinator/placement coordinator, filter to show only open jobs
+            if (!$user->is_admin && !$user->is_coordinator && !$user->is_placement_coordinator) {
+                $query->where('status', 'open');
+            }
 
             // Apply search filters
             $query = $this->applySearchFilters($query, $request);
@@ -354,6 +362,13 @@ class JobPostingController extends Controller
     public function store(Request $request)
     {
         try {
+            $user = \Auth::user();
+            
+            // Only admin, coordinator, or placement coordinator can create job postings
+            if (!$user->is_admin && !$user->is_coordinator && !$user->is_placement_coordinator) {
+                return response()->json(['error' => 'Unauthorized'], 403);
+            }
+            
             \Log::info('Job posting store request received:', $request->all());
             
             // All job posting data including eligibility criteria fields
@@ -424,6 +439,13 @@ class JobPostingController extends Controller
     public function update(Request $request, $id)
     {
         try {
+            $user = \Auth::user();
+            
+            // Only admin, coordinator, or placement coordinator can update job postings
+            if (!$user->is_admin && !$user->is_coordinator && !$user->is_placement_coordinator) {
+                return response()->json(['error' => 'Unauthorized'], 403);
+            }
+            
             $jobPosting = JobPosting::findOrFail($id);
             
             // All job posting data including eligibility criteria fields
@@ -488,6 +510,13 @@ class JobPostingController extends Controller
     public function destroy($id)
     {
         try {
+            $user = \Auth::user();
+            
+            // Only admin, coordinator, or placement coordinator can delete job postings
+            if (!$user->is_admin && !$user->is_coordinator && !$user->is_placement_coordinator) {
+                return response()->json(['error' => 'Unauthorized'], 403);
+            }
+            
             \Log::info('Attempting to delete job posting', ['id' => $id]);
             
             $jobPosting = JobPosting::with(['applications'])->findOrFail($id);

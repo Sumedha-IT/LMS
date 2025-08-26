@@ -11,8 +11,8 @@ class CompanyController extends Controller
 {
     public function __construct()
     {
-        // Allow public access to all methods for testing
-        $this->middleware('auth:sanctum')->except(['index', 'store', 'show', 'update', 'destroy', 'test']);
+        // Require authentication for all methods
+        $this->middleware('auth:sanctum');
     }
 
     public function test()
@@ -46,12 +46,26 @@ class CompanyController extends Controller
     // GET /api/companies
     public function index()
     {
+        $user = \Auth::user();
+        
+        // Check if user has admin/coordinator/placement coordinator permissions
+        if (!$user->is_admin && !$user->is_coordinator && !$user->is_placement_coordinator) {
+            return response()->json(['error' => 'Unauthorized'], 403);
+        }
+        
         return response()->json(Company::all());
     }
 
     // GET /api/companies/{id}
     public function show($id)
     {
+        $user = \Auth::user();
+        
+        // Check if user has admin/coordinator/placement coordinator permissions
+        if (!$user->is_admin && !$user->is_coordinator && !$user->is_placement_coordinator) {
+            return response()->json(['error' => 'Unauthorized'], 403);
+        }
+        
         $company = Company::find($id);
 
         if (!$company) {
@@ -64,6 +78,13 @@ class CompanyController extends Controller
     // POST /api/companies
     public function store(Request $request)
     {
+        $user = \Auth::user();
+        
+        // Check if user has admin/coordinator/placement coordinator permissions
+        if (!$user->is_admin && !$user->is_coordinator && !$user->is_placement_coordinator) {
+            return response()->json(['error' => 'Unauthorized'], 403);
+        }
+        
         \Log::info('Company store request received:', $request->all());
         
         try {

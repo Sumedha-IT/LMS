@@ -17,9 +17,9 @@ class AdminPlacementPage extends Page
 
     public function mount(): void
     {
-        // Only allow admin, coordinator, and tutor to access this page
+        // Only allow admin, coordinator, tutor, and placement coordinator to access this page
         $user = Auth::user();
-        $allowedRoles = ['Administrator', 'Academic Coordinator', 'Tutor'];
+        $allowedRoles = ['Administrator', 'Academic Coordinator', 'Tutor', 'Placement Coordinator'];
         
         if (!$user || !in_array($user->role->name, $allowedRoles)) {
             redirect()->to('/administrator/dashboard');
@@ -29,7 +29,7 @@ class AdminPlacementPage extends Page
     public static function shouldRegisterNavigation(): bool
     {
         $user = Auth::user();
-        $allowedRoles = ['Administrator', 'Academic Coordinator', 'Tutor'];
+        $allowedRoles = ['Administrator', 'Academic Coordinator', 'Tutor', 'Placement Coordinator'];
         
         return $user && $user->role && in_array($user->role->name, $allowedRoles);
     }

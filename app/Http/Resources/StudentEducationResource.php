@@ -24,8 +24,8 @@ class StudentEducationResource extends JsonResource
             'institute_name'=>$this->institute_name,
             'location'=>$this->location,
             'duration_from'=>$this->duration_from,
-            'duration_to'=>$this->duration_to
-            
+            'duration_to'=>$this->duration_to,
+            'year_of_passout'=>$this->year_of_passout
         ];
     }
 }

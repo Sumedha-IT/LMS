@@ -104,6 +104,7 @@ class User extends Authenticatable implements HasTenants, FilamentUser, HasAvata
     protected $tutorGroup = [7];
     protected $coordinatorGroup = [5];
     protected $placementStudentGroup = [11];
+    protected $placementCoordinatorGroup = [10];
 
 
     public function studentEducation(){
@@ -147,6 +148,11 @@ class User extends Authenticatable implements HasTenants, FilamentUser, HasAvata
     public function getIsPlacementStudentAttribute()
     {
         return $this->role && in_array($this->role->id, $this->placementStudentGroup) ? true : false;
+    }
+
+    public function getIsPlacementCoordinatorAttribute()
+    {
+        return $this->role && in_array($this->role->id, $this->placementCoordinatorGroup) ? true : false;
     }
 
     public function user_type()
@@ -390,5 +396,29 @@ class User extends Authenticatable implements HasTenants, FilamentUser, HasAvata
     public function jobApplications()
     {
         return $this->hasMany(JobApplication::class);
+    }
+
+    /**
+     * Get profile completion percentage
+     *
+     * @return int
+     */
+    public function getProfileCompletionPercentage()
+    {
+        $service = app(\App\Services\ProfileCompletionService::class);
+        $completion = $service->calculateProfileCompletion($this);
+        return $completion['overall_percentage'];
+    }
+
+    /**
+     * Check if user can apply for placements
+     *
+     * @return bool
+     */
+    public function canApplyForPlacements()
+    {
+        $service = app(\App\Services\ProfileCompletionService::class);
+        $eligibility = $service->canApplyForPlacements($this);
+        return $eligibility['can_apply'];
     }
 }

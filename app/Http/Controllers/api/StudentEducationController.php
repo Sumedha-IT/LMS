@@ -27,8 +27,9 @@ class StudentEducationController extends Controller
     public function store (Request $request){
         $user=$request->user();
 
-        // Get the degree type to check if it's bachelor's or master's
+        // Get the degree type to check if it's school education (10th or 12th)
         $degreeType = DegreeType::find($request->degree_type_id);
+        $isSchoolEducation = $degreeType && in_array($degreeType->id, [1, 2]); // 10th and 12th class
         
         // Base validation rules
         $rules = [
@@ -36,9 +37,22 @@ class StudentEducationController extends Controller
             'percentage_cgpa' => 'required|numeric',
             'institute_name' => 'required|string',
             'location' => 'required|string',
-            'duration_from' => 'required|date',
-            'duration_to' => 'required|date|after:duration_from'
         ];
+
+        // Add duration or year validation based on education type
+        if ($isSchoolEducation) {
+            // For school education (10th/12th), require year_of_passout
+            $rules['year_of_passout'] = 'required|string|max:4';
+            // Make duration fields optional for school education
+            $rules['duration_from'] = 'nullable|string';
+            $rules['duration_to'] = 'nullable|string';
+        } else {
+            // For other education types, require duration fields
+            $rules['duration_from'] = 'required|string';
+            $rules['duration_to'] = 'required|string';
+            // Make year_of_passout optional for non-school education
+            $rules['year_of_passout'] = 'nullable|string|max:4';
+        }
 
         // Add specialization validation only for bachelor's and master's degrees
         if ($degreeType && in_array($degreeType->name, ['Bachelors', 'Masters'])) {
@@ -58,7 +72,17 @@ class StudentEducationController extends Controller
 
         $request->validate($rules);
 
-        $education=$user->studentEducation()->create($request->all(),['user_id'=>$user->id]);
+        // Debug logging
+        \Log::info('Education data received:', $request->all());
+        \Log::info('Year of passout value:', ['year_of_passout' => $request->input('year_of_passout')]);
+
+        $educationData = $request->all();
+        $educationData['user_id'] = $user->id;
+        $education = $user->studentEducation()->create($educationData);
+        
+        // Debug logging after creation
+        \Log::info('Education created:', $education->toArray());
+        
         return new StudentEducationResource($education);
     }
     public function Get_education(Request $request){
@@ -74,9 +98,9 @@ class StudentEducationController extends Controller
         // Debug logging
         \Log::info('GetUserEducation - User ID: ' . $user->id . ', Role ID: ' . ($user->role ? $user->role->id : 'null') . ', Is Admin: ' . ($user->is_admin ? 'true' : 'false'));
         
-        // Allow admin users (role_id = 1) to view any user's education
+        // Allow admin, coordinator, and placement coordinator users to view any user's education
         // You can add more specific permission checks here
-        if (!$user->is_admin && $user->id != $userId) {
+        if (!$user->is_admin && !$user->is_coordinator && !$user->is_placement_coordinator && $user->id != $userId) {
             \Log::warning('GetUserEducation - Unauthorized access attempt. User ID: ' . $user->id . ', Target User ID: ' . $userId);
             return response()->json(['message' => 'Unauthorized'], 403);
         }
@@ -97,8 +121,9 @@ class StudentEducationController extends Controller
             return response()->json(['message' => 'Education record not found'], 404);
         }
 
-        // Get the degree type to check if it's bachelor's or master's
+        // Get the degree type to check if it's school education (10th or 12th)
         $degreeType = DegreeType::find($request->degree_type_id);
+        $isSchoolEducation = $degreeType && in_array($degreeType->id, [1, 2]); // 10th and 12th class
         
         // Base validation rules
         $rules = [
@@ -106,9 +131,22 @@ class StudentEducationController extends Controller
             'percentage_cgpa' => 'required|numeric',
             'institute_name' => 'required|string',
             'location' => 'required|string',
-            'duration_from' => 'required|date',
-            'duration_to' => 'required|date|after:duration_from'
         ];
+
+        // Add duration or year validation based on education type
+        if ($isSchoolEducation) {
+            // For school education (10th/12th), require year_of_passout
+            $rules['year_of_passout'] = 'required|string|max:4';
+            // Make duration fields optional for school education
+            $rules['duration_from'] = 'nullable|string';
+            $rules['duration_to'] = 'nullable|string';
+        } else {
+            // For other education types, require duration fields
+            $rules['duration_from'] = 'required|string';
+            $rules['duration_to'] = 'required|string';
+            // Make year_of_passout optional for non-school education
+            $rules['year_of_passout'] = 'nullable|string|max:4';
+        }
 
         // Add specialization validation only for bachelor's and master's degrees
         if ($degreeType && in_array($degreeType->name, ['Bachelors', 'Masters'])) {

@@ -63,7 +63,11 @@ class UserController extends Controller
             'qualifications' => 'required|array',
             'state_id' => 'required|integer',
             'aadhaar_number' => 'required|integer|digits:12',
-            'linkedin_profile' => 'nullable|url',
+            'linkedin_profile' => [
+                'nullable',
+                'url',
+                'regex:/^https?:\/\/(www\.)?linkedin\.com\/(in|pub|company)\/[a-zA-Z0-9-]+\/?$/'
+            ],
             'upload_resume' => 'required|file|mimes:pdf,doc,docx',
             'upload_aadhar' => 'required|file|mimes:pdf,doc,docx',
             'avatar_url' => 'nullable|file|mimes:jpeg,jpg,png,gif',

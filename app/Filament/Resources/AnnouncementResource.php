@@ -31,8 +31,8 @@ class AnnouncementResource extends Resource
 
     public static function shouldRegisterNavigation(): bool
     {
-        // Show in navigation for admin, academic coordinator and tutor users
-        return auth()->check() && (auth()->user()->is_admin || auth()->user()->is_coordinator || auth()->user()->is_tutor);
+        // Show in navigation for admin, academic coordinator, tutor, and placement coordinator users
+        return auth()->check() && (auth()->user()->is_admin || auth()->user()->is_coordinator || auth()->user()->is_tutor || auth()->user()->is_placement_coordinator);
     }
 
 
@@ -58,7 +58,7 @@ class AnnouncementResource extends Resource
                             ->columnSpanFull(),
                         Forms\Components\Radio::make('visibility')
                             ->label('Announcement visibility')
-                            ->hidden(!(auth()->user()->is_admin || auth()->user()->is_coordinator || auth()->user()->is_tutor))
+                            ->hidden(!(auth()->user()->is_admin || auth()->user()->is_coordinator || auth()->user()->is_tutor || auth()->user()->is_placement_coordinator))
                             ->options([
                                 'existing_user' => 'Visible to existing users only',
                                 'both' => 'Visible to both existing and new users in future'
@@ -71,12 +71,12 @@ class AnnouncementResource extends Resource
                                 'course_wise' => 'Course Wise'
                             ])
                             ->reactive()
-                            ->hidden(!(auth()->user()->is_admin || auth()->user()->is_coordinator || auth()->user()->is_tutor))
+                            ->hidden(!(auth()->user()->is_admin || auth()->user()->is_coordinator || auth()->user()->is_tutor || auth()->user()->is_placement_coordinator))
                             ->required(),
                         Forms\Components\Select::make('course_id')
                             ->label('Course')
                             ->options(function () {
-                                if (auth()->user()->is_admin || auth()->user()->is_coordinator) {
+                                if (auth()->user()->is_admin || auth()->user()->is_coordinator || auth()->user()->is_placement_coordinator) {
                                     return \App\Models\Course::all()->pluck('name', 'id');
                                 } else if (auth()->user()->is_tutor) {
                                     // Only show courses assigned to the tutor's batches
@@ -86,13 +86,13 @@ class AnnouncementResource extends Resource
                                 return [];
                             })
                             ->preload()
-                            ->hidden(fn(Forms\Get $get): bool => $get('audience') != 'course_wise' || !(auth()->user()->is_admin || auth()->user()->is_coordinator || auth()->user()->is_tutor))
+                            ->hidden(fn(Forms\Get $get): bool => $get('audience') != 'course_wise' || !(auth()->user()->is_admin || auth()->user()->is_coordinator || auth()->user()->is_tutor || auth()->user()->is_placement_coordinator))
                             ->required(),
                         Forms\Components\Select::make('batch_ids')
                             ->label('Batches')
                             ->options(function (callable $get) {
                                 $courseId = $get('course_id');
-                                if (auth()->user()->is_admin || auth()->user()->is_coordinator) {
+                                if (auth()->user()->is_admin || auth()->user()->is_coordinator || auth()->user()->is_placement_coordinator) {
                                     if ($courseId) {
                                         return \App\Models\Course::with('batches')->find($courseId)?->batches->pluck('name', 'id') ?? [];
                                     }
@@ -109,7 +109,7 @@ class AnnouncementResource extends Resource
                             })
                             ->preload()
                             ->multiple()
-                            ->hidden(fn(Forms\Get $get): bool => $get('audience') != 'course_wise' || !(auth()->user()->is_admin || auth()->user()->is_coordinator || auth()->user()->is_tutor))
+                            ->hidden(fn(Forms\Get $get): bool => $get('audience') != 'course_wise' || !(auth()->user()->is_admin || auth()->user()->is_coordinator || auth()->user()->is_tutor || auth()->user()->is_placement_coordinator))
                             ->required()
                     ])->columns(2)
             ]);

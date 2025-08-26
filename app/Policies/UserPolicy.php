@@ -18,7 +18,7 @@ class UserPolicy
      */
     public function viewAny(User $user): bool
     {
-        return $user->is_admin;
+        return $user->is_admin || $user->is_coordinator || $user->is_placement_coordinator;
         return $user->can('view_any_user');
     }
 
@@ -30,7 +30,7 @@ class UserPolicy
      */
     public function view(User $user): bool
     {
-        return $user->is_admin;
+        return $user->is_admin || $user->is_coordinator || $user->is_placement_coordinator;
         return $user->can('view_user');
     }
 
@@ -42,7 +42,7 @@ class UserPolicy
      */
     public function create(User $user): bool
     {
-        return $user->is_admin;
+        return $user->is_admin || $user->is_coordinator || $user->is_placement_coordinator;
         return $user->can('create_user');
     }
 
@@ -54,7 +54,7 @@ class UserPolicy
      */
     public function update(User $user): bool
     {
-        return $user->is_admin;
+        return $user->is_admin || $user->is_coordinator || $user->is_placement_coordinator;
         return $user->can('update_user');
     }
 
@@ -66,7 +66,7 @@ class UserPolicy
      */
     public function delete(User $user): bool
     {
-        return $user->is_admin;
+        return $user->is_admin || $user->is_coordinator || $user->is_placement_coordinator;
         return $user->can('delete_user');
     }
 
@@ -78,7 +78,7 @@ class UserPolicy
      */
     public function deleteAny(User $user): bool
     {
-        return $user->is_admin;
+        return $user->is_admin || $user->is_coordinator || $user->is_placement_coordinator;
         return $user->can('delete_any_user');
     }
 

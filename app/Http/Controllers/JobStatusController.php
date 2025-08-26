@@ -8,11 +8,19 @@ use App\Models\Job;
 use App\Models\JobProfile;
 use App\Models\JobStatus;
 use App\Models\User;
+use App\Services\ProfileCompletionService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 
 class JobStatusController extends Controller
 {
+    protected $profileCompletionService;
+
+    public function __construct(ProfileCompletionService $profileCompletionService)
+    {
+        $this->profileCompletionService = $profileCompletionService;
+    }
+
     public function applyJob(User $user, Job $job)
     {
 
@@ -21,23 +29,18 @@ class JobStatusController extends Controller
             return response()->json(['message' => 'Only students can apply for the job', 'status' => 400, 'success' => false], 400);
         }
 
-        $jobProfile = JobProfile::where('user_id', $user->id)->first();
-        if(empty($jobProfile)){
-            return response()->json(['message' => 'Complete your job profile', 'status' => 400, 'success' => false], 400);
-
-        }
-
-        $profilePercentage =  (int)($jobProfile->education()->count() > 0);
-        $profilePercentage +=  (int)($jobProfile->experience()->count() > 0);
-        $profilePercentage +=  (int)($jobProfile->projects()->count() > 0);
-        $profilePercentage +=  (int)($jobProfile->certificates()->where('is_resume', false)->count() > 0);
-        $profilePercentage +=  (int)($jobProfile->certificates()->where('user_id', $user->id)->where('is_resume', true)->count() > 0);
-        $profilePercentage += (int)(!empty($jobProfile->about_me));
-
-        $profilePercentage = ($profilePercentage / 6 ) * 100 ;
-        if($profilePercentage < 80) {
-            return response()->json(['message' => 'Profile completion must be atleast 80% ', 'status' => 400, 'success' => false], 400);
-
+        // Validate profile completion using the new service
+        $profileValidation = $this->profileCompletionService->canApplyForPlacements($user);
+        
+        if (!$profileValidation['can_apply']) {
+            return response()->json([
+                'message' => $profileValidation['message'],
+                'status' => 400,
+                'success' => false,
+                'completion_percentage' => $profileValidation['completion_percentage'],
+                'missing_sections' => $profileValidation['missing_sections'],
+                'required_percentage' => 90
+            ], 400);
         } 
 
         try {

@@ -25,9 +25,9 @@ class ProjectController extends Controller
         // Debug logging
         \Log::info('getUserProjects - User ID: ' . $user->id . ', Role ID: ' . ($user->role ? $user->role->id : 'null') . ', Is Admin: ' . ($user->is_admin ? 'true' : 'false'));
         
-        // Allow admin users (role_id = 1) to view any user's projects
+        // Allow admin, coordinator, and placement coordinator users to view any user's projects
         // You can add more specific permission checks here
-        if (!$user->is_admin && $user->id != $userId) {
+        if (!$user->is_admin && !$user->is_coordinator && !$user->is_placement_coordinator && $user->id != $userId) {
             \Log::warning('getUserProjects - Unauthorized access attempt. User ID: ' . $user->id . ', Target User ID: ' . $userId);
             return response()->json(['message' => 'Unauthorized'], 403);
         }

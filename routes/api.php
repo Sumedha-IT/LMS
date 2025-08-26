@@ -50,6 +50,7 @@ use App\Http\Controllers\api\JobPostingController;
 use App\Http\Controllers\api\JobApplicationController;
 use App\Http\Controllers\api\PlacementCriteriaController;
 use App\Http\Controllers\api\JobEligibilityCriteriaController;
+use App\Http\Controllers\api\ProfileCompletionController;
 
 /*
 |--------------------------------------------------------------------------
@@ -488,6 +489,10 @@ Route::middleware(['auth:sanctum'])->group(function () {
 Route::middleware(['auth:sanctum'])->group(function () {
     Route::get('/users/{id}', [UserController::class, 'show']);
     Route::apiResource('companies', CompanyController::class);
+    
+    // Profile Completion Routes
+    Route::get('/profile-completion', [ProfileCompletionController::class, 'index']);
+    Route::get('/profile-completion/can-apply', [ProfileCompletionController::class, 'canApply']);
     
     // Job Applications Search Routes (must be before apiResource)
     Route::get('job-applications/search', [JobApplicationController::class, 'search']);

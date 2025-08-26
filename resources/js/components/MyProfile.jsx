@@ -40,7 +40,6 @@ const mainMenu = [
   { id: 'projects', label: 'Projects', icon: <MdBuild /> },
   { id: 'certifications', label: 'Certifications', icon: <MdStar /> },
   { id: 'resume-upload', label: 'Resume Upload', icon: <AiOutlineFilePdf /> },
-  { id: 'resume', label: 'Export as Resume', icon: <AiOutlineFilePdf /> },
 ];
 
 // Add this after the mainMenu constant
@@ -213,6 +212,7 @@ const MyProfile = () => {
   const [specializations, setSpecializations] = useState([]);
   const [showOtherSpecialization, setShowOtherSpecialization] = useState(false);
   const [states, setStates] = useState([]); // Add states state
+  const [linkedinError, setLinkedinError] = useState(''); // Add LinkedIn validation error state
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -282,6 +282,36 @@ const MyProfile = () => {
     fileUrl: '',
     fileName: ''
   });
+  const [profileCompletionData, setProfileCompletionData] = useState(null);
+  const [showProfileDetails, setShowProfileDetails] = useState(false);
+
+  // Function to fetch profile completion data
+  const fetchProfileCompletion = async () => {
+    try {
+      const userInfo = getCookie("user_info");
+      let userData;
+
+      if (userInfo) {
+        userData = JSON.parse(userInfo);
+      } else {
+        console.error("No user info found in cookies");
+        return;
+      }
+
+      const response = await axios.get('/api/profile-completion', {
+        headers: {
+          'Accept': 'application/json',
+          'Authorization': `Bearer ${userData.token}`,
+        }
+      });
+
+      if (response.data.success) {
+        setProfileCompletionData(response.data.data);
+      }
+    } catch (error) {
+      console.error('Error fetching profile completion:', error);
+    }
+  };
 
   useEffect(() => {
     // Fetch basic profile data on component mount
@@ -307,6 +337,9 @@ const MyProfile = () => {
           baseURL: API_URL
         });
         setStates(statesResponse.data.data || []);
+
+        // Fetch profile completion data
+        await fetchProfileCompletion();
 
         console.log('Fetching profile with token:', userData.token);
 
@@ -424,14 +457,24 @@ const MyProfile = () => {
             baseURL: API_URL // Ensure the base URL is set correctly
           });
 
-          // Process education data to ensure percentage_cgpa is a number
+          // Process education data to ensure percentage_cgpa is a number and add year_of_passout for school education
           const rawEducationData = educationResponse.data.data || [];
           console.log('Raw education data from API:', rawEducationData);
 
-          const educationData = rawEducationData.map(edu => ({
+          const educationData = rawEducationData.map(edu => {
+            const degreeTypeId = edu.degree_type_id || (edu.degree_type && edu.degree_type.id);
+            const isSchoolEducation = ['1', '2', 1, 2].includes(Number(degreeTypeId));
+            
+            // Debug logging for year_of_passout
+            console.log(`Education ID ${edu.id} - year_of_passout from API:`, edu.year_of_passout);
+            
+            return {
             ...edu,
-            percentage_cgpa: typeof edu.percentage_cgpa === 'string' ? parseFloat(edu.percentage_cgpa) : edu.percentage_cgpa
-          }));
+              percentage_cgpa: typeof edu.percentage_cgpa === 'string' ? parseFloat(edu.percentage_cgpa) : edu.percentage_cgpa,
+              // Use the year_of_passout from database if it exists, otherwise keep it as is
+              year_of_passout: edu.year_of_passout || null
+            };
+          });
 
           console.log('Processed education data:', educationData);
 
@@ -538,11 +581,17 @@ const MyProfile = () => {
       // Log the education data to see what we're getting from the API
       // console.log('Education data from API:', response.data.data);
 
-      // Process the education data to ensure percentage_cgpa is a number
-      const processedEducation = (response.data.data || []).map(edu => ({
-        ...edu,
-        percentage_cgpa: typeof edu.percentage_cgpa === 'string' ? parseFloat(edu.percentage_cgpa) : edu.percentage_cgpa
-      }));
+                // Process the education data to ensure percentage_cgpa is a number and handle year_of_passout
+          const processedEducation = (response.data.data || []).map(edu => {
+            // Debug logging for year_of_passout
+            console.log(`fetchEducationData - Education ID ${edu.id} - year_of_passout from API:`, edu.year_of_passout);
+            
+            return {
+              ...edu,
+              percentage_cgpa: typeof edu.percentage_cgpa === 'string' ? parseFloat(edu.percentage_cgpa) : edu.percentage_cgpa,
+              year_of_passout: edu.year_of_passout || null
+            };
+          });
 
       // console.log('Processed education data:', processedEducation);
 
@@ -559,8 +608,30 @@ const MyProfile = () => {
     const errors = [];
     if (!data.degree_type_id) errors.push('Degree type is required');
     if (!data.institute_name) errors.push('Institute name is required');
+    
+    // Check if it's school education (10th or 12th)
+    const isSchoolEducation = ['1', '2', 1, 2].includes(Number(data.degree_type_id));
+    
+    if (isSchoolEducation) {
+      if (!data.year_of_passout) errors.push('Year of passout is required');
+      if (data.year_of_passout && (isNaN(data.year_of_passout) || data.year_of_passout < 1950 || data.year_of_passout > new Date().getFullYear() + 1)) {
+        errors.push('Year of passout must be a valid year between 1950 and ' + (new Date().getFullYear() + 1));
+      }
+    } else {
     if (!data.duration_from) errors.push('Start date is required');
     if (!data.duration_to) errors.push('End date is required');
+      
+      // Validate that duration_to is after duration_from
+      if (data.duration_from && data.duration_to) {
+        const fromDate = new Date(data.duration_from);
+        const toDate = new Date(data.duration_to);
+        
+        if (fromDate >= toDate) {
+          errors.push('End date must be after start date');
+        }
+      }
+    }
+    
     if (!data.percentage_cgpa) errors.push('Percentage/CGPA is required');
     if (data.percentage_cgpa && (isNaN(data.percentage_cgpa) || data.percentage_cgpa < 0 || data.percentage_cgpa > 100)) {
       errors.push('Percentage/CGPA must be a number between 0 and 100');
@@ -642,15 +713,32 @@ const MyProfile = () => {
   };
 
   const handleSaveEducation = (edu, index) => {
+    // Check if it's school education (10th or 12th)
+    const degreeTypeId = edu.degree_type_id || edu.degree_type?.id;
+    const isSchoolEducation = ['1', '2', 1, 2].includes(Number(degreeTypeId));
+    
+    // Validate the education data first
+    const validationErrors = validateEducationData(edu);
+    if (validationErrors.length > 0) {
+      validationErrors.forEach(error => toast.error(error));
+      return;
+    }
+
     // Check if all required fields are present
     const requiredFields = {
-      degree_type_id: edu.degree_type_id || edu.degree_type?.id,
+      degree_type_id: degreeTypeId,
       institute_name: edu.institute_name,
-      duration_from: edu.duration_from,
-      duration_to: edu.duration_to,
       percentage_cgpa: edu.percentage_cgpa,
       location: edu.location
     };
+
+    // Add duration fields based on education type
+    if (isSchoolEducation) {
+      requiredFields.year_of_passout = edu.year_of_passout;
+    } else {
+      requiredFields.duration_from = edu.duration_from;
+      requiredFields.duration_to = edu.duration_to;
+    }
 
     // Check if all required fields have values
     const hasAllRequired = Object.values(requiredFields).every(val => val !== undefined && val !== null && val !== '');
@@ -658,15 +746,21 @@ const MyProfile = () => {
     if (hasAllRequired) {
       const educationData = {
         id: edu.id, // This will be undefined for new records
-        degree_type_id: edu.degree_type_id || edu.degree_type?.id,
+        degree_type_id: degreeTypeId,
         specialization_id: edu.specialization_id || edu.specialization?.id || null,
         other_specialization: edu.other_specialization || null,
         percentage_cgpa: typeof edu.percentage_cgpa === 'number' ? edu.percentage_cgpa : parseFloat(edu.percentage_cgpa || '0'),
         institute_name: edu.institute_name.trim(),
         location: edu.location.trim(),
-        duration_from: edu.duration_from,
-        duration_to: edu.duration_to
+        duration_from: isSchoolEducation ? null : edu.duration_from,
+        duration_to: isSchoolEducation ? null : edu.duration_to,
+        year_of_passout: isSchoolEducation ? edu.year_of_passout : null
       };
+
+      // Debug logging
+      console.log('Education data being sent:', educationData);
+      console.log('Is school education:', isSchoolEducation);
+      console.log('Year of passout value:', edu.year_of_passout);
 
       if (edu.id) {
         // If we have an ID, it's an update
@@ -795,11 +889,39 @@ const MyProfile = () => {
     return errors;
   };
 
+  // Function to validate LinkedIn URL
+  const validateLinkedInUrl = (url) => {
+    if (!url || !url.trim()) return 'LinkedIn profile is required';
+    
+    // Remove whitespace
+    const cleanUrl = url.trim();
+    
+    // LinkedIn URL patterns
+    const linkedinPatterns = [
+      /^https?:\/\/(www\.)?linkedin\.com\/in\/[a-zA-Z0-9-]+\/?$/,
+      /^https?:\/\/(www\.)?linkedin\.com\/pub\/[a-zA-Z0-9-]+\/?$/,
+      /^https?:\/\/(www\.)?linkedin\.com\/company\/[a-zA-Z0-9-]+\/?$/
+    ];
+    
+    // Check if URL matches any LinkedIn pattern
+    const isValidLinkedIn = linkedinPatterns.some(pattern => pattern.test(cleanUrl));
+    
+    if (!isValidLinkedIn) {
+      return 'Please enter a valid LinkedIn profile URL (e.g., https://linkedin.com/in/yourprofile)';
+    }
+    
+    return null; // No error
+  };
+
   const validateDocs = (data) => {
     const errors = [];
     if (!data.aadhaar_number?.trim()) errors.push('Aadhaar number is required');
     if (!data.upload_aadhar && !data.aadhar_path) errors.push('Aadhaar document is required');
-    if (!data.linkedin_profile?.trim()) errors.push('LinkedIn profile is required');
+    
+    // Validate LinkedIn URL
+    const linkedinError = validateLinkedInUrl(data.linkedin_profile);
+    if (linkedinError) errors.push(linkedinError);
+    
     if (!data.passport_photo && !data.passport_photo_path) errors.push('Passport size photo is required');
     return errors;
   };
@@ -870,6 +992,20 @@ const MyProfile = () => {
           ...prev,
           [name]: value
         }));
+      }
+    } else if (name === 'linkedin_profile') {
+      // Update form data first
+      setFormData(prev => ({
+        ...prev,
+        [name]: value
+      }));
+      
+      // Validate LinkedIn URL in real-time
+      if (value.trim()) {
+        const error = validateLinkedInUrl(value);
+        setLinkedinError(error || '');
+      } else {
+        setLinkedinError('');
       }
     } else {
       setFormData(prev => ({
@@ -1178,7 +1314,11 @@ const MyProfile = () => {
     // Documents
     if (!data.aadhaar_number?.trim()) errors.push('Aadhaar number is required');
     if (!data.upload_aadhar && !data.aadhar_path) errors.push('Aadhaar document is required');
-    if (!data.linkedin_profile?.trim()) errors.push('LinkedIn profile is required');
+    
+    // Validate LinkedIn URL
+    const linkedinError = validateLinkedInUrl(data.linkedin_profile);
+    if (linkedinError) errors.push(linkedinError);
+    
     if (!data.passport_photo && !data.passport_photo_path) errors.push('Passport size photo is required');
 
     // Parent Details
@@ -1190,7 +1330,249 @@ const MyProfile = () => {
     return errors;
   };
 
-  // Update the handleSubmit function
+  // Save functions for individual tabs
+  const saveBasicDetails = async () => {
+    try {
+      const errors = validateBasicDetails(formData);
+      if (errors.length > 0) {
+        errors.forEach(error => toast.error(error));
+        return;
+      }
+
+      setLoading(true);
+      const userInfo = getCookie("user_info");
+      const userData = userInfo ? JSON.parse(userInfo) : null;
+
+      if (!userData?.token) {
+        toast.error('User authentication required');
+        return;
+      }
+
+      const formDataToSend = new FormData();
+      const jsonData = {
+        name: formData.name?.trim(),
+        email: formData.email?.trim().toLowerCase(),
+        gender: formData.gender,
+        birthday: formData.birthday,
+        registration_number: formData.registration_number,
+        domain_id: formData.domain_id,
+        country_code: formData.country_code,
+        phone: formData.phone
+      };
+
+      formDataToSend.append('data', JSON.stringify(jsonData));
+
+      const response = await axios.post(`${API_URL}/profile`, formDataToSend, {
+        headers: {
+          'Accept': 'application/json',
+          'Authorization': `Bearer ${userData.token}`,
+          'Content-Type': 'multipart/form-data',
+        },
+        withCredentials: true,
+      });
+
+      if (response.data.success) {
+        setSuccess('Basic details updated successfully!');
+        toast.success('Basic details updated successfully!');
+        if (response.data.user) {
+          setFormData(prev => ({
+            ...prev,
+            ...response.data.user
+          }));
+        }
+      } else {
+        throw new Error(response.data.message || 'Update failed');
+      }
+    } catch (error) {
+      setError(error.response?.data?.message || 'Failed to update basic details');
+      toast.error(error.response?.data?.message || 'Failed to update basic details');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const saveAdditionalDetails = async () => {
+    try {
+      const errors = validateAdditionalDetails(formData);
+      if (errors.length > 0) {
+        errors.forEach(error => toast.error(error));
+        return;
+      }
+
+      setLoading(true);
+      const userInfo = getCookie("user_info");
+      const userData = userInfo ? JSON.parse(userInfo) : null;
+
+      if (!userData?.token) {
+        toast.error('User authentication required');
+        return;
+      }
+
+      const formDataToSend = new FormData();
+      const jsonData = {
+        address: formData.address?.trim(),
+        city: formData.city?.trim(),
+        state_id: formData.state_id,
+        pincode: formData.pincode?.trim()
+      };
+
+      formDataToSend.append('data', JSON.stringify(jsonData));
+
+      const response = await axios.post(`${API_URL}/profile`, formDataToSend, {
+        headers: {
+          'Accept': 'application/json',
+          'Authorization': `Bearer ${userData.token}`,
+          'Content-Type': 'multipart/form-data',
+        },
+        withCredentials: true,
+      });
+
+      if (response.data.success) {
+        setSuccess('Additional details updated successfully!');
+        toast.success('Additional details updated successfully!');
+        setLinkedinError(''); // Clear LinkedIn validation error on successful save
+        if (response.data.user) {
+          setFormData(prev => ({
+            ...prev,
+            ...response.data.user
+          }));
+        }
+      } else {
+        throw new Error(response.data.message || 'Update failed');
+      }
+    } catch (error) {
+      setError(error.response?.data?.message || 'Failed to update additional details');
+      toast.error(error.response?.data?.message || 'Failed to update additional details');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const saveDocs = async () => {
+    try {
+      const errors = validateDocs(formData);
+      if (errors.length > 0) {
+        errors.forEach(error => toast.error(error));
+        return;
+      }
+
+      setLoading(true);
+      const userInfo = getCookie("user_info");
+      const userData = userInfo ? JSON.parse(userInfo) : null;
+
+      if (!userData?.token) {
+        toast.error('User authentication required');
+        return;
+      }
+
+      const formDataToSend = new FormData();
+
+      // Handle file uploads
+      const fileFields = ['upload_aadhar', 'passport_photo'];
+      fileFields.forEach(field => {
+        if (formData[field] instanceof File) {
+          formDataToSend.append(field, formData[field]);
+        }
+      });
+
+      const jsonData = {
+        aadhaar_number: formData.aadhaar_number?.trim(),
+        linkedin_profile: formData.linkedin_profile?.trim()
+      };
+
+      formDataToSend.append('data', JSON.stringify(jsonData));
+
+      const response = await axios.post(`${API_URL}/profile`, formDataToSend, {
+        headers: {
+          'Accept': 'application/json',
+          'Authorization': `Bearer ${userData.token}`,
+          'Content-Type': 'multipart/form-data',
+        },
+        withCredentials: true,
+      });
+
+              if (response.data.success) {
+          setSuccess('Documents updated successfully!');
+          toast.success('Documents updated successfully!');
+          setLinkedinError(''); // Clear LinkedIn validation error on successful save
+          if (response.data.user) {
+            setFormData(prev => ({
+              ...prev,
+              ...response.data.user
+            }));
+          }
+          // Refresh profile completion data
+          await fetchProfileCompletion();
+        } else {
+        throw new Error(response.data.message || 'Update failed');
+      }
+    } catch (error) {
+      setError(error.response?.data?.message || 'Failed to update documents');
+      toast.error(error.response?.data?.message || 'Failed to update documents');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const saveParentDetails = async () => {
+    try {
+      const errors = validateParentDetails(formData);
+      if (errors.length > 0) {
+        errors.forEach(error => toast.error(error));
+        return;
+      }
+
+      setLoading(true);
+      const userInfo = getCookie("user_info");
+      const userData = userInfo ? JSON.parse(userInfo) : null;
+
+      if (!userData?.token) {
+        toast.error('User authentication required');
+        return;
+      }
+
+      const formDataToSend = new FormData();
+      const jsonData = {
+        parent_name: formData.parent_name?.trim(),
+        parent_email: formData.parent_email?.trim()?.toLowerCase(),
+        parent_aadhar: formData.parent_aadhar?.trim(),
+        parent_occupation: formData.parent_occupation?.trim(),
+        residential_address: formData.residential_address?.trim()
+      };
+
+      formDataToSend.append('data', JSON.stringify(jsonData));
+
+      const response = await axios.post(`${API_URL}/profile`, formDataToSend, {
+        headers: {
+          'Accept': 'application/json',
+          'Authorization': `Bearer ${userData.token}`,
+          'Content-Type': 'multipart/form-data',
+        },
+        withCredentials: true,
+      });
+
+      if (response.data.success) {
+        setSuccess('Parent details updated successfully!');
+        toast.success('Parent details updated successfully!');
+        setLinkedinError(''); // Clear LinkedIn validation error on successful save
+        if (response.data.user) {
+          setFormData(prev => ({
+            ...prev,
+            ...response.data.user
+          }));
+        }
+      } else {
+        throw new Error(response.data.message || 'Update failed');
+      }
+    } catch (error) {
+      setError(error.response?.data?.message || 'Failed to update parent details');
+      toast.error(error.response?.data?.message || 'Failed to update parent details');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Update the handleSubmit function (for backward compatibility)
   const handleSubmit = async () => {
     try {
       // Validate all required fields first
@@ -1267,6 +1649,7 @@ const MyProfile = () => {
       if (response.data.success) {
         setSuccess('Profile updated successfully!');
         toast.success('Profile updated successfully!');
+        setLinkedinError(''); // Clear LinkedIn validation error on successful save
         if (response.data.user) {
           // If the passport photo was saved successfully, update it in the state
           if (formData.passport_photo instanceof File && response.data.user.passport_photo_path) {
@@ -1569,6 +1952,17 @@ const MyProfile = () => {
             <div className="mt-6 flex justify-end space-x-4">
               <button
                 type="button"
+                onClick={saveBasicDetails}
+                disabled={loading}
+                className="px-4 py-2 text-white rounded-lg transition-colors hover:opacity-90"
+                style={{
+                  background: 'linear-gradient(270deg, #eb6707 0%, #e42b12 100%)'
+                }}
+              >
+                {loading ? 'Saving...' : 'Save Basic Details'}
+              </button>
+              <button
+                type="button"
                 onClick={() => toggleSubTab('additional')}
                 className={`px-4 py-2 text-white rounded-lg transition-colors ${
                   !formData.name?.trim() || !formData.email?.trim() || !formData.gender || !formData.birthday
@@ -1652,6 +2046,17 @@ const MyProfile = () => {
               </div>
             </div>
             <div className="mt-6 flex justify-end space-x-4">
+              <button
+                type="button"
+                onClick={saveAdditionalDetails}
+                disabled={loading}
+                className="px-4 py-2 text-white rounded-lg transition-colors hover:opacity-90"
+                style={{
+                  background: 'linear-gradient(270deg, #eb6707 0%, #e42b12 100%)'
+                }}
+              >
+                {loading ? 'Saving...' : 'Save Additional Details'}
+              </button>
               <button
                 type="button"
                 onClick={() => toggleSubTab('docs')}
@@ -1739,11 +2144,16 @@ const MyProfile = () => {
                   name="linkedin_profile"
                   value={formData.linkedin_profile || ''}
                   onChange={handleChange}
-                  className="w-full p-2 border rounded-lg focus:ring-orange-500 focus:border-orange-500"
+                  className={`w-full p-2 border rounded-lg focus:ring-orange-500 focus:border-orange-500 ${
+                    linkedinError ? 'border-red-500 focus:ring-red-500 focus:border-red-500' : ''
+                  }`}
                   placeholder="https://linkedin.com/in/yourprofile"
                   required
                 />
-                {formData.linkedin_profile && (
+                {linkedinError && (
+                  <p className="mt-1 text-xs text-red-500">{linkedinError}</p>
+                )}
+                {formData.linkedin_profile && !linkedinError && (
                   <div className="mt-2">
                     <a
                       href={formData.linkedin_profile.startsWith('http') ? formData.linkedin_profile : `https://${formData.linkedin_profile}`}
@@ -1756,7 +2166,7 @@ const MyProfile = () => {
                     </a>
                   </div>
                 )}
-                <p className="mt-1 text-xs text-gray-500">Enter your full LinkedIn profile URL</p>
+                <p className="mt-1 text-xs text-gray-500">Enter your full LinkedIn profile URL (e.g., https://linkedin.com/in/yourprofile)</p>
               </div>
 
               <div className="flex flex-col h-full">
@@ -1804,22 +2214,20 @@ const MyProfile = () => {
                 <p className="mt-1 text-xs text-gray-500">Upload a passport size photo (max 20MB)</p>
               </div>
 
-              <div className="flex flex-col h-full">
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Resume
-                </label>
-                <div className="flex items-center space-x-4">
-                  <a
-                    href="/profile/resume-upload"
-                    className="text-orange-500 hover:text-orange-600 font-medium"
-                  >
-                    Manage Resume →
-                  </a>
-                  <span className="text-sm text-gray-500">(Dedicated section available)</span>
-                </div>
-              </div>
+
             </div>
             <div className="mt-6 flex justify-end space-x-4">
+              <button
+                type="button"
+                onClick={saveDocs}
+                disabled={loading}
+                className="px-4 py-2 text-white rounded-lg transition-colors hover:opacity-90"
+                style={{
+                  background: 'linear-gradient(270deg, #eb6707 0%, #e42b12 100%)'
+                }}
+              >
+                {loading ? 'Saving...' : 'Save Documents'}
+              </button>
               <button
                 type="button"
                 onClick={() => toggleSubTab('parent')}
@@ -1827,6 +2235,7 @@ const MyProfile = () => {
                   !formData.aadhaar_number?.trim() ||
                   (!formData.upload_aadhar && !formData.aadhar_path) ||
                   !formData.linkedin_profile?.trim() ||
+                  linkedinError ||
                   (!formData.passport_photo && !formData.passport_photo_path) ||
                   (!formData.upload_resume && !formData.resume_path)
                     ? 'bg-gray-400 cursor-not-allowed'
@@ -1836,6 +2245,7 @@ const MyProfile = () => {
                   background: !formData.aadhaar_number?.trim() ||
                     (!formData.upload_aadhar && !formData.aadhar_path) ||
                     !formData.linkedin_profile?.trim() ||
+                    linkedinError ||
                     (!formData.passport_photo && !formData.passport_photo_path)
                     ? '#9ca3af'
                     : 'linear-gradient(270deg, #eb6707 0%, #e42b12 100%)'
@@ -1844,6 +2254,7 @@ const MyProfile = () => {
                   !formData.aadhaar_number?.trim() ||
                   (!formData.upload_aadhar && !formData.aadhar_path) ||
                   !formData.linkedin_profile?.trim() ||
+                  linkedinError ||
                   (!formData.passport_photo && !formData.passport_photo_path)
                 }
               >
@@ -1927,13 +2338,14 @@ const MyProfile = () => {
             <div className="mt-6 flex justify-end">
               <button
                 type="button"
-                onClick={handleSubmit}
+                onClick={saveParentDetails}
+                disabled={loading}
                 className="px-4 py-2 text-white rounded-lg transition-colors hover:opacity-90"
                 style={{
                   background: 'linear-gradient(270deg, #eb6707 0%, #e42b12 100%)'
                 }}
               >
-                Save Changes
+                {loading ? 'Saving...' : 'Save Parent Details'}
               </button>
             </div>
           </div>
@@ -2021,10 +2433,15 @@ const MyProfile = () => {
                           const isNewSchoolEducation = ['1', '2', 1, 2].includes(Number(newDegreeId));
                           if (!isNewSchoolEducation) {
                             fetchSpecializations(newDegreeId);
+                            // Clear year_of_passout for higher education
+                            handleItemChange('education', index, 'year_of_passout', '');
                           } else {
                             // Clear specialization fields for school education
                             handleItemChange('education', index, 'specialization_id', '');
                             handleItemChange('education', index, 'other_specialization', '');
+                            // Clear duration fields for school education
+                            handleItemChange('education', index, 'duration_from', '');
+                            handleItemChange('education', index, 'duration_to', '');
                           }
                         }}
                         className="w-full p-2 border rounded-lg focus:ring-orange-500 focus:border-orange-500"
@@ -2116,6 +2533,32 @@ const MyProfile = () => {
                       />
                     </div>
 
+                    {isSchoolEducation ? (
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          Year of Passout<span className="text-red-500">*</span>
+                        </label>
+                        <input
+                          type="number"
+                          min="1950"
+                          max={new Date().getFullYear() + 1}
+                          value={edu.year_of_passout || ''}
+                          onChange={(e) => {
+                            const year = e.target.value;
+                            handleItemChange('education', index, 'year_of_passout', year);
+                            // Set duration_from and duration_to based on year for school education
+                            if (year) {
+                              handleItemChange('education', index, 'duration_from', `${year}-06-01`);
+                              handleItemChange('education', index, 'duration_to', `${year}-05-31`);
+                            }
+                          }}
+                          className="w-full p-2 border rounded-lg focus:ring-orange-500 focus:border-orange-500"
+                          placeholder="Enter year (e.g., 2023)"
+                          required
+                        />
+                      </div>
+                    ) : (
+                      <>
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-2">
                         Duration From<span className="text-red-500">*</span>
@@ -2153,6 +2596,8 @@ const MyProfile = () => {
                         required
                       />
                     </div>
+                      </>
+                    )}
 
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -3922,90 +4367,206 @@ const MyProfile = () => {
                     </div>
                     <span className="text-sm">{formData.city && formData.state_id ? `${formData.city}, India` : (formData.city || '')}</span>
                   </div>
-                  <div className="contact-info-item">
-                    <div className="contact-icon-container-resume">
-                      <AiOutlineFilePdf className="contact-icon-resume" />
-                    </div>
-                    <span
-                      className="text-sm cursor-pointer text-orange-500 hover:text-orange-700"
-                      onClick={() => setShowResumeModal(true)}
-                    >
-                      Export Resume
-                    </span>
-                  </div>
+
                 </div>
               </div>
             </div>
           </div>
 
-          {/* Add Overall Progress Bar */}
-          <div className="mt-8 bg-white rounded-lg p-6 shadow-sm progress-container">
-            <div className="flex items-center justify-between mb-2">
-              <h3 className="text-lg font-semibold text-gray-800">Profile Completion</h3>
-              <span className="text-2xl font-bold" style={{
-                background: 'linear-gradient(270deg, #eb6707 0%, #e42b12 100%)',
-                WebkitBackgroundClip: 'text',
-                WebkitTextFillColor: 'transparent',
-                backgroundClip: 'text'
-              }}>
-                {(() => {
-                  const percentage = calculateOverallProgress(formData, projects);
-                  return isNaN(percentage) ? '0%' : `${percentage}%`;
-                })()}
-              </span>
-            </div>
-            <div className="relative group">
-              <div className="w-full bg-gray-200 rounded-full h-2.5 cursor-pointer">
-                <div
-                  className="h-2.5 rounded-full transition-all duration-300"
-                  style={{ 
-                    width: `${(() => {
-                      const percentage = calculateOverallProgress(formData, projects);
-                      return isNaN(percentage) ? 0 : percentage;
-                    })()}%`,
-                    background: 'linear-gradient(270deg, #eb6707 0%, #e42b12 100%)'
-                  }}
-                />
+          {/* Profile Completion Bar - Same as Placement Center */}
+          <div className="mt-8 bg-white rounded-lg p-6 shadow-sm border-2" style={{
+            borderColor: profileCompletionData?.is_complete ? '#4caf50' : '#ff9800'
+          }}>
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-3">
+                <h3 className="text-lg font-semibold text-gray-800">Profile Completion Status</h3>
+                <div className="px-3 py-1.5 rounded-full text-xs font-bold text-white flex items-center gap-1" style={{
+                  background: profileCompletionData?.is_complete 
+                    ? 'linear-gradient(270deg, #10b981 0%, #059669 100%)'
+                    : 'linear-gradient(270deg, #eb6707 0%, #e42b12 100%)'
+                }}>
+                  {profileCompletionData?.is_complete ? (
+                    <>
+                      <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                      </svg>
+                      Complete
+                    </>
+                  ) : (
+                    <>
+                      <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                      </svg>
+                      Incomplete
+                    </>
+                  )}
+                </div>
               </div>
-              {/* Tooltip */}
-              <div className="opacity-0 group-hover:opacity-100 progress-tooltip progress-tooltip-transition absolute -top-28 left-1/2 transform -translate-x-1/2 bg-gray-900 text-white p-3 rounded-lg shadow-lg z-50">
-                <div className="text-sm font-medium mb-2 border-b border-gray-700 pb-1">Section Contributions</div>
-                <div className="space-y-1.5">
-                  {mainMenu.filter(menu => menu.id !== 'resume').map((menu) => {
-                    const percentage = calculateCompletionPercentage(formData, menu.id, projects);
-                    const validPercentage = isNaN(percentage) ? 0 : percentage;
-                    return (
-                      <div key={menu.id} className="flex items-center justify-between gap-4">
-                        <div className="flex items-center gap-2 min-w-[150px]">
-                          <span style={{
-                            background: 'linear-gradient(270deg, #eb6707 0%, #e42b12 100%)',
-                            WebkitBackgroundClip: 'text',
-                            WebkitTextFillColor: 'transparent',
-                            backgroundClip: 'text'
-                          }}>{menu.icon}</span>
-                          <span className="whitespace-nowrap">{menu.label}</span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <div className="w-24 bg-gray-700 rounded-full h-1.5">
-                            <div
-                              className="h-1.5 rounded-full"
-                              style={{ 
-                                width: `${validPercentage}%`,
-                                background: 'linear-gradient(270deg, #eb6707 0%, #e42b12 100%)'
-                              }}
-                            />
-                          </div>
-                          <span className="font-medium min-w-[40px] text-right">
-                            {validPercentage}%
-                          </span>
-                        </div>
-                      </div>
-                    );
-                  })}
+              <button
+                onClick={() => setShowProfileDetails(true)}
+                className="p-1 text-gray-500 hover:text-gray-700 transition-colors"
+                title="View Details"
+              >
+                <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+                </svg>
+              </button>
+            </div>
+
+            <div className="mb-4">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-sm text-gray-600">Overall Progress</span>
+                <span className="text-xl font-bold" style={{
+                  background: 'linear-gradient(270deg, #eb6707 0%, #e42b12 100%)',
+                  WebkitBackgroundClip: 'text',
+                  WebkitTextFillColor: 'transparent',
+                  backgroundClip: 'text'
+                }}>
+                  {profileCompletionData?.overall_percentage || 0}%
+                </span>
+              </div>
+              <div className="relative">
+                <div className="w-full bg-gray-200 rounded-full h-2.5">
+                  <div
+                    className="h-2.5 rounded-full transition-all duration-300"
+                    style={{ 
+                      width: `${profileCompletionData?.overall_percentage || 0}%`,
+                      background: 'linear-gradient(270deg, #eb6707 0%, #e42b12 100%)'
+                    }}
+                  />
                 </div>
               </div>
             </div>
+
+            {!profileCompletionData?.is_complete && (
+              <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 mb-4">
+                <div className="flex items-start gap-2">
+                  <svg className="w-5 h-5 text-yellow-600 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                  </svg>
+                  <div className="text-sm text-yellow-800">
+                    <strong>Profile completion required:</strong> You need at least 90% profile completion to apply for placements.
+                    {profileCompletionData?.missing_sections?.length > 0 && (
+                      <span> Missing: {profileCompletionData.missing_sections.join(', ')}</span>
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {profileCompletionData?.is_complete && (
+              <div className="bg-green-50 border border-green-200 rounded-lg p-3">
+                <div className="flex items-start gap-2">
+                  <svg className="w-5 h-5 text-green-600 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                  </svg>
+                  <div className="text-sm text-green-800">
+                    <strong>Profile Complete!</strong> You can now apply for placements.
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
+
+          {/* Profile Details Modal */}
+          {showProfileDetails && (
+            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+              <div className="bg-white rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+                <div className="flex items-center justify-between p-6 border-b">
+                  <h3 className="text-xl font-semibold text-gray-800">Profile Completion Details</h3>
+                  <button
+                    onClick={() => setShowProfileDetails(false)}
+                    className="p-1 text-gray-500 hover:text-gray-700 transition-colors"
+                  >
+                    <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+                    </svg>
+                  </button>
+                </div>
+                <div className="p-6">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {profileCompletionData?.sections && Object.entries(profileCompletionData.sections).map(([sectionKey, percentage]) => {
+                      const sectionName = sectionKey.charAt(0).toUpperCase() + sectionKey.slice(1).replace(/([A-Z])/g, ' $1');
+                      const isSectionComplete = percentage >= 100;
+                      
+                      return (
+                        <div key={sectionKey} className="border border-gray-200 rounded-lg p-4">
+                          <div className="flex items-center gap-3 mb-3">
+                            <div className="text-orange-500">
+                              {sectionKey === 'personal' && (
+                                <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                                  <path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" />
+                                </svg>
+                              )}
+                              {sectionKey === 'education' && (
+                                <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                                  <path d="M10.394 2.08a1 1 0 00-.788 0l-7 3a1 1 0 000 1.84L5.25 8.051a.999.999 0 01.356-.257l4-1.714a1 1 0 11.788 1.838l-2.727 1.17 1.94.831a1 1 0 00.787 0l7-3a1 1 0 000-1.838l-7-3zM3.31 9.397L5 10.12v4.102a8.969 8.969 0 00-1.05-.174 1 1 0 01-.89-.89 11.115 11.115 0 01.25-3.762zM9.3 16.573A9.026 9.026 0 007 14.935v-3.957l1.818.78a3 3 0 002.364 0l5.508-2.361a11.026 11.026 0 01.25 3.762 1 1 0 01-.89.89 8.968 8.968 0 00-5.35 2.524 1 1 0 01-1.4 0zM6 18a1 1 0 001-1v-2.065a8.935 8.935 0 00-2-.712V17a1 1 0 001 1z" />
+                                </svg>
+                              )}
+                              {sectionKey === 'projects' && (
+                                <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                                  <path fillRule="evenodd" d="M6 6V5a3 3 0 013-3h2a3 3 0 013 3v1h2a2 2 0 012 2v3.57A22.952 22.952 0 0110 13a22.95 22.95 0 01-8-1.43V8a2 2 0 012-2h2zm2-1a1 1 0 011-1h2a1 1 0 011 1v1H8V5zm1 5a1 1 0 011-1h.01a1 1 0 110 2H10a1 1 0 01-1-1z" clipRule="evenodd" />
+                                </svg>
+                              )}
+                              {sectionKey === 'certifications' && (
+                                <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                                  <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                                </svg>
+                              )}
+                              {sectionKey === 'resume' && (
+                                <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                                  <path fillRule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm2 6a1 1 0 011-1h6a1 1 0 110 2H7a1 1 0 01-1-1zm1 3a1 1 0 100 2h6a1 1 0 100-2H7z" clipRule="evenodd" />
+                                </svg>
+                              )}
+                            </div>
+                            <span className="font-semibold text-gray-800">{sectionName}</span>
+                            <div className="px-2 py-1 rounded-full text-xs font-bold text-white" style={{
+                              background: 'linear-gradient(270deg, #eb6707 0%, #e42b12 100%)'
+                            }}>
+                              {percentage}%
+                            </div>
+                          </div>
+                          <div className="relative mb-2">
+                            <div className="w-full bg-gray-200 rounded-full h-1.5">
+                              <div
+                                className="h-1.5 rounded-full transition-all duration-300"
+                                style={{ 
+                                  width: `${percentage}%`,
+                                  background: 'linear-gradient(270deg, #eb6707 0%, #e42b12 100%)'
+                                }}
+                              />
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            {isSectionComplete ? (
+                              <svg className="w-4 h-4 text-green-500" fill="currentColor" viewBox="0 0 20 20">
+                                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                              </svg>
+                            ) : (
+                              <svg className="w-4 h-4 text-red-500" fill="currentColor" viewBox="0 0 20 20">
+                                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                              </svg>
+                            )}
+                            <span className="text-sm text-gray-600">
+                              {isSectionComplete ? 'Complete' : 'Incomplete'}
+                            </span>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+                <div className="flex justify-end p-6 border-t">
+                  <button
+                    onClick={() => setShowProfileDetails(false)}
+                    className="px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors"
+                  >
+                    Close
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* Add ResumeModal */}
           <ResumeModal

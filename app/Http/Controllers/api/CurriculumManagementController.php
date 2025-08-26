@@ -21,8 +21,8 @@ class CurriculumManagementController extends Controller
         try {
             $user = Auth::user();
             
-            // Check if user has admin/coordinator permissions
-            if (!$user->is_admin && !$user->is_coordinator) {
+            // Check if user has admin/coordinator/placement coordinator permissions
+            if (!$user->is_admin && !$user->is_coordinator && !$user->is_placement_coordinator) {
                 return response()->json(['error' => 'Unauthorized'], 403);
             }
 
@@ -63,7 +63,7 @@ class CurriculumManagementController extends Controller
         try {
             $user = Auth::user();
             
-            if (!$user->is_admin && !$user->is_coordinator) {
+            if (!$user->is_admin && !$user->is_coordinator && !$user->is_placement_coordinator) {
                 return response()->json(['error' => 'Unauthorized'], 403);
             }
 
@@ -109,7 +109,7 @@ class CurriculumManagementController extends Controller
         try {
             $user = Auth::user();
             
-            if (!$user->is_admin && !$user->is_coordinator) {
+            if (!$user->is_admin && !$user->is_coordinator && !$user->is_placement_coordinator) {
                 return response()->json(['error' => 'Unauthorized'], 403);
             }
 
@@ -157,7 +157,7 @@ class CurriculumManagementController extends Controller
         try {
             $user = Auth::user();
             
-            if (!$user->is_admin && !$user->is_coordinator) {
+            if (!$user->is_admin && !$user->is_coordinator && !$user->is_placement_coordinator) {
                 return response()->json(['error' => 'Unauthorized'], 403);
             }
 
@@ -226,7 +226,7 @@ class CurriculumManagementController extends Controller
         try {
             $user = Auth::user();
             
-            if (!$user->is_admin && !$user->is_coordinator) {
+            if (!$user->is_admin && !$user->is_coordinator && !$user->is_placement_coordinator) {
                 return response()->json(['error' => 'Unauthorized'], 403);
             }
 
@@ -261,7 +261,7 @@ class CurriculumManagementController extends Controller
         try {
             $user = Auth::user();
             
-            if (!$user->is_admin && !$user->is_coordinator) {
+            if (!$user->is_admin && !$user->is_coordinator && !$user->is_placement_coordinator) {
                 return response()->json(['error' => 'Unauthorized'], 403);
             }
 
@@ -296,7 +296,7 @@ class CurriculumManagementController extends Controller
         try {
             $user = Auth::user();
             
-            if (!$user->is_admin && !$user->is_coordinator) {
+            if (!$user->is_admin && !$user->is_coordinator && !$user->is_placement_coordinator) {
                 return response()->json(['error' => 'Unauthorized'], 403);
             }
 
@@ -355,7 +355,7 @@ class CurriculumManagementController extends Controller
         try {
             $user = Auth::user();
             
-            if (!$user->is_admin && !$user->is_coordinator) {
+            if (!$user->is_admin && !$user->is_coordinator && !$user->is_placement_coordinator) {
                 return response()->json(['error' => 'Unauthorized'], 403);
             }
 
@@ -398,7 +398,7 @@ class CurriculumManagementController extends Controller
         try {
             $user = Auth::user();
             
-            if (!$user->is_admin && !$user->is_coordinator) {
+            if (!$user->is_admin && !$user->is_coordinator && !$user->is_placement_coordinator) {
                 return response()->json(['error' => 'Unauthorized'], 403);
             }
 
@@ -423,7 +423,7 @@ class CurriculumManagementController extends Controller
         try {
             $user = Auth::user();
             
-            if (!$user->is_admin && !$user->is_coordinator) {
+            if (!$user->is_admin && !$user->is_coordinator && !$user->is_placement_coordinator) {
                 return response()->json(['error' => 'Unauthorized'], 403);
             }
 
@@ -459,7 +459,7 @@ class CurriculumManagementController extends Controller
         try {
             $user = Auth::user();
             
-            if (!$user->is_admin && !$user->is_coordinator) {
+            if (!$user->is_admin && !$user->is_coordinator && !$user->is_placement_coordinator) {
                 return response()->json(['error' => 'Unauthorized'], 403);
             }
 
@@ -492,7 +492,7 @@ class CurriculumManagementController extends Controller
         try {
             $user = Auth::user();
             
-            if (!$user->is_admin && !$user->is_coordinator) {
+            if (!$user->is_admin && !$user->is_coordinator && !$user->is_placement_coordinator) {
                 return response()->json(['error' => 'Unauthorized'], 403);
             }
 
@@ -527,7 +527,7 @@ class CurriculumManagementController extends Controller
         try {
             $user = Auth::user();
             
-            if (!$user->is_admin && !$user->is_coordinator) {
+            if (!$user->is_admin && !$user->is_coordinator && !$user->is_placement_coordinator) {
                 return response()->json(['error' => 'Unauthorized'], 403);
             }
 
@@ -552,7 +552,7 @@ class CurriculumManagementController extends Controller
         try {
             $user = Auth::user();
             
-            if (!$user->is_admin && !$user->is_coordinator) {
+            if (!$user->is_admin && !$user->is_coordinator && !$user->is_placement_coordinator) {
                 return response()->json(['error' => 'Unauthorized'], 403);
             }
 
@@ -575,7 +575,7 @@ class CurriculumManagementController extends Controller
         try {
             $user = Auth::user();
             
-            if (!$user->is_admin && !$user->is_coordinator) {
+            if (!$user->is_admin && !$user->is_coordinator && !$user->is_placement_coordinator) {
                 return response()->json(['error' => 'Unauthorized'], 403);
             }
 
@@ -620,7 +620,7 @@ class CurriculumManagementController extends Controller
         try {
             $user = Auth::user();
             
-            if (!$user->is_admin && !$user->is_coordinator) {
+            if (!$user->is_admin && !$user->is_coordinator && !$user->is_placement_coordinator) {
                 return response()->json(['error' => 'Unauthorized'], 403);
             }
 
@@ -662,7 +662,7 @@ class CurriculumManagementController extends Controller
         try {
             $user = Auth::user();
             
-            if (!$user->is_admin && !$user->is_coordinator) {
+            if (!$user->is_admin && !$user->is_coordinator && !$user->is_placement_coordinator) {
                 return response()->json(['error' => 'Unauthorized'], 403);
             }
 

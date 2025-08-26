@@ -31,7 +31,7 @@ class AnnouncementPolicy
      */
     public function create(User $user): bool
     {
-        return $user->is_admin || $user->is_coordinator || $user->is_tutor;
+        return $user->is_admin || $user->is_coordinator || $user->is_tutor || $user->is_placement_coordinator;
     }
 
     /**
@@ -39,7 +39,7 @@ class AnnouncementPolicy
      */
     public function update(User $user, Announcement $announcement): bool
     {
-        return $user->is_admin || $user->is_coordinator || $user->is_tutor;
+        return $user->is_admin || $user->is_coordinator || $user->is_tutor || $user->is_placement_coordinator;
     }
 
     /**
@@ -47,7 +47,7 @@ class AnnouncementPolicy
      */
     public function delete(User $user, Announcement $announcement): bool
     {
-        return $user->is_admin || $user->is_coordinator || $user->is_tutor;
+        return $user->is_admin || $user->is_coordinator || $user->is_tutor || $user->is_placement_coordinator;
     }
 
     /**
@@ -55,7 +55,7 @@ class AnnouncementPolicy
      */
     public function restore(User $user, Announcement $announcement): bool
     {
-        return $user->is_admin || $user->is_coordinator || $user->is_tutor;
+        return $user->is_admin || $user->is_coordinator || $user->is_tutor || $user->is_placement_coordinator;
     }
 
     /**
@@ -63,6 +63,6 @@ class AnnouncementPolicy
      */
     public function forceDelete(User $user, Announcement $announcement): bool
     {
-        return $user->is_admin || $user->is_coordinator || $user->is_tutor;
+        return $user->is_admin || $user->is_coordinator || $user->is_tutor || $user->is_placement_coordinator;
     }
 }

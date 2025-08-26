@@ -919,6 +919,10 @@ const AdminPlacement = () => {
             if (projectsResult.status === 'rejected') console.error('Projects API failed:', projectsResult.reason);
             if (certificationsResult.status === 'rejected') console.error('Certifications API failed:', certificationsResult.reason);
             
+            // Debug logging for successful API calls
+            console.log('Certifications API Response:', certificationsResponse);
+            console.log('Certifications Data:', certificationsResponse.data);
+            
             // Combine all data into a single object
             const combinedStudentData = {
                 ...profileResponse.data,
@@ -1128,6 +1132,11 @@ const AdminPlacement = () => {
 
             // If path contains "resumes/" without a leading slash
             if (path.includes('resumes/') && !path.startsWith('/')) {
+                return `${baseUrl}/storage/${path}`;
+            }
+
+            // If path contains "certificates/" without a leading slash
+            if (path.includes('certificates/') && !path.startsWith('/')) {
                 return `${baseUrl}/storage/${path}`;
             }
 
@@ -4963,10 +4972,12 @@ const AdminPlacement = () => {
                                             </Typography>
                                         </Grid>
                                         <Grid item>
-                                            <Chip 
-                                                label={selectedStudentData.course_name || selectedStudentData.course?.name || 'Course N/A'} 
-                                                sx={{ bgcolor: 'rgba(255,255,255,0.2)', color: 'white' }}
-                                            />
+                                            {(selectedStudentData.course_name || selectedStudentData.course?.name) && (
+                                                <Chip 
+                                                    label={selectedStudentData.course_name || selectedStudentData.course?.name} 
+                                                    sx={{ bgcolor: 'rgba(255,255,255,0.2)', color: 'white' }}
+                                                />
+                                            )}
                                         </Grid>
                                     </Grid>
                                 </CardContent>
@@ -5001,6 +5012,10 @@ const AdminPlacement = () => {
                                     <Tab 
                                         icon={<WorkIcon />} 
                                         label="Applied Jobs" 
+                                    />
+                                    <Tab 
+                                        icon={<AssessmentIcon />} 
+                                        label="Certifications" 
                                     />
                                 </Tabs>
 
@@ -5080,17 +5095,7 @@ const AdminPlacement = () => {
                                                                     secondary={selectedStudentData.pincode || 'N/A'} 
                                                                 />
                                                             </ListItem>
-                                                            {selectedStudentData.aadhaar_number && (
-                                                            <ListItem>
-                                                                <ListItemIcon>
-                                                                        <DescriptionIcon />
-                                                                </ListItemIcon>
-                                                                <ListItemText 
-                                                                        primary="Aadhaar Number" 
-                                                                        secondary={selectedStudentData.aadhaar_number} 
-                                                                />
-                                                            </ListItem>
-                                                            )}
+                                                            {/* Aadhaar Number hidden for privacy */}
                                                             {selectedStudentData.linkedin_profile && (
                                                             <ListItem>
                                                                 <ListItemIcon>
@@ -5118,60 +5123,7 @@ const AdminPlacement = () => {
 
 
 
-                                            {/* Parent Information */}
-                                             {(selectedStudentData.parent_name || selectedStudentData.parent_email || selectedStudentData.parent_contact || selectedStudentData.parent_occupation) && (
-                                            <Grid item xs={12}>
-                                                <Card>
-                                                    <CardContent>
-                                                        <Typography variant="h6" gutterBottom>
-                                                            Parent Information
-                                                        </Typography>
-                                                        <Grid container spacing={2}>
-                                                                 {selectedStudentData.parent_name && (
-                                                            <Grid item xs={12} md={6}>
-                                                                <Typography variant="subtitle2" color="text.secondary">
-                                                                    Parent Name
-                                                                </Typography>
-                                                                <Typography variant="body1">
-                                                                             {selectedStudentData.parent_name}
-                                                                </Typography>
-                                                            </Grid>
-                                                                 )}
-                                                                 {selectedStudentData.parent_email && (
-                                                            <Grid item xs={12} md={6}>
-                                                                <Typography variant="subtitle2" color="text.secondary">
-                                                                    Parent Email
-                                                                </Typography>
-                                                                <Typography variant="body1">
-                                                                             {selectedStudentData.parent_email}
-                                                                </Typography>
-                                                            </Grid>
-                                                                 )}
-                                                                 {selectedStudentData.parent_contact && (
-                                                            <Grid item xs={12} md={6}>
-                                                                <Typography variant="subtitle2" color="text.secondary">
-                                                                    Parent Contact
-                                                                </Typography>
-                                                                <Typography variant="body1">
-                                                                             {selectedStudentData.parent_contact}
-                                                                </Typography>
-                                                            </Grid>
-                                                                 )}
-                                                                 {selectedStudentData.parent_occupation && (
-                                                            <Grid item xs={12} md={6}>
-                                                                <Typography variant="subtitle2" color="text.secondary">
-                                                                    Parent Occupation
-                                                                </Typography>
-                                                                <Typography variant="body1">
-                                                                             {selectedStudentData.parent_occupation}
-                                                                </Typography>
-                                                            </Grid>
-                                                                 )}
-                                                        </Grid>
-                                                    </CardContent>
-                                                </Card>
-                                            </Grid>
-                                             )}
+                                            {/* Parent Information hidden for privacy */}
 
                                              {/* Education Details */}
                                              {selectedStudentData.education && selectedStudentData.education.length > 0 && (
@@ -5359,18 +5311,57 @@ const AdminPlacement = () => {
                                                                                          Date: {formatDate(cert.certification_date)}
                                                                                      </Typography>
                                                                                  </Grid>
-                                                                                 {cert.score && (
-                                                                                     <Grid item xs={12} md={6}>
-                                                                                         <Typography variant="body2" color="text.secondary">
-                                                                                             Score: {cert.score}%
-                                                                                         </Typography>
-                                                                                     </Grid>
-                                                                                 )}
+                                                                                 {/* Score hidden for privacy */}
                                                                                  {cert.certificate_number && (
                                                                                      <Grid item xs={12}>
                                                                                          <Typography variant="body2" color="text.secondary">
                                                                                              Certificate Number: {cert.certificate_number}
                                                                                          </Typography>
+                                                                                     </Grid>
+                                                                                 )}
+                                                                                 {/* Certificate File Display */}
+                                                                                 {cert.path && (
+                                                                                     <Grid item xs={12}>
+                                                                                         <Box sx={{ mt: 2 }}>
+                                                                                             <Typography variant="body2" fontWeight={500} gutterBottom>
+                                                                                                 Certificate File:
+                                                                                             </Typography>
+                                                                                             <Box display="flex" gap={1} alignItems="center">
+                                                                                                 <Button
+                                                                                                     variant="outlined"
+                                                                                                     size="small"
+                                                                                                     startIcon={<DownloadIcon />}
+                                                                                                     onClick={() => downloadFile(getDocumentUrl(cert.path), `${cert.certification_name}_certificate.${cert.path.split('.').pop()}`)}
+                                                                                                 >
+                                                                                                     Download Certificate
+                                                                                                 </Button>
+                                                                                                 <Button
+                                                                                                     variant="outlined"
+                                                                                                     size="small"
+                                                                                                     startIcon={<ViewIcon />}
+                                                                                                     onClick={() => window.open(getDocumentUrl(cert.path), '_blank')}
+                                                                                                 >
+                                                                                                     View Certificate
+                                                                                                 </Button>
+                                                                                             </Box>
+                                                                                             {/* File Preview */}
+                                                                                             <Box sx={{ 
+                                                                                                 mt: 2,
+                                                                                                 width: '100%', 
+                                                                                                 height: '300px', 
+                                                                                                 border: '1px solid #e0e0e0',
+                                                                                                 borderRadius: '4px',
+                                                                                                 overflow: 'hidden'
+                                                                                             }}>
+                                                                                                 <iframe
+                                                                                                     src={getDocumentUrl(cert.path)}
+                                                                                                     title={`${cert.certification_name} Certificate`}
+                                                                                                     width="100%"
+                                                                                                     height="100%"
+                                                                                                     style={{ border: 'none' }}
+                                                                                                 />
+                                                                                             </Box>
+                                                                                         </Box>
                                                                                      </Grid>
                                                                                  )}
                                                                              </Grid>
@@ -5554,6 +5545,110 @@ const AdminPlacement = () => {
                                                 </Card>
                                             </Grid>
                                         </Grid>
+                                    </Box>
+                                )}
+
+                                {/* Certifications Tab */}
+                                {studentDetailsTabValue === 4 && (
+                                    <Box sx={{ p: 3 }}>
+                                        <Card>
+                                            <CardContent>
+                                                <Typography variant="h6" gutterBottom sx={{ display: 'flex', alignItems: 'center' }}>
+                                                    <AssessmentIcon sx={{ mr: 1 }} />
+                                                    Certifications ({selectedStudentData?.certifications?.length || 0})
+                                                </Typography>
+                                                
+                                                {selectedStudentData?.certifications && selectedStudentData.certifications.length > 0 ? (
+                                                    <Grid container spacing={3}>
+                                                        {selectedStudentData.certifications.map((cert, index) => (
+                                                            <Grid item xs={12} md={6} key={index}>
+                                                                <Card variant="outlined" sx={{ p: 3 }}>
+                                                                    <Typography variant="h6" fontWeight="bold" gutterBottom color="primary">
+                                                                        {cert.certification_name || 'Certification Name N/A'}
+                                                                    </Typography>
+                                                                    
+                                                                    <Grid container spacing={2}>
+                                                                        <Grid item xs={12}>
+                                                                            <Typography variant="body2" color="text.secondary">
+                                                                                <strong>Authority:</strong> {cert.authority || 'N/A'}
+                                                                            </Typography>
+                                                                        </Grid>
+                                                                        <Grid item xs={12} md={6}>
+                                                                            <Typography variant="body2" color="text.secondary">
+                                                                                <strong>Date:</strong> {formatDate(cert.certification_date)}
+                                                                            </Typography>
+                                                                        </Grid>
+                                                                        {cert.score && (
+                                                                            <Grid item xs={12} md={6}>
+                                                                                <Typography variant="body2" color="text.secondary">
+                                                                                    <strong>Score:</strong> {cert.score}%
+                                                                                </Typography>
+                                                                            </Grid>
+                                                                        )}
+                                                                        {cert.certificate_number && (
+                                                                            <Grid item xs={12}>
+                                                                                <Typography variant="body2" color="text.secondary">
+                                                                                    <strong>Certificate Number:</strong> {cert.certificate_number}
+                                                                                </Typography>
+                                                                            </Grid>
+                                                                        )}
+                                                                        
+                                                                        {/* Certificate File Display */}
+                                                                        {cert.path && (
+                                                                            <Grid item xs={12}>
+                                                                                <Box sx={{ mt: 2, p: 2, bgcolor: 'grey.50', borderRadius: 1 }}>
+                                                                                    <Typography variant="body2" fontWeight={500} gutterBottom>
+                                                                                        Certificate File:
+                                                                                    </Typography>
+                                                                                    <Box display="flex" gap={1} alignItems="center" mb={2}>
+                                                                                        <Button
+                                                                                            variant="contained"
+                                                                                            size="small"
+                                                                                            startIcon={<DownloadIcon />}
+                                                                                            onClick={() => downloadFile(getDocumentUrl(cert.path), `${cert.certification_name}_certificate.${cert.path.split('.').pop()}`)}
+                                                                                        >
+                                                                                            Download Certificate
+                                                                                        </Button>
+                                                                                        <Button
+                                                                                            variant="outlined"
+                                                                                            size="small"
+                                                                                            startIcon={<ViewIcon />}
+                                                                                            onClick={() => window.open(getDocumentUrl(cert.path), '_blank')}
+                                                                                        >
+                                                                                            View Certificate
+                                                                                        </Button>
+                                                                                    </Box>
+                                                                                    {/* File Preview */}
+                                                                                    <Box sx={{ 
+                                                                                        width: '100%', 
+                                                                                        height: '400px', 
+                                                                                        border: '1px solid #e0e0e0',
+                                                                                        borderRadius: '4px',
+                                                                                        overflow: 'hidden'
+                                                                                    }}>
+                                                                                        <iframe
+                                                                                            src={getDocumentUrl(cert.path)}
+                                                                                            title={`${cert.certification_name} Certificate`}
+                                                                                            width="100%"
+                                                                                            height="100%"
+                                                                                            style={{ border: 'none' }}
+                                                                                        />
+                                                                                    </Box>
+                                                                                </Box>
+                                                                            </Grid>
+                                                                        )}
+                                                                    </Grid>
+                                                                </Card>
+                                                            </Grid>
+                                                        ))}
+                                                    </Grid>
+                                                ) : (
+                                                    <Typography variant="body2" color="text.secondary">
+                                                        No certifications found for this student
+                                                    </Typography>
+                                                )}
+                                            </CardContent>
+                                        </Card>
                                     </Box>
                                 )}
 

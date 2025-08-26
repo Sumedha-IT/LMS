@@ -43,6 +43,12 @@ class UserResource extends Resource
     protected static bool $isScopedToTenant = false;
     protected static ?array $countryCodes = null;
 
+    public static function shouldRegisterNavigation(): bool
+    {
+        $user = auth()->user();
+        return $user && ($user->is_admin || $user->is_coordinator || $user->is_placement_coordinator);
+    }
+
 
 //    public static function infolist(Infolist $infolist): Infolist
 //    {

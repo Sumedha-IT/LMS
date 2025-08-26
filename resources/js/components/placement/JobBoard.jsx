@@ -50,6 +50,7 @@ import {
 } from '@mui/icons-material';
 import { useGetJobPostingsQuery } from '../../store/service/user/UserService';
 import axios from 'axios';
+import ProfileCompletionCheck from './ProfileCompletionCheck';
 
 // JobDescription component for truncating and expanding job descriptions
 const JobDescription = ({ description }) => {
@@ -99,6 +100,7 @@ const JobBoard = ({ studentId }) => {
     const [loadingStudentCourse, setLoadingStudentCourse] = useState(true);
     const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
     const [applyingJob, setApplyingJob] = useState(false);
+    const [profileCompletionStatus, setProfileCompletionStatus] = useState(null);
     const [expandedJobs, setExpandedJobs] = useState({});
     const [refreshTrigger, setRefreshTrigger] = useState(0);
 
@@ -146,6 +148,7 @@ const JobBoard = ({ studentId }) => {
         };
 
         getStudentData();
+        checkProfileCompletion();
     }, [refreshTrigger]);
 
 
@@ -199,10 +202,36 @@ const JobBoard = ({ studentId }) => {
         return matchesSearch && matchesType && matchesLocation;
     });
 
-    const handleApply = (job) => {
+    const checkProfileCompletion = async () => {
+        try {
+            const userInfo = getCookie('user_info');
+            const userData = JSON.parse(userInfo);
+            
+            const response = await axios.get('/api/profile-completion/can-apply', {
+                headers: { 'Authorization': userData.token }
+            });
+            
+            setProfileCompletionStatus(response.data.data);
+        } catch (err) {
+            console.error('Error checking profile completion:', err);
+        }
+    };
+
+    const handleApply = async (job) => {
         if (!job.isEligible) {
             return; // Don't allow applying for ineligible jobs
         }
+
+        // Check profile completion before allowing application
+        if (!profileCompletionStatus?.can_apply) {
+            setSnackbar({
+                open: true,
+                message: profileCompletionStatus?.message || 'Profile completion requirement not met',
+                severity: 'warning'
+            });
+            return;
+        }
+        
         setSelectedJob(job);
         setApplyDialogOpen(true);
     };
@@ -241,6 +270,7 @@ const JobBoard = ({ studentId }) => {
             } catch (err) {
                 console.error('Error applying for job:', err);
                 let errorMessage = 'Error applying for job. Please try again.';
+                let severity = 'error';
                 
                 if (err.response?.status === 409) {
                     errorMessage = 'You have already applied for this job.';
@@ -249,7 +279,17 @@ const JobBoard = ({ studentId }) => {
                 } else if (err.response?.status === 403) {
                     errorMessage = 'You are not eligible to apply for this job.';
                 } else if (err.response?.status === 422) {
-                    errorMessage = 'Invalid application data. Please check your information.';
+                    // Profile completion validation failed
+                    const errorData = err.response?.data;
+                    errorMessage = errorData?.message || 'Profile completion requirement not met.';
+                    
+                    // If there are missing sections, provide more detailed information
+                    if (errorData?.missing_sections && errorData.missing_sections.length > 0) {
+                        errorMessage += ` Please complete: ${errorData.missing_sections.join(', ')}.`;
+                    }
+                    
+                    // Show as warning instead of error for profile completion issues
+                    severity = 'warning';
                 } else if (err.response?.status >= 500) {
                     errorMessage = 'Server error. Please try again later.';
                 }
@@ -257,7 +297,7 @@ const JobBoard = ({ studentId }) => {
                 setSnackbar({
                     open: true,
                     message: errorMessage,
-                    severity: 'error'
+                    severity: severity
                 });
             } finally {
                 setApplyingJob(false);
@@ -343,6 +383,9 @@ const JobBoard = ({ studentId }) => {
 
     return (
         <Box>
+            {/* Profile Completion Check */}
+            <ProfileCompletionCheck onProfileUpdate={refreshStudentData} />
+            
             {/* Modern Stats Header */}
             <Box sx={{ mb: 4 }}>
                 <Box display="flex" justifyContent="space-between" alignItems="center" mb={3} flexDirection={{ xs: 'column', sm: 'row' }} gap={2}>
@@ -1002,7 +1045,7 @@ const JobBoard = ({ studentId }) => {
                                                                     e.stopPropagation();
                                                                     handleApply(job);
                                                                 }}
-                                                                disabled={!job.isEligible}
+                                                                disabled={!job.isEligible || !profileCompletionStatus?.can_apply}
                                                                 sx={{ 
                                                                     borderRadius: 4, 
                                                                     px: 6, 
@@ -1010,16 +1053,18 @@ const JobBoard = ({ studentId }) => {
                                                                     textTransform: 'none',
                                                                     fontWeight: 800,
                                                                     fontSize: '1.2rem',
-                                                                    background: job.isEligible 
+                                                                    background: job.isEligible && profileCompletionStatus?.can_apply
                                                                         ? 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'
-                                                                        : 'rgba(0,0,0,0.12)',
-                                                                    boxShadow: job.isEligible 
+                                                                        : !job.isEligible 
+                                                                        ? 'rgba(0,0,0,0.12)'
+                                                                        : 'linear-gradient(135deg, #ff9800 0%, #ffb74d 100%)',
+                                                                    boxShadow: job.isEligible && profileCompletionStatus?.can_apply
                                                                         ? '0 8px 24px rgba(103, 126, 234, 0.3)' 
                                                                         : 'none',
                                                                     transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
                                                                     '&:hover': {
-                                                                        transform: job.isEligible ? 'translateY(-3px)' : 'none',
-                                                                        boxShadow: job.isEligible 
+                                                                        transform: job.isEligible && profileCompletionStatus?.can_apply ? 'translateY(-3px)' : 'none',
+                                                                        boxShadow: job.isEligible && profileCompletionStatus?.can_apply
                                                                             ? '0 12px 32px rgba(103, 126, 234, 0.4)' 
                                                                             : 'none',
                                                                     },
@@ -1029,7 +1074,9 @@ const JobBoard = ({ studentId }) => {
                                                                     }
                                                                 }}
                                                             >
-                                                                {job.isEligible ? '🚀 Apply Now' : '❌ Not Eligible'}
+                                                                {!job.isEligible ? '❌ Not Eligible' : 
+                                                                 !profileCompletionStatus?.can_apply ? '📝 Complete Profile' : 
+                                                                 '🚀 Apply Now'}
                                                             </Button>
                                                         ) : (
                                                             (() => {
