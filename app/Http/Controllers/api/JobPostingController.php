@@ -410,7 +410,10 @@ class JobPostingController extends Controller
             
             // Convert arrays to JSON strings for JSON fields
             if (isset($jobPostingData['eligible_courses']) && is_array($jobPostingData['eligible_courses'])) {
-                $jobPostingData['eligible_courses'] = json_encode($jobPostingData['eligible_courses']);
+                // Convert course IDs to course names
+                $courseIds = $jobPostingData['eligible_courses'];
+                $courses = \App\Models\Course::whereIn('id', $courseIds)->pluck('name')->toArray();
+                $jobPostingData['eligible_courses'] = json_encode($courses);
             }
             
             if (isset($jobPostingData['specializations']) && is_array($jobPostingData['specializations'])) {
@@ -482,7 +485,10 @@ class JobPostingController extends Controller
             
             // Convert arrays to JSON strings for JSON fields
             if (isset($jobPostingData['eligible_courses']) && is_array($jobPostingData['eligible_courses'])) {
-                $jobPostingData['eligible_courses'] = json_encode($jobPostingData['eligible_courses']);
+                // Convert course IDs to course names
+                $courseIds = $jobPostingData['eligible_courses'];
+                $courses = \App\Models\Course::whereIn('id', $courseIds)->pluck('name')->toArray();
+                $jobPostingData['eligible_courses'] = json_encode($courses);
             }
             
             if (isset($jobPostingData['specializations']) && is_array($jobPostingData['specializations'])) {

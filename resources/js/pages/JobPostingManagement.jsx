@@ -118,7 +118,6 @@ const JobPostingManagement = () => {
     const [jobPostingForm, setJobPostingForm] = useState({
         company_id: '',
         title: '',
-        course_id: '',
         description: '',
         requirements: '',
         responsibilities: '',
@@ -137,7 +136,9 @@ const JobPostingManagement = () => {
         mtech_year_of_passout_max: '',
         btech_percentage_min: '',
         mtech_percentage_min: '',
-        additional_criteria: ''
+        additional_criteria: '',
+        // New fields for multiple course selection
+        eligible_courses: []
     });
 
     const handleTabChange = (event, newValue) => {
@@ -147,13 +148,24 @@ const JobPostingManagement = () => {
     const handleOpenDialog = (item = null) => {
         setSelectedItem(item);
         if (item) {
-            setJobPostingForm(item);
+            // Handle course conversion for editing
+            let formData = { ...item };
+            
+            // Convert eligible_courses from names to IDs if needed
+            if (item.eligible_courses && Array.isArray(item.eligible_courses) && item.eligible_courses.length > 0) {
+                const courseIds = item.eligible_courses.map(courseName => {
+                    const course = coursesData?.courses?.find(c => c.name === courseName);
+                    return course ? course.id : null;
+                }).filter(id => id !== null);
+                formData.eligible_courses = courseIds;
+            }
+            
+            setJobPostingForm(formData);
         } else {
             // Reset form for new job posting
             setJobPostingForm({
                 company_id: '',
                 title: '',
-                course_id: '',
                 description: '',
                 requirements: '',
                 responsibilities: '',
@@ -172,7 +184,9 @@ const JobPostingManagement = () => {
                 mtech_year_of_passout_max: '',
                 btech_percentage_min: '',
                 mtech_percentage_min: '',
-                additional_criteria: ''
+                additional_criteria: '',
+                // New fields for multiple course selection
+                eligible_courses: []
             });
         }
         setOpenDialog(true);
@@ -547,11 +561,33 @@ const JobPostingManagement = () => {
                         </Grid>
                         <Grid item xs={12} md={6}>
                             <FormControl fullWidth>
-                                <InputLabel>Course</InputLabel>
+                                <InputLabel>Courses</InputLabel>
                                 <Select
-                                    value={jobPostingForm.course_id}
-                                    onChange={(e) => setJobPostingForm({...jobPostingForm, course_id: e.target.value})}
+                                    multiple
+                                    value={jobPostingForm.eligible_courses || []}
+                                    onChange={(e) => setJobPostingForm({...jobPostingForm, eligible_courses: e.target.value})}
                                     disabled={coursesLoading}
+                                    renderValue={(selected) => (
+                                        <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+                                            {selected.map((value) => {
+                                                const course = coursesData?.courses?.find(c => c.id === value);
+                                                return (
+                                                    <Chip 
+                                                        key={value} 
+                                                        label={course ? course.name : value} 
+                                                        size="small" 
+                                                        sx={{
+                                                            backgroundColor: '#1976d2',
+                                                            color: 'white',
+                                                            '&:hover': {
+                                                                backgroundColor: '#1565c0'
+                                                            }
+                                                        }}
+                                                    />
+                                                );
+                                            })}
+                                        </Box>
+                                    )}
                                 >
                                     {coursesLoading ? (
                                         <MenuItem disabled>Loading courses...</MenuItem>

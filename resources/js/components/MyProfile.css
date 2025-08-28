@@ -99,7 +99,7 @@
 /* Main Menu Styles */
 .main-menu-item {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: space-between;
   padding: 1rem;
   border-radius: 0.5rem;
@@ -107,6 +107,11 @@
   transition-property: all;
   transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
   transition-duration: 150ms;
+  min-height: 100px;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  text-align: left;
+  flex-wrap: nowrap;
 }
 
 .main-menu-item-active {
@@ -164,6 +169,14 @@
 .main-menu-item-inactive:hover .main-menu-arrow {
   opacity: 1;
   color: #2a5298;
+}
+
+/* Ensure menu item text wraps properly */
+.main-menu-item span {
+  white-space: normal;
+  word-break: break-word;
+  hyphens: auto;
+  line-height: 1.3;
 }
 
 /* Contact Info Styles */

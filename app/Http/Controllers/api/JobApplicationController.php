@@ -708,12 +708,14 @@ class JobApplicationController extends Controller
                 'application_ids' => 'required|array',
                 'application_ids.*' => 'required|integer|exists:job_applications,id',
                 'status' => 'required|string|in:applied,shortlisted,interview_scheduled,interviewed,selected,selected_not_joined,rejected,withdrawn',
-                'job_posting_id' => 'required|integer|exists:job_postings,id'
+                'job_posting_id' => 'required|integer|exists:job_postings,id',
+                'rejection_reason' => 'nullable|string|max:1000'
             ]);
 
             $applicationIds = $request->application_ids;
             $newStatus = $request->status;
             $jobPostingId = $request->job_posting_id;
+            $rejectionReason = $request->rejection_reason;
 
             // Get the applications to update
             $applications = JobApplication::whereIn('id', $applicationIds)
@@ -741,11 +743,17 @@ class JobApplicationController extends Controller
                     'status' => $oldStatus,
                     'shortlisted_date' => $application->shortlisted_date,
                     'interview_date' => $application->interview_date,
-                    'selection_date' => $application->selection_date
+                    'selection_date' => $application->selection_date,
+                    'rejection_reason' => $application->rejection_reason
                 ];
                 
                 // Update the application status
                 $updateData = ['status' => $newStatus];
+                
+                // Add rejection reason if status is rejected
+                if ($newStatus === 'rejected' && $rejectionReason) {
+                    $updateData['rejection_reason'] = $rejectionReason;
+                }
                 
                 // Update relevant dates based on status
                 switch ($newStatus) {

@@ -206,6 +206,7 @@ const AdminPlacement = () => {
     const [bulkUpdateStatus, setBulkUpdateStatus] = useState('');
     const [bulkUpdateDialog, setBulkUpdateDialog] = useState(false);
     const [updatingBulkStatus, setUpdatingBulkStatus] = useState(false);
+    const [rejectionComments, setRejectionComments] = useState('');
     
     // Undo functionality state
     const [undoOperations, setUndoOperations] = useState([]);
@@ -397,7 +398,6 @@ const AdminPlacement = () => {
     const [jobPostingForm, setJobPostingForm] = useState({
         company_id: '',
         title: '',
-        course_id: '',
         requirements: '',
         job_type: 'full_time',
         location: '',
@@ -554,8 +554,21 @@ const AdminPlacement = () => {
                     mtech_percentage_min: eligibilityData.mtech_percentage_min || '',
                     additional_criteria: eligibilityData.additional_criteria || '',
                     // Handle new fields - parse JSON if needed
-                    eligible_courses: Array.isArray(item.eligible_courses) ? item.eligible_courses : 
-                                    (typeof item.eligible_courses === 'string' ? JSON.parse(item.eligible_courses || '[]') : []),
+                    eligible_courses: (() => {
+                        let courses = Array.isArray(item.eligible_courses) ? item.eligible_courses : 
+                                    (typeof item.eligible_courses === 'string' ? JSON.parse(item.eligible_courses || '[]') : []);
+                        
+                        // If courses are names, convert them to IDs
+                        if (courses.length > 0 && typeof courses[0] === 'string' && !courses[0].match(/^\d+$/)) {
+                            // These are course names, convert to IDs
+                            const courseIds = courses.map(courseName => {
+                                const course = courses?.courses?.find(c => c.name === courseName);
+                                return course ? course.id : null;
+                            }).filter(id => id !== null);
+                            return courseIds;
+                        }
+                        return courses;
+                    })(),
                     specializations: Array.isArray(item.specializations) ? item.specializations : 
                                    (typeof item.specializations === 'string' ? JSON.parse(item.specializations || '[]') : []),
                     backlogs_allowed: item.backlogs_allowed || '',
@@ -605,7 +618,6 @@ const AdminPlacement = () => {
                 setJobPostingForm({
                     company_id: '',
                     title: '',
-                    course_id: '',
                     requirements: '',
                     job_type: 'full_time',
                     location: '',
@@ -969,6 +981,16 @@ const AdminPlacement = () => {
             return;
         }
 
+        // Validate rejection comments when status is 'rejected'
+        if (bulkUpdateStatus === 'rejected' && !rejectionComments.trim()) {
+            setSnackbar({
+                open: true,
+                message: 'Please provide rejection comments when rejecting applications.',
+                severity: 'error'
+            });
+            return;
+        }
+
         try {
             setUpdatingBulkStatus(true);
             const userInfo = getCookie('user_info');
@@ -981,7 +1003,8 @@ const AdminPlacement = () => {
             const response = await axios.post('/api/job-applications/bulk-update', {
                 application_ids: selectedApplications,
                 status: bulkUpdateStatus,
-                job_posting_id: applicationsDialog.jobId
+                job_posting_id: applicationsDialog.jobId,
+                rejection_reason: bulkUpdateStatus === 'rejected' ? rejectionComments : null
             }, {
                 headers: { 'Authorization': `Bearer ${userData.token}` }
             });
@@ -994,6 +1017,7 @@ const AdminPlacement = () => {
                 await fetchEnhancedJobApplications(applicationsDialog.jobId);
                 setSelectedApplications([]);
                 setBulkUpdateStatus('');
+                setRejectionComments('');
                 setBulkUpdateDialog(false);
                 
                 // Show success message with undo option
@@ -2660,7 +2684,10 @@ const AdminPlacement = () => {
             {/* Bulk Update Confirmation Dialog */}
             <Dialog
                 open={bulkUpdateDialog}
-                onClose={() => setBulkUpdateDialog(false)}
+                onClose={() => {
+                    setBulkUpdateDialog(false);
+                    setRejectionComments('');
+                }}
                 maxWidth="sm"
                 fullWidth
                 PaperProps={{
@@ -2695,11 +2722,51 @@ const AdminPlacement = () => {
                     <Typography variant="body2" color="warning.main" fontWeight="500">
                         This action cannot be undone.
                     </Typography>
+                    
+                    {/* Rejection Comments Section - Only show when status is 'rejected' */}
+                    {bulkUpdateStatus === 'rejected' && (
+                        <Box sx={{ mt: 3 }}>
+                            <Typography variant="h6" gutterBottom color="error.main" fontWeight="600">
+                                Rejection Comments
+                            </Typography>
+                            <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                                Please provide a reason for rejection. This will be visible to the students and help them understand why they were not selected.
+                            </Typography>
+                            <TextField
+                                fullWidth
+                                multiline
+                                rows={4}
+                                variant="outlined"
+                                placeholder="Enter rejection reason (e.g., 'Does not meet the required technical skills', 'Interview performance was below expectations', etc.)"
+                                value={rejectionComments}
+                                onChange={(e) => setRejectionComments(e.target.value)}
+                                sx={{
+                                    '& .MuiOutlinedInput-root': {
+                                        '& fieldset': {
+                                            borderColor: 'error.main',
+                                        },
+                                        '&:hover fieldset': {
+                                            borderColor: 'error.main',
+                                        },
+                                        '&.Mui-focused fieldset': {
+                                            borderColor: 'error.main',
+                                        },
+                                    },
+                                }}
+                            />
+                            <Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: 'block' }}>
+                                Maximum 1000 characters
+                            </Typography>
+                        </Box>
+                    )}
                 </DialogContent>
                 
                 <DialogActions sx={{ p: 3, pt: 1 }}>
                     <Button 
-                        onClick={() => setBulkUpdateDialog(false)}
+                        onClick={() => {
+                            setBulkUpdateDialog(false);
+                            setRejectionComments('');
+                        }}
                         disabled={updatingBulkStatus}
                         sx={{ textTransform: 'none' }}
                     >
@@ -3818,11 +3885,33 @@ const AdminPlacement = () => {
                                 </Grid>
                                 <Grid item xs={12} md={6}>
                                     <FormControl fullWidth>
-                                        <InputLabel sx={{ fontSize: '0.9rem', fontWeight: 500 }}>Course</InputLabel>
+                                        <InputLabel sx={{ fontSize: '0.9rem', fontWeight: 500 }}>Courses</InputLabel>
                                         <Select
-                                            value={jobPostingForm.course_id}
-                                            onChange={(e) => setJobPostingForm({...jobPostingForm, course_id: e.target.value})}
+                                            multiple
+                                            value={jobPostingForm.eligible_courses || []}
+                                            onChange={(e) => setJobPostingForm({...jobPostingForm, eligible_courses: e.target.value})}
                                             disabled={coursesLoading}
+                                            renderValue={(selected) => (
+                                                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+                                                    {selected.map((value) => {
+                                                        const course = courses?.courses?.find(c => c.id === value);
+                                                        return (
+                                                            <Chip 
+                                                                key={value} 
+                                                                label={course ? course.name : value} 
+                                                                size="small" 
+                                                                sx={{
+                                                                    backgroundColor: '#1976d2',
+                                                                    color: 'white',
+                                                                    '&:hover': {
+                                                                        backgroundColor: '#1565c0'
+                                                                    }
+                                                                }}
+                                                            />
+                                                        );
+                                                    })}
+                                                </Box>
+                                            )}
                                             sx={{
                                                 borderRadius: 2,
                                                 '&:hover': {
@@ -4439,40 +4528,6 @@ const AdminPlacement = () => {
                             </Box>
                             
                             <Grid container spacing={4}>
-                                {/* Eligible Courses */}
-                                <Grid item xs={12} md={6}>
-                                    <FormControl fullWidth>
-                                        <InputLabel sx={{ fontSize: '0.9rem', fontWeight: 500 }}>Eligible Courses / Programs</InputLabel>
-                                        <Select
-                                            multiple
-                                            value={jobPostingForm.eligible_courses}
-                                            onChange={(e) => setJobPostingForm({...jobPostingForm, eligible_courses: e.target.value})}
-                                            renderValue={(selected) => (
-                                                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
-                                                    {selected.map((value) => (
-                                                        <Chip key={value} label={value} size="small" />
-                                                    ))}
-                                                </Box>
-                                            )}
-                                            sx={{
-                                                borderRadius: 2,
-                                                '&:hover': {
-                                                    boxShadow: '0 4px 12px rgba(220, 38, 38, 0.15)',
-                                                },
-                                                '&.Mui-focused': {
-                                                    boxShadow: '0 4px 20px rgba(239, 68, 68, 0.25)',
-                                                }
-                                            }}
-                                        >
-                                            <MenuItem value="B.Tech">B.Tech</MenuItem>
-                                            <MenuItem value="M.Tech">M.Tech</MenuItem>
-                                            <MenuItem value="Diploma">Diploma</MenuItem>
-                                            <MenuItem value="B.Sc">B.Sc</MenuItem>
-                                            <MenuItem value="M.Sc">M.Sc</MenuItem>
-                                        </Select>
-                                    </FormControl>
-                                </Grid>
-
                                 {/* Specializations */}
                                 <Grid item xs={12} md={6}>
                                     <FormControl fullWidth>

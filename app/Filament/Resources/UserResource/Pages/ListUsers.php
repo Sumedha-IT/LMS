@@ -33,6 +33,12 @@ class ListUsers extends ListRecords
                 ->mutateFormDataUsing(function (array $data) {
                     $this->tmp_pass = $data['password'];
                     $data['password'] = Hash::make($data['password']);
+                    
+                    // Set default placement center access for students and placement students
+                    if (in_array($data['role_id'], [6, 11])) {
+                        $data['placement_center_access'] = true;
+                    }
+                    
                     return $data;
                 })
                 ->after(function (User $record) {

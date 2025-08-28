@@ -136,9 +136,14 @@ const JobBoard = ({ studentId }) => {
                 });
                 
                 if (applicationsResponse.data.data) {
-                    const appliedJobIds = applicationsResponse.data.data.map(app => app.job_posting_id);
+                    // Filter out duplicate applications by job_posting_id (keep only the latest one)
+                    const uniqueApplications = applicationsResponse.data.data.filter((app, index, self) => 
+                        index === self.findIndex(a => a.job_posting_id === app.job_posting_id)
+                    );
+                    
+                    const appliedJobIds = uniqueApplications.map(app => app.job_posting_id);
                     setAppliedJobs(appliedJobIds);
-                    setJobApplications(applicationsResponse.data.data);
+                    setJobApplications(uniqueApplications);
                 }
             } catch (err) {
                 console.error('Error fetching student data:', err);
@@ -168,7 +173,16 @@ const JobBoard = ({ studentId }) => {
     // Transform API data to match component expectations and filter by course eligibility
     const jobs = jobPostings?.data ? jobPostings.data.map(job => {
         // Check if job is eligible for student's course
-        const isEligible = !job.course_id || (studentCourse && job.course_id === studentCourse.id);
+        let isEligible = true;
+        
+        // Check eligible_courses field first (new multiple course selection)
+        if (job.eligible_courses && Array.isArray(job.eligible_courses) && job.eligible_courses.length > 0) {
+            isEligible = job.eligible_courses.includes(studentCourse?.name);
+        }
+        // Fallback to old course_id field for backward compatibility
+        else if (job.course_id) {
+            isEligible = studentCourse && job.course_id === studentCourse.id;
+        }
         
         return {
             id: job.id,
@@ -188,10 +202,14 @@ const JobBoard = ({ studentId }) => {
             deadline: job.application_deadline ? formatDateToDMY(job.application_deadline) : 'N/A',
             domain: 'Computer Science', // Default domain
             course_id: job.course_id,
-            course_name: job.course?.name || 'Any Course',
+            course_name: job.eligible_courses && Array.isArray(job.eligible_courses) && job.eligible_courses.length > 0 
+                        ? job.eligible_courses.join(', ') 
+                        : (job.course?.name || 'Any Course'),
             isEligible: isEligible
         };
-    }) : [];
+    }).filter(job => job.isEligible) : [];
+
+
 
     const filteredJobs = jobs.filter(job => {
         const matchesSearch = job.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -218,10 +236,6 @@ const JobBoard = ({ studentId }) => {
     };
 
     const handleApply = async (job) => {
-        if (!job.isEligible) {
-            return; // Don't allow applying for ineligible jobs
-        }
-
         // Check profile completion before allowing application
         if (!profileCompletionStatus?.can_apply) {
             setSnackbar({
@@ -314,6 +328,11 @@ const JobBoard = ({ studentId }) => {
     const getApplicationStatus = (jobId) => {
         const application = jobApplications.find(app => app.job_posting_id === jobId);
         return application ? application.status : null;
+    };
+
+    const getApplicationData = (jobId) => {
+        const application = jobApplications.find(app => app.job_posting_id === jobId);
+        return application || null;
     };
 
     const getStatusColor = (status) => {
@@ -425,10 +444,10 @@ const JobBoard = ({ studentId }) => {
                             <Card sx={{ borderRadius: 3, background: 'linear-gradient(135deg, #0f1f3d 0%, #1e3c72 100%)', color: 'white', minWidth: 120 }}>
                                 <CardContent sx={{ p: 2, '&:last-child': { pb: 2 } }}>
                                     <Typography variant="h6" sx={{ fontWeight: 700, mb: 0.5 }}>
-                                        {filteredJobs.length}
+                                        {jobs.length}
                                     </Typography>
                                     <Typography variant="caption" sx={{ opacity: 0.9 }}>
-                                        Total Jobs
+                                        Available Jobs
                                     </Typography>
                                 </CardContent>
                             </Card>
@@ -437,10 +456,10 @@ const JobBoard = ({ studentId }) => {
                             <Card sx={{ borderRadius: 3, background: 'linear-gradient(270deg, #eb6707 0%, #e42b12 100%)', color: 'white', minWidth: 120 }}>
                                 <CardContent sx={{ p: 2, '&:last-child': { pb: 2 } }}>
                                     <Typography variant="h6" sx={{ fontWeight: 700, mb: 0.5 }}>
-                                        {appliedJobs.length}
+                                        {jobs.filter(job => isApplied(job.id)).length}
                                     </Typography>
                                     <Typography variant="caption" sx={{ opacity: 0.9 }}>
-                                        Applied
+                                        Applied Jobs
                                     </Typography>
                                 </CardContent>
                             </Card>
@@ -448,42 +467,7 @@ const JobBoard = ({ studentId }) => {
                     </Grid>
                 </Box>
                 
-                {/* Course Information Card */}
-                {studentCourse && (
-                    <Card sx={{ 
-                        mb: 3, 
-                        borderRadius: 3,
-                        background: 'linear-gradient(135deg, rgba(46, 125, 50, 0.05) 0%, rgba(67, 160, 71, 0.05) 100%)',
-                        border: '1px solid rgba(76, 175, 80, 0.2)',
-                        overflow: 'hidden'
-                    }}>
-                        <CardContent sx={{ p: 3 }}>
-                            <Box display="flex" alignItems="center" gap={3}>
-                                <Box sx={{
-                                    width: 60,
-                                    height: 60,
-                                    borderRadius: '50%',
-                                    background: 'linear-gradient(270deg, #eb6707 0%, #e42b12 100%)',
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    justifyContent: 'center',
-                                    boxShadow: '0 4px 20px rgba(235, 103, 7, 0.3)'
-                                }}>
-                                    <CheckCircleIcon sx={{ color: 'white', fontSize: 28 }} />
-                                </Box>
-                                <Box flex={1}>
-                                    <Typography variant="h6" fontWeight={700} sx={{ color: '#0f1f3d', mb: 0.5 }}>
-                                        ✨ Enrolled in: {studentCourse.name}
-                                    </Typography>
-                                    <Typography variant="body2" color="text.secondary" sx={{ lineHeight: 1.6 }}>
-                                        You're eligible for jobs matching your course or open to all students. 
-                                        Keep building your skills to unlock more opportunities! 🎯
-                                    </Typography>
-                                </Box>
-                            </Box>
-                        </CardContent>
-                    </Card>
-                )}
+
             </Box>
 
             {/* Modern Search and Filters */}
@@ -618,25 +602,44 @@ const JobBoard = ({ studentId }) => {
                     <Grid item xs={12} key={job.id}>
                         <Card 
                             sx={{ 
-                                    borderRadius: 4, 
+                                borderRadius: 3, 
                                 boxShadow: isApplied(job.id) 
-                                    ? '0 8px 32px rgba(76, 175, 80, 0.15)' 
-                                    : '0 4px 24px rgba(0,0,0,0.05)',
-                                    transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                                    ? '0 4px 20px rgba(76, 175, 80, 0.15)' 
+                                    : !profileCompletionStatus?.can_apply
+                                    ? '0 2px 8px rgba(239, 68, 68, 0.2)'
+                                    : '0 2px 8px rgba(0,0,0,0.08)',
+                                transition: 'all 0.3s ease',
                                 border: isApplied(job.id) 
-                                    ? '2px solid #4caf50' 
-                                    : '1px solid rgba(0,0,0,0.06)',
+                                    ? '1px solid #4caf50' 
+                                    : !profileCompletionStatus?.can_apply
+                                    ? '1px solid #ef4444'
+                                    : '1px solid #e5e7eb',
                                 background: isApplied(job.id)
-                                    ? 'linear-gradient(135deg, rgba(76, 175, 80, 0.02) 0%, rgba(129, 199, 132, 0.02) 100%)'
-                                    : 'linear-gradient(135deg, rgba(255,255,255,0.9) 0%, rgba(255,255,255,1) 100%)',
+                                    ? '#f8fdf8'
+                                    : !profileCompletionStatus?.can_apply
+                                    ? '#fef2f2'
+                                    : '#ffffff',
                                 position: 'relative',
                                 overflow: 'hidden',
-                                    cursor: 'pointer',
+                                cursor: 'pointer',
+                                animation: !profileCompletionStatus?.can_apply ? 'blinkRed 2s infinite' : 'none',
+                                '@keyframes blinkRed': {
+                                    '0%, 50%': {
+                                        borderColor: '#ef4444',
+                                        boxShadow: '0 2px 8px rgba(239, 68, 68, 0.2)'
+                                    },
+                                    '25%, 75%': {
+                                        borderColor: '#dc2626',
+                                        boxShadow: '0 4px 16px rgba(239, 68, 68, 0.4)'
+                                    }
+                                },
                                 '&:hover': {
-                                        transform: 'translateY(-4px)',
-                                        boxShadow: '0 8px 32px rgba(0,0,0,0.1)',
+                                    transform: 'translateY(-2px)',
+                                    boxShadow: !profileCompletionStatus?.can_apply
+                                        ? '0 8px 25px rgba(239, 68, 68, 0.3)'
+                                        : '0 8px 25px rgba(0,0,0,0.12)',
                                     '& .company-avatar': {
-                                            transform: 'scale(1.05)',
+                                        transform: 'scale(1.02)',
                                     },
                                 },
                                 '&::before': {
@@ -645,10 +648,12 @@ const JobBoard = ({ studentId }) => {
                                     top: 0,
                                     left: 0,
                                     right: 0,
-                                    height: '4px',
-                                    background: job.isEligible 
-                                        ? 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'
-                                        : 'linear-gradient(135deg, #ff9a56 0%, #f44336 100%)',
+                                    height: '3px',
+                                    background: isApplied(job.id)
+                                        ? '#4caf50'
+                                        : !profileCompletionStatus?.can_apply
+                                        ? '#ef4444'
+                                        : '#3b82f6',
                                 },
                             }}
                                 onClick={() => setExpandedJobs(prev => ({
@@ -664,72 +669,48 @@ const JobBoard = ({ studentId }) => {
                                         <Avatar 
                                             className="company-avatar"
                                             sx={{ 
-                                                    width: 60, 
-                                                    height: 60, 
-                                                background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                                                    fontSize: '1.2rem',
-                                                fontWeight: 800,
-                                                    boxShadow: '0 4px 16px rgba(103, 126, 234, 0.25)',
-                                                transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-                                                    border: '2px solid rgba(255,255,255,0.9)',
+                                                width: 56, 
+                                                height: 56, 
+                                                background: '#3b82f6',
+                                                fontSize: '1.1rem',
+                                                fontWeight: 600,
+                                                boxShadow: '0 2px 8px rgba(59, 130, 246, 0.2)',
+                                                transition: 'all 0.3s ease',
+                                                border: '2px solid #ffffff',
                                                 color: 'white'
                                             }}
                                         >
                                             {getCompanyInitials(job.company)}
                                         </Avatar>
-                                        {/* Status indicator */}
-                                        <Box sx={{
-                                            position: 'absolute',
-                                            bottom: -2,
-                                            right: -2,
-                                                width: 20,
-                                                height: 20,
-                                            borderRadius: '50%',
-                                            background: job.isEligible ? '#4caf50' : '#f44336',
-                                                border: '2px solid white',
-                                            display: 'flex',
-                                            alignItems: 'center',
-                                            justifyContent: 'center',
-                                                boxShadow: '0 2px 6px rgba(0,0,0,0.15)'
-                                        }}>
-                                            {job.isEligible ? 
-                                                    <CheckCircleIcon sx={{ fontSize: 10, color: 'white' }} /> :
-                                                    <CancelIcon sx={{ fontSize: 10, color: 'white' }} />
-                                            }
-                                        </Box>
+
                                     </Box>
 
                                         {/* Job Title and Company */}
                                     <Box flex={1} minWidth={0}>
                                                     <Typography 
-                                                variant="h6" 
+                                                        variant="h6" 
                                                         sx={{ 
-                                                    fontWeight: 700, 
-                                                            color: 'text.primary', 
-                                                            lineHeight: 1.2, 
-                                                    fontSize: { xs: '1.1rem', sm: '1.3rem' },
-                                                            background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                                                            backgroundClip: 'text',
-                                                            WebkitBackgroundClip: 'text',
-                                                            WebkitTextFillColor: 'transparent',
-                                                    display: 'inline-block',
-                                                    mb: 0.5
+                                                            fontWeight: 600, 
+                                                            color: '#1f2937', 
+                                                            lineHeight: 1.3, 
+                                                            fontSize: { xs: '1rem', sm: '1.2rem' },
+                                                            mb: 0.5
                                                         }}
                                                     >
                                                         {job.title}
                                                     </Typography>
                                                 <Typography 
-                                                variant="body1" 
-                                                    color="primary" 
+                                                    variant="body1" 
                                                     sx={{ 
-                                                    fontWeight: 600, 
-                                                    fontSize: '1rem',
+                                                        fontWeight: 500, 
+                                                        fontSize: '0.95rem',
+                                                        color: '#6b7280',
                                                         display: 'flex',
                                                         alignItems: 'center',
                                                         gap: 1
                                                     }}
                                                 >
-                                                <BusinessIcon sx={{ fontSize: 18 }} />
+                                                    <BusinessIcon sx={{ fontSize: 16, color: '#9ca3af' }} />
                                                     {job.company}
                                                 </Typography>
                                             </Box>
@@ -759,47 +740,91 @@ const JobBoard = ({ studentId }) => {
                                                     fontWeight: 600
                                                 }}
                                             />
-                                            {isApplied(job.id) && (
-                                                <Chip 
-                                                    label={getStatusDisplayText(getApplicationStatus(job.id))} 
-                                                    size="small"
-                                                    icon={<CheckCircleIcon />}
-                                                    color={getStatusColor(getApplicationStatus(job.id))}
-                                                    sx={{ 
-                                                        borderRadius: 2,
-                                                        fontSize: '0.75rem',
-                                                        fontWeight: 600,
-                                                        background: getApplicationStatus(job.id) === 'selected' 
-                                                            ? 'linear-gradient(135deg, #4caf50 0%, #66bb6a 100%)'
-                                                            : getApplicationStatus(job.id) === 'rejected'
-                                                            ? 'linear-gradient(135deg, #f44336 0%, #e57373 100%)'
-                                                            : getApplicationStatus(job.id) === 'shortlisted'
-                                                            ? 'linear-gradient(135deg, #2196f3 0%, #64b5f6 100%)'
-                                                            : getApplicationStatus(job.id) === 'interview_scheduled'
-                                                            ? 'linear-gradient(135deg, #00bcd4 0%, #4dd0e1 100%)'
-                                                            : getApplicationStatus(job.id) === 'interviewed'
-                                                            ? 'linear-gradient(135deg, #ff9800 0%, #ffb74d 100%)'
-                                                            : 'linear-gradient(135deg, #4caf50 0%, #66bb6a 100%)',
-                                                        color: 'white'
-                                                    }}
-                                                />
-                                            )}
+
                                         </Box>
+
+                                        {/* Apply Button */}
+                                        {!isApplied(job.id) ? (
+                                            <Button
+                                                variant="contained"
+                                                size="small"
+                                                startIcon={<ApplyIcon />}
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    handleApply(job);
+                                                }}
+                                                disabled={!profileCompletionStatus?.can_apply}
+                                                sx={{ 
+                                                    borderRadius: 2, 
+                                                    px: 3, 
+                                                    py: 1,
+                                                    textTransform: 'none',
+                                                    fontWeight: 600,
+                                                    fontSize: '0.875rem',
+                                                    background: profileCompletionStatus?.can_apply
+                                                        ? '#3b82f6'
+                                                        : '#9ca3af',
+                                                    boxShadow: profileCompletionStatus?.can_apply
+                                                        ? '0 2px 8px rgba(59, 130, 246, 0.3)' 
+                                                        : 'none',
+                                                    transition: 'all 0.3s ease',
+                                                    '&:hover': {
+                                                        transform: profileCompletionStatus?.can_apply ? 'translateY(-1px)' : 'none',
+                                                        boxShadow: profileCompletionStatus?.can_apply
+                                                            ? '0 4px 12px rgba(59, 130, 246, 0.4)' 
+                                                            : 'none',
+                                                    },
+                                                    '&:disabled': {
+                                                        background: '#9ca3af',
+                                                        color: '#ffffff'
+                                                    }
+                                                }}
+                                            >
+                                                {!profileCompletionStatus?.can_apply ? 'Complete Profile' : 'Apply'}
+                                            </Button>
+                                        ) : (
+                                            <Chip 
+                                                label={getStatusDisplayText(getApplicationStatus(job.id))} 
+                                                size="small"
+                                                color={getStatusColor(getApplicationStatus(job.id))}
+                                                sx={{ 
+                                                    borderRadius: 2,
+                                                    fontSize: '0.75rem',
+                                                    fontWeight: 600,
+                                                    background: getApplicationStatus(job.id) === 'selected' 
+                                                        ? '#4caf50'
+                                                        : getApplicationStatus(job.id) === 'rejected'
+                                                        ? '#f44336'
+                                                        : getApplicationStatus(job.id) === 'shortlisted'
+                                                        ? '#2196f3'
+                                                        : getApplicationStatus(job.id) === 'interview_scheduled'
+                                                        ? '#00bcd4'
+                                                        : getApplicationStatus(job.id) === 'interviewed'
+                                                        ? '#ff9800'
+                                                        : '#4caf50',
+                                                    color: 'white'
+                                                }}
+                                            />
+                                        )}
 
                                         {/* Expand/Collapse Icon */}
                                         <Box sx={{
                                             display: 'flex',
                                             alignItems: 'center',
                                             justifyContent: 'center',
-                                            width: 40,
-                                            height: 40,
+                                            width: 32,
+                                            height: 32,
                                             borderRadius: '50%',
-                                            background: 'rgba(103, 126, 234, 0.1)',
+                                            background: '#f3f4f6',
                                             transition: 'all 0.3s ease',
-                                            transform: isExpanded ? 'rotate(180deg)' : 'rotate(0deg)'
+                                            transform: isExpanded ? 'rotate(180deg)' : 'rotate(0deg)',
+                                            cursor: 'pointer',
+                                            '&:hover': {
+                                                background: '#e5e7eb'
+                                            }
                                         }}>
-                                            <ArrowIcon sx={{ color: '#667eea', fontSize: 20 }} />
-                                                        </Box>
+                                            <ArrowIcon sx={{ color: '#6b7280', fontSize: 16 }} />
+                                        </Box>
                                         </Box>
 
                                     {/* Expanded Content */}
@@ -807,55 +832,6 @@ const JobBoard = ({ studentId }) => {
                                         <Box sx={{ mt: 4, pt: 3, borderTop: '1px solid rgba(0,0,0,0.08)' }}>
                                             {/* Clean Job Overview Section */}
                                             <Grid container spacing={3} mb={4}>
-                                                {/* Eligibility Status */}
-                                                <Grid item xs={12}>
-                                            <Card sx={{ 
-                                                borderRadius: 3, 
-                                                        background: job.isEligible 
-                                                            ? 'linear-gradient(135deg, rgba(76, 175, 80, 0.08) 0%, rgba(129, 199, 132, 0.08) 100%)'
-                                                            : 'linear-gradient(135deg, rgba(244, 67, 54, 0.08) 0%, rgba(229, 115, 115, 0.08) 100%)',
-                                                        border: job.isEligible 
-                                                            ? '1px solid rgba(76, 175, 80, 0.2)' 
-                                                            : '1px solid rgba(244, 67, 54, 0.2)'
-                                                    }}>
-                                                        <CardContent sx={{ p: 3 }}>
-                                                            <Box display="flex" alignItems="center" gap={2}>
-                                                                <Box sx={{
-                                                                    width: 40,
-                                                                    height: 40,
-                                                                    borderRadius: '50%',
-                                                                    background: job.isEligible ? '#4caf50' : '#f44336',
-                                                                    display: 'flex',
-                                                                    alignItems: 'center',
-                                                                    justifyContent: 'center'
-                                                                }}>
-                                                                    {job.isEligible ? 
-                                                                        <CheckCircleIcon sx={{ fontSize: 20, color: 'white' }} /> :
-                                                                        <CancelIcon sx={{ fontSize: 20, color: 'white' }} />
-                                                                    }
-                                                                </Box>
-                                                                <Box>
-                                                                    <Typography variant="h6" fontWeight={700} sx={{ 
-                                                                        color: job.isEligible ? '#2e7d32' : '#c62828',
-                                                                        mb: 0.5
-                                                                    }}>
-                                                                        {job.isEligible ? '✅ You are eligible for this position!' : '❌ Not eligible for this position'}
-                                                                    </Typography>
-                                                                    <Typography variant="body2" sx={{ 
-                                                                        color: job.isEligible ? '#388e3c' : '#d32f2f',
-                                                                        opacity: 0.8
-                                                                    }}>
-                                                                        {job.isEligible 
-                                                                            ? 'This job matches your course requirements'
-                                                                            : 'This job requires a different course background'
-                                                                        }
-                                                        </Typography>
-                                                                </Box>
-                                                    </Box>
-                                                </CardContent>
-                                            </Card>
-                                                </Grid>
-                                            
                                                 {/* Job Details Grid */}
                                                 <Grid item xs={12} md={6}>
                                             <Card sx={{ 
@@ -1045,7 +1021,7 @@ const JobBoard = ({ studentId }) => {
                                                                     e.stopPropagation();
                                                                     handleApply(job);
                                                                 }}
-                                                                disabled={!job.isEligible || !profileCompletionStatus?.can_apply}
+                                                                disabled={!profileCompletionStatus?.can_apply}
                                                                 sx={{ 
                                                                     borderRadius: 4, 
                                                                     px: 6, 
@@ -1053,18 +1029,16 @@ const JobBoard = ({ studentId }) => {
                                                                     textTransform: 'none',
                                                                     fontWeight: 800,
                                                                     fontSize: '1.2rem',
-                                                                    background: job.isEligible && profileCompletionStatus?.can_apply
+                                                                    background: profileCompletionStatus?.can_apply
                                                                         ? 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'
-                                                                        : !job.isEligible 
-                                                                        ? 'rgba(0,0,0,0.12)'
                                                                         : 'linear-gradient(135deg, #ff9800 0%, #ffb74d 100%)',
-                                                                    boxShadow: job.isEligible && profileCompletionStatus?.can_apply
+                                                                    boxShadow: profileCompletionStatus?.can_apply
                                                                         ? '0 8px 24px rgba(103, 126, 234, 0.3)' 
                                                                         : 'none',
                                                                     transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
                                                                     '&:hover': {
-                                                                        transform: job.isEligible && profileCompletionStatus?.can_apply ? 'translateY(-3px)' : 'none',
-                                                                        boxShadow: job.isEligible && profileCompletionStatus?.can_apply
+                                                                        transform: profileCompletionStatus?.can_apply ? 'translateY(-3px)' : 'none',
+                                                                        boxShadow: profileCompletionStatus?.can_apply
                                                                             ? '0 12px 32px rgba(103, 126, 234, 0.4)' 
                                                                             : 'none',
                                                                     },
@@ -1074,8 +1048,7 @@ const JobBoard = ({ studentId }) => {
                                                                     }
                                                                 }}
                                                             >
-                                                                {!job.isEligible ? '❌ Not Eligible' : 
-                                                                 !profileCompletionStatus?.can_apply ? '📝 Complete Profile' : 
+                                                                {!profileCompletionStatus?.can_apply ? '📝 Complete Profile' : 
                                                                  '🚀 Apply Now'}
                                                             </Button>
                                                         ) : (
@@ -1083,6 +1056,7 @@ const JobBoard = ({ studentId }) => {
                                                                 const status = getApplicationStatus(job.id);
                                                                 const statusColor = getStatusColor(status);
                                                                 const statusText = getStatusDisplayText(status);
+                                                                const applicationData = getApplicationData(job.id);
                                                                 
                                                                 return (
                                                                     <Card sx={{
@@ -1140,6 +1114,18 @@ const JobBoard = ({ studentId }) => {
                                                                                             ? 'Thank you for attending the interview. We will get back to you soon.'
                                                                                             : 'You\'ll hear back soon! Check your email for updates.'}
                                                                                     </Typography>
+                                                                                    
+                                                                                    {/* Show rejection comments if status is rejected and comments exist */}
+                                                                                    {status === 'rejected' && applicationData?.rejection_reason && (
+                                                                                        <Box sx={{ mt: 2, p: 2, bgcolor: 'rgba(255,255,255,0.1)', borderRadius: 2 }}>
+                                                                                            <Typography variant="body2" sx={{ fontWeight: 600, mb: 1 }}>
+                                                                                                📝 Feedback from Placement Team:
+                                                                                            </Typography>
+                                                                                            <Typography variant="body2" sx={{ opacity: 0.9, fontStyle: 'italic' }}>
+                                                                                                "{applicationData.rejection_reason}"
+                                                                                            </Typography>
+                                                                                        </Box>
+                                                                                    )}
                                                                                 </Box>
                                                                             </Box>
                                                                         </CardContent>

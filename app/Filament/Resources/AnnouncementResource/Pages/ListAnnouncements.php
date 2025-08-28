@@ -17,7 +17,7 @@ class ListAnnouncements extends ListRecords
 
     protected function getHeaderActions(): array
     {
-        if (auth()->user()->is_admin || auth()->user()->is_coordinator || auth()->user()->is_tutor) {
+        if (auth()->user()->is_admin || auth()->user()->is_coordinator || auth()->user()->is_tutor || auth()->user()->is_placement_coordinator) {
             return [
                 Actions\CreateAction::make()
                     ->after(function (Announcement $record) {

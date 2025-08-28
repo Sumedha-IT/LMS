@@ -119,12 +119,37 @@ class UserImporter extends Importer
                 $this->data['role_id'] = (int) $studentRoleId;
             }
         }
+
+        // Set default placement center access for students and placement students
+        if (in_array($this->data['role_id'], [6, 11])) {
+            $this->data['placement_center_access'] = true;
+            $this->record->placement_center_access = true;
+            \Log::info('Setting placement center access to TRUE for user', [
+                'email' => $this->data['email'] ?? 'unknown',
+                'role_id' => $this->data['role_id']
+            ]);
+        } else {
+            $this->data['placement_center_access'] = false;
+            $this->record->placement_center_access = false;
+            \Log::info('Setting placement center access to FALSE for user', [
+                'email' => $this->data['email'] ?? 'unknown',
+                'role_id' => $this->data['role_id']
+            ]);
+        }
     }
 
     protected function afterSave(): void
     {
         $this->record->teams()->syncWithoutDetaching([1]);
-
+        
+        // Double-check and ensure placement center access is set correctly
+        if (in_array($this->record->role_id, [6, 11]) && !$this->record->placement_center_access) {
+            $this->record->update(['placement_center_access' => true]);
+            \Log::info('Fixed placement center access after save for user', [
+                'email' => $this->record->email,
+                'role_id' => $this->record->role_id
+            ]);
+        }
     }
 
     /**

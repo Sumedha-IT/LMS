@@ -265,9 +265,13 @@ class UserResource extends Resource
                         Forms\Components\Toggle::make('placement_center_access')
                             ->label('Placement Center Access')
                             ->helperText('Enable this to allow the user to access the Placement Center')
-                            ->default(false)
-                            ->visible(fn ($record) => $record && in_array($record->role_id, [6, 11])), // Only show for students and placement students
-                    ])->hiddenOn('create')->columns(1),
+                            ->default(true) // Default to true for new users
+                            ->visible(fn ($record, $context) => 
+                                // Show for students and placement students
+                                ($context === 'create' && in_array(request('role_id'), [6, 11])) ||
+                                ($context === 'edit' && $record && in_array($record->role_id, [6, 11]))
+                            ),
+                    ])->columns(1),
 
             ]);
     }
@@ -301,7 +305,9 @@ class UserResource extends Resource
                     ->label('Placement Center Access')
                     ->onColor('success')
                     ->offColor('danger')
-                    ->toggleable(isToggledHiddenByDefault: false),
+                    ->toggleable(isToggledHiddenByDefault: false)
+                    ->sortable()
+                    ->searchable(),
                 Tables\Columns\TextColumn::make('created_at')
                     ->dateTime()
                     ->sortable()

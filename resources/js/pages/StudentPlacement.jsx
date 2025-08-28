@@ -4,16 +4,11 @@ import {
     Container, 
     Typography, 
     Paper,
-    Breadcrumbs,
-    Link,
-    useTheme,
-    alpha
+    useTheme
 } from '@mui/material';
 import { useParams } from 'react-router-dom';
 import {
-    Home as HomeIcon,
-    Work as WorkIcon,
-    ArrowForwardIos as ArrowIcon
+    Work as WorkIcon
 } from '@mui/icons-material';
 
 // Import JobBoard component
@@ -27,21 +22,18 @@ const StudentPlacement = () => {
         <Box 
             sx={{ 
                 minHeight: '100vh',
-                background: `linear-gradient(135deg, 
-                    ${alpha(theme.palette.primary.main, 0.05)} 0%, 
-                    ${alpha(theme.palette.secondary.main, 0.05)} 100%)`,
+                background: '#f8fafc',
                 py: 4
             }}
         >
             <Container maxWidth="xl">
-                {/* Header Section with Breadcrumbs */}
+                {/* Professional Header Section */}
                 <Paper 
                     elevation={0}
                     sx={{ 
-                        p: 4, 
-                        mb: 4, 
-                        borderRadius: 4,
-                        background: 'linear-gradient(135deg, #0f1f3d 0%, #1e3c72 100%)',
+                        borderRadius: 2,
+                        mb: 4,
+                        background: 'linear-gradient(135deg, #1e293b 0%, #334155 100%)',
                         color: 'white',
                         position: 'relative',
                         overflow: 'hidden',
@@ -50,50 +42,16 @@ const StudentPlacement = () => {
                             position: 'absolute',
                             top: 0,
                             right: 0,
-                            width: '200px',
-                            height: '200px',
-                            background: alpha('#fff', 0.1),
-                            borderRadius: '50%',
-                            transform: 'translate(50px, -50px)'
-                        },
-                        '&::after': {
-                            content: '""',
-                            position: 'absolute',
-                            bottom: 0,
-                            left: 0,
-                            width: '150px',
-                            height: '150px',
-                            background: alpha('#fff', 0.08),
-                            borderRadius: '50%',
-                            transform: 'translate(-75px, 75px)'
+                            width: '300px',
+                            height: '100%',
+                            background: 'linear-gradient(135deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.02) 100%)',
+                            clipPath: 'polygon(100% 0%, 0% 100%, 100% 100%)'
                         }
                     }}
                 >
-                    <Box sx={{ position: 'relative', zIndex: 1 }}>
-                        {/* Modern Breadcrumbs */}
-                        <Breadcrumbs 
-                            aria-label="breadcrumb" 
-                            sx={{ 
-                                mb: 3,
-                                '& .MuiBreadcrumbs-separator': {
-                                    color: alpha('#fff', 0.7)
-                                }
-                            }}
-                            separator={<ArrowIcon sx={{ fontSize: 14, color: alpha('#fff', 0.7) }} />}
-                        >
-                            <Link 
-                                color="inherit" 
-                                href="#" 
-                                sx={{ 
-                                    display: 'flex', 
-                                    alignItems: 'center',
-                                    textDecoration: 'none',
-                                    opacity: 0.8,
-                                    '&:hover': { opacity: 1 }
-                                }}
-                            >
-                                
-                            </Link>
+                    <Box sx={{ position: 'relative', zIndex: 1, p: 4 }}>
+                        {/* Page Title */}
+                        <Box sx={{ mb: 3 }}>
                             <Box 
                                 sx={{ 
                                     display: 'flex', 
@@ -102,24 +60,26 @@ const StudentPlacement = () => {
                                     fontWeight: 500
                                 }}
                             >
-                                <WorkIcon sx={{ mr: 0.5, fontSize: 50 }} />
-                                Placement Center
+                                <WorkIcon sx={{ mr: 1, fontSize: 20 }} />
+                                <Typography variant="h6" sx={{ fontWeight: 500 }}>
+                                    Placement Center
+                                </Typography>
                             </Box>
-                        </Breadcrumbs>
+                        </Box>
 
-                        {/* Hero Content */}
+                        {/* Professional Hero Content */}
                         <Box>
                             <Typography 
                                 variant="h3" 
                                 component="h1" 
                                 sx={{ 
-                                    fontWeight: 700,
+                                    fontWeight: 600,
                                     mb: 2,
-                                    fontSize: { xs: '2rem', sm: '2.5rem', md: '3rem' },
+                                    fontSize: { xs: '1.75rem', sm: '2.25rem', md: '2.5rem' },
                                     lineHeight: 1.2
                                 }}
                             >
-                                🚀 Your Career Journey Starts Here
+                                Career Opportunities
                             </Typography>
                             <Typography 
                                 variant="h6" 
@@ -131,8 +91,8 @@ const StudentPlacement = () => {
                                     fontWeight: 400
                                 }}
                             >
-                                Discover amazing job opportunities that match your skills and aspirations. 
-                                Connect with top companies and take the next step in your professional journey.
+                                Discover job opportunities that align with your skills and career goals. 
+                                Connect with leading companies and advance your professional journey.
                             </Typography>
                         </Box>
                     </Box>
@@ -142,9 +102,9 @@ const StudentPlacement = () => {
                 <Paper 
                     elevation={0}
                     sx={{ 
-                        borderRadius: 4,
+                        borderRadius: 2,
                         overflow: 'hidden',
-                        border: `1px solid ${alpha(theme.palette.divider, 0.1)}`,
+                        border: '1px solid #e2e8f0',
                         background: '#fff'
                     }}
                 >

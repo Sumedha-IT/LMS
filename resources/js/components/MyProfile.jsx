@@ -38,7 +38,7 @@ const mainMenu = [
   },
   { id: 'education', label: 'Education', icon: <MdSchool /> },
   { id: 'projects', label: 'Projects', icon: <MdBuild /> },
-  { id: 'certifications', label: 'Certifications', icon: <MdStar /> },
+  { id: 'certifications', label: 'Certifications/Achievements', icon: <MdStar /> },
   { id: 'resume-upload', label: 'Resume Upload', icon: <AiOutlineFilePdf /> },
 ];
 
@@ -213,6 +213,8 @@ const MyProfile = () => {
   const [showOtherSpecialization, setShowOtherSpecialization] = useState(false);
   const [states, setStates] = useState([]); // Add states state
   const [linkedinError, setLinkedinError] = useState(''); // Add LinkedIn validation error state
+  const [educationErrors, setEducationErrors] = useState({}); // Add education validation errors state
+  const [hasValidatedEducation, setHasValidatedEducation] = useState(false); // Track if education has been validated
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -531,6 +533,31 @@ const MyProfile = () => {
     }
   }, [formData.avatar_url]);
 
+  // Validate all education entries when education tab is opened
+  useEffect(() => {
+    if (activeMenu === 'education' && formData.education.length > 0 && !hasValidatedEducation) {
+      // Clear existing errors first
+      setEducationErrors({});
+      
+      // Validate each education entry
+      formData.education.forEach((edu, index) => {
+        const degreeTypeId = edu.degree_type_id || (edu.degree_type && edu.degree_type.id);
+        const isSchoolEducation = ['1', '2', 1, 2].includes(Number(degreeTypeId));
+        
+        if (isSchoolEducation && edu.year_of_passout) {
+          // Validate school education
+          validateEducationSequence(index, degreeTypeId, edu.year_of_passout);
+        } else if (!isSchoolEducation && edu.duration_from) {
+          // Validate higher education using start year
+          const startYear = new Date(edu.duration_from).getFullYear();
+          validateEducationSequence(index, degreeTypeId, startYear);
+        }
+      });
+      
+      setHasValidatedEducation(true);
+    }
+  }, [activeMenu, formData.education, hasValidatedEducation]);
+
   // Update the fetchSpecializations function to use the same token handling:
   const fetchSpecializations = async (degreeTypeId) => {
     if (!degreeTypeId) return;
@@ -599,12 +626,91 @@ const MyProfile = () => {
         ...prev,
         education: processedEducation,
       }));
+      
+      // Clear all education validation errors when data is refreshed
+      setEducationErrors({});
+      setHasValidatedEducation(false);
     } catch (error) {
       toast.error(error.response?.data?.message || 'Failed to load education data');
     }
   };
 
-  const validateEducationData = (data) => {
+  // Helper function to validate education sequence and update error state
+  // This function ensures that:
+  // - 10th standard year of passout is before 12th standard year of passout
+  // - 12th standard year of passout is after 10th standard year of passout
+  // - Higher education degrees (Bachelors, Masters, etc.) must be after school education
+  // - Updates the educationErrors state to show validation errors in the UI
+  const validateEducationSequence = (index, degreeTypeId, yearOfPassout) => {
+    const errors = [];
+    const currentDegreeType = Number(degreeTypeId);
+    const currentYear = parseInt(yearOfPassout);
+    
+    if (currentYear && !isNaN(currentYear)) {
+      formData.education.forEach((existingEdu, existingIndex) => {
+        if (existingIndex === index) return; // Skip self
+        
+        const existingDegreeType = Number(existingEdu.degree_type_id || existingEdu.degree_type?.id);
+        const existingYear = parseInt(existingEdu.year_of_passout);
+        
+        if (existingYear && !isNaN(existingYear)) {
+          // School education validation (10th and 12th)
+          if ([1, 2].includes(currentDegreeType) && [1, 2].includes(existingDegreeType)) {
+            if (currentDegreeType === 2 && existingDegreeType === 1 && currentYear <= existingYear) {
+              errors.push('12th standard year of passout must be after 10th standard year of passout');
+            } else if (currentDegreeType === 1 && existingDegreeType === 2 && currentYear >= existingYear) {
+              errors.push('10th standard year of passout must be before 12th standard year of passout');
+            }
+          }
+          
+          // Higher education must be after school education
+          if (![1, 2].includes(currentDegreeType) && [1, 2].includes(existingDegreeType)) {
+            // Current is higher education, existing is school education
+            // For higher education, we need to check if it starts after school education is completed
+            const currentEducation = formData.education[index];
+            if (currentEducation && currentEducation.duration_from) {
+              const startYear = new Date(currentEducation.duration_from).getFullYear();
+              if (startYear <= existingYear) {
+                errors.push('Higher education must start after school education is completed');
+              }
+            }
+          } else if ([1, 2].includes(currentDegreeType) && ![1, 2].includes(existingDegreeType)) {
+            // Current is school education, existing is higher education
+            // School education should be completed before higher education starts
+            if (existingEdu.duration_from) {
+              const higherEdStartYear = new Date(existingEdu.duration_from).getFullYear();
+              if (currentYear >= higherEdStartYear) {
+                errors.push('School education must be completed before higher education starts');
+              }
+            }
+          }
+          
+          // Higher education sequence validation
+          if (![1, 2].includes(currentDegreeType) && ![1, 2].includes(existingDegreeType)) {
+            // Both are higher education - ensure logical progression
+            const currentEducation = formData.education[index];
+            if (currentEducation && currentEducation.duration_from && existingEdu.duration_from) {
+              const currentStartYear = new Date(currentEducation.duration_from).getFullYear();
+              const existingStartYear = new Date(existingEdu.duration_from).getFullYear();
+              if (currentStartYear <= existingStartYear) {
+                errors.push('Higher education degrees must start in chronological order');
+              }
+            }
+          }
+        }
+      });
+    }
+    
+    // Update error state
+    setEducationErrors(prev => ({
+      ...prev,
+      [index]: errors
+    }));
+    
+    return errors;
+  };
+
+  const validateEducationData = (data, allEducation = []) => {
     const errors = [];
     if (!data.degree_type_id) errors.push('Degree type is required');
     if (!data.institute_name) errors.push('Institute name is required');
@@ -616,6 +722,54 @@ const MyProfile = () => {
       if (!data.year_of_passout) errors.push('Year of passout is required');
       if (data.year_of_passout && (isNaN(data.year_of_passout) || data.year_of_passout < 1950 || data.year_of_passout > new Date().getFullYear() + 1)) {
         errors.push('Year of passout must be a valid year between 1950 and ' + (new Date().getFullYear() + 1));
+      }
+      
+      // Validate logical sequence for school education
+      if (data.year_of_passout && allEducation.length > 0) {
+        const currentDegreeType = Number(data.degree_type_id);
+        const currentYear = parseInt(data.year_of_passout);
+        
+        // Check against existing education entries
+        allEducation.forEach(existingEdu => {
+          if (existingEdu.id === data.id) return; // Skip self-comparison for updates
+          
+          const existingDegreeType = Number(existingEdu.degree_type_id || existingEdu.degree_type?.id);
+          const existingYear = parseInt(existingEdu.year_of_passout);
+          
+          // Get existing education end year (for higher education, use duration_to year)
+          let existingEndYear = existingYear;
+          if (![1, 2].includes(existingDegreeType) && existingEdu.duration_to) {
+            existingEndYear = new Date(existingEdu.duration_to).getFullYear();
+          }
+          
+          if (existingEndYear && !isNaN(existingEndYear)) {
+            // School education validation (10th and 12th)
+            if ([1, 2].includes(existingDegreeType) && existingYear && !isNaN(existingYear)) {
+              // 10th standard (degree_type_id = 1) should be before 12th standard (degree_type_id = 2)
+              if (currentDegreeType === 2 && existingDegreeType === 1) {
+                // Current is 12th, existing is 10th - 12th should be after 10th
+                if (currentYear <= existingYear) {
+                  errors.push('12th standard year of passout must be after 10th standard year of passout');
+                }
+              } else if (currentDegreeType === 1 && existingDegreeType === 2) {
+                // Current is 10th, existing is 12th - 10th should be before 12th
+                if (currentYear >= existingYear) {
+                  errors.push('10th standard year of passout must be before 12th standard year of passout');
+                }
+              }
+            }
+            
+            // Higher education must be after school education
+            if (![1, 2].includes(existingDegreeType)) {
+              if (existingEdu.duration_from) {
+                const higherEdStartYear = new Date(existingEdu.duration_from).getFullYear();
+                if (currentYear >= higherEdStartYear) {
+                  errors.push('School education must be completed before higher education starts');
+                }
+              }
+            }
+          }
+        });
       }
     } else {
     if (!data.duration_from) errors.push('Start date is required');
@@ -629,6 +783,38 @@ const MyProfile = () => {
         if (fromDate >= toDate) {
           errors.push('End date must be after start date');
         }
+      }
+      
+      // Validate logical sequence for higher education
+      if (data.duration_from && allEducation.length > 0) {
+        const currentStartYear = new Date(data.duration_from).getFullYear();
+        
+        // Check against existing education entries
+        allEducation.forEach(existingEdu => {
+          if (existingEdu.id === data.id) return; // Skip self-comparison for updates
+          
+          const existingDegreeType = Number(existingEdu.degree_type_id || existingEdu.degree_type?.id);
+          const existingYear = parseInt(existingEdu.year_of_passout);
+          
+          if (existingYear && !isNaN(existingYear)) {
+            // Higher education must be after school education
+            if ([1, 2].includes(existingDegreeType)) {
+              if (currentStartYear <= existingYear) {
+                errors.push('Higher education must start after school education is completed');
+              }
+            }
+            
+            // Higher education sequence validation
+            if (![1, 2].includes(existingDegreeType)) {
+              if (existingEdu.duration_from) {
+                const existingStartYear = new Date(existingEdu.duration_from).getFullYear();
+                if (currentStartYear <= existingStartYear) {
+                  errors.push('Higher education degrees must start in chronological order');
+                }
+              }
+            }
+          }
+        });
       }
     }
     
@@ -687,20 +873,17 @@ const MyProfile = () => {
         } else if (field === 'certifications') {
           // Keep existing certification handling
           switch(key) {
-            case 'score':
-              const numValue = parseFloat(value);
-              if (!isNaN(numValue) && numValue >= 0 && numValue <= 100) {
-                transformedValue = numValue.toString();
-              } else {
-                toast.error('Score must be between 0 and 100');
-                return updatedData;
-              }
-              break;
             case 'certification_date':
               transformedValue = value;
               break;
+            case 'certification_name':
+            case 'authority':
+            case 'certificate_number':
+              // Allow spaces in certification fields
+              transformedValue = value;
+              break;
             default:
-              transformedValue = value.trim();
+              transformedValue = value;
           }
         }
 
@@ -717,8 +900,8 @@ const MyProfile = () => {
     const degreeTypeId = edu.degree_type_id || edu.degree_type?.id;
     const isSchoolEducation = ['1', '2', 1, 2].includes(Number(degreeTypeId));
     
-    // Validate the education data first
-    const validationErrors = validateEducationData(edu);
+    // Validate the education data first - pass all education data for sequence validation
+    const validationErrors = validateEducationData(edu, formData.education);
     if (validationErrors.length > 0) {
       validationErrors.forEach(error => toast.error(error));
       return;
@@ -764,10 +947,10 @@ const MyProfile = () => {
 
       if (edu.id) {
         // If we have an ID, it's an update
-        updateEducation(educationData);
+        updateEducation(educationData, index);
       } else {
         // If no ID, it's a new record
-        createEducation(educationData);
+        createEducation(educationData, index);
       }
     } else {
       const missingFields = Object.entries(requiredFields)
@@ -777,7 +960,7 @@ const MyProfile = () => {
     }
   };
 
-  const createEducation = async (educationData) => {
+  const createEducation = async (educationData, index) => {
     try {
       const userInfo = getCookie("user_info");
       const userData = userInfo ? JSON.parse(userInfo) : null;
@@ -805,8 +988,18 @@ const MyProfile = () => {
       if (response.data) {
         toast.success('Education added successfully');
 
+        // Clear validation errors for this education entry
+        setEducationErrors(prev => {
+          const newErrors = { ...prev };
+          delete newErrors[index];
+          return newErrors;
+        });
+        setHasValidatedEducation(false);
+
         // Fetch fresh data to ensure we have the latest state
         await fetchEducationData();
+        // Refresh profile completion data
+        await fetchProfileCompletion();
       }
     } catch (error) {
       const errorMessage = error.response?.data?.message || 'Failed to add education';
@@ -816,7 +1009,7 @@ const MyProfile = () => {
     }
   };
 
-  const updateEducation = async (educationData) => {
+  const updateEducation = async (educationData, index) => {
     try {
       const userInfo = getCookie("user_info");
       const userData = userInfo ? JSON.parse(userInfo) : null;
@@ -844,8 +1037,18 @@ const MyProfile = () => {
       if (response.data) {
         toast.success('Education updated successfully');
 
+        // Clear validation errors for this education entry
+        setEducationErrors(prev => {
+          const newErrors = { ...prev };
+          delete newErrors[index];
+          return newErrors;
+        });
+        setHasValidatedEducation(false);
+
         // Fetch fresh data to ensure we have the latest state
         await fetchEducationData();
+        // Refresh profile completion data
+        await fetchProfileCompletion();
       }
     } catch (error) {
       const errorMessage = error.response?.data?.message || 'Failed to update education';
@@ -1160,6 +1363,8 @@ const MyProfile = () => {
           }));
           console.log('Resume uploaded successfully. Path:', response.data.user.upload_resume);
         }
+        // Refresh profile completion data
+        await fetchProfileCompletion();
       } else {
         throw new Error(response.data.message || 'Upload failed');
       }
@@ -1195,6 +1400,8 @@ const MyProfile = () => {
             resume_path: null,
             upload_resume_path: null
           }));
+          // Refresh profile completion data
+          await fetchProfileCompletion();
         } else {
           toast.error(result.message || 'Failed to delete resume');
         }
@@ -1380,6 +1587,8 @@ const MyProfile = () => {
             ...response.data.user
           }));
         }
+        // Refresh profile completion data
+        await fetchProfileCompletion();
       } else {
         throw new Error(response.data.message || 'Update failed');
       }
@@ -1437,6 +1646,8 @@ const MyProfile = () => {
             ...response.data.user
           }));
         }
+        // Refresh profile completion data
+        await fetchProfileCompletion();
       } else {
         throw new Error(response.data.message || 'Update failed');
       }
@@ -1561,6 +1772,8 @@ const MyProfile = () => {
             ...response.data.user
           }));
         }
+        // Refresh profile completion data
+        await fetchProfileCompletion();
       } else {
         throw new Error(response.data.message || 'Update failed');
       }
@@ -1675,6 +1888,8 @@ const MyProfile = () => {
             }));
           }
         }
+        // Refresh profile completion data
+        await fetchProfileCompletion();
       } else {
         throw new Error(response.data.message || 'Update failed');
       }
@@ -1728,12 +1943,7 @@ const MyProfile = () => {
         return;
       }
 
-      // Validate score
-      const score = parseFloat(cert.score);
-      if (isNaN(score) || score < 0 || score > 100) {
-        toast.error('Score must be a number between 0 and 100');
-        return;
-      }
+
 
       setLoading(true);
       const userInfo = getCookie("user_info");
@@ -1752,7 +1962,7 @@ const MyProfile = () => {
       const formattedDate = formatDateForServer(cert.certification_date);
       formData.append('certification_date', formattedDate);
 
-      formData.append('score', score.toString());
+
       formData.append('certificate_number', cert.certificate_number);
 
       if (cert.certificate_file) {
@@ -1793,6 +2003,9 @@ const MyProfile = () => {
             certifications: updatedCertifications
           };
         });
+
+        // Refresh profile completion data
+        await fetchProfileCompletion();
 
         // Keep the certifications tab open
         // Do not modify activeMenu state
@@ -2427,14 +2640,21 @@ const MyProfile = () => {
                       <select
                         value={degreeTypeId || ''}
                         onChange={(e) => {
-                          handleItemChange('education', index, 'degree_type_id', e.target.value);
-                          // Only fetch specializations for higher education
                           const newDegreeId = e.target.value;
+                          handleItemChange('education', index, 'degree_type_id', newDegreeId);
+                          
+                          // Only fetch specializations for higher education
                           const isNewSchoolEducation = ['1', '2', 1, 2].includes(Number(newDegreeId));
                           if (!isNewSchoolEducation) {
                             fetchSpecializations(newDegreeId);
                             // Clear year_of_passout for higher education
                             handleItemChange('education', index, 'year_of_passout', '');
+                            
+                            // Validate duration sequence when changing to higher education
+                            if (edu.duration_to) {
+                              const endYear = new Date(edu.duration_to).getFullYear();
+                              validateEducationSequence(index, newDegreeId, endYear);
+                            }
                           } else {
                             // Clear specialization fields for school education
                             handleItemChange('education', index, 'specialization_id', '');
@@ -2442,6 +2662,9 @@ const MyProfile = () => {
                             // Clear duration fields for school education
                             handleItemChange('education', index, 'duration_from', '');
                             handleItemChange('education', index, 'duration_to', '');
+                            
+                            // Validate year sequence when changing to school education
+                            validateEducationSequence(index, newDegreeId, edu.year_of_passout);
                           }
                         }}
                         className="w-full p-2 border rounded-lg focus:ring-orange-500 focus:border-orange-500"
@@ -2474,9 +2697,15 @@ const MyProfile = () => {
                             required={!isSchoolEducation}
                           >
                             <option value="">Select Specialization</option>
-                            {/* Filter out any existing "Other" options from the API */}
+                            {/* Only show ECE, EEE, and Others options */}
                             {specializations
-                              .filter(spec => !spec.name.toLowerCase().includes('other'))
+                              .filter(spec => {
+                                const name = spec.name.toLowerCase();
+                                return name.includes('electronics and communication') || 
+                                       name.includes('ece') ||
+                                       name.includes('electrical and electronics') || 
+                                       name.includes('eee');
+                              })
                               .map(spec => (
                                 <option key={spec.id} value={spec.id}>{spec.name}</option>
                               ))
@@ -2551,11 +2780,23 @@ const MyProfile = () => {
                               handleItemChange('education', index, 'duration_from', `${year}-06-01`);
                               handleItemChange('education', index, 'duration_to', `${year}-05-31`);
                             }
+                            
+                            // Real-time validation for year sequence
+                            validateEducationSequence(index, edu.degree_type_id, year);
                           }}
-                          className="w-full p-2 border rounded-lg focus:ring-orange-500 focus:border-orange-500"
+                          className={`w-full p-2 border rounded-lg focus:ring-orange-500 focus:border-orange-500 ${
+                            educationErrors[index] && educationErrors[index].length > 0 ? 'border-red-500 focus:ring-red-500 focus:border-red-500' : ''
+                          }`}
                           placeholder="Enter year (e.g., 2023)"
                           required
                         />
+                        {educationErrors[index] && educationErrors[index].length > 0 && (
+                          <div className="mt-1">
+                            {educationErrors[index].map((error, errorIndex) => (
+                              <p key={errorIndex} className="text-xs text-red-500">{error}</p>
+                            ))}
+                          </div>
+                        )}
                       </div>
                     ) : (
                       <>
@@ -2566,16 +2807,32 @@ const MyProfile = () => {
                       <DatePicker
                         selected={edu.duration_from ? parseISO(edu.duration_from) : null}
                         onChange={date => {
-                          handleItemChange('education', index, 'duration_from', date ? format(date, 'yyyy-MM-dd') : '');
+                          const formattedDate = date ? format(date, 'yyyy-MM-dd') : '';
+                          handleItemChange('education', index, 'duration_from', formattedDate);
+                          
+                          // Real-time validation for higher education sequence
+                          if (formattedDate) {
+                            const startYear = date.getFullYear();
+                            validateEducationSequence(index, edu.degree_type_id, startYear);
+                          }
                         }}
                         dateFormat="dd/MM/yyyy"
                         placeholderText="DD/MM/YYYY"
-                        className="w-full p-2 border rounded-lg focus:ring-orange-500 focus:border-orange-500"
+                        className={`w-full p-2 border rounded-lg focus:ring-orange-500 focus:border-orange-500 ${
+                          educationErrors[index] && educationErrors[index].length > 0 ? 'border-red-500 focus:ring-red-500 focus:border-red-500' : ''
+                        }`}
                         showMonthDropdown
                         showYearDropdown
                         dropdownMode="select"
                         required
                       />
+                      {educationErrors[index] && educationErrors[index].length > 0 && (
+                        <div className="mt-1">
+                          {educationErrors[index].map((error, errorIndex) => (
+                            <p key={errorIndex} className="text-xs text-red-500">{error}</p>
+                          ))}
+                        </div>
+                      )}
                     </div>
 
                     <div>
@@ -2585,16 +2842,32 @@ const MyProfile = () => {
                       <DatePicker
                         selected={edu.duration_to ? parseISO(edu.duration_to) : null}
                         onChange={date => {
-                          handleItemChange('education', index, 'duration_to', date ? format(date, 'yyyy-MM-dd') : '');
+                          const formattedDate = date ? format(date, 'yyyy-MM-dd') : '';
+                          handleItemChange('education', index, 'duration_to', formattedDate);
+                          
+                          // Real-time validation for higher education sequence
+                          if (formattedDate) {
+                            const endYear = date.getFullYear();
+                            validateEducationSequence(index, edu.degree_type_id, endYear);
+                          }
                         }}
                         dateFormat="dd/MM/yyyy"
                         placeholderText="DD/MM/YYYY"
-                        className="w-full p-2 border rounded-lg focus:ring-orange-500 focus:border-orange-500"
+                        className={`w-full p-2 border rounded-lg focus:ring-orange-500 focus:border-orange-500 ${
+                          educationErrors[index] && educationErrors[index].length > 0 ? 'border-red-500 focus:ring-red-500 focus:border-red-500' : ''
+                        }`}
                         showMonthDropdown
                         showYearDropdown
                         dropdownMode="select"
                         required
                       />
+                      {educationErrors[index] && educationErrors[index].length > 0 && (
+                        <div className="mt-1">
+                          {educationErrors[index].map((error, errorIndex) => (
+                            <p key={errorIndex} className="text-xs text-red-500">{error}</p>
+                          ))}
+                        </div>
+                      )}
                     </div>
                       </>
                     )}
@@ -3208,28 +3481,7 @@ const MyProfile = () => {
                     />
                   </div>
 
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Score/Percentage/CGPA<span className="text-red-500">*</span>
-                    </label>
-                    <input
-                      type="number"
-                      step="0.01"
-                      min="0"
-                      max="100"
-                      name="score"
-                      value={cert.score || ''}
-                      onChange={(e) => {
-                        const value = parseFloat(e.target.value);
-                        if (!isNaN(value) && value >= 0 && value <= 100) {
-                          handleItemChange('certifications', index, 'score', value.toString());
-                        }
-                      }}
-                      className="w-full p-2 border rounded-lg focus:ring-orange-500 focus:border-orange-500"
-                      placeholder="Enter score (0-100)"
-                      required
-                    />
-                  </div>
+
 
                   {/* Third Row */}
                   <div>
@@ -3602,6 +3854,9 @@ const MyProfile = () => {
           certifications: updatedCertifications
         };
       });
+
+      // Refresh profile completion data
+      await fetchProfileCompletion();
     } catch (error) {
       toast.error(error.response?.data?.message || 'Failed to delete certification');
     }
@@ -3650,6 +3905,8 @@ const MyProfile = () => {
 
         // Fetch fresh data to ensure we have the latest state
         await fetchEducationData();
+        // Refresh profile completion data
+        await fetchProfileCompletion();
       }
     } catch (error) {
       const errorMessage = error.response?.data?.message || 'Failed to delete education';
@@ -3767,6 +4024,8 @@ const MyProfile = () => {
         resetProjectForm();
         // Fetch updated projects list
         await fetchProjects();
+        // Refresh profile completion data
+        await fetchProfileCompletion();
       }
     } catch (error) {
       if (error.response) {
@@ -3835,7 +4094,9 @@ const MyProfile = () => {
       if (response.data.success) {
         toast.success('Project deleted successfully');
         // Fetch updated projects list
-        fetchProjects();
+        await fetchProjects();
+        // Refresh profile completion data
+        await fetchProfileCompletion();
       }
     } catch (error) {
       toast.error('Failed to delete project');
@@ -4030,12 +4291,12 @@ const MyProfile = () => {
           {/* Certifications Section */}
           {data.certifications && data.certifications.length > 0 && (
             <View style={styles.section}>
-              <Text style={styles.sectionTitle}>Certifications</Text>
+              <Text style={styles.sectionTitle}>Certifications/Achievements</Text>
               {data.certifications.map((cert, index) => (
                 <View key={index} style={{ marginBottom: 10 }}>
                   <Text style={styles.itemTitle}>{cert.certification_name}</Text>
                   <Text style={styles.itemDetails}>
-                    Issued by {cert.authority} | Score: {cert.score}%
+                    Issued by {cert.authority}
                   </Text>
                   <Text style={styles.itemDetails}>
                     Certificate Number: {cert.certificate_number}
@@ -4577,7 +4838,7 @@ const MyProfile = () => {
           />
 
           {/* Existing menu grid */}
-          <div className="mt-12 grid grid-cols-2 md:grid-cols-5 gap-4">
+          <div className="mt-12 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
             {mainMenu.filter(menu => menu.id !== 'resume').map((menu) => (
               <button
                 key={menu.id}
@@ -4588,17 +4849,17 @@ const MyProfile = () => {
                     : 'main-menu-item-inactive'
                 }`}
               >
-                <div className="flex items-center gap-3">
-                  <span className={`main-menu-icon ${
+                <div className="flex items-start gap-3 min-w-0 flex-1">
+                  <span className={`main-menu-icon flex-shrink-0 mt-1 ${
                     activeMenu === menu.id ? 'text-white' : ''
                   }`}>
                     {menu.icon}
                   </span>
-                  <div className="flex flex-col items-start">
-                    <span className="font-medium text-gray-700">{menu.label}</span>
+                  <div className="flex flex-col items-start min-w-0 flex-1">
+                    <span className="font-medium text-gray-700 text-sm leading-tight break-words w-full whitespace-normal">{menu.label}</span>
                   </div>
                 </div>
-                <span className={`main-menu-arrow ${
+                <span className={`main-menu-arrow flex-shrink-0 ${
                   activeMenu === menu.id ? 'opacity-100' : ''
                 }`}>
                   {activeMenu === menu.id ? '↓' : '→'}

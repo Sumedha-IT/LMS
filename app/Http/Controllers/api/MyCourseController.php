@@ -70,10 +70,6 @@ class MyCourseController extends Controller
                         // ->where('student_enrollments.role_id', 6) // Commented out due to missing column. Fix this condition according to your database schema for student role check.
                         ->whereNotNull('student_enrollments.batch_id');
                 })
-                ->orWhere(function($query) {
-                    $query->whereNull('course_batches.course_package_id')
-                        ->whereNull('course_batches.course_id');
-                })
                 ->distinct()
                 ->get();
 
