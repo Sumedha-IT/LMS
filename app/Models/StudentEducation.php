@@ -10,7 +10,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 class StudentEducation extends Model
 {
     use HasFactory;
-    protected $fillable = ['user_id', 'degree_type_id', 'specialization_id', 'other_specialization', 'percentage_cgpa', 'institute_name', 'location', 'duration_from', 'duration_to', 'year_of_passout'];
+    protected $fillable = ['user_id', 'degree_type_id', 'specialization_id', 'other_specialization', 'percentage_cgpa', 'grade_type', 'original_cgpa', 'institute_name', 'location', 'duration_from', 'duration_to', 'year_of_passout'];
     public function degreeType() {
         return $this->belongsTo(DegreeType::class);
     }

@@ -34,6 +34,7 @@ class StudentEducationController extends Controller
         // Base validation rules
         $rules = [
             'degree_type_id' => 'required|exists:degree_types,id',
+            'grade_type' => 'required|in:percentage,cgpa',
             'percentage_cgpa' => 'required|numeric',
             'institute_name' => 'required|string',
             'location' => 'required|string',
@@ -55,7 +56,7 @@ class StudentEducationController extends Controller
         }
 
         // Add specialization validation only for bachelor's and master's degrees
-        if ($degreeType && in_array($degreeType->name, ['Bachelors', 'Masters'])) {
+        if ($degreeType && in_array($degreeType->name, ['Bachelors/Btech', 'Masters/Mtech'])) {
             // If specialization_id is 0 (Others), require other_specialization
             if ($request->specialization_id === '0') {
                 $rules['other_specialization'] = 'required|string';
@@ -72,9 +73,44 @@ class StudentEducationController extends Controller
 
         $request->validate($rules);
 
+        // Additional validation for CGPA vs Percentage ranges and degree type compatibility
+        if ($request->grade_type === 'cgpa') {
+            // Only allow CGPA for bachelor's and master's degrees
+            if (!in_array($degreeType->name, ['Bachelors/Btech', 'Masters/Mtech'])) {
+                return response()->json(['message' => 'CGPA grade type is only allowed for Bachelor\'s and Master\'s degrees'], 422);
+            }
+            if ($request->percentage_cgpa < 0 || $request->percentage_cgpa > 10) {
+                return response()->json(['message' => 'CGPA must be between 0 and 10'], 422);
+            }
+            
+            // Convert CGPA to percentage using the formula: Percentage = (CGPA - 0.5) × 10
+            $cgpa = $request->percentage_cgpa;
+            $percentage = ($cgpa - 0.5) * 10;
+            $percentage = max(0, min(100, round($percentage, 1))); // Clamp between 0-100 and round to 1 decimal
+            
+            \Log::info('CGPA converted to percentage', [
+                'original_cgpa' => $cgpa,
+                'converted_percentage' => $percentage,
+                'formula' => "($cgpa - 0.5) * 10 = $percentage"
+            ]);
+            
+            // Store the original CGPA value and update the request data to store the converted percentage
+            $request->merge([
+                'original_cgpa' => $cgpa,
+                'percentage_cgpa' => $percentage
+            ]);
+        } else {
+            if ($request->percentage_cgpa < 0 || $request->percentage_cgpa > 100) {
+                return response()->json(['message' => 'Percentage must be between 0 and 100'], 422);
+            }
+        }
+
         // Debug logging
         \Log::info('Education data received:', $request->all());
         \Log::info('Year of passout value:', ['year_of_passout' => $request->input('year_of_passout')]);
+        \Log::info('Degree type:', ['id' => $degreeType->id, 'name' => $degreeType->name]);
+        \Log::info('Grade type:', ['grade_type' => $request->input('grade_type')]);
+        \Log::info('Percentage/CGPA:', ['percentage_cgpa' => $request->input('percentage_cgpa')]);
 
         $educationData = $request->all();
         $educationData['user_id'] = $user->id;
@@ -128,6 +164,7 @@ class StudentEducationController extends Controller
         // Base validation rules
         $rules = [
             'degree_type_id' => 'required|exists:degree_types,id',
+            'grade_type' => 'required|in:percentage,cgpa',
             'percentage_cgpa' => 'required|numeric',
             'institute_name' => 'required|string',
             'location' => 'required|string',
@@ -149,7 +186,7 @@ class StudentEducationController extends Controller
         }
 
         // Add specialization validation only for bachelor's and master's degrees
-        if ($degreeType && in_array($degreeType->name, ['Bachelors', 'Masters'])) {
+        if ($degreeType && in_array($degreeType->name, ['Bachelors/Btech', 'Masters/Mtech'])) {
             // If specialization_id is 0 (Others), require other_specialization
             if ($request->specialization_id === '0') {
                 $rules['other_specialization'] = 'required|string';
@@ -165,6 +202,38 @@ class StudentEducationController extends Controller
         }
 
         $request->validate($rules);
+
+        // Additional validation for CGPA vs Percentage ranges and degree type compatibility
+        if ($request->grade_type === 'cgpa') {
+            // Only allow CGPA for bachelor's and master's degrees
+            if (!in_array($degreeType->name, ['Bachelors/Btech', 'Masters/Mtech'])) {
+                return response()->json(['message' => 'CGPA grade type is only allowed for Bachelor\'s and Master\'s degrees'], 422);
+            }
+            if ($request->percentage_cgpa < 0 || $request->percentage_cgpa > 10) {
+                return response()->json(['message' => 'CGPA must be between 0 and 10'], 422);
+            }
+            
+            // Convert CGPA to percentage using the formula: Percentage = (CGPA - 0.5) × 10
+            $cgpa = $request->percentage_cgpa;
+            $percentage = ($cgpa - 0.5) * 10;
+            $percentage = max(0, min(100, round($percentage, 1))); // Clamp between 0-100 and round to 1 decimal
+            
+            \Log::info('CGPA converted to percentage (Update)', [
+                'original_cgpa' => $cgpa,
+                'converted_percentage' => $percentage,
+                'formula' => "($cgpa - 0.5) * 10 = $percentage"
+            ]);
+            
+            // Store the original CGPA value and update the request data to store the converted percentage
+            $request->merge([
+                'original_cgpa' => $cgpa,
+                'percentage_cgpa' => $percentage
+            ]);
+        } else {
+            if ($request->percentage_cgpa < 0 || $request->percentage_cgpa > 100) {
+                return response()->json(['message' => 'Percentage must be between 0 and 100'], 422);
+            }
+        }
         
         $education->update($request->all());
         return new StudentEducationResource($education);

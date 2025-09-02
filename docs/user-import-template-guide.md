@@ -23,6 +23,7 @@ These fields are optional and can be left empty:
 |-------|------|-------------|---------|-------|
 | `contact_number` | Text | Phone number | 9876543210 | |
 | `gender` | Text | Gender | Male/Female | |
+| `batch_name` | Text | Batch name to assign user to | Batch A | If provided, user will be automatically assigned to the specified EXISTING batch. Only use batch names that already exist in the system. |
 | `zoho_crm_id` | Text | Zoho CRM ID | CRM001 | |
 
 ## Data Validation Rules
@@ -37,6 +38,7 @@ These fields are optional and can be left empty:
 - `country_code`: Always set to +91 automatically (not required in CSV)
 - `contact_number`: Max 255 characters
 - `gender`: Max 255 characters
+- `batch_name`: Max 255 characters, case-insensitive matching with existing batches
 - `zoho_crm_id`: Max 255 characters
 
 ## Import Process
@@ -56,6 +58,7 @@ These fields are optional and can be left empty:
 - **Boolean Fields**: `feature_access` uses 1 for true, 0 for false
 - **Date Format**: Use YYYY-MM-DD format for dates
 - **Team Assignment**: Users will automatically be assigned to the current team
+- **Batch Assignment**: If `batch_name` is provided, users will be automatically assigned to the specified EXISTING batch (case-insensitive matching). Only use batch names that already exist in the system.
 
 ## Common Issues
 

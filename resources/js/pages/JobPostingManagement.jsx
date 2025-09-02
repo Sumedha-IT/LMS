@@ -441,7 +441,33 @@ const JobPostingManagement = () => {
                                         <TableRow key={job.id} hover>
                                             <TableCell>{job.title}</TableCell>
                                             <TableCell>{job.company?.name || 'N/A'}</TableCell>
-                                            <TableCell>{job.course?.name || 'N/A'}</TableCell>
+                                            <TableCell>
+                                                {(() => {
+                                                    // Parse eligible_courses if it's a JSON string, otherwise use as is
+                                                    let courses = [];
+                                                    if (job.eligible_courses) {
+                                                        if (typeof job.eligible_courses === 'string') {
+                                                            try {
+                                                                courses = JSON.parse(job.eligible_courses);
+                                                            } catch (e) {
+                                                                console.error('Error parsing eligible_courses:', e);
+                                                                courses = [];
+                                                            }
+                                                        } else if (Array.isArray(job.eligible_courses)) {
+                                                            courses = job.eligible_courses;
+                                                        }
+                                                    }
+                                                    
+                                                    // Display eligible_courses if available, otherwise fallback to course.name
+                                                    if (courses && courses.length > 0) {
+                                                        return courses.join(', ');
+                                                    } else if (job.course?.name) {
+                                                        return job.course.name;
+                                                    } else {
+                                                        return 'N/A';
+                                                    }
+                                                })()}
+                                            </TableCell>
                                             <TableCell>{job.location}</TableCell>
                                             <TableCell>
                                                 <Chip 

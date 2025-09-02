@@ -1,3 +1,4 @@
-role,name,email,contact_number,gender,password
-Student,John Doe,john.doe@example.com,9876543210,Male,Password@123
-Student,Jane Smith,jane.smith@example.com,9876543212,Female,Password@123
+role,name,email,contact_number,gender,password,batch_name
+Student,John Doe,john.doe@example.com,9876543210,Male,Password@123,PD Demo May 2025
+Student,Jane Smith,jane.smith@example.com,9876543212,Female,Password@123,PD June Test 2025
+Student,Test User,test@example.com,9876543213,Male,Password@123,new 12345

@@ -223,12 +223,36 @@ const AdminPlacement = () => {
     // States for dynamic dropdown
     const [availableStates, setAvailableStates] = useState([]);
     
+    // Users tab state
+    const [placementStudents, setPlacementStudents] = useState([]);
+    const [loadingPlacementStudents, setLoadingPlacementStudents] = useState(false);
+    const [placementStudentsError, setPlacementStudentsError] = useState(null);
+    const [placementStudentsSearch, setPlacementStudentsSearch] = useState('');
+    const [placementStudentsFilters, setPlacementStudentsFilters] = useState({
+        course_id: '',
+        ug_year_from: '',
+        ug_year_to: '',
+        pg_year_from: '',
+        pg_year_to: '',
+        ug_percentage: '',
+        pg_percentage: ''
+    });
+    
     // Generate year options for dropdowns
     const currentYear = new Date().getFullYear();
     const yearOptions = [];
     for (let year = currentYear - 10; year <= currentYear + 5; year++) {
         yearOptions.push(year);
     }
+
+    // Helper function to parse percentage values consistently
+    const parsePercentage = (value) => {
+        if (value === null || value === undefined || value === '') return null;
+        const parsed = parseFloat(value);
+        return isNaN(parsed) ? null : parsed;
+    };
+
+
 
     // Mutations
     const [createCompany, { isLoading: creatingCompany }] = useCreateCompanyMutation();
@@ -244,12 +268,6 @@ const AdminPlacement = () => {
         description: '',
         website: '',
         company_size: '',
-        contact_person: '',
-        designation: '',
-        contact_email: '',
-        contact_phone: '',
-        address: '',
-        // New fields
         company_address: '',
         city: '',
         state: '',
@@ -355,27 +373,11 @@ const AdminPlacement = () => {
             }
         }
 
-        // Email validation (old field)
-        if (form.contact_email?.trim()) {
-            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-            if (!emailRegex.test(form.contact_email)) {
-                errors.contact_email = 'Please enter a valid email address';
-            }
-        }
-
         // Website validation
         if (form.website?.trim()) {
             const urlRegex = /^(https?:\/\/)?([\da-z\.-]+)\.([a-z\.]{2,6})([\/\w \.-]*)*\/?$/;
             if (!urlRegex.test(form.website)) {
                 errors.website = 'Please enter a valid website URL';
-            }
-        }
-
-        // Phone validation (old field)
-        if (form.contact_phone?.trim()) {
-            const phoneRegex = /^[\+]?[1-9][\d]{0,15}$/;
-            if (!phoneRegex.test(form.contact_phone.replace(/[\s\-\(\)]/g, ''))) {
-                errors.contact_phone = 'Please enter a valid phone number';
             }
         }
 
@@ -434,27 +436,39 @@ const AdminPlacement = () => {
         // Calculate stats from real data
         const fetchStudentStats = async () => {
             try {
-                const userInfo = localStorage.getItem('user_info') || document.cookie.split('; ').find(row => row.startsWith('user_info='))?.split('=')[1];
+                // Get user info from localStorage or cookies using the existing getCookie function
+                let userInfo = localStorage.getItem('user_info');
+                if (!userInfo) {
+                    userInfo = getCookie('user_info');
+                }
+                
+                if (!userInfo) {
+                    throw new Error('User authentication information not found');
+                }
+                
                 const userData = JSON.parse(userInfo);
+                
+                if (!userData.token) {
+                    throw new Error('Authentication token not found');
+                }
+                
                 const response = await axios.get('/api/students', {
-                    headers: { 'Authorization': userData.token }
+                    headers: { 'Authorization': `Bearer ${userData.token}` }
                 });
                 const students = response.data.data || [];
                 const totalStudents = students.length;
-                const placedStudents = students.filter(s => s.placement_status === 'Placed').length;
 
                 const totalCompanies = companies?.length || 0;
                 const activeJobs = jobPostings?.data?.filter(job => job.status === 'open').length || 0;
                 setStats({
                     totalStudents,
-                    placedStudents,
                     activeJobs,
                     totalCompanies
                 });
             } catch (err) {
+                console.error('Error fetching student stats:', err);
                 setStats({
                     totalStudents: 0,
-                    placedStudents: 0,
                     activeJobs: jobPostings?.data?.filter(job => job.status === 'open').length || 0,
                     totalCompanies: companies?.length || 0
                 });
@@ -466,6 +480,107 @@ const AdminPlacement = () => {
             fetchStudentStats();
         }
     }, [companies, jobPostings, jobApplications]);
+
+    // Fetch placement students when Users tab is selected
+    useEffect(() => {
+        if (tabValue === 3) {
+            fetchPlacementStudents();
+        }
+    }, [tabValue]);
+
+    // Refetch placement students when filters change
+    useEffect(() => {
+        if (tabValue === 3) {
+            fetchPlacementStudents();
+        }
+    }, [placementStudentsFilters]);
+
+    const fetchPlacementStudents = async () => {
+        try {
+            setLoadingPlacementStudents(true);
+            setPlacementStudentsError(null);
+            
+            // Get user info from localStorage or cookies using the existing getCookie function
+            let userInfo = localStorage.getItem('user_info');
+            if (!userInfo) {
+                userInfo = getCookie('user_info');
+            }
+            
+            if (!userInfo) {
+                throw new Error('User authentication information not found');
+            }
+            
+            const userData = JSON.parse(userInfo);
+            
+            if (!userData.token) {
+                throw new Error('Authentication token not found');
+            }
+            
+                            console.log('Calling API:', '/api/placement-students');
+                console.log('User token:', userData.token ? 'Token exists' : 'No token');
+                
+                // Build query parameters from filters
+                const queryParams = new URLSearchParams();
+                if (placementStudentsFilters.course_id) {
+                    queryParams.append('course_id', placementStudentsFilters.course_id);
+                }
+                if (placementStudentsFilters.ug_year_from) {
+                    queryParams.append('ug_year_from', placementStudentsFilters.ug_year_from);
+                }
+                if (placementStudentsFilters.ug_year_to) {
+                    queryParams.append('ug_year_to', placementStudentsFilters.ug_year_to);
+                }
+                if (placementStudentsFilters.pg_year_from) {
+                    queryParams.append('pg_year_from', placementStudentsFilters.pg_year_from);
+                }
+                if (placementStudentsFilters.pg_year_to) {
+                    queryParams.append('pg_year_to', placementStudentsFilters.pg_year_to);
+                }
+                if (placementStudentsFilters.ug_percentage) {
+                    queryParams.append('ug_percentage', placementStudentsFilters.ug_percentage);
+                }
+                if (placementStudentsFilters.pg_percentage) {
+                    queryParams.append('pg_percentage', placementStudentsFilters.pg_percentage);
+                }
+                
+                const apiUrl = `/api/placement-students${queryParams.toString() ? '?' + queryParams.toString() : ''}`;
+                console.log('API URL with filters:', apiUrl);
+                
+                const response = await axios.get(apiUrl, {
+                    headers: { 'Authorization': `Bearer ${userData.token}` }
+                });
+            
+            console.log('Placement students response:', response.data);
+            console.log('Students data:', response.data.data);
+            if (response.data.data && response.data.data.length > 0) {
+                console.log('First student:', response.data.data[0]);
+                console.log('First student course:', response.data.data[0].course);
+                console.log('First student batches:', response.data.data[0].batches);
+            }
+            setPlacementStudents(response.data.data || []);
+        } catch (error) {
+            console.error('Error fetching placement students:', error);
+            
+            // Provide more specific error messages
+            let errorMessage = 'Failed to fetch placement students';
+            if (error.response?.status === 401) {
+                errorMessage = 'Authentication failed. Please log in again.';
+            } else if (error.response?.status === 403) {
+                errorMessage = 'Access denied. You do not have permission to view placement students.';
+            } else if (error.response?.status === 404) {
+                errorMessage = 'Placement students API endpoint not found.';
+            } else if (error.response?.status >= 500) {
+                errorMessage = 'Server error. Please try again later.';
+            } else if (error.message) {
+                errorMessage += ': ' + error.message;
+            }
+            
+            setPlacementStudentsError(errorMessage);
+            setPlacementStudents([]);
+        } finally {
+            setLoadingPlacementStudents(false);
+        }
+    };
 
     const handleTabChange = (event, newValue) => {
         setTabValue(newValue);
@@ -482,12 +597,6 @@ const AdminPlacement = () => {
                     description: item.description || '',
                     website: item.website || '',
                     company_size: item.company_size || '',
-                    contact_person: item.contact_person || '',
-                    designation: item.designation || '',
-                    contact_email: item.contact_email || '',
-                    contact_phone: item.contact_phone || '',
-                    address: item.address || '',
-                    // New fields
                     company_address: item.company_address || '',
                     city: item.city || '',
                     state: item.state || '',
@@ -590,12 +699,6 @@ const AdminPlacement = () => {
                     description: '',
                     website: '',
                     company_size: '',
-                    contact_person: '',
-                    designation: '',
-                    contact_email: '',
-                    contact_phone: '',
-                    address: '',
-                    // New fields
                     company_address: '',
                     city: '',
                     state: '',
@@ -845,6 +948,111 @@ const AdminPlacement = () => {
         setApplicationsDialog({ open: false, jobId: null, jobTitle: '' });
     };
 
+    // Users tab helper functions
+    const handleViewStudentDetails = (student) => {
+        // This can reuse the existing student details functionality
+        setStudentDetailsDialog({ open: true, studentId: student.id, jobId: null });
+        fetchStudentDetails(student.id);
+    };
+
+    const handleViewStudentApplications = (student) => {
+        // This can reuse the existing applications functionality
+        // You can implement this based on your requirements
+        console.log('View applications for student:', student.id);
+    };
+
+    const handleExportPlacementStudents = () => {
+        try {
+            const filteredStudents = placementStudents.filter(student => {
+                if (placementStudentsSearch) {
+                    const search = placementStudentsSearch.toLowerCase();
+                    return (
+                        student.name?.toLowerCase().includes(search) ||
+                        student.email?.toLowerCase().includes(search) ||
+                        student.course?.name?.toLowerCase().includes(search)
+                    );
+                }
+                return true;
+            }).filter(student => {
+                if (placementStudentsFilters.course_id && student.course_id !== placementStudentsFilters.course_id) return false;
+                
+                // UG/BTech Passout Year range filter
+                if (placementStudentsFilters.ug_year_from || placementStudentsFilters.ug_year_to) {
+                    const ugYear = student.studentEducation?.find(edu => 
+                        edu.degreeType?.name?.toLowerCase().includes('btech') || 
+                        edu.degreeType?.name?.toLowerCase().includes('ug')
+                    )?.year_of_passout;
+                    
+                    if (ugYear) {
+                        const year = parseInt(ugYear);
+                        if (placementStudentsFilters.ug_year_from && year < parseInt(placementStudentsFilters.ug_year_from)) return false;
+                        if (placementStudentsFilters.ug_year_to && year > parseInt(placementStudentsFilters.ug_year_to)) return false;
+                    } else {
+                        return false; // No UG education found
+                    }
+                }
+                
+                // PG/MTech Passout Year range filter
+                if (placementStudentsFilters.pg_year_from || placementStudentsFilters.pg_year_to) {
+                    const pgYear = student.studentEducation?.find(edu => 
+                        edu.degreeType?.name?.toLowerCase().includes('mtech') || 
+                        edu.degreeType?.name?.toLowerCase().includes('pg')
+                    )?.year_of_passout;
+                    
+                    if (pgYear) {
+                        const year = parseInt(pgYear);
+                        if (placementStudentsFilters.pg_year_from && year < parseInt(placementStudentsFilters.pg_year_from)) return false;
+                        if (placementStudentsFilters.pg_year_to && year > parseInt(placementStudentsFilters.pg_year_to)) return false;
+                    } else {
+                        return false; // No PG education found
+                    }
+                }
+                
+                // UG/BTech Percentage filter
+                if (placementStudentsFilters.ug_percentage) {
+                    const filterValue = parsePercentage(placementStudentsFilters.ug_percentage);
+                    const ugPercentage = parsePercentage(student.education_summary?.ug_percentage);
+                    
+                    if (filterValue !== null && ugPercentage !== null && ugPercentage < filterValue) {
+                        return false;
+                    }
+                }
+                
+                // PG/MTech Percentage filter
+                if (placementStudentsFilters.pg_percentage) {
+                    const filterValue = parsePercentage(placementStudentsFilters.pg_percentage);
+                    const pgPercentage = parsePercentage(student.education_summary?.pg_percentage);
+                    
+                    if (filterValue !== null && pgPercentage !== null && pgPercentage < filterValue) {
+                        return false;
+                    }
+                }
+                
+                return true;
+            });
+
+            const exportData = filteredStudents.map(student => ({
+                'Student Name': student.name || 'N/A',
+                'Email': student.email || 'N/A',
+                'Course': student.course?.name || 'No Course Assigned',
+                'UG/BTech Percentage': student.education_summary?.ug_percentage || 'N/A',
+                'PG/MTech Percentage': student.education_summary?.pg_percentage || 'N/A',
+                'UG/BTech Passout Year': student.education_summary?.ug_passout_year || 'N/A',
+                'PG/MTech Passout Year': student.education_summary?.pg_passout_year || 'N/A'
+            }));
+
+            const ws = XLSX.utils.json_to_sheet(exportData);
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, 'Placement Students');
+            XLSX.writeFile(wb, `placement-students-${new Date().toISOString().split('T')[0]}.xlsx`);
+            
+            setSnackbar({ open: true, message: 'Placement students exported successfully!', severity: 'success' });
+        } catch (error) {
+            console.error('Error exporting placement students:', error);
+            setSnackbar({ open: true, message: 'Error exporting placement students', severity: 'error' });
+        }
+    };
+
     const handleStudentDetailsClick = async (studentId, jobId) => {
         try {
         setStudentDetailsDialog({ open: true, studentId, jobId });
@@ -873,67 +1081,141 @@ const AdminPlacement = () => {
             const userInfo = getCookie('user_info');
             const userData = userInfo ? JSON.parse(userInfo) : null;
             
+            console.log('User info from cookie:', userInfo ? 'exists' : 'not found');
+            console.log('Parsed user data:', userData);
+            
             if (!userData?.token) {
-                throw new Error('Authentication required');
+                throw new Error('Authentication required - no valid token found');
+            }
+            
+            console.log('Token found, proceeding with API calls...');
+            console.log('Fetching user profile for ID:', studentId);
+            console.log('User token:', userData.token ? 'Token exists' : 'No token');
+            
+            // Try to get user data from existing placement students data first
+            let profileResponse = null;
+            const existingStudent = placementStudents.find(s => s.id == studentId);
+            
+            if (existingStudent) {
+                console.log('Using existing placement student data:', existingStudent);
+                profileResponse = { data: existingStudent };
+            } else {
+                console.log('Student not found in existing data, trying API calls...');
+                
+                // Try to get user data from placement students API
+                try {
+                    // Use the show method for individual student
+                    const placementResponse = await axios.get(`/api/placement-students/${studentId}`, {
+                        headers: { 'Authorization': `Bearer ${userData.token}` }
+                    });
+                    
+                    if (placementResponse.data.success && placementResponse.data.data) {
+                        profileResponse = { data: placementResponse.data.data };
+                        console.log('User data retrieved from placement students API:', placementResponse.data.data);
+                    }
+                } catch (placementError) {
+                    console.error('Placement students API failed:', placementError);
+                    
+                    // If individual student API fails, try the search approach
+                    try {
+                        const searchResponse = await axios.get(`/api/placement-students?search=${studentId}`, {
+                            headers: { 'Authorization': `Bearer ${userData.token}` }
+                        });
+                        
+                        if (searchResponse.data.data && searchResponse.data.data.length > 0) {
+                            const userData = searchResponse.data.data.find(user => user.id == studentId);
+                            if (userData) {
+                                profileResponse = { data: userData };
+                                console.log('User data retrieved from placement students search API:', userData);
+                            }
+                        }
+                    } catch (searchError) {
+                        console.error('Placement students search API also failed:', searchError);
+                    }
+                }
+                
+                // If placement students API didn't work, try the users API as fallback
+                if (!profileResponse) {
+                    console.log('Trying users API as fallback...');
+                    try {
+                        const profileResult = await axios.get(`/api/users/${studentId}?include=course,batches`, {
+                            headers: { 'Authorization': `Bearer ${userData.token}` }
+                        });
+                        profileResponse = profileResult;
+                    } catch (usersError) {
+                        console.error('Users API also failed:', usersError);
+                    }
+                }
+            }
+            
+            // Fetch applications and exam results (optional)
+            console.log('Fetching applications and exam results...');
+            let applicationsResponse = { data: { data: [] } };
+            let examResponse = { data: { data: [] } };
+            
+            try {
+                const applicationsResult = await axios.get(`/api/job-applications?user_id=${studentId}`, {
+                    headers: { 'Authorization': `Bearer ${userData.token}` }
+                });
+                applicationsResponse = applicationsResult;
+                console.log('Applications fetched successfully');
+            } catch (applicationsError) {
+                console.error('Applications API failed:', applicationsError);
+            }
+            
+            try {
+                const examResult = await axios.get(`/api/students/${studentId}/exam-results`, {
+                    headers: { 'Authorization': `Bearer ${userData.token}` }
+                });
+                examResponse = examResult;
+                console.log('Exam results fetched successfully');
+            } catch (examError) {
+                console.error('Exam API failed:', examError);
             }
 
-            // Fetch basic student data first
-            const [
-                profileResult,
-                applicationsResult,
-                examResult
-            ] = await Promise.allSettled([
-                axios.get(`/api/users/${studentId}?include=course,batches`, {
-                    headers: { 'Authorization': `Bearer ${userData.token}` }
-                }),
-                axios.get(`/api/job-applications?user_id=${studentId}`, {
-                    headers: { 'Authorization': `Bearer ${userData.token}` }
-                }),
-                axios.get(`/api/students/${studentId}/exam-results`, {
-                    headers: { 'Authorization': `Bearer ${userData.token}` }
-                })
-            ]);
-
-            // Extract successful responses or use default values
-            const profileResponse = profileResult.status === 'fulfilled' ? profileResult.value : { data: {} };
-            const applicationsResponse = applicationsResult.status === 'fulfilled' ? applicationsResult.value : { data: { data: [] } };
-            const examResponse = examResult.status === 'fulfilled' ? examResult.value : { data: { data: [] } };
-
-            // Log any failed API calls
-            if (profileResult.status === 'rejected') console.error('Profile API failed:', profileResult.reason);
-            if (applicationsResult.status === 'rejected') console.error('Applications API failed:', applicationsResult.reason);
-            if (examResult.status === 'rejected') console.error('Exam API failed:', examResult.reason);
-
-            // Now fetch education, projects, and certifications for the specific user
-            const [
-                educationResult,
-                projectsResult,
-                certificationsResult
-            ] = await Promise.allSettled([
-                axios.get(`/api/get/education/${studentId}`, {
-                    headers: { 'Authorization': `Bearer ${userData.token}` }
-                }),
-                axios.get(`/api/projects/${studentId}`, {
-                    headers: { 'Authorization': `Bearer ${userData.token}` }
-                }),
-                axios.get(`/api/certifications/${studentId}`, {
-                    headers: { 'Authorization': `Bearer ${userData.token}` }
-                })
-            ]);
-
-            // Extract successful responses or use default values
-            const educationResponse = educationResult.status === 'fulfilled' ? educationResult.value : { data: { data: [] } };
-            const projectsResponse = projectsResult.status === 'fulfilled' ? projectsResult.value : { data: { projects: [] } };
-            const certificationsResponse = certificationsResult.status === 'fulfilled' ? certificationsResult.value : { data: { data: [] } };
-
-            // Log any failed API calls
-            if (educationResult.status === 'rejected') console.error('Education API failed:', educationResult.reason);
-            if (projectsResult.status === 'rejected') console.error('Projects API failed:', projectsResult.reason);
-            if (certificationsResult.status === 'rejected') console.error('Certifications API failed:', certificationsResult.reason);
+            // Now fetch education, projects, and certifications for the specific user (optional)
+            let educationResponse = { data: { data: [] } };
+            let projectsResponse = { data: { projects: [] } };
+            let certificationsResponse = { data: { data: [] } };
             
-            // Debug logging for successful API calls
-            console.log('Certifications API Response:', certificationsResponse);
-            console.log('Certifications Data:', certificationsResponse.data);
+            try {
+                const educationResult = await axios.get(`/api/get/education/${studentId}`, {
+                    headers: { 'Authorization': `Bearer ${userData.token}` }
+                });
+                educationResponse = educationResult;
+                console.log('Education fetched successfully');
+            } catch (educationError) {
+                console.error('Education API failed:', educationError);
+            }
+            
+            try {
+                const projectsResult = await axios.get(`/api/projects/${studentId}`, {
+                    headers: { 'Authorization': `Bearer ${userData.token}` }
+                });
+                projectsResponse = projectsResult;
+                console.log('Projects fetched successfully');
+            } catch (projectsError) {
+                console.error('Projects API failed:', projectsError);
+            }
+            
+            try {
+                const certificationsResult = await axios.get(`/api/certifications/${studentId}`, {
+                    headers: { 'Authorization': `Bearer ${userData.token}` }
+                });
+                certificationsResponse = certificationsResult;
+                console.log('Certifications fetched successfully');
+                console.log('Certifications API Response:', certificationsResponse);
+                console.log('Certifications Data:', certificationsResponse.data);
+            } catch (certificationsError) {
+                console.error('Certifications API failed:', certificationsError);
+            }
+            
+            // Ensure we have profile data
+            if (!profileResponse || !profileResponse.data) {
+                console.error('No profile data found from any API endpoint');
+                console.error('Profile Response:', profileResponse);
+                throw new Error('Failed to retrieve user profile data from any available API endpoint');
+            }
             
             // Combine all data into a single object
             const combinedStudentData = {
@@ -942,6 +1224,20 @@ const AdminPlacement = () => {
                 projects: projectsResponse.data.projects || [],
                 certifications: certificationsResponse.data.data || []
             };
+            
+            console.log('Combined Student Data:', combinedStudentData);
+            
+            // If profile data is missing basic fields, try to get them from existing placement students data
+            if (!combinedStudentData.email || !combinedStudentData.phone) {
+                const existingStudent = placementStudents.find(s => s.id == studentId);
+                if (existingStudent) {
+                    console.log('Using existing placement student data for missing fields:', existingStudent);
+                    combinedStudentData.email = combinedStudentData.email || existingStudent.email;
+                    combinedStudentData.phone = combinedStudentData.phone || existingStudent.phone;
+                    combinedStudentData.name = combinedStudentData.name || existingStudent.name;
+                    combinedStudentData.course = combinedStudentData.course || existingStudent.course;
+                }
+            }
             
             setSelectedStudentData(combinedStudentData);
             setStudentJobApplications(applicationsResponse.data.data || []);
@@ -1433,8 +1729,8 @@ const AdminPlacement = () => {
         const q = companiesSearch.toLowerCase();
         return (
             c.name?.toLowerCase().includes(q) ||
-            c.contact_person?.toLowerCase().includes(q) ||
-            c.contact_email?.toLowerCase().includes(q)
+            c.contact_person_name?.toLowerCase().includes(q) ||
+            c.contact_email_new?.toLowerCase().includes(q)
         );
     });
 
@@ -1449,11 +1745,6 @@ const AdminPlacement = () => {
                     label: 'Total Students',
                     value: stats?.totalStudents || 0,
                     icon: <GroupIcon sx={{ color: '#fff' }} />,
-                }, {
-                    key: 'placedStudents',
-                    label: 'Placed Students',
-                    value: stats?.placedStudents || 0,
-                    icon: <AssessmentIcon sx={{ color: '#fff' }} />,
                 }, {
                     key: 'activeJobs',
                     label: 'Active Jobs',
@@ -1548,6 +1839,11 @@ const AdminPlacement = () => {
                             icon={<AssessmentIcon />}
                             label="Reports"
                             {...a11yProps(2)}
+                        />
+                        <Tab
+                            icon={<GroupIcon />}
+                            label={`Users (${stats?.totalStudents || 0})`}
+                            {...a11yProps(3)}
                         />
                     </Tabs>
                 </Box>
@@ -1875,10 +2171,36 @@ const AdminPlacement = () => {
                                                         }
                                                     }}
                                                 >
-                                                    <TableCell>{job.title}</TableCell>
-                                                    <TableCell>{job.company?.name || 'N/A'}</TableCell>
-                                                    <TableCell>{job.course?.name || 'N/A'}</TableCell>
-                                                    <TableCell>{job.location}</TableCell>
+                                                                                                <TableCell>{job.title}</TableCell>
+                                            <TableCell>{job.company?.name || 'N/A'}</TableCell>
+                                            <TableCell>
+                                                {(() => {
+                                                    // Parse eligible_courses if it's a JSON string, otherwise use as is
+                                                    let courses = [];
+                                                    if (job.eligible_courses) {
+                                                        if (typeof job.eligible_courses === 'string') {
+                                                            try {
+                                                                courses = JSON.parse(job.eligible_courses);
+                                                            } catch (e) {
+                                                                console.error('Error parsing eligible_courses:', e);
+                                                                courses = [];
+                                                            }
+                                                        } else if (Array.isArray(job.eligible_courses)) {
+                                                            courses = job.eligible_courses;
+                                                        }
+                                                    }
+                                                    
+                                                    // Display eligible_courses if available, otherwise fallback to course.name
+                                                    if (courses && courses.length > 0) {
+                                                        return courses.join(', ');
+                                                    } else if (job.course?.name) {
+                                                        return job.course.name;
+                                                    } else {
+                                                        return 'N/A';
+                                                    }
+                                                })()}
+                                            </TableCell>
+                                            <TableCell>{job.location}</TableCell>
                                                     <TableCell>
                                                         <Chip 
                                                             label={job.job_type} 
@@ -2027,7 +2349,6 @@ const AdminPlacement = () => {
                                             <TableCell>Contact Person</TableCell>
                                             <TableCell>City</TableCell>
                                             <TableCell>Country</TableCell>
-                                            <TableCell>Status</TableCell>
                                             <TableCell align="right">Actions</TableCell>
                                         </TableRow>
                                     </TableHead>
@@ -2035,16 +2356,9 @@ const AdminPlacement = () => {
                                         {filteredCompanies.map((company) => (
                                             <TableRow key={company.id}>
                                                 <TableCell>{company.name}</TableCell>
-                                                <TableCell>{company.contact_person_name || company.contact_person || 'N/A'}</TableCell>
+                                                <TableCell>{company.contact_person_name || 'N/A'}</TableCell>
                                                 <TableCell>{company.city || 'N/A'}</TableCell>
                                                 <TableCell>{company.country || 'N/A'}</TableCell>
-                                                <TableCell>
-                                                    <Chip 
-                                                        label={company.is_active ? 'Active' : 'Inactive'} 
-                                                        color={company.is_active ? 'success' : 'default'} 
-                                                        size="small" 
-                                                    />
-                                                </TableCell>
                                                 <TableCell align="right">
                                                     <Box display="flex" justifyContent="flex-end" gap={0.5}>
                                                         <Tooltip title="View Details">
@@ -2097,11 +2411,7 @@ const AdminPlacement = () => {
                                                             value: stats?.totalStudents || 0,
                                                             fill: '#0f1f3d'
                                                         },
-                                                        {
-                                                            name: 'Placed Students',
-                                                            value: stats?.placedStudents || 0,
-                                                            fill: '#4caf50'
-                                                        }
+
                                                     ]}
                                                     margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
                                                 >
@@ -2255,7 +2565,7 @@ const AdminPlacement = () => {
                                                     data={[
                                                         {
                                                             subject: 'Placement Rate',
-                                                            A: stats?.totalStudents > 0 ? Math.round((stats?.placedStudents / stats?.totalStudents) * 100) : 0,
+                                                            A: 0, // Placement status removed
                                                             fullMark: 100,
                                                         },
 
@@ -2384,6 +2694,373 @@ const AdminPlacement = () => {
                                 </Card>
                             </Grid>
                         </Grid>
+                    </Box>
+                </TabPanel>
+
+                <TabPanel value={tabValue} index={3}>
+                    <Box>
+                        <Typography variant="h5" gutterBottom sx={{ mb: 3, fontWeight: 600 }}>
+                            👥 Placement Students
+                        </Typography>
+                        
+                        {/* Search and Filters */}
+                        <Box sx={{ mb: 3 }}>
+                            <Grid container spacing={2} alignItems="center">
+                                <Grid item xs={12} md={4}>
+                                    <TextField
+                                        fullWidth
+                                        size="small"
+                                        placeholder="Search students by name, email, or course..."
+                                        value={placementStudentsSearch}
+                                        onChange={(e) => setPlacementStudentsSearch(e.target.value)}
+                                        InputProps={{
+                                            startAdornment: (
+                                                <InputAdornment position="start">
+                                                    <SearchIcon fontSize="small" />
+                                                </InputAdornment>
+                                            )
+                                        }}
+                                    />
+                                </Grid>
+                                <Grid item xs={12} md={2}>
+                                    <FormControl fullWidth size="small">
+                                        <InputLabel>Course</InputLabel>
+                                        <Select
+                                            value={placementStudentsFilters.course_id}
+                                            onChange={(e) => setPlacementStudentsFilters({
+                                                ...placementStudentsFilters,
+                                                course_id: e.target.value
+                                            })}
+                                            label="Course"
+                                            disabled={coursesLoading}
+                                        >
+                                            <MenuItem value="">All Courses</MenuItem>
+                                            {coursesLoading ? (
+                                                <MenuItem disabled>Loading courses...</MenuItem>
+                                            ) : courses?.courses && Array.isArray(courses.courses) ? courses.courses.map((course) => (
+                                                <MenuItem key={course.id} value={course.id}>
+                                                    {course.name}
+                                                </MenuItem>
+                                            )) : (
+                                                <MenuItem disabled>No courses available</MenuItem>
+                                            )}
+                                        </Select>
+                                    </FormControl>
+                                </Grid>
+                                <Grid item xs={12} md={4}>
+                                    <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
+                                        <Typography variant="body2" sx={{ minWidth: '120px', fontWeight: 500 }}>
+                                            UG/BTech Passout Year:
+                                        </Typography>
+                                        <FormControl size="small" sx={{ minWidth: '100px' }}>
+                                            <InputLabel>From</InputLabel>
+                                            <Select
+                                                value={placementStudentsFilters.ug_year_from || ''}
+                                                onChange={(e) => setPlacementStudentsFilters({
+                                                    ...placementStudentsFilters,
+                                                    ug_year_from: e.target.value
+                                                })}
+                                                label="From"
+                                            >
+                                                <MenuItem value="">From</MenuItem>
+                                                {yearOptions.map((year) => (
+                                                    <MenuItem key={year} value={year}>
+                                                        {year}
+                                                    </MenuItem>
+                                                ))}
+                                            </Select>
+                                        </FormControl>
+                                        <Typography variant="body2" sx={{ mx: 1 }}>
+                                            to
+                                        </Typography>
+                                        <FormControl size="small" sx={{ minWidth: '100px' }}>
+                                            <InputLabel>To</InputLabel>
+                                            <Select
+                                                value={placementStudentsFilters.ug_year_to || ''}
+                                                onChange={(e) => setPlacementStudentsFilters({
+                                                    ...placementStudentsFilters,
+                                                    ug_year_to: e.target.value
+                                                })}
+                                                label="To"
+                                            >
+                                                <MenuItem value="">To</MenuItem>
+                                                {yearOptions.map((year) => (
+                                                    <MenuItem key={year} value={year}>
+                                                        {year}
+                                                    </MenuItem>
+                                                ))}
+                                            </Select>
+                                        </FormControl>
+                                    </Box>
+                                </Grid>
+                                <Grid item xs={12} md={4}>
+                                    <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
+                                        <Typography variant="body2" sx={{ minWidth: '120px', fontWeight: 500 }}>
+                                            PG/MTech Passout Year:
+                                        </Typography>
+                                        <FormControl size="small" sx={{ minWidth: '100px' }}>
+                                            <InputLabel>From</InputLabel>
+                                            <Select
+                                                value={placementStudentsFilters.pg_year_from || ''}
+                                                onChange={(e) => setPlacementStudentsFilters({
+                                                    ...placementStudentsFilters,
+                                                    pg_year_from: e.target.value
+                                                })}
+                                                label="From"
+                                            >
+                                                <MenuItem value="">From</MenuItem>
+                                                {yearOptions.map((year) => (
+                                                    <MenuItem key={year} value={year}>
+                                                        {year}
+                                                    </MenuItem>
+                                                ))}
+                                            </Select>
+                                        </FormControl>
+                                        <Typography variant="body2" sx={{ mx: 1 }}>
+                                            to
+                                        </Typography>
+                                        <FormControl size="small" sx={{ minWidth: '100px' }}>
+                                            <InputLabel>To</InputLabel>
+                                            <Select
+                                                value={placementStudentsFilters.pg_year_to || ''}
+                                                onChange={(e) => setPlacementStudentsFilters({
+                                                    ...placementStudentsFilters,
+                                                    pg_year_to: e.target.value
+                                                })}
+                                                label="To"
+                                            >
+                                                <MenuItem value="">To</MenuItem>
+                                                {yearOptions.map((year) => (
+                                                    <MenuItem key={year} value={year}>
+                                                        {year}
+                                                    </MenuItem>
+                                                ))}
+                                            </Select>
+                                        </FormControl>
+                                    </Box>
+                                </Grid>
+                            </Grid>
+                            
+                            {/* Percentage Filters Row */}
+                            <Grid container spacing={2} sx={{ mt: 1 }}>
+                                <Grid item xs={12} md={2}>
+                                    <Tooltip title="Enter minimum UG/BTech percentage (0-100). Shows students with percentage >= this value">
+                                        <TextField
+                                            fullWidth
+                                            size="small"
+                                            label="UG/BTech %"
+                                            type="number"
+                                            placeholder="Min %"
+                                            value={placementStudentsFilters.ug_percentage}
+                                            onChange={(e) => {
+                                                const value = e.target.value;
+                                                // Only allow valid percentage values
+                                                if (value === '' || (parseFloat(value) >= 0 && parseFloat(value) <= 100)) {
+                                                    setPlacementStudentsFilters({
+                                                        ...placementStudentsFilters,
+                                                        ug_percentage: value
+                                                    });
+                                                }
+                                            }}
+                                            inputProps={{ min: 0, max: 100, step: 0.01 }}
+                                        />
+                                    </Tooltip>
+                                </Grid>
+                                <Grid item xs={12} md={2}>
+                                    <Tooltip title="Enter minimum PG/MTech percentage (0-100). Shows students with percentage >= this value">
+                                        <TextField
+                                            fullWidth
+                                            size="small"
+                                            label="PG/MTech %"
+                                            type="number"
+                                            placeholder="Min %"
+                                            value={placementStudentsFilters.pg_percentage}
+                                            onChange={(e) => {
+                                                const value = e.target.value;
+                                                // Only allow valid percentage values
+                                                if (value === '' || (parseFloat(value) >= 0 && parseFloat(value) <= 100)) {
+                                                    setPlacementStudentsFilters({
+                                                        ...placementStudentsFilters,
+                                                        pg_percentage: value
+                                                    });
+                                                }
+                                            }}
+                                            inputProps={{ min: 0, max: 100, step: 0.01 }}
+                                        />
+                                    </Tooltip>
+                                </Grid>
+                                <Grid item xs={12} md={2}>
+                                    <Button
+                                        variant="contained"
+                                        startIcon={<DownloadIcon />}
+                                        onClick={() => handleExportPlacementStudents()}
+                                        disabled={!placementStudents || placementStudents.length === 0}
+                                        sx={{
+                                            textTransform: 'none',
+                                            borderRadius: 2,
+                                            background: 'linear-gradient(270deg, #eb6707 0%, #e42b12 100%)'
+                                        }}
+                                    >
+                                        Export
+                                    </Button>
+                                </Grid>
+                                <Grid item xs={12} md={2}>
+                                    <Button
+                                        variant="outlined"
+                                        onClick={() => setPlacementStudentsFilters({
+                                            course_id: '',
+                                            ug_year_from: '',
+                                            ug_year_to: '',
+                                            pg_year_from: '',
+                                            pg_year_to: '',
+                                            ug_percentage: '',
+                                            pg_percentage: ''
+                                        })}
+                                        sx={{
+                                            textTransform: 'none',
+                                            borderRadius: 2,
+                                            borderColor: '#eb6707',
+                                            color: '#eb6707',
+                                            '&:hover': {
+                                                borderColor: '#e42b12',
+                                                backgroundColor: 'rgba(235, 103, 7, 0.04)'
+                                            }
+                                        }}
+                                    >
+                                        Clear Filters
+                                    </Button>
+                                </Grid>
+                            </Grid>
+                        </Box>
+
+                        {/* Students Table */}
+                        <Box sx={{ mb: 2 }}>
+                            <Typography variant="body2" color="text.secondary" sx={{ fontStyle: 'italic' }}>
+                                💡 Click on any row to view student details
+                            </Typography>
+                        </Box>
+                        {loadingPlacementStudents ? (
+                            <Box display="flex" justifyContent="center" p={3}>
+                                <CircularProgress />
+                            </Box>
+                        ) : placementStudentsError ? (
+                            <Alert severity="error" sx={{ mb: 3 }}>
+                                {placementStudentsError}
+                            </Alert>
+                        ) : (
+                            <TableContainer component={Paper} sx={{ borderRadius: 3, boxShadow: 4 }}>
+                                <Table size="small" sx={{
+                                    '& tbody tr:hover': { backgroundColor: 'action.hover' },
+                                    '& tbody tr:nth-of-type(odd)': { backgroundColor: 'rgba(0,0,0,0.02)' },
+                                    '& thead th': { 
+                                        background: 'linear-gradient(270deg, #eb6707 0%, #e42b12 100%)',
+                                        color: '#fff',
+                                        fontWeight: 700,
+                                        fontSize: '0.875rem'
+                                    }
+                                }}>
+                                    <TableHead>
+                                        <TableRow>
+                                            <TableCell>Name</TableCell>
+                                            <TableCell>Course</TableCell>
+                                            <TableCell>UG/BTech %</TableCell>
+                                            <TableCell>PG/MTech %</TableCell>
+                                            <TableCell>UG/BTech Passout Year</TableCell>
+                                            <TableCell>PG/MTech Passout Year</TableCell>
+                                        </TableRow>
+                                    </TableHead>
+                                    <TableBody>
+                                        {placementStudents && Array.isArray(placementStudents) ? placementStudents
+                                            .filter(student => {
+                                                if (placementStudentsSearch) {
+                                                    const search = placementStudentsSearch.toLowerCase();
+                                                    return (
+                                                        student.name?.toLowerCase().includes(search) ||
+                                                        student.email?.toLowerCase().includes(search) ||
+                                                        student.course?.name?.toLowerCase().includes(search)
+                                                    );
+                                                }
+                                                return true;
+                                            })
+                                            .map((student) => (
+                                                <TableRow 
+                                                    key={student.id}
+                                                    onClick={() => handleViewStudentDetails(student)}
+                                                    sx={{ 
+                                                        cursor: 'pointer',
+                                                        '&:hover': { 
+                                                            backgroundColor: 'action.hover',
+                                                            transform: 'scale(1.01)',
+                                                            transition: 'all 0.2s ease-in-out'
+                                                        }
+                                                    }}
+                                                    title="Click to view student details"
+                                                >
+                                                    <TableCell>
+                                                        <Box display="flex" alignItems="center" gap={1}>
+                                                            <Avatar sx={{ width: 32, height: 32, fontSize: '0.875rem' }}>
+                                                                {student.name?.charAt(0)?.toUpperCase()}
+                                                            </Avatar>
+                                                            <Box sx={{ flex: 1 }}>
+                                                                <Typography variant="body2" fontWeight={600}>
+                                                                    {student.name}
+                                                                </Typography>
+                                                                <Typography variant="caption" color="text.secondary">
+                                                                    {student.email}
+                                                                </Typography>
+                                                            </Box>
+                                                            <Box sx={{ 
+                                                                color: 'text.secondary', 
+                                                                opacity: 0.7,
+                                                                transition: 'opacity 0.2s ease-in-out'
+                                                            }}>
+                                                                →
+                                                            </Box>
+                                                        </Box>
+                                                    </TableCell>
+                                                    <TableCell>
+                                                        <Chip 
+                                                            label={student.course?.name || 'No Course Assigned'} 
+                                                            size="small" 
+                                                            color={student.course?.name ? "primary" : "default"}
+                                                        />
+                                                    </TableCell>
+                                                    <TableCell>
+                                                        {student.education_summary?.ug_percentage || 'N/A'}
+                                                    </TableCell>
+                                                    <TableCell>
+                                                        {student.education_summary?.pg_percentage || 'N/A'}
+                                                    </TableCell>
+                                                    <TableCell>
+                                                        {student.education_summary?.ug_passout_year || 'N/A'}
+                                                    </TableCell>
+                                                    <TableCell>
+                                                        {student.education_summary?.pg_passout_year || 'N/A'}
+                                                    </TableCell>
+                                                </TableRow>
+                                            )) : (
+                                                <TableRow>
+                                                    <TableCell colSpan={7} align="center">
+                                                        <Typography variant="body2" color="text.secondary">
+                                                            No placement students data available
+                                                        </Typography>
+                                                    </TableCell>
+                                                </TableRow>
+                                            )}
+                                    </TableBody>
+                                </Table>
+                            </TableContainer>
+                        )}
+
+                        {/* No Students Found */}
+                        {!loadingPlacementStudents && !placementStudentsError && placementStudents.length === 0 && (
+                            <Paper sx={{ p: 4, textAlign: 'center', borderRadius: 3, boxShadow: 3 }}>
+                                <Typography variant="h6" gutterBottom>No placement students found</Typography>
+                                <Typography variant="body2" color="text.secondary">
+                                    There are no students currently enrolled in placement programs.
+                                </Typography>
+                            </Paper>
+                        )}
                     </Box>
                 </TabPanel>
 
@@ -3074,182 +3751,6 @@ const AdminPlacement = () => {
                                             startAdornment: (
                                                 <InputAdornment position="start" sx={{ alignSelf: 'flex-start', mt: 1 }}>
                                                     📝
-                                                </InputAdornment>
-                                            ),
-                                        }}
-                                    />
-                                </Grid>
-                            </Grid>
-                        </Paper>
-
-                        {/* Contact Information Section */}
-                        <Paper 
-                            elevation={0} 
-                            sx={{ 
-                                p: 3, 
-                                mb: 3,
-                                border: '1px solid #e2e8f0',
-                                borderRadius: 2,
-                                background: '#ffffff',
-                                boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
-                            }}
-                        >
-                            <Box display="flex" alignItems="center" gap={2} mb={3}>
-                                <Avatar sx={{ background: 'linear-gradient(270deg, #eb6707 0%, #e42b12 100%)', width: 32, height: 32 }}>
-                                    👤
-                                </Avatar>
-                                <Typography variant="h6" fontWeight="600" color="#eb6707">
-                                    Contact Information
-                                </Typography>
-                            </Box>
-                            
-                            <Grid container spacing={3}>
-                                <Grid item xs={12} md={6}>
-                                    <TextField
-                                        fullWidth
-                                        label="Contact Person"
-                                        value={companyForm.contact_person}
-                                        onChange={(e) => setCompanyForm({...companyForm, contact_person: e.target.value})}
-                                        variant="outlined"
-                                        placeholder=""
-                                        sx={{
-                                            '& .MuiOutlinedInput-root': {
-                                                borderRadius: 2,
-                                                transition: 'all 0.3s ease',
-                                                '&:hover': {
-                                                    boxShadow: '0 4px 12px rgba(235, 103, 7, 0.15)',
-                                                },
-                                                '&.Mui-focused': {
-                                                    boxShadow: '0 4px 20px rgba(228, 43, 18, 0.25)',
-                                                }
-                                            }
-                                        }}
-                                        InputProps={{
-                                            startAdornment: (
-                                                <InputAdornment position="start">
-                                                    👨‍💼
-                                                </InputAdornment>
-                                            ),
-                                        }}
-                                    />
-                                </Grid>
-                                <Grid item xs={12} md={6}>
-                                    <TextField
-                                        fullWidth
-                                        label="Designation"
-                                        value={companyForm.designation}
-                                        onChange={(e) => setCompanyForm({...companyForm, designation: e.target.value})}
-                                        variant="outlined"
-                                        placeholder=""
-                                        sx={{
-                                            '& .MuiOutlinedInput-root': {
-                                                borderRadius: 2,
-                                                transition: 'all 0.3s ease',
-                                                '&:hover': {
-                                                    boxShadow: '0 4px 12px rgba(235, 103, 7, 0.15)',
-                                                },
-                                                '&.Mui-focused': {
-                                                    boxShadow: '0 4px 20px rgba(228, 43, 18, 0.25)',
-                                                }
-                                            }
-                                        }}
-                                        InputProps={{
-                                            startAdornment: (
-                                                <InputAdornment position="start">
-                                                    🏢
-                                                </InputAdornment>
-                                            ),
-                                        }}
-                                    />
-                                </Grid>
-                                <Grid item xs={12} md={6}>
-                                    <TextField
-                                        fullWidth
-                                        label="Contact Email"
-                                        type="email"
-                                        value={companyForm.contact_email}
-                                        onChange={(e) => setCompanyForm({...companyForm, contact_email: e.target.value})}
-                                        variant="outlined"
-                                        placeholder=""
-                                        sx={{
-                                            '& .MuiOutlinedInput-root': {
-                                                borderRadius: 2,
-                                                transition: 'all 0.3s ease',
-                                                '&:hover': {
-                                                    boxShadow: '0 4px 12px rgba(235, 103, 7, 0.15)',
-                                                },
-                                                '&.Mui-focused': {
-                                                    boxShadow: '0 4px 20px rgba(228, 43, 18, 0.25)',
-                                                }
-                                            }
-                                        }}
-                                        InputProps={{
-                                            startAdornment: (
-                                                <InputAdornment position="start">
-                                                    ✉️
-                                                </InputAdornment>
-                                            ),
-                                        }}
-                                    />
-                                </Grid>
-                                <Grid item xs={12} md={6}>
-                                    <TextField
-                                        fullWidth
-                                        label="Contact Phone"
-                                        value={companyForm.contact_phone}
-                                        onChange={(e) => setCompanyForm({...companyForm, contact_phone: e.target.value})}
-                                        variant="outlined"
-                                        placeholder=""
-                                        sx={{
-                                            '& .MuiOutlinedInput-root': {
-                                                borderRadius: 2,
-                                                transition: 'all 0.3s ease',
-                                                '&:hover': {
-                                                    boxShadow: '0 4px 12px rgba(235, 103, 7, 0.15)',
-                                                },
-                                                '&.Mui-focused': {
-                                                    boxShadow: '0 4px 20px rgba(228, 43, 18, 0.25)',
-                                                }
-                                            }
-                                        }}
-                                        InputProps={{
-                                            startAdornment: (
-                                                <InputAdornment position="start">
-                                                    📞
-                                                </InputAdornment>
-                                            ),
-                                        }}
-                                    />
-                                </Grid>
-                                <Grid item xs={12} md={6}>
-                                    <Box /> {/* Empty space for alignment */}
-                                </Grid>
-                                <Grid item xs={12}>
-                                    <TextField
-                                        fullWidth
-                                        multiline
-                                        rows={3}
-                                        label="Company Address"
-                                        value={companyForm.address}
-                                        onChange={(e) => setCompanyForm({...companyForm, address: e.target.value})}
-                                        variant="outlined"
-                                        placeholder=""
-                                        sx={{
-                                            '& .MuiOutlinedInput-root': {
-                                                borderRadius: 2,
-                                                transition: 'all 0.3s ease',
-                                                '&:hover': {
-                                                    boxShadow: '0 4px 12px rgba(235, 103, 7, 0.15)',
-                                                },
-                                                '&.Mui-focused': {
-                                                    boxShadow: '0 4px 20px rgba(228, 43, 18, 0.25)',
-                                                }
-                                            }
-                                        }}
-                                        InputProps={{
-                                            startAdornment: (
-                                                <InputAdornment position="start" sx={{ alignSelf: 'flex-start', mt: 1 }}>
-                                                    📍
                                                 </InputAdornment>
                                             ),
                                         }}
@@ -6083,54 +6584,7 @@ const AdminPlacement = () => {
                                                 </Typography>
                                             </Box>
                                         </Grid>
-                                        <Grid item xs={12} md={6}>
-                                            <Box sx={{ mb: 2 }}>
-                                                <Typography variant="subtitle2" color="text.secondary" gutterBottom>
-                                                    Legacy Contact Person
-                                                </Typography>
-                                                <Typography variant="body1">
-                                                    {companyDetailsDialog.company.contact_person || 'N/A'}
-                                                </Typography>
-                                            </Box>
-                                        </Grid>
-                                        <Grid item xs={12} md={6}>
-                                            <Box sx={{ mb: 2 }}>
-                                                <Typography variant="subtitle2" color="text.secondary" gutterBottom>
-                                                    Legacy Contact Email
-                                                </Typography>
-                                                <Typography variant="body1">
-                                                    {companyDetailsDialog.company.contact_email ? (
-                                                        <a href={`mailto:${companyDetailsDialog.company.contact_email}`} style={{ color: '#1976d2', textDecoration: 'none' }}>
-                                                            {companyDetailsDialog.company.contact_email}
-                                                        </a>
-                                                    ) : 'N/A'}
-                                                </Typography>
-                                            </Box>
-                                        </Grid>
-                                        <Grid item xs={12} md={6}>
-                                            <Box sx={{ mb: 2 }}>
-                                                <Typography variant="subtitle2" color="text.secondary" gutterBottom>
-                                                    Legacy Contact Phone
-                                                </Typography>
-                                                <Typography variant="body1">
-                                                    {companyDetailsDialog.company.contact_phone ? (
-                                                        <a href={`tel:${companyDetailsDialog.company.contact_phone}`} style={{ color: '#1976d2', textDecoration: 'none' }}>
-                                                            {companyDetailsDialog.company.contact_phone}
-                                                        </a>
-                                                    ) : 'N/A'}
-                                                </Typography>
-                                            </Box>
-                                        </Grid>
-                                        <Grid item xs={12} md={6}>
-                                            <Box sx={{ mb: 2 }}>
-                                                <Typography variant="subtitle2" color="text.secondary" gutterBottom>
-                                                    Legacy Address
-                                                </Typography>
-                                                <Typography variant="body1">
-                                                    {companyDetailsDialog.company.address || 'N/A'}
-                                                </Typography>
-                                            </Box>
-                                        </Grid>
+
                                     </Grid>
                                 </Paper>
 

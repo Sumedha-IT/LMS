@@ -51,6 +51,7 @@ use App\Http\Controllers\api\JobApplicationController;
 use App\Http\Controllers\api\PlacementCriteriaController;
 use App\Http\Controllers\api\JobEligibilityCriteriaController;
 use App\Http\Controllers\api\ProfileCompletionController;
+use App\Http\Controllers\api\PlacementStudentsController;
 
 /*
 |--------------------------------------------------------------------------
@@ -511,6 +512,7 @@ Route::apiResource('job-applications', JobApplicationController::class);
         
     Route::apiResource('placement-criteria', PlacementCriteriaController::class);
     Route::apiResource('job-eligibility-criteria', JobEligibilityCriteriaController::class);
+    Route::apiResource('placement-students', PlacementStudentsController::class);
 
 
 });

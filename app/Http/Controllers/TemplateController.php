@@ -65,7 +65,7 @@ class TemplateController extends Controller
         return response()->json([
             'template_available' => file_exists($file),
             'download_url' => route('user.import.template'),
-            'instructions' => 'Download the template file, fill in the user data, and upload the CSV file. Only the required fields (name, email, password) are mandatory. All other fields are optional.',
+            'instructions' => 'Download the template file, fill in the user data, and upload the CSV file. Required fields: role, name, email, password. Optional fields: contact_number, gender, batch_name. If batch_name is provided, users will be automatically assigned to the specified batch.',
             'documentation_url' => '/docs/user-import-template-guide.md'
         ]);
     }

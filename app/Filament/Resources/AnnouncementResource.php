@@ -125,10 +125,10 @@ class AnnouncementResource extends Resource
                     . '<br>' .
                         (auth()->user()->is_admin || auth()->user()->is_coordinator || auth()->user()->is_tutor ?
                             ($record->schedule_at ?
-                                (\Carbon\Carbon::parse($record->schedule_at)->format('d M Y h:i'))
+                                ($record->schedule_at->format('d M Y h:i'))
                                 : 'Not scheduled')
                             : ($record->schedule_at ?
-                                (\Carbon\Carbon::parse($record->schedule_at)->format('d M Y'))
+                                ($record->schedule_at->format('d M Y'))
                                 : 'Not scheduled')
                         )
                     ))
@@ -166,7 +166,7 @@ class AnnouncementResource extends Resource
                     ->label(false)
                     ->formatStateUsing(function (Announcement $record) {
                         return $record->schedule_at ?
-                            \Carbon\Carbon::parse($record->schedule_at)->format('d M Y') :
+                            $record->schedule_at->format('d M Y') :
                             'Not scheduled';
                     })
                     ->columnSpanFull(),

@@ -33,12 +33,8 @@ class Batch extends Model
     protected static function booted(): void
     {
         static::addGlobalScope('limited', function (Builder $query) {
+            // Only apply the scope if the user is a student
             if (auth()->check() && auth()->user()->is_student) {
-
-                // $query->select('batches.*')
-                // ->join('batch_user', 'batches.id', '=', 'batch_user.batch_id')
-                // ->where('batch_user.user_id', auth()->user()->id);
-
                 $query->select('batches.*')->whereHas('student_batches');
             }
             // if (auth()->check() && auth()->user()->is_tutor) {
@@ -69,6 +65,13 @@ class Batch extends Model
         });
     }
 
+    /**
+     * Get batches without the global scope for admin operations
+     */
+    public static function withoutStudentScope()
+    {
+        return static::withoutGlobalScope('limited');
+    }
 
     public function branch()
     {

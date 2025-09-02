@@ -16,9 +16,16 @@ class StudentsController extends Controller
         $pageNo = $req->get('page', 1);
         $offset = ($pageNo - 1) * $size;
 
-        $students = User::with(['role', 'batches.course_package'])->whereHas('role', function($query) {
+
+
+        $students = User::with(['role', 'batches' => function($query) {
+            // Use the withoutStudentScope method to bypass the global scope
+            $query->withoutGlobalScope('limited');
+        }, 'batches.course_package'])->whereHas('role', function($query) {
             $query->where('name', 'Student');
         })->offset($offset)->limit($size)->get();
+
+
 
         return StudentResource::collection($students);
     }
@@ -34,7 +41,10 @@ class StudentsController extends Controller
         }
 
         $input = $validator->validated();
-        $student = User::with(['role', 'batches.course_package'])->whereHas('role', function($query) {
+        $student = User::with(['role', 'batches' => function($query) {
+            // Use the withoutStudentScope method to bypass the global scope
+            $query->withoutGlobalScope('limited');
+        }, 'batches.course_package'])->whereHas('role', function($query) {
             $query->where('name', 'Student');
         })->where("id",$input['id'])->first();
 

@@ -616,7 +616,8 @@ const MyProfile = () => {
             return {
               ...edu,
               percentage_cgpa: typeof edu.percentage_cgpa === 'string' ? parseFloat(edu.percentage_cgpa) : edu.percentage_cgpa,
-              year_of_passout: edu.year_of_passout || null
+              year_of_passout: edu.year_of_passout || null,
+              grade_type: edu.grade_type || 'percentage' // Default to percentage if not set
             };
           });
 
@@ -670,16 +671,16 @@ const MyProfile = () => {
             const currentEducation = formData.education[index];
             if (currentEducation && currentEducation.duration_from) {
               const startYear = new Date(currentEducation.duration_from).getFullYear();
-              if (startYear <= existingYear) {
-                errors.push('Higher education must start after school education is completed');
-              }
+                          if (startYear < existingYear) {
+              errors.push('Higher education must start after school education is completed');
+            }
             }
           } else if ([1, 2].includes(currentDegreeType) && ![1, 2].includes(existingDegreeType)) {
             // Current is school education, existing is higher education
             // School education should be completed before higher education starts
             if (existingEdu.duration_from) {
               const higherEdStartYear = new Date(existingEdu.duration_from).getFullYear();
-              if (currentYear >= higherEdStartYear) {
+              if (currentYear > higherEdStartYear) {
                 errors.push('School education must be completed before higher education starts');
               }
             }
@@ -799,7 +800,7 @@ const MyProfile = () => {
           if (existingYear && !isNaN(existingYear)) {
             // Higher education must be after school education
             if ([1, 2].includes(existingDegreeType)) {
-              if (currentStartYear <= existingYear) {
+              if (currentStartYear < existingYear) {
                 errors.push('Higher education must start after school education is completed');
               }
             }
@@ -818,9 +819,24 @@ const MyProfile = () => {
       }
     }
     
-    if (!data.percentage_cgpa) errors.push('Percentage/CGPA is required');
-    if (data.percentage_cgpa && (isNaN(data.percentage_cgpa) || data.percentage_cgpa < 0 || data.percentage_cgpa > 100)) {
-      errors.push('Percentage/CGPA must be a number between 0 and 100');
+    // Validate grade type and percentage/CGPA
+    if (!data.grade_type) errors.push('Grade type is required');
+    
+    if (!data.percentage_cgpa) {
+      errors.push(data.grade_type === 'cgpa' ? 'CGPA is required' : 'Percentage is required');
+    } else {
+      const numValue = parseFloat(data.percentage_cgpa);
+      if (isNaN(numValue)) {
+        errors.push(data.grade_type === 'cgpa' ? 'CGPA must be a valid number' : 'Percentage must be a valid number');
+      } else if (data.grade_type === 'cgpa') {
+        if (numValue < 0 || numValue > 10) {
+          errors.push('CGPA must be between 0 and 10');
+        }
+      } else {
+        if (numValue < 0 || numValue > 100) {
+          errors.push('Percentage must be between 0 and 100');
+        }
+      }
     }
     return errors;
   };
@@ -841,19 +857,52 @@ const MyProfile = () => {
 
         if (field === 'education') {
           switch(key) {
+            case 'grade_type':
+              // Handle grade type selection
+              transformedValue = value;
+              console.log(`Setting grade_type to: ${value} for education index ${index}`);
+              
+              // Clear percentage_cgpa when switching grade types to prevent invalid values
+              if (updatedData[field][index].percentage_cgpa) {
+                const currentValue = updatedData[field][index].percentage_cgpa;
+                if (value === 'cgpa' && (currentValue > 10 || currentValue < 0)) {
+                  // If switching to CGPA and current value is invalid for CGPA, clear it
+                  updatedData[field][index].percentage_cgpa = '';
+                  console.log('Cleared invalid CGPA value:', currentValue);
+                } else if (value === 'percentage' && (currentValue > 100 || currentValue < 0)) {
+                  // If switching to percentage and current value is invalid for percentage, clear it
+                  updatedData[field][index].percentage_cgpa = '';
+                  console.log('Cleared invalid percentage value:', currentValue);
+                }
+              }
+              break;
             case 'percentage_cgpa':
-              // Make sure we're handling the percentage as a number
+              // Handle percentage/CGPA input based on grade type
               if (value === '') {
                 transformedValue = '';
               } else {
                 const numValue = parseFloat(value);
-                if (!isNaN(numValue) && numValue >= 0 && numValue <= 100) {
-                  // Store as a number, not a string
-                  transformedValue = numValue;
-                  console.log('Percentage value set:', numValue, typeof numValue);
+                const currentEdu = updatedData[field][index];
+                const gradeType = currentEdu.grade_type || 'percentage';
+                
+                if (gradeType === 'cgpa') {
+                  // Validate CGPA input (0-10 scale)
+                  if (!isNaN(numValue) && numValue >= 0 && numValue <= 10) {
+                    transformedValue = numValue;
+                    console.log('CGPA value set:', numValue, typeof numValue);
+                  } else {
+                    toast.error('CGPA must be between 0 and 10');
+                    return updatedData;
+                  }
                 } else {
-                  toast.error('Percentage/CGPA must be between 0 and 100');
-                  return updatedData;
+                  // Validate percentage input (0-100 scale)
+                  if (!isNaN(numValue) && numValue >= 0 && numValue <= 100) {
+                    transformedValue = numValue;
+                    console.log('Percentage value set:', numValue, typeof numValue);
+                  } else {
+                    toast.error('Percentage must be between 0 and 100');
+                    return updatedData;
+                  }
                 }
               }
               break;
@@ -888,6 +937,8 @@ const MyProfile = () => {
         }
 
         updatedData[field][index][key] = transformedValue;
+        console.log(`Updated ${field}[${index}].${key} to:`, transformedValue);
+        console.log(`Current ${field}[${index}] object:`, updatedData[field][index]);
         return updatedData;
       });
     } catch (error) {
@@ -911,6 +962,7 @@ const MyProfile = () => {
     const requiredFields = {
       degree_type_id: degreeTypeId,
       institute_name: edu.institute_name,
+      grade_type: edu.grade_type,
       percentage_cgpa: edu.percentage_cgpa,
       location: edu.location
     };
@@ -927,12 +979,14 @@ const MyProfile = () => {
     const hasAllRequired = Object.values(requiredFields).every(val => val !== undefined && val !== null && val !== '');
 
     if (hasAllRequired) {
+      // Send the original value to the backend - let the backend handle conversion
       const educationData = {
         id: edu.id, // This will be undefined for new records
         degree_type_id: degreeTypeId,
         specialization_id: edu.specialization_id || edu.specialization?.id || null,
         other_specialization: edu.other_specialization || null,
-        percentage_cgpa: typeof edu.percentage_cgpa === 'number' ? edu.percentage_cgpa : parseFloat(edu.percentage_cgpa || '0'),
+        percentage_cgpa: edu.percentage_cgpa, // Send original value (CGPA or percentage)
+        grade_type: edu.grade_type, // Send the grade type
         institute_name: edu.institute_name.trim(),
         location: edu.location.trim(),
         duration_from: isSchoolEducation ? null : edu.duration_from,
@@ -940,10 +994,33 @@ const MyProfile = () => {
         year_of_passout: isSchoolEducation ? edu.year_of_passout : null
       };
 
+      // Final validation before sending to backend
+      if (edu.grade_type === 'cgpa') {
+        if (edu.percentage_cgpa < 0 || edu.percentage_cgpa > 10) {
+          toast.error('CGPA must be between 0 and 10');
+          return;
+        }
+        console.log(`Sending CGPA ${edu.percentage_cgpa} to backend for conversion`);
+      } else {
+        if (edu.percentage_cgpa < 0 || edu.percentage_cgpa > 100) {
+          toast.error('Percentage must be between 0 and 100');
+          return;
+        }
+        console.log(`Sending percentage ${edu.percentage_cgpa} to backend`);
+      }
+
       // Debug logging
+      console.log('=== EDUCATION DATA DEBUG ===');
       console.log('Education data being sent:', educationData);
       console.log('Is school education:', isSchoolEducation);
       console.log('Year of passout value:', edu.year_of_passout);
+      console.log('Grade type being sent:', edu.grade_type);
+      console.log('Value being sent (CGPA or percentage):', edu.percentage_cgpa);
+      console.log('Full education object:', edu);
+      console.log('Required fields check:', requiredFields);
+      console.log('Degree type ID:', degreeTypeId);
+      console.log('Degree type name:', degreeTypes.find(dt => dt.id == degreeTypeId)?.name);
+      console.log('=== END DEBUG ===');
 
       if (edu.id) {
         // If we have an ID, it's an update
@@ -971,6 +1048,14 @@ const MyProfile = () => {
       }
 
       setLoading(true);
+
+      // Debug logging before sending request
+      console.log('Sending education data to API:', educationData);
+      console.log('Request headers:', {
+        'Accept': 'application/json',
+        'Authorization': `Bearer ${userData.token}`,
+        'Content-Type': 'application/json'
+      });
 
       const response = await axios({
         method: 'post',
@@ -1002,6 +1087,10 @@ const MyProfile = () => {
         await fetchProfileCompletion();
       }
     } catch (error) {
+      console.error('Education creation error:', error);
+      console.error('Error response:', error.response?.data);
+      console.error('Error status:', error.response?.status);
+      
       const errorMessage = error.response?.data?.message || 'Failed to add education';
       toast.error(errorMessage);
     } finally {
@@ -1445,7 +1534,8 @@ const MyProfile = () => {
             location: '',
             duration_from: '',
             duration_to: '',
-            percentage_cgpa: ''
+            percentage_cgpa: '',
+            grade_type: 'percentage' // Default to percentage
           });
         } else {
           toast.info('Please fill out the existing education form first');
@@ -2663,6 +2753,9 @@ const MyProfile = () => {
                             handleItemChange('education', index, 'duration_from', '');
                             handleItemChange('education', index, 'duration_to', '');
                             
+                            // For school education, automatically set grade_type to percentage
+                            handleItemChange('education', index, 'grade_type', 'percentage');
+                            
                             // Validate year sequence when changing to school education
                             validateEducationSequence(index, newDegreeId, edu.year_of_passout);
                           }
@@ -2872,27 +2965,77 @@ const MyProfile = () => {
                       </>
                     )}
 
+                    {/* Grade Type Selection */}
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Percentage/CGPA<span className="text-red-500">*</span>
+                        Grade Type<span className="text-red-500">*</span>
+                      </label>
+                      <select
+                        value={edu.grade_type || 'percentage'}
+                        onChange={(e) => {
+                          const newGradeType = e.target.value;
+                          console.log(`Grade type changed to: ${newGradeType}`);
+                          handleItemChange('education', index, 'grade_type', newGradeType);
+                          
+                          // Clear the percentage_cgpa when changing grade type
+                          handleItemChange('education', index, 'percentage_cgpa', '');
+                          
+                          // If switching to CGPA, set default value
+                          if (newGradeType === 'cgpa') {
+                            console.log('Switching to CGPA mode');
+                            handleItemChange('education', index, 'percentage_cgpa', '');
+                          } else {
+                            console.log('Switching to Percentage mode');
+                          }
+                        }}
+                        className="w-full p-2 border rounded-lg focus:ring-orange-500 focus:border-orange-500"
+                        required
+                      >
+                        {getGradeTypeOptions(degreeTypeId).map(option => (
+                          <option key={option.value} value={option.value}>
+                            {option.label}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
+                    {/* Percentage/CGPA Input */}
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        {edu.grade_type === 'cgpa' ? 'CGPA' : 'Percentage'}<span className="text-red-500">*</span>
                       </label>
                       <input
                         type="number"
                         step="0.01"
-                        min="0"
-                        max="100"
+                        min={getInputConstraints(edu.grade_type || 'percentage', degreeTypeId).min}
+                        max={getInputConstraints(edu.grade_type || 'percentage', degreeTypeId).max}
                         value={edu.percentage_cgpa || ''}
                         onChange={(e) => {
-                          console.log('Percentage input value:', e.target.value, typeof e.target.value);
+                          console.log('Grade input value:', e.target.value, typeof e.target.value);
+                          console.log('Current grade_type:', edu.grade_type);
+                          console.log('Current percentage_cgpa:', edu.percentage_cgpa);
                           handleItemChange('education', index, 'percentage_cgpa', e.target.value);
                         }}
                         onBlur={() => {
-                          console.log('Current percentage value after blur:', edu.percentage_cgpa, typeof edu.percentage_cgpa);
+                          console.log('Current grade value after blur:', edu.percentage_cgpa, typeof edu.percentage_cgpa);
                         }}
                         className="w-full p-2 border rounded-lg focus:ring-orange-500 focus:border-orange-500"
-                        placeholder="Enter percentage (0-100)"
+                        placeholder={getInputConstraints(edu.grade_type || 'percentage', degreeTypeId).placeholder}
                         required
                       />
+
+                      
+                      {/* Validation warning */}
+                      {edu.grade_type === 'cgpa' && edu.percentage_cgpa && (edu.percentage_cgpa < 0 || edu.percentage_cgpa > 10) && (
+                        <div className="text-xs text-red-600 mt-1">
+                          ⚠️ CGPA must be between 0 and 10
+                        </div>
+                      )}
+                      {edu.grade_type === 'percentage' && edu.percentage_cgpa && (edu.percentage_cgpa < 0 || edu.percentage_cgpa > 100) && (
+                        <div className="text-xs text-red-600 mt-1">
+                          ⚠️ Percentage must be between 0 and 100
+                        </div>
+                        )}
                     </div>
                   </div>
 
@@ -4499,6 +4642,72 @@ const MyProfile = () => {
     });
   };
 
+  // Add this function after the existing functions
+  const convertCGPAToPercentage = (cgpa, degreeTypeName) => {
+    if (!cgpa || isNaN(cgpa)) return null;
+    
+    const degreeType = degreeTypeName?.toLowerCase() || '';
+    
+    // Different conversion scales for different degree types
+    if (degreeType.includes('bachelor') || degreeType.includes('btech')) {
+      // For Bachelor's/BTech: CGPA 10 scale to percentage
+      // Formula: Percentage = (CGPA - 0.5) × 10
+      const percentage = (cgpa - 0.5) * 10;
+      return Math.min(100, Math.max(0, Math.round(percentage * 10) / 10)); // Round to 1 decimal place, clamp between 0-100
+    } else if (degreeType.includes('master') || degreeType.includes('mtech')) {
+      // For Master's/MTech: CGPA 10 scale to percentage
+      // Formula: Percentage = (CGPA - 0.5) × 10
+      const percentage = (cgpa - 0.5) * 10;
+      return Math.min(100, Math.max(0, Math.round(percentage * 10) / 10)); // Round to 1 decimal place, clamp between 0-100
+    }
+    
+    // For other degree types, assume it's already a percentage
+    return cgpa;
+  };
+
+  const getGradeTypeOptions = (degreeTypeId) => {
+    const degreeType = degreeTypes.find(dt => dt.id == degreeTypeId);
+    const degreeName = degreeType?.name?.toLowerCase() || '';
+    
+    // Only show CGPA option for bachelor's and master's degrees
+    if (degreeName.includes('bachelor') || degreeName.includes('btech') || 
+        degreeName.includes('master') || degreeName.includes('mtech')) {
+      return [
+        { value: 'percentage', label: 'Percentage' },
+        { value: 'cgpa', label: 'CGPA (10 Scale)' }
+      ];
+    }
+    
+    // For other degree types (10th, 12th, Diploma), only show percentage
+    return [
+      { value: 'percentage', label: 'Percentage' }
+    ];
+  };
+
+  const getInputConstraints = (gradeType, degreeTypeId) => {
+    const degreeType = degreeTypes.find(dt => dt.id == degreeTypeId);
+    const degreeName = degreeType?.name?.toLowerCase() || '';
+    
+    if (gradeType === 'cgpa' && (degreeName.includes('bachelor') || degreeName.includes('btech') || 
+                                 degreeName.includes('master') || degreeName.includes('mtech'))) {
+      // CGPA constraints for bachelor's and master's
+      return {
+        min: 0,
+        max: 10,
+        step: 0.01,
+        placeholder: "Enter CGPA (0-10)"
+      };
+    } else {
+      // Percentage constraints for all other cases
+      return {
+        min: 0,
+        max: 100,
+        step: 0.01,
+        placeholder: "Enter percentage (0-100)"
+      };
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
@@ -4719,7 +4928,7 @@ const MyProfile = () => {
               <div className="bg-green-50 border border-green-200 rounded-lg p-3">
                 <div className="flex items-start gap-2">
                   <svg className="w-5 h-5 text-green-600 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
                   </svg>
                   <div className="text-sm text-green-800">
                     <strong>Profile Complete!</strong> You can now apply for placements.

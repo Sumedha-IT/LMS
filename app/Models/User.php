@@ -182,7 +182,12 @@ class User extends Authenticatable implements HasTenants, FilamentUser, HasAvata
 
     public function course()
     {
-        return $this->belongsTo(Course::class, 'course_id');
+        // Get course through the first batch's course_package_id
+        return $this->belongsToMany(Course::class, 'batch_user', 'user_id', 'batch_id')
+                    ->join('batches', 'batch_user.batch_id', '=', 'batches.id')
+                    ->where('batches.course_package_id', '=', 'courses.id')
+                    ->select('courses.*')
+                    ->limit(1);
     }
 
     public function canAccessTenant(Model $tenant): bool

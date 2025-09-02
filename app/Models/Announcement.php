@@ -40,4 +40,20 @@ class Announcement extends Model
     {
         $this->attributes['batch_ids'] = implode(',', $value);
     }
+
+    // Setter for schedule_at to handle d/m/Y H:i:s format
+    public function setScheduleAtAttribute($value)
+    {
+        if ($value && is_string($value)) {
+            try {
+                // Try to parse the date in d/m/Y H:i:s format
+                $this->attributes['schedule_at'] = Carbon::createFromFormat('d/m/Y H:i:s', $value);
+            } catch (\Exception $e) {
+                // If that fails, try the default Carbon parse
+                $this->attributes['schedule_at'] = Carbon::parse($value);
+            }
+        } else {
+            $this->attributes['schedule_at'] = $value;
+        }
+    }
 }

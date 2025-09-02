@@ -4,6 +4,7 @@ namespace App\Filament\Imports;
 
 use App\Models\User;
 use App\Models\Role;
+use App\Models\Batch;
 use Filament\Actions\Imports\ImportColumn;
 use Filament\Actions\Imports\Importer;
 use Filament\Actions\Imports\Models\Import;
@@ -13,6 +14,8 @@ use Illuminate\Validation\Rule;
 class UserImporter extends Importer
 {
     protected static ?string $model = User::class;
+    
+    protected $batchNameToAssign = null;
 
     public static function getColumns(): array
     {
@@ -56,6 +59,8 @@ class UserImporter extends Importer
             ImportColumn::make('password')
                 ->requiredMapping()
                 ->rules(['required', 'max:255']),
+            ImportColumn::make('batch_name')
+                ->rules(['nullable', 'max:255']),
         ];
     }
 
@@ -64,6 +69,81 @@ class UserImporter extends Importer
          // Skip duplicates via unique validation; always create a fresh model instance
          return new User();
     }
+
+    public function fillRecord(): void
+    {
+        // Remove batch_name from data before filling the record to prevent database errors
+        if (isset($this->data['batch_name'])) {
+            $this->batchNameToAssign = trim((string) $this->data['batch_name']);
+            unset($this->data['batch_name']);
+            \Log::info('batch_name removed in fillRecord method', [
+                'batch_name_value' => $this->batchNameToAssign
+            ]);
+        }
+
+        // Call parent method to fill the record normally
+        parent::fillRecord();
+    }
+
+    protected function mutateRecordDataBeforeCreate(array $data): array
+    {
+        // batch_name is now handled in fillRecord method, so we just process other fields
+
+        // Normalize email for consistent matching
+        if (!empty($data['email'])) {
+            $data['email'] = mb_strtolower(trim((string) $data['email']));
+        }
+
+        // Always set default country code to +91
+        $data['country_code'] = '+91';
+
+        // Mirror contact_number to phone for compatibility if phone column exists
+        if (!empty($data['contact_number'])) {
+            $data['phone'] = $data['contact_number'];
+        }
+
+        // Map role (by name) to role_id
+        if (!empty($data['role'])) {
+            $roleInput = trim((string) $data['role']);
+
+            // If numeric provided, accept as-is; otherwise look up by name (case-insensitive)
+            if (is_numeric($roleInput)) {
+                $data['role_id'] = (int) $roleInput;
+            } else {
+                $matchedRole = Role::query()
+                    ->whereRaw('LOWER(name) = ?', [mb_strtolower($roleInput)])
+                    ->first();
+
+                if ($matchedRole) {
+                    $data['role_id'] = (int) $roleInput;
+                }
+            }
+
+            // Remove the non-fillable column
+            unset($data['role']);
+        }
+
+        // Fallback: if role_id still not set, default to Student role if available
+        if (empty($data['role_id'])) {
+            $studentRoleId = Role::query()->whereRaw('LOWER(name) = ?', ['student'])->value('id');
+            if (!empty($studentRoleId)) {
+                $data['role_id'] = (int) $studentRoleId;
+            }
+        }
+
+        // Set default placement center access for students and placement students
+        if (in_array($data['role_id'], [6, 11])) {
+            $data['placement_center_access'] = true;
+        } else {
+            $data['placement_center_access'] = false;
+        }
+
+        return $data;
+    }
+
+    // mutateRecordDataBeforeFill method removed - data is now handled in fillRecord method
+
+    // beforeSave method removed - data is now handled in fillRecord method
 
     public static function getCompletedNotificationBody(Import $import): string
     {
@@ -74,68 +154,6 @@ class UserImporter extends Importer
         }
 
         return $body;
-    }
-
-    protected function beforeSave(): void
-    {
-        // Normalize email for consistent matching
-        if (!empty($this->data['email'])) {
-            $this->data['email'] = mb_strtolower(trim((string) $this->data['email']));
-        }
-
-        // Always set default country code to +91
-        $this->data['country_code'] = '+91';
-
-        // Mirror contact_number to phone for compatibility if phone column exists
-        if (!empty($this->data['contact_number'])) {
-            $this->data['phone'] = $this->data['contact_number'];
-        }
-
-        // Map role (by name) to role_id
-        if (!empty($this->data['role'])) {
-            $roleInput = trim((string) $this->data['role']);
-
-            // If numeric provided, accept as-is; otherwise look up by name (case-insensitive)
-            if (is_numeric($roleInput)) {
-                $this->data['role_id'] = (int) $roleInput;
-            } else {
-                $matchedRole = Role::query()
-                    ->whereRaw('LOWER(name) = ?', [mb_strtolower($roleInput)])
-                    ->first();
-
-                if ($matchedRole) {
-                    $this->data['role_id'] = $matchedRole->id;
-                }
-            }
-
-            // Remove the non-fillable column
-            unset($this->data['role']);
-        }
-
-        // Fallback: if role_id still not set, default to Student role if available
-        if (empty($this->data['role_id'])) {
-            $studentRoleId = Role::query()->whereRaw('LOWER(name) = ?', ['student'])->value('id');
-            if (!empty($studentRoleId)) {
-                $this->data['role_id'] = (int) $studentRoleId;
-            }
-        }
-
-        // Set default placement center access for students and placement students
-        if (in_array($this->data['role_id'], [6, 11])) {
-            $this->data['placement_center_access'] = true;
-            $this->record->placement_center_access = true;
-            \Log::info('Setting placement center access to TRUE for user', [
-                'email' => $this->data['email'] ?? 'unknown',
-                'role_id' => $this->data['role_id']
-            ]);
-        } else {
-            $this->data['placement_center_access'] = false;
-            $this->record->placement_center_access = false;
-            \Log::info('Setting placement center access to FALSE for user', [
-                'email' => $this->data['email'] ?? 'unknown',
-                'role_id' => $this->data['role_id']
-            ]);
-        }
     }
 
     protected function afterSave(): void
@@ -149,6 +167,36 @@ class UserImporter extends Importer
                 'email' => $this->record->email,
                 'role_id' => $this->record->role_id
             ]);
+        }
+
+        // Assign user to batch if batch_name is provided
+        if (!empty($this->batchNameToAssign)) {
+            $batchName = $this->batchNameToAssign;
+            
+            // Find batch by name (case-insensitive)
+            $batch = Batch::query()
+                ->whereRaw('LOWER(name) = ?', [mb_strtolower($batchName)])
+                ->first();
+            
+            if ($batch) {
+                // Attach user to existing batch
+                $this->record->batches()->syncWithoutDetaching([$batch->id]);
+                
+                \Log::info('User successfully assigned to existing batch during import', [
+                    'user_id' => $this->record->id,
+                    'user_email' => $this->record->email,
+                    'batch_id' => $batch->id,
+                    'batch_name' => $batch->name
+                ]);
+            } else {
+                // Log warning that batch doesn't exist - user will not be assigned to any batch
+                \Log::warning('Batch not found during user import - user will not be assigned to any batch', [
+                    'user_id' => $this->record->id,
+                    'user_email' => $this->record->email,
+                    'batch_name' => $batchName,
+                    'message' => 'Please create the batch first or use an existing batch name'
+                ]);
+            }
         }
     }
 
@@ -165,7 +213,7 @@ class UserImporter extends Importer
      */
     public static function getTemplateInstructions(): string
     {
-        return 'Download the template, fill role (name), name, email, country_code, contact_number, gender, password. country_code defaults to +91 if left empty.';
+        return 'Download the template, fill role (name), name, email, contact_number, gender, password, batch_name. batch_name is optional - if provided, users will be automatically assigned to the specified EXISTING batch. IMPORTANT: Only use batch names that already exist in the system. country_code defaults to +91 if left empty.';
     }
 
 }
