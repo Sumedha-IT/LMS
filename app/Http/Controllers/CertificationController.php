@@ -20,8 +20,6 @@ class CertificationController extends Controller
         // Check if the current user is an admin or has permission to view other users' data
         $user = $request->user();
         
-        // Debug logging
-        \Log::info('getUserCertifications - User ID: ' . $user->id . ', Role ID: ' . ($user->role ? $user->role->id : 'null') . ', Is Admin: ' . ($user->is_admin ? 'true' : 'false'));
         
         // Allow admin, coordinator, and placement coordinator users to view any user's certifications
         // You can add more specific permission checks here
@@ -32,9 +30,6 @@ class CertificationController extends Controller
         
         $certifications = Certification::where('user_id', $userId)->get();
         
-        // Debug logging
-        \Log::info('getUserCertifications - Found certifications: ' . $certifications->count());
-        \Log::info('getUserCertifications - Certifications data: ' . $certifications->toJson());
         
         return response()->json(['data' => $certifications]);
     }

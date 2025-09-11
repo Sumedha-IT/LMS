@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
+import { format } from 'date-fns';
 import {
     Box,
     Typography,
@@ -31,6 +32,7 @@ import {
     Tab,
     Tooltip
 } from '@mui/material';
+import RichTextEditor from '../components/common/RichTextEditor';
 import {
     Add as AddIcon,
     Edit as EditIcon,
@@ -74,6 +76,61 @@ function a11yProps(index) {
 const JobPostingManagement = () => {
     const { id } = useParams();
     const navigate = useNavigate();
+
+    // Date formatting functions
+    const formatDateToDMY = (dateString) => {
+        if (!dateString) return '';
+        try {
+            const date = new Date(dateString);
+            return format(date, 'dd/MM/yyyy');
+        } catch (error) {
+            console.error('Error formatting date:', error);
+            return dateString;
+        }
+    };
+
+    // Convert date from dd/mm/yyyy to yyyy-mm-dd for HTML date input
+    const formatDateForInput = (dateString) => {
+        if (!dateString) return '';
+        try {
+            // If it's already in yyyy-mm-dd format, return as is
+            if (dateString.match(/^\d{4}-\d{2}-\d{2}$/)) {
+                return dateString;
+            }
+            
+            // If it's in dd/mm/yyyy format, convert to yyyy-mm-dd
+            if (dateString.match(/^\d{2}\/\d{2}\/\d{4}$/)) {
+                const [day, month, year] = dateString.split('/');
+                return `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
+            }
+            
+            // For other formats, try to parse and convert
+            const date = new Date(dateString);
+            if (!isNaN(date.getTime())) {
+                return date.toISOString().split('T')[0];
+            }
+            
+            return '';
+        } catch (error) {
+            console.error('Error formatting date for input:', error);
+            return '';
+        }
+    };
+
+    // Convert date from yyyy-mm-dd to dd/mm/yyyy for display
+    const formatDateForDisplay = (dateString) => {
+        if (!dateString) return '';
+        try {
+            const date = new Date(dateString);
+            if (!isNaN(date.getTime())) {
+                return format(date, 'dd/MM/yyyy');
+            }
+            return dateString;
+        } catch (error) {
+            console.error('Error formatting date for display:', error);
+            return dateString;
+        }
+    };
     const [tabValue, setTabValue] = useState(0);
     const [openDialog, setOpenDialog] = useState(false);
     const [selectedItem, setSelectedItem] = useState(null);
@@ -666,33 +723,24 @@ const JobPostingManagement = () => {
                         </Grid>
 
                         <Grid item xs={12}>
-                            <TextField
-                                fullWidth
-                                multiline
-                                rows={3}
+                            <RichTextEditor
                                 label="Job Description"
                                 value={jobPostingForm.description}
-                                onChange={(e) => setJobPostingForm({...jobPostingForm, description: e.target.value})}
+                                onChange={(value) => setJobPostingForm({...jobPostingForm, description: value})}
                             />
                         </Grid>
                         <Grid item xs={12}>
-                            <TextField
-                                fullWidth
-                                multiline
-                                rows={3}
+                            <RichTextEditor
                                 label="Job Requirements"
                                 value={jobPostingForm.requirements}
-                                onChange={(e) => setJobPostingForm({...jobPostingForm, requirements: e.target.value})}
+                                onChange={(value) => setJobPostingForm({...jobPostingForm, requirements: value})}
                             />
                         </Grid>
                         <Grid item xs={12}>
-                            <TextField
-                                fullWidth
-                                multiline
-                                rows={3}
+                            <RichTextEditor
                                 label="Job Responsibilities"
                                 value={jobPostingForm.responsibilities}
-                                onChange={(e) => setJobPostingForm({...jobPostingForm, responsibilities: e.target.value})}
+                                onChange={(value) => setJobPostingForm({...jobPostingForm, responsibilities: value})}
                             />
                         </Grid>
                         <Grid item xs={12} md={6}>
@@ -735,10 +783,11 @@ const JobPostingManagement = () => {
                                 fullWidth
                                 label="Application Deadline"
                                 type="date"
-                                value={jobPostingForm.application_deadline}
+                                value={formatDateForInput(jobPostingForm.application_deadline)}
                                 onChange={(e) => setJobPostingForm({...jobPostingForm, application_deadline: e.target.value})}
                                 InputLabelProps={{ shrink: true }}
                                 placeholder=""
+                                helperText={jobPostingForm.application_deadline ? formatDateForDisplay(jobPostingForm.application_deadline) : ''}
                             />
                         </Grid>
                         
@@ -889,4 +938,4 @@ const JobPostingManagement = () => {
     );
 };
 
-export default JobPostingManagement; 
+export default JobPostingManagement;

@@ -45,7 +45,7 @@ class ProfileCompletionService
             'overall_percentage' => round($overallPercentage),
             'sections' => $sections,
             'weights' => $weights,
-            'is_complete' => $overallPercentage >= 90, // 90% threshold for completion
+            'is_complete' => $overallPercentage >= 100, // 100% threshold for completion
             'missing_sections' => $this->getMissingSections($sections),
         ];
     }
@@ -234,7 +234,8 @@ class ProfileCompletionService
             $missing[] = 'Certifications';
         }
         
-        if ($sections['resume'] < 80) {
+        // Resume is always required for job applications, so always show as missing if not uploaded
+        if ($sections['resume'] < 100) {
             $missing[] = 'Resume Upload';
         }
         
@@ -251,13 +252,31 @@ class ProfileCompletionService
     {
         $completion = $this->calculateProfileCompletion($user);
         
+        // Check if resume is uploaded - this is mandatory for job applications
+        $hasResume = !empty($user->upload_resume);
+        
+        if (!$hasResume) {
+            // Ensure Resume Upload is in missing sections if not already there
+            $missingSections = $completion['missing_sections'];
+            if (!in_array('Resume Upload', $missingSections)) {
+                $missingSections[] = 'Resume Upload';
+            }
+            
+            return [
+                'can_apply' => false,
+                'completion_percentage' => $completion['overall_percentage'],
+                'missing_sections' => $missingSections,
+                'message' => 'Resume is required to apply for jobs. Please upload your resume first.'
+            ];
+        }
+        
         return [
             'can_apply' => $completion['is_complete'],
             'completion_percentage' => $completion['overall_percentage'],
             'missing_sections' => $completion['missing_sections'],
             'message' => $completion['is_complete'] 
                 ? 'Profile is complete. You can apply for placements.'
-                : 'Profile completion must be at least 90%. Please complete the following sections: ' . implode(', ', $completion['missing_sections'])
+                : 'Profile completion must be 100%. Please complete the following sections: ' . implode(', ', $completion['missing_sections'])
         ];
     }
 }

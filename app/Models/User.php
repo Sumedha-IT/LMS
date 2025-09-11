@@ -67,10 +67,13 @@ class User extends Authenticatable implements HasTenants, FilamentUser, HasAvata
         'receive_sms_notification',
         'zoho_crm_id',
         'course_id',
+        'program',
         'exam_total_marks',
         'exam_last_calculated_at',
         'exam_last_attempt_id',
-        'placement_center_access'
+        'placement_center_access',
+        'sumedha_batch_month',
+        'sumedha_batch_year'
     ];
 
     /**

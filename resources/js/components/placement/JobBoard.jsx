@@ -51,28 +51,20 @@ import {
 import { useGetJobPostingsQuery } from '../../store/service/user/UserService';
 import axios from 'axios';
 import ProfileCompletionCheck from './ProfileCompletionCheck';
+import RichTextDisplay from '../common/RichTextDisplay';
 
-// JobDescription component for truncating and expanding job descriptions
+// JobDescription component for displaying full job descriptions
 const JobDescription = ({ description }) => {
-    const [expanded, setExpanded] = React.useState(false);
-    const limit = 150;
     if (!description) return null;
-    const isLong = description.length > limit;
     return (
-        <Typography variant="body2" color="text.secondary" paragraph sx={{ lineHeight: 1.6 }}>
-            {expanded || !isLong
-                ? description
-                : `${description.substring(0, limit)}...`}
-            {isLong && (
-                <Button
-                    size="small"
-                    onClick={() => setExpanded((prev) => !prev)}
-                    sx={{ ml: 1, textTransform: 'none', fontWeight: 500, fontSize: '0.95em', p: 0, minWidth: 0 }}
-                >
-                    {expanded ? 'Show less' : 'Read more'}
-                </Button>
-            )}
-        </Typography>
+        <RichTextDisplay 
+            content={description} 
+            sx={{ 
+                color: 'text.secondary',
+                fontSize: '0.875rem',
+                lineHeight: 1.6 
+            }} 
+        />
     );
 };
 
@@ -104,8 +96,11 @@ const JobBoard = ({ studentId }) => {
     const [expandedJobs, setExpandedJobs] = useState({});
     const [refreshTrigger, setRefreshTrigger] = useState(0);
 
-    // Real API call for job postings
-    const { data: jobPostings, isLoading: loading, error } = useGetJobPostingsQuery();
+    // Real API call for job postings - only fetch when student course is loaded
+    const { data: jobPostings, isLoading: loading, error } = useGetJobPostingsQuery(
+        studentCourse ? { student_course: studentCourse.name } : null,
+        { skip: !studentCourse }
+    );
 
     // Function to refresh student data
     const refreshStudentData = () => {
@@ -173,16 +168,38 @@ const JobBoard = ({ studentId }) => {
     // Transform API data to match component expectations and filter by course eligibility
     const jobs = jobPostings?.data ? jobPostings.data.map(job => {
         // Check if job is eligible for student's course
-        let isEligible = true;
+        let isEligible = false; // Default to false, must explicitly match
+        let eligibleCourses = null; // Initialize eligibleCourses variable
         
-        // Check eligible_courses field first (new multiple course selection)
-        if (job.eligible_courses && Array.isArray(job.eligible_courses) && job.eligible_courses.length > 0) {
-            isEligible = job.eligible_courses.includes(studentCourse?.name);
+        // Only show jobs if student course is loaded
+        if (studentCourse) {
+            // Handle eligible_courses field - could be array, JSON string, or null
+            eligibleCourses = job.eligible_courses;
+            if (typeof eligibleCourses === 'string') {
+                try {
+                    eligibleCourses = JSON.parse(eligibleCourses);
+                } catch (e) {
+                    eligibleCourses = null;
+                }
+            }
+            
+            // Check eligible_courses field first (new multiple course selection)
+            if (eligibleCourses && Array.isArray(eligibleCourses) && eligibleCourses.length > 0) {
+                isEligible = eligibleCourses.includes(studentCourse.name);
+            }
+            // Fallback to old course_id field for backward compatibility
+            else if (job.course_id) {
+                isEligible = job.course_id === studentCourse.id;
+            }
+            // If no course restrictions specified, don't show the job (safer approach)
+            else {
+                isEligible = false;
+            }
+        } else {
+            // Student course not loaded yet, no jobs will be shown
         }
-        // Fallback to old course_id field for backward compatibility
-        else if (job.course_id) {
-            isEligible = studentCourse && job.course_id === studentCourse.id;
-        }
+        
+
         
         return {
             id: job.id,
@@ -197,14 +214,36 @@ const JobBoard = ({ studentId }) => {
                     job.salary_min ? `₹${job.salary_min}+ LPA` : 'Not specified',
             experience: job.experience_required || 'Not specified',
             description: job.description,
-            requirements: job.requirements ? job.requirements.split(',').map(req => req.trim()) : [],
+            requirements: job.requirements || '',
             postedDate: job.created_at ? new Date(job.created_at).toLocaleDateString() : 'N/A',
             deadline: job.application_deadline ? formatDateToDMY(job.application_deadline) : 'N/A',
             domain: 'Computer Science', // Default domain
             course_id: job.course_id,
-            course_name: job.eligible_courses && Array.isArray(job.eligible_courses) && job.eligible_courses.length > 0 
-                        ? job.eligible_courses.join(', ') 
+            course_name: eligibleCourses && Array.isArray(eligibleCourses) && eligibleCourses.length > 0 
+                        ? eligibleCourses.join(', ') 
                         : (job.course?.name || 'Any Course'),
+            // Additional fields for comprehensive job details
+            vacancies: job.vacancies || 'N/A',
+            salary_min: job.salary_min || 'N/A',
+            salary_max: job.salary_max || 'N/A',
+            btech_percentage_min: job.btech_percentage_min || 'N/A',
+            mtech_percentage_min: job.mtech_percentage_min || 'N/A',
+            btech_year_min: job.btech_year_min || 'N/A',
+            btech_year_max: job.btech_year_max || 'N/A',
+            mtech_year_min: job.mtech_year_min || 'N/A',
+            mtech_year_max: job.mtech_year_max || 'N/A',
+            backlogs_allowed: job.backlogs_allowed ? 'Yes' : 'No',
+            mandatory_documents: job.mandatory_original_documents ? 'Yes' : 'No',
+            specializations: job.specializations || 'N/A',
+            additional_criteria: job.additional_criteria || 'N/A',
+            recruitment_mode: job.mode_of_recruitment || 'N/A',
+            interview_mode: job.interview_mode || 'N/A',
+            interview_date: job.interview_date ? formatDateToDMY(job.interview_date) : 'N/A',
+            recruitment_steps: job.recruitment_process_steps || 'N/A',
+            venue_link: job.venue_link || 'N/A',
+            bond_details: job.bond_service_agreement || 'N/A',
+            training_period_stipend: job.training_period_stipend || 'N/A',
+            status: job.status || 'Open',
             isEligible: isEligible
         };
     }).filter(job => job.isEligible) : [];
@@ -434,8 +473,13 @@ const JobBoard = ({ studentId }) => {
                             </Button>
                         </Box>
                         <Typography variant="body1" color="text.secondary">
-                            {filteredJobs.length} {filteredJobs.length === 1 ? 'opportunity' : 'opportunities'} available
+                            {loadingStudentCourse ? 'Loading course information...' : 
+                             loading ? 'Loading job opportunities...' :
+                             filteredJobs.length === 0 ? 'No opportunities available for your course' :
+                             `${filteredJobs.length} ${filteredJobs.length === 1 ? 'opportunity' : 'opportunities'} available`}
                         </Typography>
+                        
+
                     </Box>
                     
                     {/* Quick Stats Cards */}
@@ -444,10 +488,10 @@ const JobBoard = ({ studentId }) => {
                             <Card sx={{ borderRadius: 3, background: 'linear-gradient(135deg, #0f1f3d 0%, #1e3c72 100%)', color: 'white', minWidth: 120 }}>
                                 <CardContent sx={{ p: 2, '&:last-child': { pb: 2 } }}>
                                     <Typography variant="h6" sx={{ fontWeight: 700, mb: 0.5 }}>
-                                        {jobs.length}
+                                        {loadingStudentCourse ? '...' : (loading ? '...' : jobs.length)}
                                     </Typography>
                                     <Typography variant="caption" sx={{ opacity: 0.9 }}>
-                                        Available Jobs
+                                        {loadingStudentCourse ? 'Loading Course...' : (loading ? 'Loading Jobs...' : 'Available Jobs')}
                                     </Typography>
                                 </CardContent>
                             </Card>
@@ -594,53 +638,62 @@ const JobBoard = ({ studentId }) => {
             </Card>
 
             {/* Collapsible Job Cards */}
-            <Grid container spacing={3}>
-                {filteredJobs.map((job) => {
+            {loadingStudentCourse ? (
+                <Box sx={{ 
+                    display: 'flex', 
+                    flexDirection: 'column', 
+                    alignItems: 'center', 
+                    justifyContent: 'center', 
+                    py: 8,
+                    textAlign: 'center'
+                }}>
+                    <CircularProgress size={60} sx={{ mb: 2, color: '#667eea' }} />
+                    <Typography variant="h6" color="text.secondary">
+                        Loading your course information...
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+                        This helps us show only relevant job opportunities
+                    </Typography>
+                </Box>
+            ) : (
+                <Grid container spacing={3}>
+                    {filteredJobs.map((job) => {
                     const isExpanded = expandedJobs[job.id] || false;
                     
                     return (
                     <Grid item xs={12} key={job.id}>
                         <Card 
                             sx={{ 
-                                borderRadius: 3, 
+                                borderRadius: 4, 
                                 boxShadow: isApplied(job.id) 
-                                    ? '0 4px 20px rgba(76, 175, 80, 0.15)' 
+                                    ? '0 8px 32px rgba(76, 175, 80, 0.12)' 
                                     : !profileCompletionStatus?.can_apply
-                                    ? '0 2px 8px rgba(239, 68, 68, 0.2)'
-                                    : '0 2px 8px rgba(0,0,0,0.08)',
-                                transition: 'all 0.3s ease',
+                                    ? '0 4px 16px rgba(239, 68, 68, 0.15)'
+                                    : '0 4px 16px rgba(0,0,0,0.06)',
+                                transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
                                 border: isApplied(job.id) 
-                                    ? '1px solid #4caf50' 
+                                    ? '2px solid #4caf50' 
                                     : !profileCompletionStatus?.can_apply
-                                    ? '1px solid #ef4444'
-                                    : '1px solid #e5e7eb',
-                                background: isApplied(job.id)
-                                    ? '#f8fdf8'
-                                    : !profileCompletionStatus?.can_apply
-                                    ? '#fef2f2'
-                                    : '#ffffff',
+                                    ? '2px solid #ef4444'
+                                    : '1px solid #f1f5f9',
+                                background: 'linear-gradient(135deg, #ffffff 0%, #fafbfc 100%)',
                                 position: 'relative',
                                 overflow: 'hidden',
                                 cursor: 'pointer',
-                                animation: !profileCompletionStatus?.can_apply ? 'blinkRed 2s infinite' : 'none',
-                                '@keyframes blinkRed': {
-                                    '0%, 50%': {
-                                        borderColor: '#ef4444',
-                                        boxShadow: '0 2px 8px rgba(239, 68, 68, 0.2)'
-                                    },
-                                    '25%, 75%': {
-                                        borderColor: '#dc2626',
-                                        boxShadow: '0 4px 16px rgba(239, 68, 68, 0.4)'
-                                    }
-                                },
+                                mb: 3,
                                 '&:hover': {
-                                    transform: 'translateY(-2px)',
-                                    boxShadow: !profileCompletionStatus?.can_apply
-                                        ? '0 8px 25px rgba(239, 68, 68, 0.3)'
-                                        : '0 8px 25px rgba(0,0,0,0.12)',
+                                    transform: 'translateY(-4px)',
+                                    boxShadow: isApplied(job.id)
+                                        ? '0 12px 40px rgba(76, 175, 80, 0.2)'
+                                        : !profileCompletionStatus?.can_apply
+                                        ? '0 8px 32px rgba(239, 68, 68, 0.25)'
+                                        : '0 12px 40px rgba(0,0,0,0.1)',
                                     '& .company-avatar': {
-                                        transform: 'scale(1.02)',
+                                        transform: 'scale(1.05)',
                                     },
+                                    '& .job-title': {
+                                        color: '#3b82f6',
+                                    }
                                 },
                                 '&::before': {
                                     content: '""',
@@ -648,12 +701,12 @@ const JobBoard = ({ studentId }) => {
                                     top: 0,
                                     left: 0,
                                     right: 0,
-                                    height: '3px',
+                                    height: '4px',
                                     background: isApplied(job.id)
-                                        ? '#4caf50'
+                                        ? 'linear-gradient(90deg, #4caf50, #66bb6a)'
                                         : !profileCompletionStatus?.can_apply
-                                        ? '#ef4444'
-                                        : '#3b82f6',
+                                        ? 'linear-gradient(90deg, #ef4444, #f87171)'
+                                        : 'linear-gradient(90deg, #3b82f6, #60a5fa)',
                                 },
                             }}
                                 onClick={() => setExpandedJobs(prev => ({
@@ -689,12 +742,14 @@ const JobBoard = ({ studentId }) => {
                                     <Box flex={1} minWidth={0}>
                                                     <Typography 
                                                         variant="h6" 
+                                                        className="job-title"
                                                         sx={{ 
                                                             fontWeight: 600, 
                                                             color: '#1f2937', 
                                                             lineHeight: 1.3, 
                                                             fontSize: { xs: '1rem', sm: '1.2rem' },
-                                                            mb: 0.5
+                                                            mb: 0.5,
+                                                            transition: 'color 0.3s ease'
                                                         }}
                                                     >
                                                         {job.title}
@@ -830,187 +885,305 @@ const JobBoard = ({ studentId }) => {
                                     {/* Expanded Content */}
                                     {isExpanded && (
                                         <Box sx={{ mt: 4, pt: 3, borderTop: '1px solid rgba(0,0,0,0.08)' }}>
-                                            {/* Clean Job Overview Section */}
-                                            <Grid container spacing={3} mb={4}>
-                                                {/* Job Details Grid */}
-                                                <Grid item xs={12} md={6}>
-                                            <Card sx={{ 
+                                            {/* Job Overview Section */}
+                                            <Box sx={{ 
+                                                backgroundColor: 'white', 
                                                 borderRadius: 3, 
-                                                        background: 'linear-gradient(135deg, rgba(103, 126, 234, 0.05) 0%, rgba(118, 75, 162, 0.05) 100%)',
-                                                        border: '1px solid rgba(103, 126, 234, 0.1)',
-                                                        height: '100%'
-                                                    }}>
-                                                        <CardContent sx={{ p: 3 }}>
-                                                            <Typography variant="h6" fontWeight={700} sx={{ mb: 2, color: '#667eea', display: 'flex', alignItems: 'center', gap: 1 }}>
-                                                                💰 Compensation & Benefits
-                                                            </Typography>
-                                                            <Box display="flex" alignItems="center" gap={2} mb={2}>
-                                                                <MoneyIcon sx={{ fontSize: 20, color: '#667eea' }} />
-                                                                <Typography variant="body1" fontWeight={600} sx={{ color: '#667eea' }}>
-                                                            {job.salary}
-                                                        </Typography>
-                                                    </Box>
-                                                            <Typography variant="body2" color="text.secondary">
-                                                                Competitive salary package with benefits
-                                                            </Typography>
-                                                </CardContent>
-                                            </Card>
-                                                </Grid>
-
-                                                <Grid item xs={12} md={6}>
-                                            <Card sx={{ 
-                                                borderRadius: 3, 
-                                                        background: 'linear-gradient(135deg, rgba(255, 152, 0, 0.05) 0%, rgba(255, 193, 7, 0.05) 100%)',
-                                                        border: '1px solid rgba(255, 152, 0, 0.1)',
-                                                        height: '100%'
-                                                    }}>
-                                                        <CardContent sx={{ p: 3 }}>
-                                                            <Typography variant="h6" fontWeight={700} sx={{ mb: 2, color: '#ff9800', display: 'flex', alignItems: 'center', gap: 1 }}>
-                                                                📈 Experience Level
-                                                            </Typography>
-                                                            <Box display="flex" alignItems="center" gap={2} mb={2}>
-                                                                <TrendingIcon sx={{ fontSize: 20, color: '#ff9800' }} />
-                                                                <Typography variant="body1" fontWeight={600} sx={{ color: '#ff9800' }}>
-                                                            {job.experience}
-                                                        </Typography>
-                                                    </Box>
-                                                            <Typography variant="body2" color="text.secondary">
-                                                                Experience required for this role
-                                                            </Typography>
-                                                </CardContent>
-                                            </Card>
-                                                </Grid>
-                                        
-                                                {/* Job Timeline */}
-                                                <Grid item xs={12}>
-                                        <Card sx={{ 
-                                            borderRadius: 3,
-                                                        background: 'linear-gradient(135deg, rgba(76, 175, 80, 0.05) 0%, rgba(129, 199, 132, 0.05) 100%)',
-                                                        border: '1px solid rgba(76, 175, 80, 0.1)'
-                                                    }}>
-                                                        <CardContent sx={{ p: 3 }}>
-                                                            <Typography variant="h6" fontWeight={700} sx={{ mb: 3, color: '#4caf50', display: 'flex', alignItems: 'center', gap: 1 }}>
-                                                                📅 Important Dates
-                                                            </Typography>
-                                                            <Grid container spacing={3}>
-                                                                <Grid item xs={12} md={6}>
-                                                <Box display="flex" alignItems="center" gap={2}>
-                                                    <Box sx={{
-                                                        width: 32,
-                                                        height: 32,
-                                                        borderRadius: '50%',
-                                                                            background: 'rgba(103, 126, 234, 0.1)',
-                                                        display: 'flex',
-                                                        alignItems: 'center',
-                                                        justifyContent: 'center'
-                                                    }}>
-                                                                            <TimeIcon sx={{ fontSize: 16, color: '#667eea' }} />
-                                                    </Box>
-                                                    <Box>
-                                                                            <Typography variant="body2" fontWeight={600} sx={{ color: '#667eea' }}>
-                                                                                Posted Date
-                                                        </Typography>
-                                                                            <Typography variant="body1" fontWeight={700}>
-                                                                                {job.postedDate}
-                                                                            </Typography>
-                                                                        </Box>
-                                                                    </Box>
-                                                                </Grid>
-                                                                {job.deadline !== 'N/A' && (
-                                                                    <Grid item xs={12} md={6}>
-                                                                        <Box display="flex" alignItems="center" gap={2}>
-                                                                            <Box sx={{
-                                                                                width: 32,
-                                                                                height: 32,
-                                                                                borderRadius: '50%',
-                                                                                background: 'rgba(255, 152, 0, 0.1)',
-                                                                                display: 'flex',
-                                                                                alignItems: 'center',
-                                                                                justifyContent: 'center'
-                                                                            }}>
-                                                                                <ViewIcon sx={{ fontSize: 16, color: '#ff9800' }} />
-                                                                            </Box>
-                                                                            <Box>
-                                                                                <Typography variant="body2" fontWeight={600} sx={{ color: '#ff9800' }}>
-                                                                                    Application Deadline
-                                                                                </Typography>
-                                                                                <Typography variant="body1" fontWeight={700}>
-                                                                                    {job.deadline}
-                                                        </Typography>
-                                                    </Box>
-                                                </Box>
-                                                                    </Grid>
-                                                                )}
-                                                            </Grid>
-                                            </CardContent>
-                                        </Card>
-                                                </Grid>
-                                            </Grid>
-
-                                            {/* Job Description Section */}
-                                            <Card sx={{ mb: 4, borderRadius: 3 }}>
-                                                <CardContent sx={{ p: 4 }}>
-                                                    <Typography variant="h5" fontWeight={700} sx={{ mb: 3, color: '#667eea', display: 'flex', alignItems: 'center', gap: 1 }}>
-                                                        📝 Job Description
-                                                    </Typography>
-                                        <JobDescription description={job.description} />
-                                                </CardContent>
-                                            </Card>
-
-                                            {/* Skills Required Section */}
-                                        {job.requirements.length > 0 && (
-                                            <Card sx={{ 
-                                                    mb: 4,
-                                                borderRadius: 3,
-                                                background: 'linear-gradient(135deg, rgba(103, 126, 234, 0.05) 0%, rgba(118, 75, 162, 0.05) 100%)',
-                                                border: '1px solid rgba(103, 126, 234, 0.1)'
+                                                p: 4, 
+                                                mb: 4,
+                                                boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+                                                border: '1px solid #e0e0e0'
                                             }}>
-                                                    <CardContent sx={{ p: 4 }}>
-                                                        <Typography variant="h5" fontWeight={700} sx={{ mb: 3, color: '#667eea', display: 'flex', alignItems: 'center', gap: 2 }}>
-                                                        <Box sx={{
-                                                                width: 40,
-                                                                height: 40,
-                                                            borderRadius: '50%',
-                                                            background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                                                            display: 'flex',
-                                                            alignItems: 'center',
-                                                            justifyContent: 'center'
-                                                        }}>
-                                                                <StarIcon sx={{ fontSize: 20, color: 'white' }} />
+                                                <Typography variant="h5" fontWeight={700} sx={{ mb: 3, color: '#333', borderBottom: '2px solid #1976d2', pb: 1 }}>
+                                                    Job Overview
+                                                </Typography>
+                                                
+                                                <Grid container spacing={3}>
+                                                    {/* Company & Job Type */}
+                                                    <Grid item xs={12} md={6}>
+                                                        <Box sx={{ mb: 2, display: 'flex', alignItems: 'center', gap: 2 }}>
+                                                            <Typography variant="h6" fontWeight={600} sx={{ color: '#1976d2', minWidth: '120px' }}>
+                                                                Company:
+                                                            </Typography>
+                                                            <Typography variant="body1" sx={{ color: '#555' }}>
+                                                                {job.company}
+                                                            </Typography>
                                                         </Box>
-                                                            🎯 Required Skills & Technologies
-                                                        </Typography>
-                                                    <Box display="flex" gap={2} flexWrap="wrap">
-                                                            {job.requirements.map((req, index) => (
-                                                            <Card key={index} sx={{ 
-                                                                borderRadius: 2,
-                                                                    background: 'linear-gradient(135deg, rgba(255,255,255,0.9) 0%, rgba(255,255,255,1) 100%)',
-                                                                border: '1px solid rgba(103, 126, 234, 0.2)',
-                                                                    transition: 'all 0.2s ease',
-                                                                    '&:hover': {
-                                                                        transform: 'translateY(-2px)',
-                                                                        boxShadow: '0 4px 12px rgba(103, 126, 234, 0.2)'
-                                                                    }
-                                                                }}>
-                                                                    <CardContent sx={{ p: 2, '&:last-child': { pb: 2 } }}>
-                                                                    <Typography variant="body2" fontWeight={600} sx={{ color: '#667eea' }}>
-                                                                        {req}
-                                                                    </Typography>
-                                                                </CardContent>
-                                                            </Card>
-                                                        ))}
-                                                    </Box>
-                                                </CardContent>
-                                            </Card>
+                                                        <Box sx={{ mb: 2, display: 'flex', alignItems: 'center', gap: 2 }}>
+                                                            <Typography variant="h6" fontWeight={600} sx={{ color: '#1976d2', minWidth: '120px' }}>
+                                                                Job Type:
+                                                            </Typography>
+                                                            <Typography variant="body1" sx={{ color: '#555' }}>
+                                                                {job.type}
+                                                            </Typography>
+                                                        </Box>
+                                                    </Grid>
+
+                                                    {/* Location & Experience */}
+                                                    <Grid item xs={12} md={6}>
+                                                        <Box sx={{ mb: 2, display: 'flex', alignItems: 'center', gap: 2 }}>
+                                                            <Typography variant="h6" fontWeight={600} sx={{ color: '#1976d2', minWidth: '160px' }}>
+                                                                Location:
+                                                            </Typography>
+                                                            <Typography variant="body1" sx={{ color: '#555' }}>
+                                                                {job.location}
+                                                            </Typography>
+                                                        </Box>
+                                                        <Box sx={{ mb: 2, display: 'flex', alignItems: 'center', gap: 2 }}>
+                                                            <Typography variant="h6" fontWeight={600} sx={{ color: '#1976d2', minWidth: '160px' }}>
+                                                                Experience Required:
+                                                            </Typography>
+                                                            <Typography variant="body1" sx={{ color: '#555' }}>
+                                                                {job.experience}
+                                                            </Typography>
+                                                        </Box>
+                                                    </Grid>
+
+                                                    {/* Salary & Compensation */}
+                                                    <Grid item xs={12} sm={6}>
+                                                        <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
+                                                            <Typography variant="h6" fontWeight={600} sx={{ color: '#1976d2', minWidth: '120px' }}>
+                                                                Salary:
+                                                            </Typography>
+                                                            <Typography variant="body1" sx={{ color: '#555' }}>
+                                                                {job.salary}
+                                                            </Typography>
+                                                        </Box>
+                                                        {(job.salary_min !== 'N/A' || job.salary_max !== 'N/A') && (
+                                                            <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
+                                                                <Typography variant="body2" fontWeight={500} sx={{ color: '#666', minWidth: '120px' }}>
+                                                                    Range:
+                                                                </Typography>
+                                                                <Typography variant="body2" sx={{ color: '#555' }}>
+                                                                    ₹{job.salary_min}L - ₹{job.salary_max}L
+                                                                </Typography>
+                                                            </Box>
+                                                        )}
+                                                        {job.vacancies !== 'N/A' && (
+                                                            <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
+                                                                <Typography variant="body2" fontWeight={500} sx={{ color: '#666', minWidth: '120px' }}>
+                                                                    Vacancies:
+                                                                </Typography>
+                                                                <Typography variant="body2" sx={{ color: '#555' }}>
+                                                                    {job.vacancies}
+                                                                </Typography>
+                                                            </Box>
+                                                        )}
+                                                    </Grid>
+
+                                                    {/* Important Dates */}
+                                                    <Grid item xs={12}>
+                                                        <Box sx={{ mb: 2 }}>
+                                                            <Typography variant="h6" fontWeight={600} sx={{ mb: 1, color: '#1976d2' }}>
+                                                                Important Dates:
+                                                            </Typography>
+                                                            <Typography variant="body1" sx={{ pl: 2, color: '#555' }}>
+                                                                Posted: {job.postedDate}
+                                                            </Typography>
+                                                            {job.deadline !== 'N/A' && (
+                                                                <Typography variant="body1" sx={{ pl: 2, color: '#d32f2f', mt: 1, fontWeight: 600 }}>
+                                                                    Application Deadline: {job.deadline}
+                                                                </Typography>
+                                                            )}
+                                                        </Box>
+                                                    </Grid>
+                                                </Grid>
+                                            </Box>
+
+                                            {/* Job Description & Requirements Section */}
+                            <Box sx={{ mb: 4 }}>
+                                <Typography variant="h5" fontWeight={700} sx={{ mb: 2, color: '#333', borderBottom: '2px solid #667eea', pb: 1 }}>
+                                    Job Description & Requirements
+                                </Typography>
+                                <Box sx={{ pl: 2 }}>
+                                    <JobDescription description={job.description} />
+                                    {job.requirements && (
+                                        <Box sx={{ mt: 3 }}>
+                                            <Typography variant="h6" fontWeight={600} sx={{ mb: 1, color: '#667eea' }}>
+                                                Required Skills & Technologies:
+                                            </Typography>
+                                            <RichTextDisplay 
+                                                content={job.requirements} 
+                                                sx={{ 
+                                                    pl: 2, 
+                                                    lineHeight: 1.6, 
+                                                    color: '#555',
+                                                    fontSize: '1rem'
+                                                }} 
+                                            />
+                                        </Box>
+                                    )}
+                                </Box>
+                            </Box>
+
+                            {/* Eligibility Criteria Section */}
+                            <Box sx={{ mb: 4 }}>
+                                <Typography variant="h5" fontWeight={700} sx={{ mb: 2, color: '#333', borderBottom: '2px solid #4caf50', pb: 1 }}>
+                                    Eligibility Criteria
+                                </Typography>
+                                <Box sx={{ pl: 2 }}>
+                                    {/* B.Tech Requirements */}
+                                    <Typography variant="h6" fontWeight={600} sx={{ mb: 1, color: '#4caf50' }}>
+                                        B.Tech Requirements:
+                                    </Typography>
+                                    <Box sx={{ pl: 2, mb: 2 }}>
+                                        {job.btech_percentage_min !== 'N/A' && (
+                                            <Typography variant="body1" sx={{ mb: 0.5, color: '#555' }}>
+                                                • Minimum Percentage: {job.btech_percentage_min}%
+                                            </Typography>
                                         )}
+                                        {(job.btech_year_min !== 'N/A' || job.btech_year_max !== 'N/A') && (
+                                            <Typography variant="body1" sx={{ mb: 0.5, color: '#555' }}>
+                                                • Year of Passout: {job.btech_year_min} - {job.btech_year_max}
+                                            </Typography>
+                                        )}
+                                    </Box>
+                                    
+                                    {/* M.Tech Requirements */}
+                                    <Typography variant="h6" fontWeight={600} sx={{ mb: 1, color: '#4caf50' }}>
+                                        M.Tech Requirements:
+                                    </Typography>
+                                    <Box sx={{ pl: 2, mb: 2 }}>
+                                        {job.mtech_percentage_min !== 'N/A' && (
+                                            <Typography variant="body1" sx={{ mb: 0.5, color: '#555' }}>
+                                                • Minimum Percentage: {job.mtech_percentage_min}%
+                                            </Typography>
+                                        )}
+                                        {(job.mtech_year_min !== 'N/A' || job.mtech_year_max !== 'N/A') && (
+                                            <Typography variant="body1" sx={{ mb: 0.5, color: '#555' }}>
+                                                • Year of Passout: {job.mtech_year_min} - {job.mtech_year_max}
+                                            </Typography>
+                                        )}
+                                    </Box>
+                                    
+                                    {/* Additional Requirements */}
+                                    <Typography variant="h6" fontWeight={600} sx={{ mb: 1, color: '#4caf50' }}>
+                                        Additional Requirements:
+                                    </Typography>
+                                    <Box sx={{ pl: 2 }}>
+                                        <Typography variant="body1" sx={{ mb: 0.5, color: '#555' }}>
+                                            • Backlogs Allowed: {job.backlogs_allowed}
+                                        </Typography>
+                                        <Typography variant="body1" sx={{ mb: 0.5, color: '#555' }}>
+                                            • Mandatory Original Documents: {job.mandatory_documents}
+                                        </Typography>
+                                        {job.specializations && job.specializations !== 'N/A' && (
+                                            <Typography variant="body1" sx={{ mb: 0.5, color: '#555' }}>
+                                                • Specializations: {job.specializations}
+                                            </Typography>
+                                        )}
+                                        {job.additional_criteria && job.additional_criteria !== 'N/A' && (
+                                            <Typography variant="body1" sx={{ mb: 0.5, color: '#555' }}>
+                                                • Additional Criteria: {job.additional_criteria}
+                                            </Typography>
+                                        )}
+                                    </Box>
+                                </Box>
+                            </Box>
+
+                            {/* Eligible Courses Section */}
+                            {job.course_name && job.course_name !== 'N/A' && job.course_name !== 'Any Course' && (
+                                <Box sx={{ mb: 4 }}>
+                                    <Typography variant="h5" fontWeight={700} sx={{ mb: 2, color: '#333', borderBottom: '2px solid #2196f3', pb: 1 }}>
+                                        Eligible Courses
+                                    </Typography>
+                                    <Typography variant="body1" sx={{ pl: 2, lineHeight: 1.6, color: '#555' }}>
+                                        {job.course_name}
+                                    </Typography>
+                                </Box>
+                            )}
+
+                            {/* Recruitment Process Section */}
+                            <Box sx={{ mb: 4 }}>
+                                <Typography variant="h5" fontWeight={700} sx={{ mb: 2, color: '#333', borderBottom: '2px solid #ff9800', pb: 1 }}>
+                                    Recruitment Process
+                                </Typography>
+                                <Box sx={{ pl: 2 }}>
+                                    {job.recruitment_mode && job.recruitment_mode !== 'N/A' && (
+                                        <Typography variant="body1" sx={{ mb: 0.5, color: '#555' }}>
+                                            • Mode of Recruitment: {job.recruitment_mode}
+                                        </Typography>
+                                    )}
+                                    {job.interview_mode && job.interview_mode !== 'N/A' && (
+                                        <Typography variant="body1" sx={{ mb: 0.5, color: '#555' }}>
+                                            • Interview Mode: {job.interview_mode}
+                                        </Typography>
+                                    )}
+                                    {job.interview_date && job.interview_date !== 'N/A' && (
+                                        <Typography variant="body1" sx={{ mb: 0.5, color: '#555' }}>
+                                            • Interview Date: {job.interview_date}
+                                        </Typography>
+                                    )}
+                                    {job.recruitment_steps && job.recruitment_steps !== 'N/A' && (
+                                        <Typography variant="body1" sx={{ mb: 0.5, color: '#555' }}>
+                                            • Process Steps: {job.recruitment_steps}
+                                        </Typography>
+                                    )}
+                                    {job.venue_link && job.venue_link !== 'N/A' && (
+                                        <Typography variant="body1" sx={{ mb: 0.5, color: '#555' }}>
+                                            • Venue / Link: {job.venue_link}
+                                        </Typography>
+                                    )}
+                                </Box>
+                            </Box>
+
+                            {/* Additional Information Section */}
+                            {(job.bond_details && job.bond_details !== 'N/A') || 
+                             (job.training_period_stipend && job.training_period_stipend !== 'N/A') || 
+                             (job.additional_criteria && job.additional_criteria !== 'N/A') ? (
+                                <Box sx={{ mb: 4 }}>
+                                    <Typography variant="h5" fontWeight={700} sx={{ mb: 2, color: '#333', borderBottom: '2px solid #9c27b0', pb: 1 }}>
+                                        Additional Information
+                                    </Typography>
+                                    <Box sx={{ pl: 2 }}>
+                                        {job.bond_details && job.bond_details !== 'N/A' && (
+                                            <Box sx={{ mb: 2 }}>
+                                                <Typography variant="h6" fontWeight={600} sx={{ mb: 1, color: '#9c27b0' }}>
+                                                    Bond / Service Agreement Details:
+                                                </Typography>
+                                                <Typography variant="body1" sx={{ pl: 2, lineHeight: 1.6, color: '#555' }}>
+                                                    {job.bond_details}
+                                                </Typography>
+                                            </Box>
+                                        )}
+                                        {job.training_period_stipend && job.training_period_stipend !== 'N/A' && (
+                                            <Box sx={{ mb: 2 }}>
+                                                <Typography variant="h6" fontWeight={600} sx={{ mb: 1, color: '#9c27b0' }}>
+                                                    Training Period Stipend:
+                                                </Typography>
+                                                <Typography variant="body1" sx={{ pl: 2, lineHeight: 1.6, color: '#555' }}>
+                                                    ₹{job.training_period_stipend}
+                                                </Typography>
+                                            </Box>
+                                        )}
+                                        {job.additional_criteria && job.additional_criteria !== 'N/A' && (
+                                            <Box sx={{ mb: 2 }}>
+                                                <Typography variant="h6" fontWeight={600} sx={{ mb: 1, color: '#9c27b0' }}>
+                                                    Additional Criteria:
+                                                </Typography>
+                                                <Typography variant="body1" sx={{ pl: 2, lineHeight: 1.6, color: '#555' }}>
+                                                    {job.additional_criteria}
+                                                </Typography>
+                                            </Box>
+                                        )}
+                                    </Box>
+                                </Box>
+                            ) : null}
+
+
 
                                             {/* Action Section */}
-                                        <Card sx={{ 
-                                            borderRadius: 3,
-                                                background: 'linear-gradient(135deg, rgba(248, 249, 250, 0.9) 0%, rgba(255, 255, 255, 1) 100%)',
-                                            border: '1px solid rgba(0,0,0,0.05)'
-                                        }}>
-                                                <CardContent sx={{ p: 4 }}>
+                                            <Box sx={{ 
+                                                backgroundColor: 'white', 
+                                                borderRadius: 3, 
+                                                p: 4, 
+                                                mb: 4,
+                                                boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+                                                border: '1px solid #e0e0e0'
+                                            }}>
+                                                <Typography variant="h5" fontWeight={700} sx={{ mb: 3, color: '#333', borderBottom: '2px solid #4caf50', pb: 1 }}>
+                                                    Apply for this Position
+                                                </Typography>
                                                     <Box display="flex" justifyContent="center" alignItems="center">
                                                         {!isApplied(job.id) ? (
                                                             <Button
@@ -1134,8 +1307,7 @@ const JobBoard = ({ studentId }) => {
                                                             })()
                                                         )}
                                                 </Box>
-                                            </CardContent>
-                                        </Card>
+                                            </Box>
                                     </Box>
                                     )}
                             </CardContent>
@@ -1143,9 +1315,10 @@ const JobBoard = ({ studentId }) => {
                     </Grid>
                     );
                 })}
-            </Grid>
+                </Grid>
+            )}
 
-            {filteredJobs.length === 0 && (
+            {filteredJobs.length === 0 && !loading && (
                 <Card sx={{ 
                     mt: 4, 
                     borderRadius: 5, 
@@ -1182,15 +1355,21 @@ const JobBoard = ({ studentId }) => {
                         </Box>
                         <Box>
                             <Typography variant="h5" sx={{ fontWeight: 700, color: 'text.primary', mb: 1 }}>
-                                🔍 No Jobs Found
+                                {jobs.length === 0 ? '🎯 No Jobs for Your Course' : '🔍 No Jobs Found'}
                             </Typography>
                             <Typography variant="h6" color="text.secondary" sx={{ mb: 2 }}>
-                                We couldn't find any opportunities matching your search
+                                {jobs.length === 0 ? 
+                                    'No job opportunities are currently available for your course' :
+                                    'We couldn\'t find any opportunities matching your search'
+                                }
                             </Typography>
                         </Box>
                         <Box sx={{ maxWidth: 400 }}>
                             <Typography variant="body1" color="text.secondary" sx={{ lineHeight: 1.6 }}>
-                                Try adjusting your search filters, or check back later as we're constantly adding new exciting opportunities that match your skills!
+                                {jobs.length === 0 ? 
+                                    'Jobs are filtered based on your enrolled course. Check back later for new opportunities that match your qualifications!' :
+                                    'Try adjusting your search filters, or check back later as we\'re constantly adding new exciting opportunities that match your skills!'
+                                }
                             </Typography>
                         </Box>
                         <Card sx={{
@@ -1201,7 +1380,10 @@ const JobBoard = ({ studentId }) => {
                         }}>
                             <CardContent sx={{ p: 2 }}>
                                 <Typography variant="body2" fontWeight={600} sx={{ color: '#667eea' }}>
-                                    💡 Tip: Clear all filters to see all available positions
+                                    {jobs.length === 0 ? 
+                                        '💡 Tip: Jobs are automatically filtered by your course eligibility' :
+                                        '💡 Tip: Clear all filters to see all available positions'
+                                    }
                                 </Typography>
                             </CardContent>
                         </Card>
@@ -1294,4 +1476,4 @@ const JobBoard = ({ studentId }) => {
     );
 };
 
-export default JobBoard; 
+export default JobBoard;

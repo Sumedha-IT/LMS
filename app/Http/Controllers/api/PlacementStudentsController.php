@@ -133,6 +133,10 @@ class PlacementStudentsController extends Controller
             // Transform the data to include calculated fields
             $students->getCollection()->transform(function ($student) {
 
+                // Transform avatar URL to full URL
+                if ($student->avatar_url) {
+                    $student->avatar_url = $student->getFilamentAvatarUrl();
+                }
 
                 // Get course from first batch
                 $firstBatch = $student->batches->first();
@@ -251,6 +255,11 @@ class PlacementStudentsController extends Controller
                 $student->course = \App\Models\Course::find($firstBatch->course_package_id);
             } else {
                 $student->course = null;
+            }
+
+            // Transform avatar URL to full URL
+            if ($student->avatar_url) {
+                $student->avatar_url = $student->getFilamentAvatarUrl();
             }
 
             // Add education summary

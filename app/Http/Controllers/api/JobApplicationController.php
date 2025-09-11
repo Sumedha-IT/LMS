@@ -54,6 +54,14 @@ class JobApplicationController extends Controller
             $perPage = $request->get('per_page', 15);
             $applications = $query->paginate($perPage);
 
+            // Transform avatar URLs for users in applications
+            $applications->getCollection()->transform(function ($application) {
+                if ($application->user && $application->user->avatar_url) {
+                    $application->user->avatar_url = $application->user->getFilamentAvatarUrl();
+                }
+                return $application;
+            });
+
             return response()->json([
                 'data' => $applications->items(),
                 'pagination' => [
@@ -212,6 +220,11 @@ class JobApplicationController extends Controller
                 }
             }
             
+            // Transform avatar URL for user in application
+            if ($jobApplication->user && $jobApplication->user->avatar_url) {
+                $jobApplication->user->avatar_url = $jobApplication->user->getFilamentAvatarUrl();
+            }
+            
             return response()->json($jobApplication);
         } catch (\Exception $e) {
             \Log::error('Error in job application show:', ['error' => $e->getMessage()]);
@@ -222,7 +235,6 @@ class JobApplicationController extends Controller
     public function store(Request $request)
     {
         try {
-            \Log::info('Job application store request received:', $request->all());
             
             // Get the authenticated user
             $user = auth()->user();
@@ -244,7 +256,7 @@ class JobApplicationController extends Controller
                     'message' => $profileValidation['message'],
                     'completion_percentage' => $profileValidation['completion_percentage'],
                     'missing_sections' => $profileValidation['missing_sections'],
-                    'required_percentage' => 90
+                    'required_percentage' => 100
                 ], 422);
             }
 
@@ -639,6 +651,14 @@ class JobApplicationController extends Controller
             $perPage = $validated['per_page'] ?? 10;
             $applications = $query->paginate($perPage);
 
+            // Transform avatar URLs for users in applications
+            $applications->getCollection()->transform(function ($application) {
+                if ($application->user && $application->user->avatar_url) {
+                    $application->user->avatar_url = $application->user->getFilamentAvatarUrl();
+                }
+                return $application;
+            });
+
             // Get applied filters for response
             $appliedFilters = ['job_posting_id' => $job_posting_id];
             if (!empty($validated['company_name'])) {
@@ -1002,14 +1022,6 @@ class JobApplicationController extends Controller
                 $message = $this->getStatusUpdateEmailContent($user, $jobPosting, $oldStatus, $newStatus);
 
                 // Send email (you can use Laravel's Mail facade here)
-                // For now, we'll log the email data
-                \Log::info('Status update email would be sent:', [
-                    'to' => $user->email,
-                    'subject' => $subject,
-                    'status' => $newStatus,
-                    'job_title' => $jobPosting->title,
-                    'company' => $jobPosting->company->name ?? 'Unknown Company'
-                ]);
 
                 // TODO: Implement actual email sending
                 // Mail::to($user->email)->send(new JobApplicationStatusUpdate($user, $jobPosting, $oldStatus, $newStatus));

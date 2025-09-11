@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
 import { FaChevronDown, FaChevronUp } from 'react-icons/fa';
 import { BsPersonLinesFill } from 'react-icons/bs';
@@ -56,7 +56,7 @@ const calculateCompletionPercentage = (formData, menuId, projects) => {
         const basicFields = ['name', 'email', 'gender', 'birthday'];
         const additionalFields = ['address', 'city', 'state_id', 'pincode'];
         const docsFields = ['aadhaar_number', 'upload_aadhar', 'linkedin_profile', 'passport_photo'];
-        const parentFields = ['parent_name', 'parent_email', 'parent_aadhar', 'parent_occupation', 'residential_address'];
+        const parentFields = ['parent_name', 'parent_contact_number', 'residential_address'];
 
         const basicComplete = basicFields.filter(field => formData[field]).length;
         const additionalComplete = additionalFields.filter(field => formData[field]).length;
@@ -238,9 +238,7 @@ const MyProfile = () => {
     resume_path: null,
     upload_aadhar: null,
     parent_name: '',
-    parent_email: '',
-    parent_aadhar: '',
-    parent_occupation: '',
+    parent_contact_number: '',
     residential_address: '',
     receive_email_notification: false,
     receive_sms_notification: false,
@@ -250,7 +248,9 @@ const MyProfile = () => {
     certifications: [],
     achievements: [],
     social_links: { linkedin: '', github: '' },
-    batch: { name: '' }
+    batch: { name: '' },
+    sumedha_batch_month: '',
+    sumedha_batch_year: ''
   });
   const [photoPreview, setPhotoPreview] = useState(null);
   const [deleteConfirmations, setDeleteConfirmations] = useState({});
@@ -269,7 +269,8 @@ const MyProfile = () => {
     project_type: '',
     client_name: '',
     organization: '',
-    project_files: []  // Add new field for project files
+    project_files: [],  // Add new field for project files
+    existing_files: []  // Add field for existing uploaded files
   });
   const [showProjectForm, setShowProjectForm] = useState(false);
   const [showResumeModal, setShowResumeModal] = useState(false);
@@ -286,6 +287,15 @@ const MyProfile = () => {
   });
   const [profileCompletionData, setProfileCompletionData] = useState(null);
   const [showProfileDetails, setShowProfileDetails] = useState(false);
+  
+  // Add state for tracking education changes
+  const [originalEducationData, setOriginalEducationData] = useState([]);
+  const [educationChanges, setEducationChanges] = useState({});
+  // Add state for tracking edit mode for each education item
+  const [educationEditMode, setEducationEditMode] = useState({});
+  
+  // Use ref to store original education data for more reliable access
+  const originalEducationDataRef = useRef([]);
 
   // Function to fetch profile completion data
   const fetchProfileCompletion = async () => {
@@ -343,7 +353,6 @@ const MyProfile = () => {
         // Fetch profile completion data
         await fetchProfileCompletion();
 
-        console.log('Fetching profile with token:', userData.token);
 
         // Fetch basic profile data and projects in parallel
         const [profileResponse, projectsResponse] = await Promise.all([
@@ -363,7 +372,6 @@ const MyProfile = () => {
         ]);
 
         if (profileResponse.data && profileResponse.data.user) {
-          console.log('Profile data received:', profileResponse.data);
           setFormData(prev => ({
             ...prev,
             ...profileResponse.data.user
@@ -449,45 +457,17 @@ const MyProfile = () => {
           });
           setDegreeTypes(degreeResponse.data.data || []);
 
-          // Fetch education data
-          const educationResponse = await axios.get(`${API_ENDPOINT}/get/education`, {
-            headers: {
-              'Accept': 'application/json',
-              'Authorization': `Bearer ${userData.token}`,
-            },
-            withCredentials: true,
-            baseURL: API_URL // Ensure the base URL is set correctly
-          });
-
-          // Process education data to ensure percentage_cgpa is a number and add year_of_passout for school education
-          const rawEducationData = educationResponse.data.data || [];
-          console.log('Raw education data from API:', rawEducationData);
-
-          const educationData = rawEducationData.map(edu => {
-            const degreeTypeId = edu.degree_type_id || (edu.degree_type && edu.degree_type.id);
-            const isSchoolEducation = ['1', '2', 1, 2].includes(Number(degreeTypeId));
-            
-            // Debug logging for year_of_passout
-            console.log(`Education ID ${edu.id} - year_of_passout from API:`, edu.year_of_passout);
-            
-            return {
-            ...edu,
-              percentage_cgpa: typeof edu.percentage_cgpa === 'string' ? parseFloat(edu.percentage_cgpa) : edu.percentage_cgpa,
-              // Use the year_of_passout from database if it exists, otherwise keep it as is
-              year_of_passout: edu.year_of_passout || null
-            };
-          });
-
-          console.log('Processed education data:', educationData);
+          // Use the dedicated fetchEducationData function to ensure proper original data storage
+          await fetchEducationData();
 
           // Get unique degree type IDs that need specializations
           const uniqueDegreeTypeIds = [...new Set(
-            educationData
+            formData.education
               .map(edu => edu.degree_type_id || (edu.degree_type && edu.degree_type.id))
               .filter(id => id && ![1, 2, '1', '2'].includes(Number(id)))
           )];
 
-          // Fetch all specializations in parallel
+          // Fetch all specializations from API (including BSc and MSc now that they're in DB)
           const specializationPromises = uniqueDegreeTypeIds.map(degreeTypeId =>
             axios.get(`${API_ENDPOINT}/get/specialization/${degreeTypeId}`, {
               headers: {
@@ -512,10 +492,6 @@ const MyProfile = () => {
           );
 
           setSpecializations(uniqueSpecializations);
-          setFormData(prev => ({
-            ...prev,
-            education: educationData,
-          }));
         }
       } catch (error) {
         toast.error('Failed to load data');
@@ -571,6 +547,7 @@ const MyProfile = () => {
         return;
       }
 
+      // Always try to fetch from API first (this will work for BSc and MSc now that they're in DB)
       const response = await axios.get(`${API_ENDPOINT}/get/specialization/${degreeTypeId}`, {
         headers: {
           'Accept': 'application/json',
@@ -582,7 +559,17 @@ const MyProfile = () => {
 
       setSpecializations(response.data.data || []);
     } catch (error) {
-      toast.error('Failed to load specializations');
+      // If API call fails, check if it's BSc or MSc and use default specializations
+      const filteredDegrees = getFilteredDegreeTypes();
+      const selectedDegree = filteredDegrees.find(dt => dt.id == degreeTypeId);
+      
+      if (selectedDegree && ['BSc', 'MSc'].includes(selectedDegree.name)) {
+        const defaultSpecs = getDefaultSpecializations(selectedDegree.name);
+        setSpecializations(defaultSpecs);
+      } else {
+        toast.error('Failed to load specializations');
+        setSpecializations([]);
+      }
     }
   };
 
@@ -605,14 +592,8 @@ const MyProfile = () => {
         baseURL: API_URL // Ensure the base URL is set correctly
       });
 
-      // Log the education data to see what we're getting from the API
-      // console.log('Education data from API:', response.data.data);
-
                 // Process the education data to ensure percentage_cgpa is a number and handle year_of_passout
           const processedEducation = (response.data.data || []).map(edu => {
-            // Debug logging for year_of_passout
-            console.log(`fetchEducationData - Education ID ${edu.id} - year_of_passout from API:`, edu.year_of_passout);
-            
             return {
               ...edu,
               percentage_cgpa: typeof edu.percentage_cgpa === 'string' ? parseFloat(edu.percentage_cgpa) : edu.percentage_cgpa,
@@ -621,19 +602,104 @@ const MyProfile = () => {
             };
           });
 
-      // console.log('Processed education data:', processedEducation);
-
       setFormData((prev) => ({
         ...prev,
         education: processedEducation,
       }));
       
+      // Store original education data for change tracking
+      // Create a deep copy to ensure we have the original state
+      const originalDataCopy = processedEducation.map(edu => ({ ...edu }));
+      
+      setOriginalEducationData(originalDataCopy);
+      originalEducationDataRef.current = originalDataCopy; // Store in ref for reliable access
+      setEducationChanges({});
+      
       // Clear all education validation errors when data is refreshed
       setEducationErrors({});
       setHasValidatedEducation(false);
+      
+      // Reset edit mode for all education items
+      setEducationEditMode({});
     } catch (error) {
       toast.error(error.response?.data?.message || 'Failed to load education data');
     }
+  };
+
+  // Helper function to check if an education item has unsaved changes
+  const hasEducationChanges = (index) => {
+    const current = formData.education[index];
+    if (!current) return false;
+    
+    // For new items (no ID), always return true
+    if (!current.id) return true;
+    
+    // Try to find original data by index first in state, then ref
+    let original = originalEducationData[index];
+    if (!original) {
+      original = originalEducationDataRef.current[index];
+    }
+    
+    // If not found by index, try to find by ID in state
+    if (!original) {
+      original = originalEducationData.find(origEdu => origEdu.id === current.id);
+    }
+    
+    // If still not found, try to find by ID in ref
+    if (!original) {
+      original = originalEducationDataRef.current.find(origEdu => origEdu.id === current.id);
+    }
+    
+    // If no original data found, treat as new item
+    if (!original) return true;
+    
+    // Check if any field has changed
+    const fieldsToCheck = [
+      'degree_type_id', 'specialization_id', 'other_specialization', 
+      'percentage_cgpa', 'grade_type', 'institute_name', 'location',
+      'duration_from', 'duration_to', 'year_of_passout'
+    ];
+    
+    return fieldsToCheck.some(field => {
+      const currentValue = current[field];
+      const originalValue = original[field];
+      
+      // Handle null/undefined comparisons
+      if (currentValue === null || currentValue === undefined) {
+        return originalValue !== null && originalValue !== undefined;
+      }
+      if (originalValue === null || originalValue === undefined) {
+        return currentValue !== null && currentValue !== undefined;
+      }
+      
+      // Handle date comparisons
+      if (field === 'duration_from' || field === 'duration_to') {
+        return currentValue !== originalValue;
+      }
+      
+      // Handle numeric comparisons
+      if (field === 'percentage_cgpa') {
+        return parseFloat(currentValue) !== parseFloat(originalValue);
+      }
+      
+      // Handle string comparisons
+      return String(currentValue).trim() !== String(originalValue).trim();
+    });
+  };
+
+  // Helper function to toggle edit mode for education items
+  const toggleEducationEditMode = (index) => {
+    setEducationEditMode(prev => ({
+      ...prev,
+      [index]: !prev[index]
+    }));
+  };
+
+  // Helper function to check if an education item is in edit mode
+  const isEducationInEditMode = (index) => {
+    // New items (no ID) are always in edit mode
+    if (!formData.education[index]?.id) return true;
+    return educationEditMode[index] || false;
   };
 
   // Helper function to validate education sequence and update error state
@@ -707,6 +773,110 @@ const MyProfile = () => {
       ...prev,
       [index]: errors
     }));
+    
+    return errors;
+  };
+
+  // Function to validate only the changed fields for existing education items
+  const validateChangedEducationFields = (data, changedFields, allEducation = []) => {
+    const errors = [];
+    const degreeTypeId = data.degree_type_id || data.degree_type?.id;
+    const isSchoolEducation = ['1', '2', 1, 2].includes(Number(degreeTypeId));
+
+    // Only validate changed fields and their dependencies
+    changedFields.forEach(field => {
+      switch (field) {
+        case 'degree_type_id':
+          if (!data.degree_type_id) {
+            errors.push('Degree type is required');
+          }
+          break;
+        case 'institute_name':
+          if (!data.institute_name || data.institute_name.trim() === '') {
+            errors.push('Institute name is required');
+          }
+          break;
+        case 'location':
+          if (!data.location || data.location.trim() === '') {
+            errors.push('Location is required');
+          }
+          break;
+        case 'year_of_passout':
+          if (isSchoolEducation) {
+            if (!data.year_of_passout) {
+              errors.push('Year of passout is required');
+            } else if (isNaN(data.year_of_passout) || data.year_of_passout < 1950 || data.year_of_passout > new Date().getFullYear() + 1) {
+              errors.push('Year of passout must be a valid year between 1950 and ' + (new Date().getFullYear() + 1));
+            }
+          }
+          break;
+        case 'duration_from':
+          if (!isSchoolEducation) {
+            if (!data.duration_from) {
+              errors.push('Start date is required');
+            }
+          }
+          break;
+        case 'duration_to':
+          if (!isSchoolEducation) {
+            if (!data.duration_to) {
+              errors.push('End date is required');
+            }
+          }
+          break;
+        case 'grade_type':
+          if (!data.grade_type) {
+            errors.push('Grade type is required');
+          }
+          break;
+        case 'percentage_cgpa':
+          if (!data.percentage_cgpa) {
+            errors.push(data.grade_type === 'cgpa' ? 'CGPA is required' : 'Percentage is required');
+          } else {
+            const numValue = parseFloat(data.percentage_cgpa);
+            if (isNaN(numValue)) {
+              errors.push(data.grade_type === 'cgpa' ? 'CGPA must be a valid number' : 'Percentage must be a valid number');
+            } else if (data.grade_type === 'cgpa') {
+              if (numValue < 0 || numValue > 10) {
+                errors.push('CGPA must be between 0 and 10');
+              }
+            } else {
+              if (numValue < 0 || numValue > 100) {
+                errors.push('Percentage must be between 0 and 100');
+              }
+            }
+          }
+          break;
+        case 'specialization_id':
+          if (!isSchoolEducation && !data.specialization_id) {
+            errors.push('Specialization is required');
+          }
+          break;
+        case 'other_specialization':
+          if (!isSchoolEducation && data.specialization_id === '0' && (!data.other_specialization || data.other_specialization.trim() === '')) {
+            errors.push('Other specialization is required');
+          }
+          break;
+      }
+    });
+
+    // Validate date relationships if duration fields are involved
+    if (changedFields.includes('duration_from') || changedFields.includes('duration_to')) {
+      if (data.duration_from && data.duration_to) {
+        const fromDate = new Date(data.duration_from);
+        const toDate = new Date(data.duration_to);
+        
+        if (fromDate >= toDate) {
+          errors.push('End date must be after start date');
+        }
+      }
+    }
+
+    // Validate sequence if year or duration fields are changed
+    if (changedFields.includes('year_of_passout') || changedFields.includes('duration_from') || changedFields.includes('duration_to')) {
+      // Add sequence validation logic here if needed
+      // This would be similar to the existing sequence validation but only for changed fields
+    }
     
     return errors;
   };
@@ -860,7 +1030,6 @@ const MyProfile = () => {
             case 'grade_type':
               // Handle grade type selection
               transformedValue = value;
-              console.log(`Setting grade_type to: ${value} for education index ${index}`);
               
               // Clear percentage_cgpa when switching grade types to prevent invalid values
               if (updatedData[field][index].percentage_cgpa) {
@@ -868,11 +1037,9 @@ const MyProfile = () => {
                 if (value === 'cgpa' && (currentValue > 10 || currentValue < 0)) {
                   // If switching to CGPA and current value is invalid for CGPA, clear it
                   updatedData[field][index].percentage_cgpa = '';
-                  console.log('Cleared invalid CGPA value:', currentValue);
                 } else if (value === 'percentage' && (currentValue > 100 || currentValue < 0)) {
                   // If switching to percentage and current value is invalid for percentage, clear it
                   updatedData[field][index].percentage_cgpa = '';
-                  console.log('Cleared invalid percentage value:', currentValue);
                 }
               }
               break;
@@ -889,7 +1056,6 @@ const MyProfile = () => {
                   // Validate CGPA input (0-10 scale)
                   if (!isNaN(numValue) && numValue >= 0 && numValue <= 10) {
                     transformedValue = numValue;
-                    console.log('CGPA value set:', numValue, typeof numValue);
                   } else {
                     toast.error('CGPA must be between 0 and 10');
                     return updatedData;
@@ -898,7 +1064,6 @@ const MyProfile = () => {
                   // Validate percentage input (0-100 scale)
                   if (!isNaN(numValue) && numValue >= 0 && numValue <= 100) {
                     transformedValue = numValue;
-                    console.log('Percentage value set:', numValue, typeof numValue);
                   } else {
                     toast.error('Percentage must be between 0 and 100');
                     return updatedData;
@@ -937,8 +1102,15 @@ const MyProfile = () => {
         }
 
         updatedData[field][index][key] = transformedValue;
-        console.log(`Updated ${field}[${index}].${key} to:`, transformedValue);
-        console.log(`Current ${field}[${index}] object:`, updatedData[field][index]);
+        
+        // Track changes for education items
+        if (field === 'education') {
+          setEducationChanges(prev => ({
+            ...prev,
+            [index]: true
+          }));
+        }
+        
         return updatedData;
       });
     } catch (error) {
@@ -951,14 +1123,93 @@ const MyProfile = () => {
     const degreeTypeId = edu.degree_type_id || edu.degree_type?.id;
     const isSchoolEducation = ['1', '2', 1, 2].includes(Number(degreeTypeId));
     
-    // Validate the education data first - pass all education data for sequence validation
+    // For existing education items, only validate changed fields
+    if (edu.id) {
+      // Get the original data for comparison - try state first, then ref
+      let originalEdu = originalEducationData[index];
+      
+      // If not found by index in state, try ref
+      if (!originalEdu) {
+        originalEdu = originalEducationDataRef.current[index];
+      }
+      
+      // If not found by index, try to find by ID in state
+      if (!originalEdu) {
+        originalEdu = originalEducationData.find(origEdu => origEdu.id === edu.id);
+      }
+      
+      // If still not found, try to find by ID in ref
+      if (!originalEdu) {
+        originalEdu = originalEducationDataRef.current.find(origEdu => origEdu.id === edu.id);
+      }
+      
+      if (!originalEdu) {
+        // Fallback: use the current education data as original (treat as new item)
     const validationErrors = validateEducationData(edu, formData.education);
     if (validationErrors.length > 0) {
       validationErrors.forEach(error => toast.error(error));
       return;
     }
+      } else {
+        // Check which fields have actually changed
+      const changedFields = [];
+      const fieldsToCheck = [
+        'degree_type_id', 'specialization_id', 'other_specialization', 
+        'percentage_cgpa', 'grade_type', 'institute_name', 'location',
+        'duration_from', 'duration_to', 'year_of_passout'
+      ];
 
-    // Check if all required fields are present
+      fieldsToCheck.forEach(field => {
+        const currentValue = edu[field];
+        const originalValue = originalEdu[field];
+        
+        // Handle null/undefined comparisons
+        if (currentValue !== originalValue) {
+          if (currentValue === null || currentValue === undefined) {
+            if (originalValue !== null && originalValue !== undefined) {
+              changedFields.push(field);
+            }
+          } else if (originalValue === null || originalValue === undefined) {
+            if (currentValue !== null && currentValue !== undefined) {
+              changedFields.push(field);
+            }
+          } else {
+            // Handle different data types
+            if (field === 'percentage_cgpa') {
+              if (parseFloat(currentValue) !== parseFloat(originalValue)) {
+                changedFields.push(field);
+              }
+            } else {
+              if (String(currentValue).trim() !== String(originalValue).trim()) {
+                changedFields.push(field);
+              }
+            }
+          }
+        }
+      });
+
+      // If no fields have changed, don't proceed
+      if (changedFields.length === 0) {
+        toast.info('No changes detected');
+        return;
+      }
+
+        // Only validate the changed fields and their dependencies
+        const validationErrors = validateChangedEducationFields(edu, changedFields, formData.education);
+        if (validationErrors.length > 0) {
+          validationErrors.forEach(error => toast.error(error));
+          return;
+        }
+      }
+    } else {
+      // For new education items, validate all required fields
+      const validationErrors = validateEducationData(edu, formData.education);
+      if (validationErrors.length > 0) {
+        validationErrors.forEach(error => toast.error(error));
+        return;
+      }
+
+      // Check if all required fields are present for new items
     const requiredFields = {
       degree_type_id: degreeTypeId,
       institute_name: edu.institute_name,
@@ -978,7 +1229,16 @@ const MyProfile = () => {
     // Check if all required fields have values
     const hasAllRequired = Object.values(requiredFields).every(val => val !== undefined && val !== null && val !== '');
 
-    if (hasAllRequired) {
+      if (!hasAllRequired) {
+        const missingFields = Object.entries(requiredFields)
+          .filter(([_, value]) => !value)
+          .map(([key]) => key);
+        toast.error(`Please fill in all required fields: ${missingFields.join(', ')}`);
+        return;
+      }
+    }
+
+    // Proceed with save if validation passes
       // Send the original value to the backend - let the backend handle conversion
       const educationData = {
         id: edu.id, // This will be undefined for new records
@@ -994,33 +1254,20 @@ const MyProfile = () => {
         year_of_passout: isSchoolEducation ? edu.year_of_passout : null
       };
 
+
       // Final validation before sending to backend
       if (edu.grade_type === 'cgpa') {
         if (edu.percentage_cgpa < 0 || edu.percentage_cgpa > 10) {
           toast.error('CGPA must be between 0 and 10');
           return;
         }
-        console.log(`Sending CGPA ${edu.percentage_cgpa} to backend for conversion`);
       } else {
         if (edu.percentage_cgpa < 0 || edu.percentage_cgpa > 100) {
           toast.error('Percentage must be between 0 and 100');
           return;
         }
-        console.log(`Sending percentage ${edu.percentage_cgpa} to backend`);
       }
 
-      // Debug logging
-      console.log('=== EDUCATION DATA DEBUG ===');
-      console.log('Education data being sent:', educationData);
-      console.log('Is school education:', isSchoolEducation);
-      console.log('Year of passout value:', edu.year_of_passout);
-      console.log('Grade type being sent:', edu.grade_type);
-      console.log('Value being sent (CGPA or percentage):', edu.percentage_cgpa);
-      console.log('Full education object:', edu);
-      console.log('Required fields check:', requiredFields);
-      console.log('Degree type ID:', degreeTypeId);
-      console.log('Degree type name:', degreeTypes.find(dt => dt.id == degreeTypeId)?.name);
-      console.log('=== END DEBUG ===');
 
       if (edu.id) {
         // If we have an ID, it's an update
@@ -1028,12 +1275,6 @@ const MyProfile = () => {
       } else {
         // If no ID, it's a new record
         createEducation(educationData, index);
-      }
-    } else {
-      const missingFields = Object.entries(requiredFields)
-        .filter(([_, value]) => !value)
-        .map(([key]) => key);
-      toast.error(`Please fill in all required fields: ${missingFields.join(', ')}`);
     }
   };
 
@@ -1048,14 +1289,6 @@ const MyProfile = () => {
       }
 
       setLoading(true);
-
-      // Debug logging before sending request
-      console.log('Sending education data to API:', educationData);
-      console.log('Request headers:', {
-        'Accept': 'application/json',
-        'Authorization': `Bearer ${userData.token}`,
-        'Content-Type': 'application/json'
-      });
 
       const response = await axios({
         method: 'post',
@@ -1085,12 +1318,21 @@ const MyProfile = () => {
         await fetchEducationData();
         // Refresh profile completion data
         await fetchProfileCompletion();
+        
+        // Clear change tracking for this item
+        setEducationChanges(prev => {
+          const newChanges = { ...prev };
+          delete newChanges[index];
+          return newChanges;
+        });
+
+        // Exit edit mode after successful save
+        setEducationEditMode(prev => ({
+          ...prev,
+          [index]: false
+        }));
       }
     } catch (error) {
-      console.error('Education creation error:', error);
-      console.error('Error response:', error.response?.data);
-      console.error('Error status:', error.response?.status);
-      
       const errorMessage = error.response?.data?.message || 'Failed to add education';
       toast.error(errorMessage);
     } finally {
@@ -1138,14 +1380,27 @@ const MyProfile = () => {
         await fetchEducationData();
         // Refresh profile completion data
         await fetchProfileCompletion();
+        
+        // Clear change tracking for this item
+        setEducationChanges(prev => {
+          const newChanges = { ...prev };
+          delete newChanges[index];
+          return newChanges;
+        });
+
+        // Exit edit mode after successful save
+        setEducationEditMode(prev => ({
+          ...prev,
+          [index]: false
+        }));
       }
     } catch (error) {
       const errorMessage = error.response?.data?.message || 'Failed to update education';
       toast.error(errorMessage);
-    } finally {
-      setLoading(false);
-    }
-  };
+          } finally {
+        setLoading(false);
+      }
+    };
 
   const toggleMenu = (id) => {
     // Only change the active menu, don't trigger success messages
@@ -1162,6 +1417,14 @@ const MyProfile = () => {
     }
   };
 
+  // Reset education changes when switching tabs
+  useEffect(() => {
+    if (activeMenu !== 'education') {
+      setEducationChanges({});
+    }
+  }, [activeMenu]);
+
+
   // Add these validation functions before the renderSubTabContent function
   const validateBasicDetails = (data) => {
     const errors = [];
@@ -1169,6 +1432,9 @@ const MyProfile = () => {
     if (!data.email?.trim()) errors.push('Email is required');
     if (!data.gender) errors.push('Gender is required');
     if (!data.birthday) errors.push('Birthday is required');
+    if (!data.program) errors.push('Program is required');
+    if (!data.sumedha_batch_month) errors.push('Sumedha Batch Month is required');
+    if (!data.sumedha_batch_year) errors.push('Sumedha Batch Year is required');
     return errors;
   };
 
@@ -1221,8 +1487,7 @@ const MyProfile = () => {
   const validateParentDetails = (data) => {
     const errors = [];
     if (!data.parent_name?.trim()) errors.push('Parent name is required');
-    if (!data.parent_aadhar?.trim()) errors.push('Parent Aadhaar is required');
-    if (!data.parent_occupation?.trim()) errors.push('Parent occupation is required');
+    if (!data.parent_contact_number?.trim()) errors.push('Parent contact number is required');
     if (!data.residential_address?.trim()) errors.push('Residential address is required');
     return errors;
   };
@@ -1278,8 +1543,9 @@ const MyProfile = () => {
           [name]: value
         }));
       }
-    } else if (name === 'parent_aadhar') {
-      if (value.length <= 12 && /^\d*$/.test(value)) {
+    } else if (name === 'parent_contact_number') {
+      // Only allow numbers and limit to 10 digits
+      if (value.length <= 10 && /^\d*$/.test(value)) {
         setFormData(prev => ({
           ...prev,
           [name]: value
@@ -1450,7 +1716,6 @@ const MyProfile = () => {
             resume_path: response.data.user.upload_resume,
             upload_resume_path: response.data.user.upload_resume // Also set this for compatibility
           }));
-          console.log('Resume uploaded successfully. Path:', response.data.user.upload_resume);
         }
         // Refresh profile completion data
         await fetchProfileCompletion();
@@ -1526,6 +1791,7 @@ const MyProfile = () => {
           if (!newData.education) {
             newData.education = [];
           }
+          const newIndex = newData.education.length;
           newData.education.push({
             degree_type_id: '',
             specialization_id: '',
@@ -1536,6 +1802,20 @@ const MyProfile = () => {
             duration_to: '',
             percentage_cgpa: '',
             grade_type: 'percentage' // Default to percentage
+          });
+          
+          // Track this new item as having changes
+          setEducationChanges(prev => ({
+            ...prev,
+            [newIndex]: true
+          }));
+          
+          // Update original education data to include the new item
+          setOriginalEducationData(prev => {
+            const newOriginalData = [...prev];
+            newOriginalData[newIndex] = { ...newData.education[newIndex] };
+            originalEducationDataRef.current = newOriginalData; // Update ref as well
+            return newOriginalData;
           });
         } else {
           toast.info('Please fill out the existing education form first');
@@ -1620,8 +1900,7 @@ const MyProfile = () => {
 
     // Parent Details
     if (!data.parent_name?.trim()) errors.push('Parent name is required');
-    if (!data.parent_aadhar?.trim()) errors.push('Parent Aadhaar is required');
-    if (!data.parent_occupation?.trim()) errors.push('Parent occupation is required');
+    if (!data.parent_contact_number?.trim()) errors.push('Parent contact number is required');
     if (!data.residential_address?.trim()) errors.push('Residential address is required');
 
     return errors;
@@ -1651,10 +1930,11 @@ const MyProfile = () => {
         email: formData.email?.trim().toLowerCase(),
         gender: formData.gender,
         birthday: formData.birthday,
-        registration_number: formData.registration_number,
-        domain_id: formData.domain_id,
+        program: formData.program,
         country_code: formData.country_code,
-        phone: formData.phone
+        phone: formData.phone,
+        sumedha_batch_month: formData.sumedha_batch_month,
+        sumedha_batch_year: formData.sumedha_batch_year
       };
 
       formDataToSend.append('data', JSON.stringify(jsonData));
@@ -1835,9 +2115,7 @@ const MyProfile = () => {
       const formDataToSend = new FormData();
       const jsonData = {
         parent_name: formData.parent_name?.trim(),
-        parent_email: formData.parent_email?.trim()?.toLowerCase(),
-        parent_aadhar: formData.parent_aadhar?.trim(),
-        parent_occupation: formData.parent_occupation?.trim(),
+        parent_contact_number: formData.parent_contact_number?.trim(),
         residential_address: formData.residential_address?.trim()
       };
 
@@ -1924,9 +2202,7 @@ const MyProfile = () => {
         aadhaar_number: formData.aadhaar_number?.trim(),
         linkedin_profile: formData.linkedin_profile?.trim(),
         parent_name: formData.parent_name?.trim(),
-        parent_email: formData.parent_email?.trim()?.toLowerCase(),
-        parent_aadhar: formData.parent_aadhar?.trim(),
-        parent_occupation: formData.parent_occupation?.trim(),
+        parent_contact_number: formData.parent_contact_number?.trim(),
         residential_address: formData.residential_address?.trim(),
         receive_email_notification: Boolean(formData.receive_email_notification),
         receive_sms_notification: Boolean(formData.receive_sms_notification),
@@ -2021,6 +2297,33 @@ const MyProfile = () => {
       return `${year}-${month}-${day}`;
     } catch (error) {
       console.error('Error formatting date:', error, dateString);
+      return '';
+    }
+  };
+
+  // Add a helper function to format dates in dd/mm/yy format
+  const formatDateDDMMYY = (dateString) => {
+    if (!dateString) return '';
+    
+    try {
+      // Handle YYYY-MM-DD format explicitly
+      if (/^\d{4}-\d{2}-\d{2}$/.test(dateString)) {
+        const [year, month, day] = dateString.split('-');
+        return `${day}/${month}/${year.slice(-2)}`;
+      }
+      
+      // Fallback to Date object parsing
+      const date = new Date(dateString);
+      if (isNaN(date.getTime())) {
+        return '';
+      }
+      
+      const day = date.getDate().toString().padStart(2, '0');
+      const month = (date.getMonth() + 1).toString().padStart(2, '0');
+      const year = date.getFullYear().toString().slice(-2);
+      
+      return `${day}/${month}/${year}`;
+    } catch (error) {
       return '';
     }
   };
@@ -2144,9 +2447,8 @@ const MyProfile = () => {
                   type="text"
                   name="name"
                   value={formData.name || ''}
-                  onChange={handleChange}
-                  className="w-full p-2 border rounded-lg focus:ring-orange-500 focus:border-orange-500"
-                  required
+                  disabled
+                  className="w-full p-2 border rounded-lg bg-gray-50"
                 />
               </div>
               <div>
@@ -2157,34 +2459,27 @@ const MyProfile = () => {
                   type="email"
                   name="email"
                   value={formData.email || ''}
+                  disabled
+                  className="w-full p-2 border rounded-lg bg-gray-50"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Program<span className="text-red-500">*</span>
+                </label>
+                <select
+                  name="program"
+                  value={formData.program || ''}
                   onChange={handleChange}
                   className="w-full p-2 border rounded-lg focus:ring-orange-500 focus:border-orange-500"
                   required
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Registration Number
-                </label>
-                <input
-                  type="text"
-                  name="registration_number"
-                  value={formData.registration_number || ''}
-                  onChange={handleChange}
-                  disabled
-                  className="w-full p-2 border rounded-lg bg-gray-50"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Domain
-                </label>
-                <input
-                  type="text"
-                  value={formData.domain_id || ''}
-                  disabled
-                  className="w-full p-2 border rounded-lg bg-gray-50"
-                />
+                >
+                  <option value="">Select Program</option>
+                  <option value="CEP/STEP">CEP/STEP</option>
+                  <option value="RISE">RISE</option>
+                  <option value="CD - 50/50">CD - 50/50</option>
+                  <option value="PAP">PAP</option>
+                </select>
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -2251,6 +2546,54 @@ const MyProfile = () => {
                   required
                 />
               </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Sumedha Batch Month<span className="text-red-500">*</span>
+                </label>
+                <select
+                  name="sumedha_batch_month"
+                  value={formData.sumedha_batch_month || ''}
+                  onChange={handleChange}
+                  className="w-full p-2 border rounded-lg focus:ring-orange-500 focus:border-orange-500"
+                  required
+                >
+                  <option value="">Select Month</option>
+                  <option value="January">January</option>
+                  <option value="February">February</option>
+                  <option value="March">March</option>
+                  <option value="April">April</option>
+                  <option value="May">May</option>
+                  <option value="June">June</option>
+                  <option value="July">July</option>
+                  <option value="August">August</option>
+                  <option value="September">September</option>
+                  <option value="October">October</option>
+                  <option value="November">November</option>
+                  <option value="December">December</option>
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Sumedha Batch Year<span className="text-red-500">*</span>
+                </label>
+                <select
+                  name="sumedha_batch_year"
+                  value={String(formData.sumedha_batch_year || '')}
+                  onChange={handleChange}
+                  className="w-full p-2 border rounded-lg focus:ring-orange-500 focus:border-orange-500"
+                  required
+                >
+                  <option value="">Select Year</option>
+                  {Array.from({ length: 10 }, (_, i) => {
+                    const year = new Date().getFullYear() - 5 + i;
+                    return (
+                      <option key={year} value={year}>
+                        {year}
+                      </option>
+                    );
+                  })}
+                </select>
+              </div>
             </div>
             <div className="mt-6 flex justify-end space-x-4">
               <button
@@ -2268,16 +2611,16 @@ const MyProfile = () => {
                 type="button"
                 onClick={() => toggleSubTab('additional')}
                 className={`px-4 py-2 text-white rounded-lg transition-colors ${
-                  !formData.name?.trim() || !formData.email?.trim() || !formData.gender || !formData.birthday
+                  !formData.name?.trim() || !formData.email?.trim() || !formData.gender || !formData.birthday || !formData.sumedha_batch_month || !formData.sumedha_batch_year
                     ? 'bg-gray-400 cursor-not-allowed'
                     : 'hover:opacity-90'
                 }`}
                 style={{
-                  background: !formData.name?.trim() || !formData.email?.trim() || !formData.gender || !formData.birthday
+                  background: !formData.name?.trim() || !formData.email?.trim() || !formData.gender || !formData.birthday || !formData.sumedha_batch_month || !formData.sumedha_batch_year
                     ? '#9ca3af'
                     : 'linear-gradient(270deg, #eb6707 0%, #e42b12 100%)'
                 }}
-                disabled={!formData.name?.trim() || !formData.email?.trim() || !formData.gender || !formData.birthday}
+                disabled={!formData.name?.trim() || !formData.email?.trim() || !formData.gender || !formData.birthday || !formData.sumedha_batch_month || !formData.sumedha_batch_year}
               >
                 Next
               </button>
@@ -2499,9 +2842,7 @@ const MyProfile = () => {
                         alt="Passport Size"
                         className="h-20 w-16 object-cover rounded"
                         onError={(e) => {
-                          console.error("Image failed to load:", e);
-                          console.log("Image source:", e.target.src);
-                          console.log("Passport photo path:", formData.passport_photo_path);
+                          // Image failed to load
                         }}
                       />
                       <button
@@ -2585,42 +2926,16 @@ const MyProfile = () => {
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Parent Email
+                  Parent Contact Number<span className="text-red-500">*</span>
                 </label>
                 <input
-                  type="email"
-                  name="parent_email"
-                  value={formData.parent_email || ''}
+                  type="tel"
+                  name="parent_contact_number"
+                  value={formData.parent_contact_number || ''}
                   onChange={handleChange}
                   className="w-full p-2 border rounded-lg focus:ring-orange-500 focus:border-orange-500"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Parent Aadhaar<span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="text"
-                  name="parent_aadhar"
-                  value={formData.parent_aadhar || ''}
-                  onChange={handleChange}
-                  className="w-full p-2 border rounded-lg focus:ring-orange-500 focus:border-orange-500"
-                  required
-                  pattern="\d{12}"
-                  title="Parent Aadhaar must be exactly 12 digits"
-                  maxLength={12}
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Parent Occupation<span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="text"
-                  name="parent_occupation"
-                  value={formData.parent_occupation || ''}
-                  onChange={handleChange}
-                  className="w-full p-2 border rounded-lg focus:ring-orange-500 focus:border-orange-500"
+                  placeholder="Enter 10-digit contact number"
+                  maxLength={10}
                   required
                 />
               </div>
@@ -2760,11 +3075,14 @@ const MyProfile = () => {
                             validateEducationSequence(index, newDegreeId, edu.year_of_passout);
                           }
                         }}
-                        className="w-full p-2 border rounded-lg focus:ring-orange-500 focus:border-orange-500"
+                        className={`w-full p-2 border rounded-lg focus:ring-orange-500 focus:border-orange-500 ${
+                          !isEducationInEditMode(index) ? 'bg-gray-100 cursor-not-allowed' : ''
+                        }`}
+                        disabled={!isEducationInEditMode(index)}
                         required
                       >
                         <option value="">Select Degree Type</option>
-                        {degreeTypes.map(type => (
+                        {getFilteredDegreeTypes().map(type => (
                           <option key={type.id} value={type.id}>{type.name}</option>
                         ))}
                       </select>
@@ -2786,19 +3104,64 @@ const MyProfile = () => {
                               handleItemChange('education', index, 'other_specialization', ''); // Clear previous value
                               setShowOtherSpecialization(value === '0');
                             }}
-                            className="w-full p-2 border rounded-lg focus:ring-orange-500 focus:border-orange-500"
+                            className={`w-full p-2 border rounded-lg focus:ring-orange-500 focus:border-orange-500 ${
+                              !isEducationInEditMode(index) ? 'bg-gray-100 cursor-not-allowed' : ''
+                            }`}
+                            disabled={!isEducationInEditMode(index)}
                             required={!isSchoolEducation}
                           >
                             <option value="">Select Specialization</option>
-                            {/* Only show ECE, EEE, and Others options */}
+                            {/* Filter specializations based on degree type */}
                             {specializations
                               .filter(spec => {
-                                const name = spec.name.toLowerCase();
-                                return name.includes('electronics and communication') || 
-                                       name.includes('ece') ||
-                                       name.includes('electrical and electronics') || 
-                                       name.includes('eee');
+                                const specName = spec.name.toLowerCase();
+                                const filteredDegrees = getFilteredDegreeTypes();
+                                const selectedDegree = filteredDegrees.find(dt => dt.id == degreeTypeId);
+                                const degreeTypeName = selectedDegree?.name?.toLowerCase() || '';
+                                
+                                // For Bachelors/Btech: show ECE, EEE, EIE
+                                if (degreeTypeName === 'bachelors/btech' || degreeTypeName === 'b.tech') {
+                                  return specName.includes('electronics and communication') || 
+                                         specName.includes('ece') ||
+                                         specName.includes('electrical and electronics') || 
+                                         specName.includes('eee') ||
+                                         specName.includes('electronics and instrumentation') ||
+                                         specName.includes('eie');
+                                }
+                                
+                                // For Masters/Mtech: show ECE, EEE, EIE, VLSI
+                                if (degreeTypeName === 'masters/mtech' || degreeTypeName === 'm.tech') {
+                                  return specName.includes('electronics and communication') || 
+                                         specName.includes('ece') ||
+                                         specName.includes('electrical and electronics') || 
+                                         specName.includes('eee') ||
+                                         specName.includes('electronics and instrumentation') ||
+                                         specName.includes('eie') ||
+                                         specName.includes('vlsi');
+                                }
+                                
+                                // For Diploma: show ECE, EEE, EIE
+                                if (degreeTypeName === 'diploma') {
+                                  return specName.includes('electronics and communication') || 
+                                         specName.includes('ece') ||
+                                         specName.includes('electrical and electronics') || 
+                                         specName.includes('eee') ||
+                                         specName.includes('electronics and instrumentation') ||
+                                         specName.includes('eie');
+                                }
+                                
+                                // For BSc and MSc: show all specializations
+                                if (degreeTypeName === 'bsc' || degreeTypeName === 'msc') {
+                                  return true;
+                                }
+                                
+                                // For other degree types: show all
+                                return true;
                               })
+                              // Remove duplicates by name
+                              .filter((spec, index, self) => 
+                                index === self.findIndex(s => s.name === spec.name)
+                              )
                               .map(spec => (
                                 <option key={spec.id} value={spec.id}>{spec.name}</option>
                               ))
@@ -2818,7 +3181,10 @@ const MyProfile = () => {
                               type="text"
                               value={edu.other_specialization || ''}
                               onChange={(e) => handleItemChange('education', index, 'other_specialization', e.target.value)}
-                              className="w-full p-2 border rounded-lg focus:ring-orange-500 focus:border-orange-500"
+                              className={`w-full p-2 border rounded-lg focus:ring-orange-500 focus:border-orange-500 ${
+                                !isEducationInEditMode(index) ? 'bg-gray-100 cursor-not-allowed' : ''
+                              }`}
+                              disabled={!isEducationInEditMode(index)}
                               placeholder="Enter your specialization"
                               required={true}
                             />
@@ -2835,7 +3201,10 @@ const MyProfile = () => {
                         type="text"
                         value={edu.institute_name || ''}
                         onChange={(e) => handleItemChange('education', index, 'institute_name', e.target.value)}
-                        className="w-full p-2 border rounded-lg focus:ring-orange-500 focus:border-orange-500"
+                        className={`w-full p-2 border rounded-lg focus:ring-orange-500 focus:border-orange-500 ${
+                          !isEducationInEditMode(index) ? 'bg-gray-100 cursor-not-allowed' : ''
+                        }`}
+                        disabled={!isEducationInEditMode(index)}
                         placeholder="Enter institute name"
                         required
                       />
@@ -2849,22 +3218,23 @@ const MyProfile = () => {
                         type="text"
                         value={edu.location || ''}
                         onChange={(e) => handleItemChange('education', index, 'location', e.target.value)}
-                        className="w-full p-2 border rounded-lg focus:ring-orange-500 focus:border-orange-500"
+                        className={`w-full p-2 border rounded-lg focus:ring-orange-500 focus:border-orange-500 ${
+                          !isEducationInEditMode(index) ? 'bg-gray-100 cursor-not-allowed' : ''
+                        }`}
+                        disabled={!isEducationInEditMode(index)}
                         placeholder="Enter location"
                         required
                       />
                     </div>
 
-                    {isSchoolEducation ? (
+                    {/* Year of Passout - for school education only */}
+                    {isSchoolEducation && (
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-2">
                           Year of Passout<span className="text-red-500">*</span>
                         </label>
-                        <input
-                          type="number"
-                          min="1950"
-                          max={new Date().getFullYear() + 1}
-                          value={edu.year_of_passout || ''}
+                        <select
+                          value={String(edu.year_of_passout || '')}
                           onChange={(e) => {
                             const year = e.target.value;
                             handleItemChange('education', index, 'year_of_passout', year);
@@ -2879,10 +3249,22 @@ const MyProfile = () => {
                           }}
                           className={`w-full p-2 border rounded-lg focus:ring-orange-500 focus:border-orange-500 ${
                             educationErrors[index] && educationErrors[index].length > 0 ? 'border-red-500 focus:ring-red-500 focus:border-red-500' : ''
+                          } ${
+                            !isEducationInEditMode(index) ? 'bg-gray-100 cursor-not-allowed' : ''
                           }`}
-                          placeholder="Enter year (e.g., 2023)"
+                          disabled={!isEducationInEditMode(index)}
                           required
-                        />
+                        >
+                          <option value="">Select Year</option>
+                          {Array.from({ length: 20 }, (_, i) => {
+                            const year = new Date().getFullYear() - 10 + i;
+                            return (
+                              <option key={year} value={year}>
+                                {year}
+                              </option>
+                            );
+                          })}
+                        </select>
                         {educationErrors[index] && educationErrors[index].length > 0 && (
                           <div className="mt-1">
                             {educationErrors[index].map((error, errorIndex) => (
@@ -2891,34 +3273,108 @@ const MyProfile = () => {
                           </div>
                         )}
                       </div>
-                    ) : (
-                      <>
+                    )}
+
+                    {/* Grade Type Selection - for all education types */}
                     <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Grade Type<span className="text-red-500">*</span>
+                      </label>
+                      <select
+                        value={edu.grade_type || 'percentage'}
+                        onChange={(e) => {
+                          const newGradeType = e.target.value;
+                          handleItemChange('education', index, 'grade_type', newGradeType);
+                          
+                          // Clear the percentage_cgpa when changing grade type
+                          handleItemChange('education', index, 'percentage_cgpa', '');
+                        }}
+                        className={`w-full p-2 border rounded-lg focus:ring-orange-500 focus:border-orange-500 ${
+                          !isEducationInEditMode(index) ? 'bg-gray-100 cursor-not-allowed' : ''
+                        }`}
+                        disabled={!isEducationInEditMode(index)}
+                        required
+                      >
+                        {getGradeTypeOptions(degreeTypeId).map(option => (
+                          <option key={option.value} value={option.value}>
+                            {option.label}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
+                    {/* Percentage/CGPA Input - for all education types */}
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        {edu.grade_type === 'cgpa' ? 'CGPA' : 'Percentage'}<span className="text-red-500">*</span>
+                      </label>
+                      <input
+                        type="number"
+                        step="0.01"
+                        min={getInputConstraints(edu.grade_type || 'percentage', degreeTypeId).min}
+                        max={getInputConstraints(edu.grade_type || 'percentage', degreeTypeId).max}
+                        value={edu.percentage_cgpa || ''}
+                        onChange={(e) => {
+                          handleItemChange('education', index, 'percentage_cgpa', e.target.value);
+                        }}
+                        className={`w-full p-2 border rounded-lg focus:ring-orange-500 focus:border-orange-500 ${
+                          !isEducationInEditMode(index) ? 'bg-gray-100 cursor-not-allowed' : ''
+                        }`}
+                        disabled={!isEducationInEditMode(index)}
+                        placeholder={getInputConstraints(edu.grade_type || 'percentage', degreeTypeId).placeholder}
+                        required
+                      />
+
+                      {/* Validation warning */}
+                      {edu.grade_type === 'cgpa' && edu.percentage_cgpa && (edu.percentage_cgpa < 0 || edu.percentage_cgpa > 10) && (
+                        <div className="text-xs text-red-600 mt-1">
+                          ⚠️ CGPA must be between 0 and 10
+                        </div>
+                      )}
+                      {edu.grade_type === 'percentage' && edu.percentage_cgpa && (edu.percentage_cgpa < 0 || edu.percentage_cgpa > 100) && (
+                        <div className="text-xs text-red-600 mt-1">
+                          ⚠️ Percentage must be between 0 and 100
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Duration fields - for higher education only */}
+                    {!isSchoolEducation && (
+                      <>
+                        <div>
                       <label className="block text-sm font-medium text-gray-700 mb-2">
                         Duration From<span className="text-red-500">*</span>
                       </label>
-                      <DatePicker
-                        selected={edu.duration_from ? parseISO(edu.duration_from) : null}
-                        onChange={date => {
-                          const formattedDate = date ? format(date, 'yyyy-MM-dd') : '';
+                      <select
+                        value={edu.duration_from ? new Date(edu.duration_from).getFullYear() : ''}
+                        onChange={(e) => {
+                          const year = e.target.value;
+                          const formattedDate = year ? `${year}-06-01` : '';
                           handleItemChange('education', index, 'duration_from', formattedDate);
                           
                           // Real-time validation for higher education sequence
-                          if (formattedDate) {
-                            const startYear = date.getFullYear();
-                            validateEducationSequence(index, edu.degree_type_id, startYear);
+                          if (year) {
+                            validateEducationSequence(index, edu.degree_type_id, year);
                           }
                         }}
-                        dateFormat="dd/MM/yyyy"
-                        placeholderText="DD/MM/YYYY"
                         className={`w-full p-2 border rounded-lg focus:ring-orange-500 focus:border-orange-500 ${
                           educationErrors[index] && educationErrors[index].length > 0 ? 'border-red-500 focus:ring-red-500 focus:border-red-500' : ''
+                        } ${
+                          !isEducationInEditMode(index) ? 'bg-gray-100 cursor-not-allowed' : ''
                         }`}
-                        showMonthDropdown
-                        showYearDropdown
-                        dropdownMode="select"
+                        disabled={!isEducationInEditMode(index)}
                         required
-                      />
+                      >
+                        <option value="">Select Year</option>
+                        {Array.from({ length: 20 }, (_, i) => {
+                          const year = new Date().getFullYear() - 10 + i;
+                          return (
+                            <option key={year} value={year}>
+                              {year}
+                            </option>
+                          );
+                        })}
+                      </select>
                       {educationErrors[index] && educationErrors[index].length > 0 && (
                         <div className="mt-1">
                           {educationErrors[index].map((error, errorIndex) => (
@@ -2932,28 +3388,36 @@ const MyProfile = () => {
                       <label className="block text-sm font-medium text-gray-700 mb-2">
                         Duration To<span className="text-red-500">*</span>
                       </label>
-                      <DatePicker
-                        selected={edu.duration_to ? parseISO(edu.duration_to) : null}
-                        onChange={date => {
-                          const formattedDate = date ? format(date, 'yyyy-MM-dd') : '';
+                      <select
+                        value={edu.duration_to ? new Date(edu.duration_to).getFullYear() : ''}
+                        onChange={(e) => {
+                          const year = e.target.value;
+                          const formattedDate = year ? `${year}-05-31` : '';
                           handleItemChange('education', index, 'duration_to', formattedDate);
                           
                           // Real-time validation for higher education sequence
-                          if (formattedDate) {
-                            const endYear = date.getFullYear();
-                            validateEducationSequence(index, edu.degree_type_id, endYear);
+                          if (year) {
+                            validateEducationSequence(index, edu.degree_type_id, year);
                           }
                         }}
-                        dateFormat="dd/MM/yyyy"
-                        placeholderText="DD/MM/YYYY"
                         className={`w-full p-2 border rounded-lg focus:ring-orange-500 focus:border-orange-500 ${
                           educationErrors[index] && educationErrors[index].length > 0 ? 'border-red-500 focus:ring-red-500 focus:border-red-500' : ''
+                        } ${
+                          !isEducationInEditMode(index) ? 'bg-gray-100 cursor-not-allowed' : ''
                         }`}
-                        showMonthDropdown
-                        showYearDropdown
-                        dropdownMode="select"
+                        disabled={!isEducationInEditMode(index)}
                         required
-                      />
+                      >
+                        <option value="">Select Year</option>
+                        {Array.from({ length: 20 }, (_, i) => {
+                          const year = new Date().getFullYear() - 10 + i;
+                          return (
+                            <option key={year} value={year}>
+                              {year}
+                            </option>
+                          );
+                        })}
+                      </select>
                       {educationErrors[index] && educationErrors[index].length > 0 && (
                         <div className="mt-1">
                           {educationErrors[index].map((error, errorIndex) => (
@@ -2961,82 +3425,9 @@ const MyProfile = () => {
                           ))}
                         </div>
                       )}
-                    </div>
+                        </div>
                       </>
                     )}
-
-                    {/* Grade Type Selection */}
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Grade Type<span className="text-red-500">*</span>
-                      </label>
-                      <select
-                        value={edu.grade_type || 'percentage'}
-                        onChange={(e) => {
-                          const newGradeType = e.target.value;
-                          console.log(`Grade type changed to: ${newGradeType}`);
-                          handleItemChange('education', index, 'grade_type', newGradeType);
-                          
-                          // Clear the percentage_cgpa when changing grade type
-                          handleItemChange('education', index, 'percentage_cgpa', '');
-                          
-                          // If switching to CGPA, set default value
-                          if (newGradeType === 'cgpa') {
-                            console.log('Switching to CGPA mode');
-                            handleItemChange('education', index, 'percentage_cgpa', '');
-                          } else {
-                            console.log('Switching to Percentage mode');
-                          }
-                        }}
-                        className="w-full p-2 border rounded-lg focus:ring-orange-500 focus:border-orange-500"
-                        required
-                      >
-                        {getGradeTypeOptions(degreeTypeId).map(option => (
-                          <option key={option.value} value={option.value}>
-                            {option.label}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-
-                    {/* Percentage/CGPA Input */}
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        {edu.grade_type === 'cgpa' ? 'CGPA' : 'Percentage'}<span className="text-red-500">*</span>
-                      </label>
-                      <input
-                        type="number"
-                        step="0.01"
-                        min={getInputConstraints(edu.grade_type || 'percentage', degreeTypeId).min}
-                        max={getInputConstraints(edu.grade_type || 'percentage', degreeTypeId).max}
-                        value={edu.percentage_cgpa || ''}
-                        onChange={(e) => {
-                          console.log('Grade input value:', e.target.value, typeof e.target.value);
-                          console.log('Current grade_type:', edu.grade_type);
-                          console.log('Current percentage_cgpa:', edu.percentage_cgpa);
-                          handleItemChange('education', index, 'percentage_cgpa', e.target.value);
-                        }}
-                        onBlur={() => {
-                          console.log('Current grade value after blur:', edu.percentage_cgpa, typeof edu.percentage_cgpa);
-                        }}
-                        className="w-full p-2 border rounded-lg focus:ring-orange-500 focus:border-orange-500"
-                        placeholder={getInputConstraints(edu.grade_type || 'percentage', degreeTypeId).placeholder}
-                        required
-                      />
-
-                      
-                      {/* Validation warning */}
-                      {edu.grade_type === 'cgpa' && edu.percentage_cgpa && (edu.percentage_cgpa < 0 || edu.percentage_cgpa > 10) && (
-                        <div className="text-xs text-red-600 mt-1">
-                          ⚠️ CGPA must be between 0 and 10
-                        </div>
-                      )}
-                      {edu.grade_type === 'percentage' && edu.percentage_cgpa && (edu.percentage_cgpa < 0 || edu.percentage_cgpa > 100) && (
-                        <div className="text-xs text-red-600 mt-1">
-                          ⚠️ Percentage must be between 0 and 100
-                        </div>
-                        )}
-                    </div>
                   </div>
 
                   {/* Action Buttons */}
@@ -3071,16 +3462,33 @@ const MyProfile = () => {
                         >
                           Delete
                         </button>
+                        {!isEducationInEditMode(index) ? (
+                          <button
+                            type="button"
+                            onClick={() => toggleEducationEditMode(index)}
+                            className="px-4 py-2 text-blue-600 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors"
+                          >
+                            Edit
+                          </button>
+                        ) : (
                         <button
                           type="button"
                           onClick={() => handleSaveEducation(edu, index)}
-                          className="px-4 py-2 text-white rounded-lg transition-colors hover:opacity-90"
+                          className={`px-4 py-2 rounded-lg transition-colors ${
+                            hasEducationChanges(index) 
+                              ? 'text-white hover:opacity-90' 
+                              : 'text-gray-600 bg-gray-300 cursor-not-allowed'
+                          }`}
                           style={{
-                            background: 'linear-gradient(270deg, #eb6707 0%, #e42b12 100%)'
+                            background: hasEducationChanges(index) 
+                              ? 'linear-gradient(270deg, #eb6707 0%, #e42b12 100%)'
+                              : '#d1d5db'
                           }}
+                          disabled={!hasEducationChanges(index)}
                         >
-                          Save
+                          {hasEducationChanges(index) ? 'Save' : 'Saved'}
                         </button>
+                        )}
                       </>
                     )}
                   </div>
@@ -3158,7 +3566,8 @@ const MyProfile = () => {
                                 project_type: project.project_type,
                                 client_name: project.client_name,
                                 organization: project.organization,
-                                project_files: []
+                                project_files: [],
+                                existing_files: project.project_files ? JSON.parse(project.project_files) : []
                               });
                               setShowProjectForm(true);
                             }}
@@ -3287,8 +3696,8 @@ const MyProfile = () => {
                           <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                           </svg>
-                          {new Date(project.start_date).toLocaleDateString()} -
-                          {project.is_ongoing ? ' Present' : ` ${new Date(project.end_date).toLocaleDateString()}`}
+                          {formatDateDDMMYY(project.start_date)} -
+                          {project.is_ongoing ? ' Present' : ` ${formatDateDDMMYY(project.end_date)}`}
                         </div>
                       </div>
                     </div>
@@ -3408,11 +3817,18 @@ const MyProfile = () => {
                       <label className="project-form-label">
                         Start Date<span className="text-red-500">*</span>
                       </label>
-                      <input
-                        type="date"
-                        value={projectForm.start_date}
-                        onChange={(e) => setProjectForm({...projectForm, start_date: e.target.value})}
+                      <DatePicker
+                        selected={projectForm.start_date ? parseISO(projectForm.start_date) : null}
+                        onChange={date => {
+                          const formattedDate = date ? format(date, 'yyyy-MM-dd') : '';
+                          setProjectForm({...projectForm, start_date: formattedDate});
+                        }}
+                        dateFormat="dd/MM/yyyy"
+                        placeholderText="DD/MM/YYYY"
                         className="project-form-input"
+                        showMonthDropdown
+                        showYearDropdown
+                        dropdownMode="select"
                         required
                       />
                     </div>
@@ -3427,7 +3843,7 @@ const MyProfile = () => {
                             type="checkbox"
                             id="is_ongoing"
                             checked={projectForm.is_ongoing}
-                            onChange={(e) => setProjectForm({...projectForm, is_ongoing: e.target.checked})}
+                            onChange={(e) => setProjectForm({...projectForm, is_ongoing: e.target.checked, end_date: e.target.checked ? '' : projectForm.end_date})}
                             className="project-form-checkbox"
                           />
                           <label htmlFor="is_ongoing" className="text-sm text-gray-700">
@@ -3435,11 +3851,18 @@ const MyProfile = () => {
                           </label>
                         </div>
                         {!projectForm.is_ongoing && (
-                          <input
-                            type="date"
-                            value={projectForm.end_date}
-                            onChange={(e) => setProjectForm({...projectForm, end_date: e.target.value})}
+                          <DatePicker
+                            selected={projectForm.end_date ? parseISO(projectForm.end_date) : null}
+                            onChange={date => {
+                              const formattedDate = date ? format(date, 'yyyy-MM-dd') : '';
+                              setProjectForm({...projectForm, end_date: formattedDate});
+                            }}
+                            dateFormat="dd/MM/yyyy"
+                            placeholderText="DD/MM/YYYY"
                             className="project-form-input"
+                            showMonthDropdown
+                            showYearDropdown
+                            dropdownMode="select"
                           />
                         )}
                       </div>
@@ -3508,6 +3931,43 @@ const MyProfile = () => {
                           <p className="text-xs text-gray-500">Any file up to 10MB</p>
                         </div>
                       </div>
+
+                      {/* Display existing uploaded files */}
+                      {projectForm.existing_files.length > 0 && (
+                        <div className="mt-4">
+                          <h4 className="text-sm font-medium text-gray-700">Existing files:</h4>
+                          <ul className="mt-2 divide-y divide-gray-200">
+                            {projectForm.existing_files.map((file, index) => (
+                              <li key={index} className="py-2 flex justify-between items-center">
+                                <div className="flex items-center space-x-2">
+                                  <span className="text-sm text-gray-500">{file.original_name || file.name}</span>
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      setPdfViewerModal({
+                                        isOpen: true,
+                                        fileUrl: getDocumentUrl(file.path),
+                                        fileName: file.original_name || file.name
+                                      });
+                                    }}
+                                    className="text-orange-500 hover:text-orange-600"
+                                    title="View file"
+                                  >
+                                    <FiEye className="w-4 h-4" />
+                                  </button>
+                                </div>
+                                <button
+                                  type="button"
+                                  onClick={() => removeExistingProjectFile(index)}
+                                  className="text-red-500 hover:text-red-700"
+                                >
+                                  Remove
+                                </button>
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
 
                       {/* Display uploaded files */}
                       {projectForm.project_files.length > 0 && (
@@ -3664,11 +4124,19 @@ const MyProfile = () => {
                             href={getDocumentUrl(cert.path)}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="text-orange-500 hover:text-orange-600"
-
+                            className="text-orange-500 hover:text-orange-600 flex items-center"
                           >
+                            <FiEye className="mr-1" />
                             View Certificate
                           </a>
+                          <button
+                            onClick={() => handleRemoveCertificateFile(index)}
+                            className="text-red-500 hover:text-red-600 flex items-center ml-2"
+                            title="Remove certificate file"
+                          >
+                            <FiTrash2 className="mr-1" />
+                            Remove
+                          </button>
                           <span className="ml-2 text-xs text-gray-500" title={cert.path}>
                             {cert.path && typeof cert.path === 'string' && cert.path.length > 20
                               ? `${cert.path.slice(0, 20)}...`
@@ -3763,13 +4231,6 @@ const MyProfile = () => {
                         <button
                           onClick={() => {
                             const url = getDocumentUrl(formData.upload_resume || formData.resume_path || formData.upload_resume_path);
-                            console.log('Resume URL:', url);
-                            console.log('Resume path data:', {
-                              upload_resume: formData.upload_resume,
-                              resume_path: formData.resume_path,
-                              upload_resume_path: formData.upload_resume_path
-                            });
-                            console.log('API_URL:', API_URL);
                             if (!url) {
                               toast.error('Resume file not found');
                             } else {
@@ -3955,6 +4416,21 @@ const MyProfile = () => {
     }
 
     return null;
+  };
+
+  const handleRemoveCertificateFile = (index) => {
+    setFormData(prev => {
+      const updatedCertifications = [...prev.certifications];
+      updatedCertifications[index] = {
+        ...updatedCertifications[index],
+        certificate_file: null,
+        path: null
+      };
+      return {
+        ...prev,
+        certifications: updatedCertifications
+      };
+    });
   };
 
   const handleDeleteCertification = async (index) => {
@@ -4149,6 +4625,13 @@ const MyProfile = () => {
         });
       }
 
+      // If editing, always send information about remaining existing files (even if empty)
+      if (editingProject) {
+        const remainingFilePaths = (projectForm.existing_files || []).map(file => file.path || file);
+        // Send as JSON string to avoid array indexing issues
+        formData.append('remaining_files', JSON.stringify(remainingFilePaths));
+      }
+
       const response = await axios({
         method: method,
         url: url,
@@ -4206,6 +4689,17 @@ const MyProfile = () => {
       ...prev,
       project_files: prev.project_files.filter((_, i) => i !== index)
     }));
+  };
+
+  const removeExistingProjectFile = (index) => {
+    setProjectForm(prev => {
+      const updatedFiles = [...(prev.existing_files || [])];
+      updatedFiles.splice(index, 1);
+      return {
+        ...prev,
+        existing_files: updatedFiles
+      };
+    });
   };
 
   const [projectToDelete, setProjectToDelete] = useState(null);
@@ -4267,7 +4761,8 @@ const MyProfile = () => {
       project_type: '',
       client_name: '',
       organization: '',
-      project_files: []
+      project_files: [],
+      existing_files: []
     });
     setShowProjectForm(false);
   };
@@ -4369,8 +4864,29 @@ const MyProfile = () => {
   const Resume = ({ data }) => {
     const formatDate = (dateString) => {
       if (!dateString) return '';
-      const date = new Date(dateString);
-      return date.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+      
+      // Use the same dd/mm/yy format as the main component
+      try {
+        // Handle YYYY-MM-DD format explicitly
+        if (/^\d{4}-\d{2}-\d{2}$/.test(dateString)) {
+          const [year, month, day] = dateString.split('-');
+          return `${day}/${month}/${year.slice(-2)}`;
+        }
+        
+        // Fallback to Date object parsing
+        const date = new Date(dateString);
+        if (isNaN(date.getTime())) {
+          return '';
+        }
+        
+        const day = date.getDate().toString().padStart(2, '0');
+        const month = (date.getMonth() + 1).toString().padStart(2, '0');
+        const year = date.getFullYear().toString().slice(-2);
+        
+        return `${day}/${month}/${year}`;
+      } catch (error) {
+        return '';
+      }
     };
 
     return (
@@ -4401,7 +4917,7 @@ const MyProfile = () => {
                     {edu.degree_type?.name} {edu.specialization?.name ? `in ${edu.specialization.name}` : ''}
                   </Text>
                   <Text style={styles.itemDetails}>
-                    {formatDate(edu.duration_from)} - {formatDate(edu.duration_to)} | CGPA/Percentage: {edu.percentage_cgpa}%
+                    {edu.duration_from ? new Date(edu.duration_from).getFullYear() : ''} - {edu.duration_to ? new Date(edu.duration_to).getFullYear() : ''} | {edu.grade_type === 'cgpa' ? 'CGPA' : 'Percentage'}: {edu.percentage_cgpa}{edu.grade_type === 'cgpa' ? '' : '%'}
                   </Text>
                   <Text style={styles.itemDetails}>Location: {edu.location}</Text>
                 </View>
@@ -4420,7 +4936,7 @@ const MyProfile = () => {
                     Role: {project.role} | Technologies: {project.technologies}
                   </Text>
                   <Text style={styles.itemDetails}>
-                    {formatDate(project.start_date)} - {project.is_ongoing ? 'Present' : formatDate(project.end_date)}
+                    {formatDateDDMMYY(project.start_date)} - {project.is_ongoing ? 'Present' : formatDateDDMMYY(project.end_date)}
                   </Text>
                   <Text style={styles.itemDetails}>{project.description}</Text>
                   {project.key_achievements && (
@@ -4642,55 +5158,78 @@ const MyProfile = () => {
     });
   };
 
-  // Add this function after the existing functions
-  const convertCGPAToPercentage = (cgpa, degreeTypeName) => {
-    if (!cgpa || isNaN(cgpa)) return null;
+
+  // Function to get default specializations for BSc and MSc
+  const getDefaultSpecializations = (degreeTypeName) => {
+    const name = degreeTypeName.toLowerCase();
     
-    const degreeType = degreeTypeName?.toLowerCase() || '';
-    
-    // Different conversion scales for different degree types
-    if (degreeType.includes('bachelor') || degreeType.includes('btech')) {
-      // For Bachelor's/BTech: CGPA 10 scale to percentage
-      // Formula: Percentage = (CGPA - 0.5) × 10
-      const percentage = (cgpa - 0.5) * 10;
-      return Math.min(100, Math.max(0, Math.round(percentage * 10) / 10)); // Round to 1 decimal place, clamp between 0-100
-    } else if (degreeType.includes('master') || degreeType.includes('mtech')) {
-      // For Master's/MTech: CGPA 10 scale to percentage
-      // Formula: Percentage = (CGPA - 0.5) × 10
-      const percentage = (cgpa - 0.5) * 10;
-      return Math.min(100, Math.max(0, Math.round(percentage * 10) / 10)); // Round to 1 decimal place, clamp between 0-100
+    if (name === 'bsc') {
+      return [
+        { id: 'bsc_maths', name: 'Maths' },
+        { id: 'bsc_science', name: 'Science' },
+        { id: 'bsc_electronics', name: 'Electronics' }
+      ];
     }
     
-    // For other degree types, assume it's already a percentage
-    return cgpa;
+    if (name === 'msc') {
+      return [
+        { id: 'msc_maths', name: 'Maths' },
+        { id: 'msc_science', name: 'Science' },
+        { id: 'msc_electronics', name: 'Electronics' }
+      ];
+    }
+    
+    return [];
+  };
+
+  // Function to filter and modify degree types based on requirements
+  const getFilteredDegreeTypes = () => {
+    return degreeTypes.map(type => {
+      const name = type.name.toLowerCase();
+      
+      // Replace Bachelor's/Btech with B.Tech
+      if (name.includes('bachelor') || name.includes('bachelors') || name.includes('btech')) {
+        return { ...type, name: 'B.Tech' };
+      }
+      
+      // Replace Master's/Mtech with M.Tech
+      if (name.includes('master') || name.includes('masters') || name.includes('mtech')) {
+        return { ...type, name: 'M.Tech' };
+      }
+      
+      // Add BSc and MSc options
+      if (name.includes('bsc') || name.includes('b.sc')) {
+        return { ...type, name: 'BSc' };
+      }
+      
+      if (name.includes('msc') || name.includes('m.sc')) {
+        return { ...type, name: 'MSc' };
+      }
+      
+      return type;
+    }).filter(type => {
+      const name = type.name.toLowerCase();
+      // Keep only the modified options and remove duplicates
+      return ['b.tech', 'm.tech', 'bsc', 'msc', 'diploma', '10th', '12th'].includes(name) ||
+             ['1', '2'].includes(type.id.toString());
+    });
   };
 
   const getGradeTypeOptions = (degreeTypeId) => {
     const degreeType = degreeTypes.find(dt => dt.id == degreeTypeId);
     const degreeName = degreeType?.name?.toLowerCase() || '';
     
-    // Only show CGPA option for bachelor's and master's degrees
-    if (degreeName.includes('bachelor') || degreeName.includes('btech') || 
-        degreeName.includes('master') || degreeName.includes('mtech')) {
-      return [
-        { value: 'percentage', label: 'Percentage' },
-        { value: 'cgpa', label: 'CGPA (10 Scale)' }
-      ];
-    }
-    
-    // For other degree types (10th, 12th, Diploma), only show percentage
+    // Show both Percentage and CGPA options for all education types
+    // including 10th, 12th, Bachelor's, Master's, etc.
     return [
-      { value: 'percentage', label: 'Percentage' }
+      { value: 'percentage', label: 'Percentage' },
+      { value: 'cgpa', label: 'CGPA (10 Scale)' }
     ];
   };
 
   const getInputConstraints = (gradeType, degreeTypeId) => {
-    const degreeType = degreeTypes.find(dt => dt.id == degreeTypeId);
-    const degreeName = degreeType?.name?.toLowerCase() || '';
-    
-    if (gradeType === 'cgpa' && (degreeName.includes('bachelor') || degreeName.includes('btech') || 
-                                 degreeName.includes('master') || degreeName.includes('mtech'))) {
-      // CGPA constraints for bachelor's and master's
+    if (gradeType === 'cgpa') {
+      // CGPA constraints for all education types (10th, 12th, Bachelor's, Master's, etc.)
       return {
         min: 0,
         max: 10,
@@ -4698,7 +5237,7 @@ const MyProfile = () => {
         placeholder: "Enter CGPA (0-10)"
       };
     } else {
-      // Percentage constraints for all other cases
+      // Percentage constraints for all education types
       return {
         min: 0,
         max: 100,
@@ -4785,7 +5324,7 @@ const MyProfile = () => {
                     alt="Profile"
                     className="profile-image"
                     onError={(e) => {
-                      console.error("Avatar image failed to load:", e);
+                      // Avatar image failed to load
                       e.target.src = '/images/avatar-placeholder.png';
                       // Clear the invalid avatar URL from formData
                       setFormData(prev => ({
@@ -4915,7 +5454,7 @@ const MyProfile = () => {
                     <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
                   </svg>
                   <div className="text-sm text-yellow-800">
-                    <strong>Profile completion required:</strong> You need at least 90% profile completion to apply for placements.
+                    <strong>Profile completion required:</strong> You need 100% profile completion to apply for placements.
                     {profileCompletionData?.missing_sections?.length > 0 && (
                       <span> Missing: {profileCompletionData.missing_sections.join(', ')}</span>
                     )}

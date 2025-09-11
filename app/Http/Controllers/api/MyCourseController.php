@@ -30,13 +30,6 @@ class MyCourseController extends Controller
                 ], 422);
             }
 
-            // Log the incoming request headers for debugging
-            Log::info('Request headers:', [
-                'Authorization' => $request->header('Authorization'),
-                'Accept' => $request->header('Accept'),
-                'Content-Type' => $request->header('Content-Type'),
-                'user_id' => $id
-            ]);
 
             $user = Auth::user();
 
@@ -123,7 +116,6 @@ class MyCourseController extends Controller
                 ];
             });
 
-            Log::info('Successfully retrieved ' . $formattedCourses->count() . ' courses for user: ' . $user->id);
 
             return response()->json([
                 'courses' => $formattedCourses,

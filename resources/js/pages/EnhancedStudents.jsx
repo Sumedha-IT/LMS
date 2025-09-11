@@ -179,7 +179,11 @@ const EnhancedStudents = () => {
                     {selectedStudent ? (
                         <>
                             <Box display="flex" flexDirection="column" alignItems="center" mb={2}>
-                                <Avatar sx={{ width: 72, height: 72, mb: 1 }}>
+                                <Avatar 
+                                    sx={{ width: 72, height: 72, mb: 1 }}
+                                    src={selectedStudent.avatar_url}
+                                    alt={selectedStudent.name}
+                                >
                                     {selectedStudent.name?.[0] || '?'}
                                 </Avatar>
                                 <Typography variant="h6">{selectedStudent.name}</Typography>

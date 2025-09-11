@@ -93,7 +93,7 @@ class AdministratorPanelProvider extends PanelProvider
                 'secondary' => Color::Blue,
             ])
             ->brandLogo(asset('images/sumedha.png'))
-            ->brandLogoHeight('3rem')
+            ->brandLogoHeight('6.5rem')
             ->discoverResources(in: app_path('Filament/Resources'), for: 'App\\Filament\\Resources')
             ->discoverPages(in: app_path('Filament/Pages'), for: 'App\\Filament\\Pages')
             ->pages([

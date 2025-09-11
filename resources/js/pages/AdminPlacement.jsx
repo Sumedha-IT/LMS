@@ -45,6 +45,8 @@ import {
     ListItemText,
     ListItemIcon
 } from '@mui/material';
+import RichTextEditor from '../components/common/RichTextEditor';
+import RichTextDisplay from '../components/common/RichTextDisplay';
 import {
     BarChart,
     Bar,
@@ -150,6 +152,49 @@ const AdminPlacement = () => {
             return dateString;
         }
     };
+
+    // Convert date from dd/mm/yyyy to yyyy-mm-dd for HTML date input
+    const formatDateForInput = (dateString) => {
+        if (!dateString) return '';
+        try {
+            // If it's already in yyyy-mm-dd format, return as is
+            if (dateString.match(/^\d{4}-\d{2}-\d{2}$/)) {
+                return dateString;
+            }
+            
+            // If it's in dd/mm/yyyy format, convert to yyyy-mm-dd
+            if (dateString.match(/^\d{2}\/\d{2}\/\d{4}$/)) {
+                const [day, month, year] = dateString.split('/');
+                return `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
+            }
+            
+            // For other formats, try to parse and convert
+            const date = new Date(dateString);
+            if (!isNaN(date.getTime())) {
+                return date.toISOString().split('T')[0];
+            }
+            
+            return '';
+        } catch (error) {
+            console.error('Error formatting date for input:', error);
+            return '';
+        }
+    };
+
+    // Convert date from yyyy-mm-dd to dd/mm/yyyy for display
+    const formatDateForDisplay = (dateString) => {
+        if (!dateString) return '';
+        try {
+            const date = new Date(dateString);
+            if (!isNaN(date.getTime())) {
+                return format(date, 'dd/MM/yyyy');
+            }
+            return dateString;
+        } catch (error) {
+            console.error('Error formatting date for display:', error);
+            return dateString;
+        }
+    };
     
     const { id } = useParams();
     const [tabValue, setTabValue] = useState(0);
@@ -237,6 +282,7 @@ const AdminPlacement = () => {
         ug_percentage: '',
         pg_percentage: ''
     });
+    const [exportConfirmationDialog, setExportConfirmationDialog] = useState({ open: false, recordCount: 0 });
     
     // Generate year options for dropdowns
     const currentYear = new Date().getFullYear();
@@ -664,19 +710,19 @@ const AdminPlacement = () => {
                     additional_criteria: eligibilityData.additional_criteria || '',
                     // Handle new fields - parse JSON if needed
                     eligible_courses: (() => {
-                        let courses = Array.isArray(item.eligible_courses) ? item.eligible_courses : 
+                        let coursesArray = Array.isArray(item.eligible_courses) ? item.eligible_courses : 
                                     (typeof item.eligible_courses === 'string' ? JSON.parse(item.eligible_courses || '[]') : []);
                         
                         // If courses are names, convert them to IDs
-                        if (courses.length > 0 && typeof courses[0] === 'string' && !courses[0].match(/^\d+$/)) {
+                        if (coursesArray.length > 0 && typeof coursesArray[0] === 'string' && !coursesArray[0].match(/^\d+$/)) {
                             // These are course names, convert to IDs
-                            const courseIds = courses.map(courseName => {
+                            const courseIds = coursesArray.map(courseName => {
                                 const course = courses?.courses?.find(c => c.name === courseName);
                                 return course ? course.id : null;
                             }).filter(id => id !== null);
                             return courseIds;
                         }
-                        return courses;
+                        return coursesArray;
                     })(),
                     specializations: Array.isArray(item.specializations) ? item.specializations : 
                                    (typeof item.specializations === 'string' ? JSON.parse(item.specializations || '[]') : []),
@@ -963,25 +1009,27 @@ const AdminPlacement = () => {
 
     const handleExportPlacementStudents = () => {
         try {
+            // Apply all filters to the current placement students data
             const filteredStudents = placementStudents.filter(student => {
+                // Search filter
                 if (placementStudentsSearch) {
                     const search = placementStudentsSearch.toLowerCase();
-                    return (
+                    const matchesSearch = (
                         student.name?.toLowerCase().includes(search) ||
                         student.email?.toLowerCase().includes(search) ||
                         student.course?.name?.toLowerCase().includes(search)
                     );
+                    if (!matchesSearch) return false;
                 }
-                return true;
-            }).filter(student => {
-                if (placementStudentsFilters.course_id && student.course_id !== placementStudentsFilters.course_id) return false;
                 
-                // UG/BTech Passout Year range filter
+                // Course filter - check against course.id instead of course_id
+                if (placementStudentsFilters.course_id && student.course?.id !== parseInt(placementStudentsFilters.course_id)) {
+                    return false;
+                }
+                
+                // UG/BTech Passout Year range filter - use education_summary data
                 if (placementStudentsFilters.ug_year_from || placementStudentsFilters.ug_year_to) {
-                    const ugYear = student.studentEducation?.find(edu => 
-                        edu.degreeType?.name?.toLowerCase().includes('btech') || 
-                        edu.degreeType?.name?.toLowerCase().includes('ug')
-                    )?.year_of_passout;
+                    const ugYear = student.education_summary?.ug_passout_year;
                     
                     if (ugYear) {
                         const year = parseInt(ugYear);
@@ -992,12 +1040,9 @@ const AdminPlacement = () => {
                     }
                 }
                 
-                // PG/MTech Passout Year range filter
+                // PG/MTech Passout Year range filter - use education_summary data
                 if (placementStudentsFilters.pg_year_from || placementStudentsFilters.pg_year_to) {
-                    const pgYear = student.studentEducation?.find(edu => 
-                        edu.degreeType?.name?.toLowerCase().includes('mtech') || 
-                        edu.degreeType?.name?.toLowerCase().includes('pg')
-                    )?.year_of_passout;
+                    const pgYear = student.education_summary?.pg_passout_year;
                     
                     if (pgYear) {
                         const year = parseInt(pgYear);
@@ -1031,9 +1076,11 @@ const AdminPlacement = () => {
                 return true;
             });
 
+            // Create export data with only required fields
             const exportData = filteredStudents.map(student => ({
                 'Student Name': student.name || 'N/A',
                 'Email': student.email || 'N/A',
+                'Phone': student.phone || student.contact_number || 'N/A',
                 'Course': student.course?.name || 'No Course Assigned',
                 'UG/BTech Percentage': student.education_summary?.ug_percentage || 'N/A',
                 'PG/MTech Percentage': student.education_summary?.pg_percentage || 'N/A',
@@ -1041,12 +1088,26 @@ const AdminPlacement = () => {
                 'PG/MTech Passout Year': student.education_summary?.pg_passout_year || 'N/A'
             }));
 
+            // Generate filename with filter information
+            let filename = `placement-students-${new Date().toISOString().split('T')[0]}`;
+            if (placementStudentsSearch || Object.values(placementStudentsFilters).some(val => val !== '')) {
+                filename += '-filtered';
+            }
+            filename += '.xlsx';
+
             const ws = XLSX.utils.json_to_sheet(exportData);
             const wb = XLSX.utils.book_new();
             XLSX.utils.book_append_sheet(wb, ws, 'Placement Students');
-            XLSX.writeFile(wb, `placement-students-${new Date().toISOString().split('T')[0]}.xlsx`);
+            XLSX.writeFile(wb, filename);
             
-            setSnackbar({ open: true, message: 'Placement students exported successfully!', severity: 'success' });
+            // Show success message with count and filter info
+            let message = `Successfully exported ${filteredStudents.length} placement students`;
+            if (placementStudentsSearch || Object.values(placementStudentsFilters).some(val => val !== '')) {
+                message += ' (filtered data)';
+            }
+            message += '!';
+            
+            setSnackbar({ open: true, message, severity: 'success' });
         } catch (error) {
             console.error('Error exporting placement students:', error);
             setSnackbar({ open: true, message: 'Error exporting placement students', severity: 'error' });
@@ -2889,33 +2950,93 @@ const AdminPlacement = () => {
                                         />
                                     </Tooltip>
                                 </Grid>
+                                <Grid item xs={12} md={4}>
+                                    <Box sx={{ 
+                                        display: 'flex', 
+                                        alignItems: 'center', 
+                                        height: '100%',
+                                        px: 2,
+                                        py: 1,
+                                        bgcolor: 'rgba(235, 103, 7, 0.1)',
+                                        borderRadius: 1,
+                                        border: '1px solid rgba(235, 103, 7, 0.2)'
+                                    }}>
+                                        <Typography variant="body2" sx={{ color: '#eb6707', fontWeight: 500 }}>
+                                            📊 Showing {placementStudents?.length || 0} students
+                                            {placementStudentsSearch || Object.values(placementStudentsFilters).some(val => val !== '') 
+                                                ? ' (filtered)' 
+                                                : ' (all)'
+                                            }
+                                        </Typography>
+                                    </Box>
+                                </Grid>
                                 <Grid item xs={12} md={2}>
-                                    <Button
-                                        variant="contained"
-                                        startIcon={<DownloadIcon />}
-                                        onClick={() => handleExportPlacementStudents()}
-                                        disabled={!placementStudents || placementStudents.length === 0}
-                                        sx={{
-                                            textTransform: 'none',
-                                            borderRadius: 2,
-                                            background: 'linear-gradient(270deg, #eb6707 0%, #e42b12 100%)'
-                                        }}
-                                    >
-                                        Export
-                                    </Button>
+                                                                            <Tooltip 
+                                            title={
+                                                (() => {
+                                                    const hasFilters = placementStudentsSearch || Object.values(placementStudentsFilters).some(val => val !== '');
+                                                    if (hasFilters) {
+                                                        let filterInfo = `Export ${placementStudents?.length || 0} filtered students\n\nActive filters:`;
+                                                        if (placementStudentsSearch) filterInfo += `\n• Search: "${placementStudentsSearch}"`;
+                                                        if (placementStudentsFilters.course_id) filterInfo += `\n• Course: ${courses?.courses?.find(c => c.id === parseInt(placementStudentsFilters.course_id))?.name || 'Unknown'}`;
+                                                        if (placementStudentsFilters.ug_year_from || placementStudentsFilters.ug_year_to) filterInfo += `\n• UG Year: ${placementStudentsFilters.ug_year_from || 'Any'} - ${placementStudentsFilters.ug_year_to || 'Any'}`;
+                                                        if (placementStudentsFilters.pg_year_from || placementStudentsFilters.pg_year_to) filterInfo += `\n• PG Year: ${placementStudentsFilters.pg_year_from || 'Any'} - ${placementStudentsFilters.pg_year_to || 'Any'}`;
+                                                        if (placementStudentsFilters.ug_percentage) filterInfo += `\n• UG % ≥ ${placementStudentsFilters.ug_percentage}%`;
+                                                        if (placementStudentsFilters.pg_percentage) filterInfo += `\n• PG % ≥ ${placementStudentsFilters.pg_percentage}%`;
+                                                        return filterInfo;
+                                                    } else {
+                                                        return `Export all ${placementStudents?.length || 0} placement students`;
+                                                    }
+                                                })()
+                                            }
+                                            arrow
+                                        >
+                                        <Button
+                                            variant="contained"
+                                            startIcon={<DownloadIcon />}
+                                            onClick={() => handleExportPlacementStudents()}
+                                            disabled={!placementStudents || placementStudents.length === 0}
+                                            sx={{
+                                                textTransform: 'none',
+                                                borderRadius: 2,
+                                                background: 'linear-gradient(270deg, #eb6707 0%, #e42b12 100%)'
+                                            }}
+                                        >
+                                            {placementStudentsSearch || Object.values(placementStudentsFilters).some(val => val !== '') 
+                                                ? 'Export Filtered' 
+                                                : 'Export All'
+                                            }
+                                        </Button>
+                                    </Tooltip>
+                                    {/* Export Info */}
+                                    <Typography variant="caption" sx={{ 
+                                        display: 'block', 
+                                        mt: 1, 
+                                        color: 'text.secondary',
+                                        textAlign: 'center',
+                                        fontStyle: 'italic'
+                                    }}>
+                                        {placementStudentsSearch || Object.values(placementStudentsFilters).some(val => val !== '') 
+                                            ? `Will export ${placementStudents?.length || 0} filtered students` 
+                                            : `Will export all ${placementStudents?.length || 0} students`
+                                        }
+                                    </Typography>
                                 </Grid>
                                 <Grid item xs={12} md={2}>
                                     <Button
                                         variant="outlined"
-                                        onClick={() => setPlacementStudentsFilters({
-                                            course_id: '',
-                                            ug_year_from: '',
-                                            ug_year_to: '',
-                                            pg_year_from: '',
-                                            pg_year_to: '',
-                                            ug_percentage: '',
-                                            pg_percentage: ''
-                                        })}
+                                        onClick={() => {
+                                            setPlacementStudentsFilters({
+                                                course_id: '',
+                                                ug_year_from: '',
+                                                ug_year_to: '',
+                                                pg_year_from: '',
+                                                pg_year_to: '',
+                                                ug_percentage: '',
+                                                pg_percentage: ''
+                                            });
+                                            setPlacementStudentsSearch('');
+                                        }}
                                         sx={{
                                             textTransform: 'none',
                                             borderRadius: 2,
@@ -2932,6 +3053,89 @@ const AdminPlacement = () => {
                                 </Grid>
                             </Grid>
                         </Box>
+
+                        {/* Active Filters Summary */}
+                        {(placementStudentsSearch || Object.values(placementStudentsFilters).some(val => val !== '')) && (
+                            <Box sx={{ mb: 2, p: 2, bgcolor: 'rgba(25, 118, 210, 0.1)', borderRadius: 2, border: '1px solid rgba(25, 118, 210, 0.2)' }}>
+                                <Typography variant="body2" sx={{ color: '#1976d2', fontWeight: 500, mb: 1 }}>
+                                    🔍 Active Filters:
+                                </Typography>
+                                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+                                    {placementStudentsSearch && (
+                                        <Chip 
+                                            label={`Search: "${placementStudentsSearch}"`} 
+                                            size="small" 
+                                            color="primary" 
+                                            variant="outlined"
+                                            onDelete={() => setPlacementStudentsSearch('')}
+                                        />
+                                    )}
+                                    {placementStudentsFilters.course_id && (
+                                        <Chip 
+                                            label={`Course: ${courses?.courses?.find(c => c.id === parseInt(placementStudentsFilters.course_id))?.name || 'Unknown'}`} 
+                                            size="small" 
+                                            color="primary" 
+                                            variant="outlined"
+                                            onDelete={() => setPlacementStudentsFilters({...placementStudentsFilters, course_id: ''})}
+                                        />
+                                    )}
+                                    {placementStudentsFilters.ug_year_from && (
+                                        <Chip 
+                                            label={`UG Year From: ${placementStudentsFilters.ug_year_from}`} 
+                                            size="small" 
+                                            color="primary" 
+                                            variant="outlined"
+                                            onDelete={() => setPlacementStudentsFilters({...placementStudentsFilters, ug_year_from: ''})}
+                                        />
+                                    )}
+                                    {placementStudentsFilters.ug_year_to && (
+                                        <Chip 
+                                            label={`UG Year To: ${placementStudentsFilters.ug_year_to}`} 
+                                            size="small" 
+                                            color="primary" 
+                                            variant="outlined"
+                                            onDelete={() => setPlacementStudentsFilters({...placementStudentsFilters, ug_year_to: ''})}
+                                        />
+                                    )}
+                                    {placementStudentsFilters.pg_year_from && (
+                                        <Chip 
+                                            label={`PG Year From: ${placementStudentsFilters.pg_year_from}`} 
+                                            size="small" 
+                                            color="primary" 
+                                            variant="outlined"
+                                            onDelete={() => setPlacementStudentsFilters({...placementStudentsFilters, pg_year_from: ''})}
+                                        />
+                                    )}
+                                    {placementStudentsFilters.pg_year_to && (
+                                        <Chip 
+                                            label={`PG Year To: ${placementStudentsFilters.pg_year_to}`} 
+                                            size="small" 
+                                            color="primary" 
+                                            variant="outlined"
+                                            onDelete={() => setPlacementStudentsFilters({...placementStudentsFilters, pg_year_to: ''})}
+                                        />
+                                    )}
+                                    {placementStudentsFilters.ug_percentage && (
+                                        <Chip 
+                                            label={`UG % ≥ ${placementStudentsFilters.ug_percentage}%`} 
+                                            size="small" 
+                                            color="primary" 
+                                            variant="outlined"
+                                            onDelete={() => setPlacementStudentsFilters({...placementStudentsFilters, ug_percentage: ''})}
+                                        />
+                                    )}
+                                    {placementStudentsFilters.pg_percentage && (
+                                        <Chip 
+                                            label={`PG % ≥ ${placementStudentsFilters.pg_percentage}%`} 
+                                            size="small" 
+                                            color="primary" 
+                                            variant="outlined"
+                                            onDelete={() => setPlacementStudentsFilters({...placementStudentsFilters, pg_percentage: ''})}
+                                        />
+                                    )}
+                                </Box>
+                            </Box>
+                        )}
 
                         {/* Students Table */}
                         <Box sx={{ mb: 2 }}>
@@ -2998,7 +3202,11 @@ const AdminPlacement = () => {
                                                 >
                                                     <TableCell>
                                                         <Box display="flex" alignItems="center" gap={1}>
-                                                            <Avatar sx={{ width: 32, height: 32, fontSize: '0.875rem' }}>
+                                                            <Avatar 
+                                                                sx={{ width: 32, height: 32, fontSize: '0.875rem' }}
+                                                                src={student.avatar_url}
+                                                                alt={student.name}
+                                                            >
                                                                 {student.name?.charAt(0)?.toUpperCase()}
                                                             </Avatar>
                                                             <Box sx={{ flex: 1 }}>
@@ -3242,9 +3450,10 @@ const AdminPlacement = () => {
                                             <TableCell>Course</TableCell>
                                             <TableCell>Application Date</TableCell>
                                             <TableCell>Status</TableCell>
+                                            <TableCell>Rejection Reason</TableCell>
                                         </TableRow>
                                         <TableRow>
-                                            <TableCell colSpan={7} sx={{ textAlign: 'center', py: 1, fontSize: '0.875rem', color: 'text.secondary', fontStyle: 'italic' }}>
+                                            <TableCell colSpan={8} sx={{ textAlign: 'center', py: 1, fontSize: '0.875rem', color: 'text.secondary', fontStyle: 'italic' }}>
                                                 Select applications to update status in bulk, or click on any student row to view complete details
                                             </TableCell>
                                         </TableRow>
@@ -3272,7 +3481,11 @@ const AdminPlacement = () => {
                                                 </TableCell>
                                                 <TableCell>
                                                     <Box display="flex" alignItems="center" gap={1}>
-                                                        <Avatar sx={{ width: 32, height: 32, fontSize: '0.875rem' }}>
+                                                        <Avatar 
+                                                            sx={{ width: 32, height: 32, fontSize: '0.875rem' }}
+                                                            src={application.user?.avatar_url}
+                                                            alt={application.user?.name}
+                                                        >
                                                             {application.user?.name?.charAt(0)?.toUpperCase() || 'S'}
                                                         </Avatar>
                                                         <Typography variant="body2" fontWeight={500}>
@@ -3303,6 +3516,29 @@ const AdminPlacement = () => {
                                                             <OpenInNewIcon sx={{ fontSize: 16, opacity: 0.7 }} />
                                                         </Tooltip>
                                                     </Box>
+                                                </TableCell>
+                                                <TableCell>
+                                                    {application.rejection_reason ? (
+                                                        <Tooltip title={application.rejection_reason} arrow>
+                                                            <Typography 
+                                                                variant="body2" 
+                                                                sx={{ 
+                                                                    maxWidth: 200, 
+                                                                    overflow: 'hidden', 
+                                                                    textOverflow: 'ellipsis', 
+                                                                    whiteSpace: 'nowrap',
+                                                                    color: 'error.main',
+                                                                    cursor: 'pointer'
+                                                                }}
+                                                            >
+                                                                {application.rejection_reason}
+                                                            </Typography>
+                                                        </Tooltip>
+                                                    ) : (
+                                                        <Typography variant="body2" color="text.secondary">
+                                                            -
+                                                        </Typography>
+                                                    )}
                                                 </TableCell>
                                             </TableRow>
                                         ))}
@@ -4542,38 +4778,12 @@ const AdminPlacement = () => {
                             
                             <Grid container spacing={4}>
                                 <Grid item xs={12}>
-                                    <TextField
-                                        fullWidth
-                                        multiline
-                                        rows={4}
+                                    <RichTextEditor
                                         label="Job Description, Roles and Responsibilities"
                                         value={jobPostingForm.requirements}
-                                        onChange={(e) => setJobPostingForm({...jobPostingForm, requirements: e.target.value})}
-                                        variant="outlined"
-                                        placeholder=""
-                                        sx={{
-                                            '& .MuiOutlinedInput-root': {
-                                                borderRadius: 2,
-                                                transition: 'all 0.3s ease',
-                                                '&:hover': {
-                                                    boxShadow: '0 4px 12px rgba(235, 103, 7, 0.15)',
-                                                },
-                                                '&.Mui-focused': {
-                                                    boxShadow: '0 4px 20px rgba(228, 43, 18, 0.25)',
-                                                }
-                                            },
-                                            '& .MuiInputLabel-root': {
-                                                fontSize: '0.9rem',
-                                                fontWeight: 500
-                                            }
-                                        }}
-                                        InputProps={{
-                                            startAdornment: (
-                                                <InputAdornment position="start" sx={{ alignSelf: 'flex-start', mt: 1 }}>
-                                                    ✅
-                                                </InputAdornment>
-                                            ),
-                                        }}
+                                        onChange={(value) => setJobPostingForm({...jobPostingForm, requirements: value})}
+                                        placeholder="Enter job description, roles and responsibilities..."
+                                        height={250}
                                     />
                                 </Grid>
 
@@ -4742,10 +4952,11 @@ const AdminPlacement = () => {
                                         fullWidth
                                         label="Application Deadline"
                                         type="date"
-                                        value={jobPostingForm.application_deadline}
+                                        value={formatDateForInput(jobPostingForm.application_deadline)}
                                         onChange={(e) => setJobPostingForm({...jobPostingForm, application_deadline: e.target.value})}
                                         InputLabelProps={{ shrink: true }}
                                         placeholder=""
+                                        helperText={jobPostingForm.application_deadline ? formatDateForDisplay(jobPostingForm.application_deadline) : ''}
                                         sx={{
                                             '& .MuiOutlinedInput-root': {
                                                 borderRadius: 2,
@@ -5241,9 +5452,10 @@ const AdminPlacement = () => {
                                         fullWidth
                                         label="Interview Date(s) (if known)"
                                         type="date"
-                                        value={jobPostingForm.interview_date}
+                                        value={formatDateForInput(jobPostingForm.interview_date)}
                                         onChange={(e) => setJobPostingForm({...jobPostingForm, interview_date: e.target.value})}
                                         InputLabelProps={{ shrink: true }}
+                                        helperText={jobPostingForm.interview_date ? formatDateForDisplay(jobPostingForm.interview_date) : ''}
                                         sx={{
                                             '& .MuiOutlinedInput-root': {
                                                 borderRadius: 2,
@@ -5512,6 +5724,8 @@ const AdminPlacement = () => {
                                                     fontSize: '2rem',
                                                     bgcolor: 'rgba(255,255,255,0.2)'
                                                 }}
+                                                src={selectedStudentData.avatar_url}
+                                                alt={selectedStudentData.name}
                                             >
                                                 {selectedStudentData.name?.charAt(0)?.toUpperCase() || 'S'}
                                             </Avatar>
@@ -6227,6 +6441,7 @@ const AdminPlacement = () => {
                                                                             <TableCell>Company</TableCell>
                                                                             <TableCell>Application Date</TableCell>
                                                                             <TableCell>Job Status</TableCell>
+                                                                            <TableCell>Rejection Reason</TableCell>
                                                                         </TableRow>
                                                                     </TableHead>
                                                             <TableBody>
@@ -6249,6 +6464,29 @@ const AdminPlacement = () => {
                                                                                 color={getStatusColor(application.status)} 
                                                                                 size="small" 
                                                                             />
+                                                                        </TableCell>
+                                                                        <TableCell>
+                                                                            {application.rejection_reason ? (
+                                                                                <Tooltip title={application.rejection_reason} arrow>
+                                                                                    <Typography 
+                                                                                        variant="body2" 
+                                                                                        sx={{ 
+                                                                                            maxWidth: 200, 
+                                                                                            overflow: 'hidden', 
+                                                                                            textOverflow: 'ellipsis', 
+                                                                                            whiteSpace: 'nowrap',
+                                                                                            color: 'error.main',
+                                                                                            cursor: 'pointer'
+                                                                                        }}
+                                                                                    >
+                                                                                        {application.rejection_reason}
+                                                                                    </Typography>
+                                                                                </Tooltip>
+                                                                            ) : (
+                                                                                <Typography variant="body2" color="text.secondary">
+                                                                                    -
+                                                                                </Typography>
+                                                                            )}
                                                                         </TableCell>
                                                                     </TableRow>
                                                                 ))}
@@ -6791,23 +7029,25 @@ const AdminPlacement = () => {
                                             </Box>
                                         </Grid>
                                         <Grid item xs={12}>
-                                            {/* <Box sx={{ mb: 2 }}>
+                                            <Box sx={{ mb: 2 }}>
                                                 <Typography variant="subtitle2" color="text.secondary" gutterBottom>
-                                                    J
+                                                    Job Description
                                                 </Typography>
-                                                <Typography variant="body1">
-                                                    {jobPostingDetailsDialog.jobPosting.description || 'N/A'}
-                                                </Typography>
-                                            </Box> */}
+                                                <RichTextDisplay 
+                                                    content={jobPostingDetailsDialog.jobPosting.description || 'N/A'}
+                                                    sx={{ mt: 1 }}
+                                                />
+                                            </Box>
                                         </Grid>
                                         <Grid item xs={12}>
                                             <Box sx={{ mb: 2 }}>
                                                 <Typography variant="subtitle2" color="text.secondary" gutterBottom>
                                                    Job Description and Requirements
                                                 </Typography>
-                                                <Typography variant="body1">
-                                                    {jobPostingDetailsDialog.jobPosting.requirements || 'N/A'}
-                                                </Typography>
+                                                <RichTextDisplay 
+                                                    content={jobPostingDetailsDialog.jobPosting.requirements || 'N/A'}
+                                                    sx={{ mt: 1 }}
+                                                />
                                             </Box>
                                         </Grid>
                                     </Grid>
@@ -7093,11 +7333,7 @@ const AdminPlacement = () => {
                                                 </Typography>
                                                 <Typography variant="body1">
                                                     {jobPostingDetailsDialog.jobPosting.interview_date ? 
-                                                        new Date(jobPostingDetailsDialog.jobPosting.interview_date).toLocaleDateString('en-US', {
-                                                            year: 'numeric',
-                                                            month: 'long',
-                                                            day: 'numeric'
-                                                        }) : 'N/A'}
+                                                        formatDateToDMY(jobPostingDetailsDialog.jobPosting.interview_date) : 'N/A'}
                                                 </Typography>
                                             </Box>
                                         </Grid>
@@ -7108,11 +7344,7 @@ const AdminPlacement = () => {
                                                 </Typography>
                                                 <Typography variant="body1">
                                                     {jobPostingDetailsDialog.jobPosting.application_deadline ? 
-                                                        new Date(jobPostingDetailsDialog.jobPosting.application_deadline).toLocaleDateString('en-US', {
-                                                            year: 'numeric',
-                                                            month: 'long',
-                                                            day: 'numeric'
-                                                        }) : 'N/A'}
+                                                        formatDateToDMY(jobPostingDetailsDialog.jobPosting.application_deadline) : 'N/A'}
                                                 </Typography>
                                             </Box>
                                         </Grid>
@@ -7272,4 +7504,4 @@ const AdminPlacement = () => {
     );
 };
 
-export default AdminPlacement; 
+export default AdminPlacement;

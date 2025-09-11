@@ -75,30 +75,11 @@ class StudentEducationController extends Controller
 
         // Additional validation for CGPA vs Percentage ranges and degree type compatibility
         if ($request->grade_type === 'cgpa') {
-            // Only allow CGPA for bachelor's and master's degrees
-            if (!in_array($degreeType->name, ['Bachelors/Btech', 'Masters/Mtech'])) {
-                return response()->json(['message' => 'CGPA grade type is only allowed for Bachelor\'s and Master\'s degrees'], 422);
-            }
+            // Allow CGPA for all education types (10th, 12th, Bachelor's, Master's, etc.)
             if ($request->percentage_cgpa < 0 || $request->percentage_cgpa > 10) {
                 return response()->json(['message' => 'CGPA must be between 0 and 10'], 422);
             }
-            
-            // Convert CGPA to percentage using the formula: Percentage = (CGPA - 0.5) × 10
-            $cgpa = $request->percentage_cgpa;
-            $percentage = ($cgpa - 0.5) * 10;
-            $percentage = max(0, min(100, round($percentage, 1))); // Clamp between 0-100 and round to 1 decimal
-            
-            \Log::info('CGPA converted to percentage', [
-                'original_cgpa' => $cgpa,
-                'converted_percentage' => $percentage,
-                'formula' => "($cgpa - 0.5) * 10 = $percentage"
-            ]);
-            
-            // Store the original CGPA value and update the request data to store the converted percentage
-            $request->merge([
-                'original_cgpa' => $cgpa,
-                'percentage_cgpa' => $percentage
-            ]);
+            // Store CGPA value as-is without conversion
         } else {
             if ($request->percentage_cgpa < 0 || $request->percentage_cgpa > 100) {
                 return response()->json(['message' => 'Percentage must be between 0 and 100'], 422);
@@ -114,6 +95,11 @@ class StudentEducationController extends Controller
 
         $educationData = $request->all();
         $educationData['user_id'] = $user->id;
+        
+        // Store the value in percentage_cgpa field for both CGPA and percentage
+        // The grade_type field will indicate whether it's CGPA or percentage
+        $educationData['percentage_cgpa'] = $request->percentage_cgpa;
+        
         $education = $user->studentEducation()->create($educationData);
         
         // Debug logging after creation
@@ -124,6 +110,10 @@ class StudentEducationController extends Controller
     public function Get_education(Request $request){
         $user=$request->user();
         $education=StudentEducation::where('user_id',$user->id)->get();
+        
+        // Debug: Log the raw database data
+        \Log::info('Raw education data from database:', $education->toArray());
+        
         return StudentEducationResource::collection($education);
     }
 
@@ -131,8 +121,6 @@ class StudentEducationController extends Controller
         // Check if the current user is an admin or has permission to view other users' data
         $user = $request->user();
         
-        // Debug logging
-        \Log::info('GetUserEducation - User ID: ' . $user->id . ', Role ID: ' . ($user->role ? $user->role->id : 'null') . ', Is Admin: ' . ($user->is_admin ? 'true' : 'false'));
         
         // Allow admin, coordinator, and placement coordinator users to view any user's education
         // You can add more specific permission checks here
@@ -205,37 +193,24 @@ class StudentEducationController extends Controller
 
         // Additional validation for CGPA vs Percentage ranges and degree type compatibility
         if ($request->grade_type === 'cgpa') {
-            // Only allow CGPA for bachelor's and master's degrees
-            if (!in_array($degreeType->name, ['Bachelors/Btech', 'Masters/Mtech'])) {
-                return response()->json(['message' => 'CGPA grade type is only allowed for Bachelor\'s and Master\'s degrees'], 422);
-            }
+            // Allow CGPA for all education types (10th, 12th, Bachelor's, Master's, etc.)
             if ($request->percentage_cgpa < 0 || $request->percentage_cgpa > 10) {
                 return response()->json(['message' => 'CGPA must be between 0 and 10'], 422);
             }
-            
-            // Convert CGPA to percentage using the formula: Percentage = (CGPA - 0.5) × 10
-            $cgpa = $request->percentage_cgpa;
-            $percentage = ($cgpa - 0.5) * 10;
-            $percentage = max(0, min(100, round($percentage, 1))); // Clamp between 0-100 and round to 1 decimal
-            
-            \Log::info('CGPA converted to percentage (Update)', [
-                'original_cgpa' => $cgpa,
-                'converted_percentage' => $percentage,
-                'formula' => "($cgpa - 0.5) * 10 = $percentage"
-            ]);
-            
-            // Store the original CGPA value and update the request data to store the converted percentage
-            $request->merge([
-                'original_cgpa' => $cgpa,
-                'percentage_cgpa' => $percentage
-            ]);
+            // Store CGPA value as-is without conversion
         } else {
             if ($request->percentage_cgpa < 0 || $request->percentage_cgpa > 100) {
                 return response()->json(['message' => 'Percentage must be between 0 and 100'], 422);
             }
         }
         
-        $education->update($request->all());
+        $updateData = $request->all();
+        
+        // Store the value in percentage_cgpa field for both CGPA and percentage
+        // The grade_type field will indicate whether it's CGPA or percentage
+        $updateData['percentage_cgpa'] = $request->percentage_cgpa;
+        
+        $education->update($updateData);
         return new StudentEducationResource($education);
     }
 

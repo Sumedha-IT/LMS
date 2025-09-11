@@ -1,4 +1,5 @@
 import { Button, MenuItem, Select, TextField } from '@mui/material';
+import RichTextEditor from '../common/RichTextEditor';
 import { useFormik } from 'formik';
 import React, { useEffect } from 'react';
 import * as Yup from "yup";
@@ -225,19 +226,19 @@ const CreateJob = () => {
                                 helperText={formik.touched.location && formik.errors.location}
                             />
                         </div>
-                        <div className="flex items-center gap-4">
-                            <label className="w-1/3">Description<span className="text-[red]">*</span></label>
-                            <TextField
-                                fullWidth
-                                id="description"
-                                label="description"
-                                name="description"
-                                margin="normal"
-                                value={formik.values.description}
-                                onChange={formik.handleChange}
-                                error={formik.touched.description && Boolean(formik.errors.description)}
-                                helperText={formik.touched.description && formik.errors.description}
-                            />
+                        <div className="flex items-start gap-4">
+                            <label className="w-1/3 pt-2">Description<span className="text-[red]">*</span></label>
+                            <div className="flex-1">
+                                <RichTextEditor
+                                    label="Job Description"
+                                    value={formik.values.description}
+                                    onChange={(value) => formik.setFieldValue('description', value)}
+                                    placeholder="Enter detailed job description..."
+                                    height={200}
+                                    error={formik.touched.description && Boolean(formik.errors.description)}
+                                    helperText={formik.touched.description && formik.errors.description}
+                                />
+                            </div>
                         </div>
                         <div className="flex items-center gap-4">
                             <label className="w-1/3">Salary<span className="text-[red]">*</span></label>

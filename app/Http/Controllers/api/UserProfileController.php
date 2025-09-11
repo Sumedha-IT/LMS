@@ -56,12 +56,28 @@ class UserProfileController extends Controller
                 'passport_photo' => 'nullable|file|mimes:jpeg,jpg,png|max:20480' // 20MB max
             ];
 
+            // Add program validation if program data is being sent
+            if (isset($data['program'])) {
+                $validationRules['data'] = 'required|json';
+            }
+
             // Only validate upload_resume if it's being uploaded
             if ($request->hasFile('upload_resume')) {
                 $validationRules['upload_resume'] = 'nullable|file|mimes:pdf,doc,docx';
             }
 
             $request->validate($validationRules);
+
+            // Validate program field if present
+            if (isset($data['program'])) {
+                $validPrograms = ['CEP/STEP', 'RISE', 'CD - 50/50', 'PAP'];
+                if (!in_array($data['program'], $validPrograms)) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Invalid program selected'
+                    ], 400);
+                }
+            }
 
             // Handle file uploads
             if ($request->hasFile('avatar_url')) {

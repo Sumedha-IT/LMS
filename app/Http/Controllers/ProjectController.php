@@ -22,8 +22,6 @@ class ProjectController extends Controller
         // Check if the current user is an admin or has permission to view other users' data
         $user = $request->user();
         
-        // Debug logging
-        \Log::info('getUserProjects - User ID: ' . $user->id . ', Role ID: ' . ($user->role ? $user->role->id : 'null') . ', Is Admin: ' . ($user->is_admin ? 'true' : 'false'));
         
         // Allow admin, coordinator, and placement coordinator users to view any user's projects
         // You can add more specific permission checks here
@@ -114,13 +112,76 @@ class ProjectController extends Controller
                 'key_achievements' => 'nullable|string',
                 'organization' => 'nullable|string',
                 'project_files' => 'nullable|array',
-                'project_files.*' => 'nullable|file|max:10240' // 10MB max per file
+                'project_files.*' => 'nullable|file|max:10240', // 10MB max per file
+                'remaining_files' => 'nullable|string' // Changed to string since we send JSON
             ]);
 
-            // Handle file uploads
+            // Handle file uploads and deletions
             $existingFiles = json_decode($project->project_files ?? '[]', true);
-            $uploadedFiles = $existingFiles;
+            
+            // If remaining_files is provided, use only those files (delete others)
+            if ($request->has('remaining_files')) {
+                $remainingFiles = $request->input('remaining_files');
+                
+                // Handle JSON string format
+                if (is_string($remainingFiles)) {
+                    $remainingFiles = json_decode($remainingFiles, true) ?? [];
+                }
+                
+                // Ensure it's an array
+                if (!is_array($remainingFiles)) {
+                    $remainingFiles = [];
+                }
+                
+                $filesToDelete = [];
+                
+                // Find files to delete
+                foreach ($existingFiles as $existingFile) {
+                    $shouldKeep = false;
+                    foreach ($remainingFiles as $remainingFile) {
+                        if ($existingFile['path'] === $remainingFile) {
+                            $shouldKeep = true;
+                            break;
+                        }
+                    }
+                    if (!$shouldKeep) {
+                        $filesToDelete[] = $existingFile;
+                    }
+                }
+                
+                // Delete files from storage
+                foreach ($filesToDelete as $fileToDelete) {
+                    if (isset($fileToDelete['path']) && Storage::disk('public')->exists($fileToDelete['path'])) {
+                        Storage::disk('public')->delete($fileToDelete['path']);
+                    }
+                }
+                
+                // Keep only remaining files
+                $uploadedFiles = array_filter($existingFiles, function($file) use ($remainingFiles) {
+                    if (!isset($file['path'])) {
+                        return false;
+                    }
+                    foreach ($remainingFiles as $remainingFile) {
+                        if ($file['path'] === $remainingFile) {
+                            return true;
+                        }
+                    }
+                    return false;
+                });
+                $uploadedFiles = array_values($uploadedFiles); // Re-index array
+                
+                // Log for debugging
+                \Log::info('Project file update:', [
+                    'existing_files_count' => count($existingFiles),
+                    'remaining_files_count' => count($remainingFiles),
+                    'files_to_delete_count' => count($filesToDelete),
+                    'final_files_count' => count($uploadedFiles)
+                ]);
+            } else {
+                $uploadedFiles = $existingFiles;
+            }
 
+            // Add new uploaded files
             if ($request->hasFile('project_files')) {
                 foreach ($request->file('project_files') as $file) {
                     $path = $file->store('project-files/' . auth()->id(), 'public');
@@ -198,4 +259,4 @@ class ProjectController extends Controller
             'project' => $project
         ]);
     }
-} 
+}

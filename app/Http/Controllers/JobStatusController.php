@@ -39,7 +39,7 @@ class JobStatusController extends Controller
                 'success' => false,
                 'completion_percentage' => $profileValidation['completion_percentage'],
                 'missing_sections' => $profileValidation['missing_sections'],
-                'required_percentage' => 90
+                'required_percentage' => 100
             ], 400);
         } 
 

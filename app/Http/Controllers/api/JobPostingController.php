@@ -4,15 +4,19 @@ namespace App\Http\Controllers\api;
 
 use App\Http\Controllers\Controller;
 use App\Models\JobPosting;
+use App\Services\JobNotificationService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 
 class JobPostingController extends Controller
 {
-    public function __construct()
+    protected $jobNotificationService;
+
+    public function __construct(JobNotificationService $jobNotificationService)
     {
         // Require authentication for all methods
         $this->middleware('auth:sanctum');
+        $this->jobNotificationService = $jobNotificationService;
     }
 
     /**
@@ -428,7 +432,22 @@ class JobPostingController extends Controller
             // Create job posting with all fields
             $jobPosting = JobPosting::create($jobPostingData);
             
-            \Log::info('Job posting created successfully:', $jobPosting->toArray());
+            // Load relationships for notification
+            $jobPosting->load(['company', 'course']);
+            
+            \Log::info('📝 Job posting created, triggering notifications', [
+                'job_id' => $jobPosting->id,
+                'job_title' => $jobPosting->title,
+                'company' => $jobPosting->company->name ?? 'Unknown',
+                'course_id' => $jobPosting->course_id,
+                'eligible_courses' => $jobPosting->eligible_courses,
+                'posted_by' => $jobPosting->posted_by
+            ]);
+            
+            // Send notifications to eligible users
+            $this->jobNotificationService->sendJobCreatedNotification($jobPosting);
+            
+            \Log::info('✅ Job posting created successfully:', $jobPosting->toArray());
             return response()->json($jobPosting, 201);
         } catch (\Exception $e) {
             \Log::error('Error creating job posting:', [
@@ -450,6 +469,9 @@ class JobPostingController extends Controller
             }
             
             $jobPosting = JobPosting::findOrFail($id);
+            
+            // Store old status for notification
+            $oldStatus = $jobPosting->status;
             
             // All job posting data including eligibility criteria fields
             $jobPostingData = $request->only([
@@ -502,6 +524,35 @@ class JobPostingController extends Controller
             
             // Update job posting with all fields
             $jobPosting->update($jobPostingData);
+            
+            // Load relationships for notification
+            $jobPosting->load(['company', 'course']);
+            
+            // Check if status changed and send notification
+            if (isset($jobPostingData['status']) && $oldStatus !== $jobPostingData['status']) {
+                \Log::info('🔄 Job status changed, triggering notifications', [
+                    'job_id' => $jobPosting->id,
+                    'job_title' => $jobPosting->title,
+                    'company' => $jobPosting->company->name ?? 'Unknown',
+                    'old_status' => $oldStatus,
+                    'new_status' => $jobPostingData['status'],
+                    'course_id' => $jobPosting->course_id,
+                    'eligible_courses' => $jobPosting->eligible_courses
+                ]);
+                
+                $this->jobNotificationService->sendJobStatusChangedNotification(
+                    $jobPosting, 
+                    $oldStatus, 
+                    $jobPostingData['status']
+                );
+            } else {
+                \Log::info('ℹ️ Job updated but status unchanged, no notifications sent', [
+                    'job_id' => $jobPosting->id,
+                    'job_title' => $jobPosting->title,
+                    'old_status' => $oldStatus,
+                    'new_status' => $jobPostingData['status'] ?? 'not_provided'
+                ]);
+            }
             
             return response()->json($jobPosting);
         } catch (\Exception $e) {
