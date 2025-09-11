@@ -2584,8 +2584,8 @@ const MyProfile = () => {
                   required
                 >
                   <option value="">Select Year</option>
-                  {Array.from({ length: 10 }, (_, i) => {
-                    const year = new Date().getFullYear() - 5 + i;
+                  {Array.from({ length: 31 }, (_, i) => {
+                    const year = 2000 + i;
                     return (
                       <option key={year} value={year}>
                         {year}
@@ -3256,8 +3256,8 @@ const MyProfile = () => {
                           required
                         >
                           <option value="">Select Year</option>
-                          {Array.from({ length: 20 }, (_, i) => {
-                            const year = new Date().getFullYear() - 10 + i;
+                          {Array.from({ length: 31 }, (_, i) => {
+                            const year = 2000 + i;
                             return (
                               <option key={year} value={year}>
                                 {year}
@@ -3366,8 +3366,8 @@ const MyProfile = () => {
                         required
                       >
                         <option value="">Select Year</option>
-                        {Array.from({ length: 20 }, (_, i) => {
-                          const year = new Date().getFullYear() - 10 + i;
+                        {Array.from({ length: 31 }, (_, i) => {
+                          const year = 2000 + i;
                           return (
                             <option key={year} value={year}>
                               {year}
@@ -3409,8 +3409,8 @@ const MyProfile = () => {
                         required
                       >
                         <option value="">Select Year</option>
-                        {Array.from({ length: 20 }, (_, i) => {
-                          const year = new Date().getFullYear() - 10 + i;
+                        {Array.from({ length: 31 }, (_, i) => {
+                          const year = 2000 + i;
                           return (
                             <option key={year} value={year}>
                               {year}
