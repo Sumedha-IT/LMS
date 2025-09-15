@@ -250,7 +250,9 @@ const MyProfile = () => {
     social_links: { linkedin: '', github: '' },
     batch: { name: '' },
     sumedha_batch_month: '',
-    sumedha_batch_year: ''
+    sumedha_batch_year: '',
+    branch_location: '',
+    sumedha_batch_name: ''
   });
   const [photoPreview, setPhotoPreview] = useState(null);
   const [deleteConfirmations, setDeleteConfirmations] = useState({});
@@ -1435,6 +1437,8 @@ const MyProfile = () => {
     if (!data.program) errors.push('Program is required');
     if (!data.sumedha_batch_month) errors.push('Sumedha Batch Month is required');
     if (!data.sumedha_batch_year) errors.push('Sumedha Batch Year is required');
+    if (!data.branch_location) errors.push('Branch Location is required');
+    if (!data.sumedha_batch_name) errors.push('Sumedha Batch Name is required');
     return errors;
   };
 
@@ -1934,7 +1938,9 @@ const MyProfile = () => {
         country_code: formData.country_code,
         phone: formData.phone,
         sumedha_batch_month: formData.sumedha_batch_month,
-        sumedha_batch_year: formData.sumedha_batch_year
+        sumedha_batch_year: formData.sumedha_batch_year,
+        branch_location: formData.branch_location,
+        sumedha_batch_name: formData.sumedha_batch_name
       };
 
       formDataToSend.append('data', JSON.stringify(jsonData));
@@ -2592,9 +2598,57 @@ const MyProfile = () => {
                       </option>
                     );
                   })}
-                </select>
+                 </select>
+               </div>
+               <div>
+                 <label className="block text-sm font-medium text-gray-700 mb-2">
+                   Branch Location<span className="text-red-500">*</span>
+                 </label>
+                 <select
+                   name="branch_location"
+                   value={formData.branch_location || ''}
+                   onChange={handleChange}
+                   className="w-full p-2 border rounded-lg focus:ring-orange-500 focus:border-orange-500"
+                   required
+                 >
+                   <option value="">Select Branch Location</option>
+                   <option value="Hyderabad">Hyderabad</option>
+                   <option value="Bangalore">Bangalore</option>
+                 </select>
+               </div>
+               <div>
+                 <label className="block text-sm font-medium text-gray-700 mb-2">
+                   Sumedha Batch Name<span className="text-red-500">*</span>
+                 </label>
+                 <select
+                   name="sumedha_batch_name"
+                   value={formData.sumedha_batch_name || ''}
+                   onChange={handleChange}
+                   className="w-full p-2 border rounded-lg focus:ring-orange-500 focus:border-orange-500"
+                   required
+                 >
+                   <option value="">Select Batch Name</option>
+                   <option value="PD">PD</option>
+                   <option value="PD1">PD1</option>
+                   <option value="PD2">PD2</option>
+                   <option value="PD3">PD3</option>
+                   <option value="PD4">PD4</option>
+                   <option value="PD5">PD5</option>
+                   <option value="DV">DV</option>
+                   <option value="DV1">DV1</option>
+                   <option value="DV2">DV2</option>
+                   <option value="DV3">DV3</option>
+                   <option value="DV4">DV4</option>
+                   <option value="DV5">DV5</option>
+                   <option value="AL">AL</option>
+                   <option value="AL1">AL1</option>
+                   <option value="AL2">AL2</option>
+                   <option value="AL3">AL3</option>
+                   <option value="AL4">AL4</option>
+                   <option value="AL5">AL5</option>
+                 </select>
+               </div>
               </div>
-            </div>
             <div className="mt-6 flex justify-end space-x-4">
               <button
                 type="button"
@@ -2610,17 +2664,17 @@ const MyProfile = () => {
               <button
                 type="button"
                 onClick={() => toggleSubTab('additional')}
-                className={`px-4 py-2 text-white rounded-lg transition-colors ${
-                  !formData.name?.trim() || !formData.email?.trim() || !formData.gender || !formData.birthday || !formData.sumedha_batch_month || !formData.sumedha_batch_year
-                    ? 'bg-gray-400 cursor-not-allowed'
-                    : 'hover:opacity-90'
-                }`}
-                style={{
-                  background: !formData.name?.trim() || !formData.email?.trim() || !formData.gender || !formData.birthday || !formData.sumedha_batch_month || !formData.sumedha_batch_year
-                    ? '#9ca3af'
-                    : 'linear-gradient(270deg, #eb6707 0%, #e42b12 100%)'
-                }}
-                disabled={!formData.name?.trim() || !formData.email?.trim() || !formData.gender || !formData.birthday || !formData.sumedha_batch_month || !formData.sumedha_batch_year}
+                  className={`px-4 py-2 text-white rounded-lg transition-colors ${
+                   !formData.name?.trim() || !formData.email?.trim() || !formData.gender || !formData.birthday || !formData.sumedha_batch_month || !formData.sumedha_batch_year || !formData.branch_location || !formData.sumedha_batch_name
+                      ? 'bg-gray-400 cursor-not-allowed'
+                      : 'hover:opacity-90'
+                  }`}
+                  style={{
+                   background: !formData.name?.trim() || !formData.email?.trim() || !formData.gender || !formData.birthday || !formData.sumedha_batch_month || !formData.sumedha_batch_year || !formData.branch_location || !formData.sumedha_batch_name
+                      ? '#9ca3af'
+                      : 'linear-gradient(270deg, #eb6707 0%, #e42b12 100%)'
+                  }}
+                 disabled={!formData.name?.trim() || !formData.email?.trim() || !formData.gender || !formData.birthday || !formData.sumedha_batch_month || !formData.sumedha_batch_year || !formData.branch_location || !formData.sumedha_batch_name}
               >
                 Next
               </button>

@@ -73,7 +73,9 @@ class User extends Authenticatable implements HasTenants, FilamentUser, HasAvata
         'exam_last_attempt_id',
         'placement_center_access',
         'sumedha_batch_month',
-        'sumedha_batch_year'
+        'sumedha_batch_year',
+        'branch_location',
+        'sumedha_batch_name'
     ];
 
     /**
