@@ -5,17 +5,20 @@ namespace App\Filament\Imports;
 use App\Models\User;
 use App\Models\Role;
 use App\Models\Batch;
+use App\Notifications\WelcomeEmail;
 use Filament\Actions\Imports\ImportColumn;
 use Filament\Actions\Imports\Importer;
 use Filament\Actions\Imports\Models\Import;
 use Filament\Facades\Filament;
 use Illuminate\Validation\Rule;
+use Illuminate\Support\Facades\Mail;
 
 class UserImporter extends Importer
 {
     protected static ?string $model = User::class;
     
     protected $batchNameToAssign = null;
+    protected $userPassword = null;
 
     public static function getColumns(): array
     {
@@ -72,6 +75,11 @@ class UserImporter extends Importer
 
     public function fillRecord(): void
     {
+        // Store the plain password before it gets hashed
+        if (isset($this->data['password'])) {
+            $this->userPassword = $this->data['password'];
+        }
+
         // Remove batch_name from data before filling the record to prevent database errors
         if (isset($this->data['batch_name'])) {
             $this->batchNameToAssign = trim((string) $this->data['batch_name']);
@@ -195,6 +203,33 @@ class UserImporter extends Importer
                     'user_email' => $this->record->email,
                     'batch_name' => $batchName,
                     'message' => 'Please create the batch first or use an existing batch name'
+                ]);
+            }
+        }
+
+        // Send welcome email to the user
+        if (!empty($this->userPassword) && !empty($this->record->email)) {
+            try {
+                Mail::send('emailTemplates.sitWelcomeEmail', [
+                    'student_name' => $this->record->name,
+                    'login_email' => $this->record->email,
+                    'login_password' => $this->userPassword,
+                    'login_url' => url('/administrator')
+                ], function ($message) {
+                    $message->to($this->record->email);
+                    $message->subject('Welcome to SIT Placements Platform');
+                });
+                
+                \Log::info('Welcome email sent successfully during import', [
+                    'user_id' => $this->record->id,
+                    'user_email' => $this->record->email,
+                    'user_name' => $this->record->name
+                ]);
+            } catch (\Exception $e) {
+                \Log::error('Failed to send welcome email during import', [
+                    'user_id' => $this->record->id,
+                    'user_email' => $this->record->email,
+                    'error' => $e->getMessage()
                 ]);
             }
         }

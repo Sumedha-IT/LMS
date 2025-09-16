@@ -6,12 +6,15 @@ use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
+use Illuminate\Support\Facades\Mail;
+use Illuminate\Mail\Mailable;
 
 class WelcomeEmail extends Notification
 {
     use Queueable;
     public $login_email;
     public $login_password;
+    public $student_name;
 
     /**
      * Create a new notification instance.
@@ -20,6 +23,7 @@ class WelcomeEmail extends Notification
     {
         $this->login_email = $data['login_email'];
         $this->login_password = $data['login_password'];
+        $this->student_name = $data['student_name'] ?? 'Student';
     }
 
     /**
@@ -38,12 +42,14 @@ class WelcomeEmail extends Notification
     public function toMail(object $notifiable): MailMessage
     {
         return (new MailMessage)
-                    ->greeting('Dear user')
-                    ->line('Please find below login details')
-                    ->line('Email:'.$this->login_email)
-                    ->line('Password:'.$this->login_password)
-                    ->action('Login', url('/administrator'))
-                    ->line('Thank you for using our application!');
+                    ->subject('Welcome to SIT Placements Platform')
+                    ->view('emailTemplates.sitWelcomeEmail', [
+                        'student_name' => $this->student_name,
+                        'login_email' => $this->login_email,
+                        'login_password' => $this->login_password,
+                        'login_url' => url('/administrator')
+                    ])
+                    ->salutation(''); // This removes the default "Regards, Laravel" footer
     }
 
     /**
