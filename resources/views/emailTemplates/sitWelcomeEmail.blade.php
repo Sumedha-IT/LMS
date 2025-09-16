@@ -34,7 +34,7 @@
             margin: 20px 0;
             padding: 15px;
             background-color: #f9f9f9;
-            border-left: 4px solid #007BFF;
+            border-left: 4px solid rgb(9, 87, 171);
             border-radius: 4px;
         }
         .credentials p {
@@ -68,12 +68,12 @@
             border-radius: 4px;
         }
         .footer a {
-            color: #007BFF;
+            color: rgb(4, 61, 122);
             text-decoration: none;
         }
         .login-button {
             display: inline-block;
-            background-color: #007BFF;
+            background-color: rgb(170, 65, 3);
             color: white;
             padding: 12px 24px;
             text-decoration: none;
