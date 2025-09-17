@@ -3089,12 +3089,10 @@ const AdminPlacement = () => {
                                         gap: 2, 
                                         mb: filtersExpanded ? 3 : 0,
                                         cursor: 'pointer',
-                                        transition: 'all 0.3s ease',
+                                        p: 1,
+                                        borderRadius: 2,
                                         '&:hover': {
-                                            backgroundColor: 'rgba(235, 103, 7, 0.05)',
-                                            borderRadius: 2,
-                                            p: 1,
-                                            m: -1
+                                            backgroundColor: 'rgba(235, 103, 7, 0.05)'
                                         }
                                     }}
                                     onClick={() => setFiltersExpanded(!filtersExpanded)}
@@ -3127,7 +3125,6 @@ const AdminPlacement = () => {
                                         display: 'flex',
                                         alignItems: 'center',
                                         justifyContent: 'center',
-                                        transition: 'transform 0.3s ease',
                                         transform: filtersExpanded ? 'rotate(180deg)' : 'rotate(0deg)'
                                     }}>
                                         <ExpandMoreIcon sx={{ color: '#eb6707', fontSize: 20 }} />
@@ -3136,13 +3133,7 @@ const AdminPlacement = () => {
 
                                 {/* Filter Grid - Collapsible */}
                                 {filtersExpanded && (
-                                    <Box sx={{ 
-                                        animation: 'fadeIn 0.3s ease-in-out',
-                                        '@keyframes fadeIn': {
-                                            from: { opacity: 0, transform: 'translateY(-10px)' },
-                                            to: { opacity: 1, transform: 'translateY(0)' }
-                                        }
-                                    }}>
+                                    <Box>
                                         <Grid container spacing={3}>
                                     {/* Course Filter */}
                                     <Grid item xs={12} md={4}>
@@ -3150,13 +3141,7 @@ const AdminPlacement = () => {
                                             p: 2, 
                                             borderRadius: 2, 
                                             backgroundColor: 'rgba(235, 103, 7, 0.05)',
-                                            border: '1px solid rgba(235, 103, 7, 0.1)',
-                                            transition: 'all 0.3s ease',
-                                            '&:hover': {
-                                                backgroundColor: 'rgba(235, 103, 7, 0.08)',
-                                                transform: 'translateY(-2px)',
-                                                boxShadow: '0 4px 12px rgba(235, 103, 7, 0.15)'
-                                            }
+                                            border: '1px solid rgba(235, 103, 7, 0.1)'
                                         }}>
                                             <Typography variant="subtitle2" sx={{ 
                                                 mb: 1.5, 
@@ -3209,13 +3194,7 @@ const AdminPlacement = () => {
                                             p: 2, 
                                             borderRadius: 2, 
                                             backgroundColor: 'rgba(52, 152, 219, 0.05)',
-                                            border: '1px solid rgba(52, 152, 219, 0.1)',
-                                            transition: 'all 0.3s ease',
-                                            '&:hover': {
-                                                backgroundColor: 'rgba(52, 152, 219, 0.08)',
-                                                transform: 'translateY(-2px)',
-                                                boxShadow: '0 4px 12px rgba(52, 152, 219, 0.15)'
-                                            }
+                                            border: '1px solid rgba(52, 152, 219, 0.1)'
                                         }}>
                                             <Typography variant="subtitle2" sx={{ 
                                                 mb: 1.5, 
@@ -3298,13 +3277,7 @@ const AdminPlacement = () => {
                                             p: 2, 
                                             borderRadius: 2, 
                                             backgroundColor: 'rgba(155, 89, 182, 0.05)',
-                                            border: '1px solid rgba(155, 89, 182, 0.1)',
-                                            transition: 'all 0.3s ease',
-                                            '&:hover': {
-                                                backgroundColor: 'rgba(155, 89, 182, 0.08)',
-                                                transform: 'translateY(-2px)',
-                                                boxShadow: '0 4px 12px rgba(155, 89, 182, 0.15)'
-                                            }
+                                            border: '1px solid rgba(155, 89, 182, 0.1)'
                                         }}>
                                             <Typography variant="subtitle2" sx={{ 
                                                 mb: 1.5, 
@@ -3387,13 +3360,7 @@ const AdminPlacement = () => {
                                             p: 2, 
                                             borderRadius: 2, 
                                             backgroundColor: 'rgba(46, 204, 113, 0.05)',
-                                            border: '1px solid rgba(46, 204, 113, 0.1)',
-                                            transition: 'all 0.3s ease',
-                                            '&:hover': {
-                                                backgroundColor: 'rgba(46, 204, 113, 0.08)',
-                                                transform: 'translateY(-2px)',
-                                                boxShadow: '0 4px 12px rgba(46, 204, 113, 0.15)'
-                                            }
+                                            border: '1px solid rgba(46, 204, 113, 0.1)'
                                         }}>
                                             <Typography variant="subtitle2" sx={{ 
                                                 mb: 1.5, 
@@ -3445,13 +3412,7 @@ const AdminPlacement = () => {
                                             p: 2, 
                                             borderRadius: 2, 
                                             backgroundColor: 'rgba(230, 126, 34, 0.05)',
-                                            border: '1px solid rgba(230, 126, 34, 0.1)',
-                                            transition: 'all 0.3s ease',
-                                            '&:hover': {
-                                                backgroundColor: 'rgba(230, 126, 34, 0.08)',
-                                                transform: 'translateY(-2px)',
-                                                boxShadow: '0 4px 12px rgba(230, 126, 34, 0.15)'
-                                            }
+                                            border: '1px solid rgba(230, 126, 34, 0.1)'
                                         }}>
                                             <Typography variant="subtitle2" sx={{ 
                                                 mb: 1.5, 
@@ -3580,16 +3541,11 @@ const AdminPlacement = () => {
                                                     px: 3,
                                                     py: 1.5,
                                                     background: 'linear-gradient(135deg, #eb6707 0%, #e42b12 100%)',
-                                                    boxShadow: '0 4px 15px rgba(235, 103, 7, 0.3)',
                                                     '&:hover': {
                                                         background: 'linear-gradient(135deg, #e42b12 0%, #eb6707 100%)',
-                                                        transform: 'translateY(-2px)',
-                                                        boxShadow: '0 6px 20px rgba(235, 103, 7, 0.4)',
                                                     },
                                                     '&:disabled': {
                                                         background: '#bdc3c7',
-                                                        boxShadow: 'none',
-                                                        transform: 'none',
                                                     }
                                                 }}
                                             >
@@ -3627,8 +3583,6 @@ const AdminPlacement = () => {
                                                     borderColor: '#c0392b',
                                                     backgroundColor: 'rgba(231, 76, 60, 0.04)',
                                                     borderWidth: 2,
-                                                    transform: 'translateY(-2px)',
-                                                    boxShadow: '0 4px 15px rgba(231, 76, 60, 0.2)',
                                                 }
                                             }}
                                         >
