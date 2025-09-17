@@ -214,7 +214,7 @@ class UserImporter extends Importer
                     'student_name' => $this->record->name,
                     'login_email' => $this->record->email,
                     'login_password' => $this->userPassword,
-                    'login_url' => url('/administrator')
+                    'login_url' => 'https://eduspark.sumedhait.com'
                 ], function ($message) {
                     $message->to($this->record->email);
                     $message->subject('Welcome to SIT Placements Platform');
