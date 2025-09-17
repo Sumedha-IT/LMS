@@ -47,7 +47,7 @@ class WelcomeEmail extends Notification
                         'student_name' => $this->student_name,
                         'login_email' => $this->login_email,
                         'login_password' => $this->login_password,
-                        'login_url' => url('/administrator')
+                        'login_url' => url('/')
                     ])
                     ->salutation(''); // This removes the default "Regards, Laravel" footer
     }
