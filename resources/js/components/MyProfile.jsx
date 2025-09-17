@@ -5680,6 +5680,27 @@ const MyProfile = () => {
               <span className="text-orange-500">{mainMenu.find((m) => m.id === activeMenu)?.icon}</span>
               {mainMenu.find((m) => m.id === activeMenu)?.label}
             </h3>
+            {/* Mobile navigation buttons */}
+            <div className="flex gap-2 md:hidden">
+              <button
+                onClick={() => setActiveMenu(null)}
+                className="p-2 rounded-full bg-white shadow-md hover:bg-gray-50 transition-colors"
+                title="Back to Main Menu"
+              >
+                <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 19l-7-7 7-7" />
+                </svg>
+              </button>
+              <button
+                onClick={() => setActiveMenu(null)}
+                className="p-2 rounded-full bg-white shadow-md hover:bg-gray-50 transition-colors"
+                title="Close Form"
+              >
+                <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
           </div>
           {/* Use a regular div instead of a form to prevent automatic form submission */}
           <div>
