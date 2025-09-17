@@ -21,6 +21,7 @@ import {
     TableContainer,
     TableHead,
     TableRow,
+    TablePagination,
     Dialog,
     DialogTitle,
     DialogContent,
@@ -90,9 +91,14 @@ import {
     Phone as PhoneIcon,
     LocationOn as LocationIcon,
     School as SchoolIcon,
-    CalendarToday as CalendarIcon,
+    CalendarToday as CalendarTodayIcon,
     LinkedIn as LinkedInIcon,
-    Undo as UndoIcon
+    Undo as UndoIcon,
+    TrendingUp as TrendingUpIcon,
+    BarChart as BarChartIcon,
+    Clear as ClearIcon,
+    ExpandMore as ExpandMoreIcon,
+    ExpandLess as ExpandLessIcon
 } from '@mui/icons-material';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { countryStates } from '../utils/jsonData';
@@ -281,6 +287,17 @@ const AdminPlacement = () => {
         pg_year_to: '',
         ug_percentage: '',
         pg_percentage: ''
+    });
+    const [filtersExpanded, setFiltersExpanded] = useState(false);
+    
+    // Pagination state for placement students
+    const [placementStudentsPagination, setPlacementStudentsPagination] = useState({
+        current_page: 1,
+        last_page: 1,
+        per_page: 10,
+        total: 0,
+        from: 0,
+        to: 0
     });
     const [exportConfirmationDialog, setExportConfirmationDialog] = useState({ open: false, recordCount: 0 });
     
@@ -506,18 +523,18 @@ const AdminPlacement = () => {
 
                 const totalCompanies = companies?.length || 0;
                 const activeJobs = jobPostings?.data?.filter(job => job.status === 'open').length || 0;
-                setStats({
-                    totalStudents,
+                setStats(prevStats => ({
+                    totalStudents: prevStats?.totalStudents || totalStudents, // Keep existing total if set from pagination
                     activeJobs,
                     totalCompanies
-                });
+                }));
             } catch (err) {
                 console.error('Error fetching student stats:', err);
-                setStats({
-                    totalStudents: 0,
+                setStats(prevStats => ({
+                    totalStudents: prevStats?.totalStudents || 0, // Keep existing total if set from pagination
                     activeJobs: jobPostings?.data?.filter(job => job.status === 'open').length || 0,
                     totalCompanies: companies?.length || 0
-                });
+                }));
             } finally {
                 setLoading(false);
             }
@@ -537,11 +554,13 @@ const AdminPlacement = () => {
     // Refetch placement students when filters change
     useEffect(() => {
         if (tabValue === 3) {
-            fetchPlacementStudents();
+            // Reset to first page when filters change
+            setPlacementStudentsPagination(prev => ({ ...prev, current_page: 1 }));
+            fetchPlacementStudents(1);
         }
     }, [placementStudentsFilters]);
 
-    const fetchPlacementStudents = async () => {
+    const fetchPlacementStudents = async (page = 1) => {
         try {
             setLoadingPlacementStudents(true);
             setPlacementStudentsError(null);
@@ -562,48 +581,169 @@ const AdminPlacement = () => {
                 throw new Error('Authentication token not found');
             }
             
-                            console.log('Calling API:', '/api/placement-students');
-                console.log('User token:', userData.token ? 'Token exists' : 'No token');
-                
-                // Build query parameters from filters
-                const queryParams = new URLSearchParams();
-                if (placementStudentsFilters.course_id) {
-                    queryParams.append('course_id', placementStudentsFilters.course_id);
-                }
-                if (placementStudentsFilters.ug_year_from) {
-                    queryParams.append('ug_year_from', placementStudentsFilters.ug_year_from);
-                }
-                if (placementStudentsFilters.ug_year_to) {
-                    queryParams.append('ug_year_to', placementStudentsFilters.ug_year_to);
-                }
-                if (placementStudentsFilters.pg_year_from) {
-                    queryParams.append('pg_year_from', placementStudentsFilters.pg_year_from);
-                }
-                if (placementStudentsFilters.pg_year_to) {
-                    queryParams.append('pg_year_to', placementStudentsFilters.pg_year_to);
-                }
-                if (placementStudentsFilters.ug_percentage) {
-                    queryParams.append('ug_percentage', placementStudentsFilters.ug_percentage);
-                }
-                if (placementStudentsFilters.pg_percentage) {
-                    queryParams.append('pg_percentage', placementStudentsFilters.pg_percentage);
-                }
-                
-                const apiUrl = `/api/placement-students${queryParams.toString() ? '?' + queryParams.toString() : ''}`;
-                console.log('API URL with filters:', apiUrl);
-                
-                const response = await axios.get(apiUrl, {
-                    headers: { 'Authorization': `Bearer ${userData.token}` }
-                });
+            console.log('Calling API:', '/api/placement-students');
+            console.log('User token:', userData.token ? 'Token exists' : 'No token');
             
+            // Build query parameters from filters
+            const queryParams = new URLSearchParams();
+            if (placementStudentsFilters.course_id) {
+                queryParams.append('course_id', placementStudentsFilters.course_id);
+            }
+            if (placementStudentsFilters.ug_year_from) {
+                queryParams.append('ug_year_from', placementStudentsFilters.ug_year_from);
+            }
+            if (placementStudentsFilters.ug_year_to) {
+                queryParams.append('ug_year_to', placementStudentsFilters.ug_year_to);
+            }
+            if (placementStudentsFilters.pg_year_from) {
+                queryParams.append('pg_year_from', placementStudentsFilters.pg_year_from);
+            }
+            if (placementStudentsFilters.pg_year_to) {
+                queryParams.append('pg_year_to', placementStudentsFilters.pg_year_to);
+            }
+            if (placementStudentsFilters.ug_percentage) {
+                queryParams.append('ug_percentage', placementStudentsFilters.ug_percentage);
+            }
+            if (placementStudentsFilters.pg_percentage) {
+                queryParams.append('pg_percentage', placementStudentsFilters.pg_percentage);
+            }
+            
+            // Add pagination parameters
+            queryParams.append('page', page);
+            queryParams.append('per_page', placementStudentsPagination.per_page);
+            
+            const apiUrl = `/api/placement-students${queryParams.toString() ? '?' + queryParams.toString() : ''}`;
+            console.log('API URL with filters and pagination:', apiUrl);
+            
+            const response = await axios.get(apiUrl, {
+                headers: { 'Authorization': `Bearer ${userData.token}` }
+            });
+        
             console.log('Placement students response:', response.data);
             console.log('Students data:', response.data.data);
+            console.log('Pagination data:', response.data.pagination);
+            
             if (response.data.data && response.data.data.length > 0) {
                 console.log('First student:', response.data.data[0]);
                 console.log('First student course:', response.data.data[0].course);
                 console.log('First student batches:', response.data.data[0].batches);
             }
+            
+            // Set students data and pagination metadata
             setPlacementStudents(response.data.data || []);
+            if (response.data.pagination) {
+                setPlacementStudentsPagination(response.data.pagination);
+                
+                // Update stats with the total count from pagination
+                setStats(prevStats => ({
+                    ...prevStats,
+                    totalStudents: response.data.pagination.total
+                }));
+            }
+        } catch (error) {
+            console.error('Error fetching placement students:', error);
+            
+            // Provide more specific error messages
+            let errorMessage = 'Failed to fetch placement students';
+            if (error.response?.status === 401) {
+                errorMessage = 'Authentication failed. Please log in again.';
+            } else if (error.response?.status === 403) {
+                errorMessage = 'Access denied. You do not have permission to view placement students.';
+            } else if (error.response?.status === 404) {
+                errorMessage = 'Placement students API endpoint not found.';
+            } else if (error.response?.status >= 500) {
+                errorMessage = 'Server error. Please try again later.';
+            } else if (error.message) {
+                errorMessage += ': ' + error.message;
+            }
+            
+            setPlacementStudentsError(errorMessage);
+            setPlacementStudents([]);
+        } finally {
+            setLoadingPlacementStudents(false);
+        }
+    };
+
+    const fetchPlacementStudentsWithPerPage = async (page = 1, perPage = 10) => {
+        try {
+            setLoadingPlacementStudents(true);
+            setPlacementStudentsError(null);
+            
+            // Get user info from localStorage or cookies using the existing getCookie function
+            let userInfo = localStorage.getItem('user_info');
+            if (!userInfo) {
+                userInfo = getCookie('user_info');
+            }
+            
+            if (!userInfo) {
+                throw new Error('User authentication information not found');
+            }
+            
+            const userData = JSON.parse(userInfo);
+            
+            if (!userData.token) {
+                throw new Error('Authentication token not found');
+            }
+            
+            console.log('Calling API:', '/api/placement-students');
+            console.log('User token:', userData.token ? 'Token exists' : 'No token');
+            
+            // Build query parameters from filters
+            const queryParams = new URLSearchParams();
+            if (placementStudentsFilters.course_id) {
+                queryParams.append('course_id', placementStudentsFilters.course_id);
+            }
+            if (placementStudentsFilters.ug_year_from) {
+                queryParams.append('ug_year_from', placementStudentsFilters.ug_year_from);
+            }
+            if (placementStudentsFilters.ug_year_to) {
+                queryParams.append('ug_year_to', placementStudentsFilters.ug_year_to);
+            }
+            if (placementStudentsFilters.pg_year_from) {
+                queryParams.append('pg_year_from', placementStudentsFilters.pg_year_from);
+            }
+            if (placementStudentsFilters.pg_year_to) {
+                queryParams.append('pg_year_to', placementStudentsFilters.pg_year_to);
+            }
+            if (placementStudentsFilters.ug_percentage) {
+                queryParams.append('ug_percentage', placementStudentsFilters.ug_percentage);
+            }
+            if (placementStudentsFilters.pg_percentage) {
+                queryParams.append('pg_percentage', placementStudentsFilters.pg_percentage);
+            }
+            
+            // Add pagination parameters
+            queryParams.append('page', page);
+            queryParams.append('per_page', perPage);
+            
+            const apiUrl = `/api/placement-students${queryParams.toString() ? '?' + queryParams.toString() : ''}`;
+            console.log('API URL with filters and pagination:', apiUrl);
+            
+            const response = await axios.get(apiUrl, {
+                headers: { 'Authorization': `Bearer ${userData.token}` }
+            });
+        
+            console.log('Placement students response:', response.data);
+            console.log('Students data:', response.data.data);
+            console.log('Pagination data:', response.data.pagination);
+            
+            if (response.data.data && response.data.data.length > 0) {
+                console.log('First student:', response.data.data[0]);
+                console.log('First student course:', response.data.data[0].course);
+                console.log('First student batches:', response.data.data[0].batches);
+            }
+            
+            // Set students data and pagination metadata
+            setPlacementStudents(response.data.data || []);
+            if (response.data.pagination) {
+                setPlacementStudentsPagination(response.data.pagination);
+                
+                // Update stats with the total count from pagination
+                setStats(prevStats => ({
+                    ...prevStats,
+                    totalStudents: response.data.pagination.total
+                }));
+            }
         } catch (error) {
             console.error('Error fetching placement students:', error);
             
@@ -630,6 +770,124 @@ const AdminPlacement = () => {
 
     const handleTabChange = (event, newValue) => {
         setTabValue(newValue);
+    };
+
+    // Pagination handlers for placement students
+    const handlePlacementStudentsPageChange = (event, newPage) => {
+        fetchPlacementStudents(newPage + 1); // Material-UI uses 0-based indexing
+    };
+
+    const handlePlacementStudentsPerPageChange = (event) => {
+        const newPerPage = parseInt(event.target.value, 10);
+        setPlacementStudentsPagination(prev => ({ ...prev, per_page: newPerPage, current_page: 1 }));
+        // Use the new per_page value directly instead of relying on state
+        fetchPlacementStudentsWithPerPage(1, newPerPage);
+    };
+
+    // Function to calculate profile completion percentage
+    const calculateProfileCompletion = (student) => {
+        let completedFields = 0;
+        let totalFields = 0;
+
+        // Basic profile fields
+        const basicFields = [
+            'name', 'email', 'phone', 'date_of_birth', 'gender', 
+            'address', 'city', 'state', 'country', 'pincode'
+        ];
+        
+        basicFields.forEach(field => {
+            totalFields++;
+            if (student[field] && student[field].toString().trim() !== '') {
+                completedFields++;
+            }
+        });
+
+        // Education fields
+        if (student.studentEducation && student.studentEducation.length > 0) {
+            totalFields += 3; // degree, percentage, passout year
+            const education = student.studentEducation[0];
+            if (education.degreeType && education.degreeType.name) completedFields++;
+            if (education.percentage_cgpa) completedFields++;
+            if (education.duration_to) completedFields++;
+        } else {
+            totalFields += 3;
+        }
+
+        // Course/Batch information
+        if (student.batches && student.batches.length > 0) {
+            totalFields += 2; // course, batch
+            const batch = student.batches[0];
+            if (batch.course_package && batch.course_package.name) completedFields++;
+            if (batch.name) completedFields++;
+        } else {
+            totalFields += 2;
+        }
+
+        // Avatar/profile picture
+        totalFields++;
+        if (student.avatar_url) completedFields++;
+
+        return Math.round((completedFields / totalFields) * 100);
+    };
+
+    // Custom CircularProgress with label component
+    const CircularProgressWithLabel = ({ value, size = 40, student }) => {
+        return (
+            <Box sx={{ position: 'relative', display: 'inline-flex', alignItems: 'center', gap: 1 }}>
+                <Box sx={{ position: 'relative', display: 'inline-flex' }}>
+                    <CircularProgress
+                        variant="determinate"
+                        value={value}
+                        size={size}
+                        thickness={4}
+                        sx={{
+                            color: value >= 80 ? '#4caf50' : value >= 60 ? '#ff9800' : '#f44336',
+                            position: 'absolute',
+                            top: 0,
+                            left: 0,
+                        }}
+                    />
+                    <Avatar
+                        src={student.avatar_url}
+                        sx={{ 
+                            width: size, 
+                            height: size,
+                            border: '2px solid #fff',
+                            boxShadow: '0 2px 8px rgba(0,0,0,0.15)'
+                        }}
+                    />
+                </Box>
+                <Box sx={{ 
+                    display: 'flex', 
+                    flexDirection: 'column', 
+                    alignItems: 'center',
+                    minWidth: '40px'
+                }}>
+                    <Typography
+                        variant="caption"
+                        sx={{
+                            fontSize: '0.75rem',
+                            fontWeight: 'bold',
+                            color: value >= 80 ? '#4caf50' : value >= 60 ? '#ff9800' : '#f44336',
+                            lineHeight: 1
+                        }}
+                    >
+                        {`${Math.round(value)}%`}
+                    </Typography>
+                    <Typography
+                        variant="caption"
+                        sx={{
+                            fontSize: '0.6rem',
+                            color: 'text.secondary',
+                            lineHeight: 1,
+                            mt: 0.25
+                        }}
+                    >
+                        {value >= 80 ? 'Complete' : value >= 60 ? 'Good' : 'Incomplete'}
+                    </Typography>
+                </Box>
+            </Box>
+        );
     };
 
     const handleOpenDialog = (type, item = null) => {
@@ -1017,7 +1275,8 @@ const AdminPlacement = () => {
                     const matchesSearch = (
                         student.name?.toLowerCase().includes(search) ||
                         student.email?.toLowerCase().includes(search) ||
-                        student.course?.name?.toLowerCase().includes(search)
+                        student.course?.name?.toLowerCase().includes(search) ||
+                        student.phone?.toLowerCase().includes(search)
                     );
                     if (!matchesSearch) return false;
                 }
@@ -2764,204 +3023,522 @@ const AdminPlacement = () => {
                             👥 Placement Students
                         </Typography>
                         
-                        {/* Search and Filters */}
-                        <Box sx={{ mb: 3 }}>
-                            <Grid container spacing={2} alignItems="center">
-                                <Grid item xs={12} md={4}>
+                        {/* Enhanced Search and Filters */}
+                        <Box sx={{ mb: 4 }}>
+                            {/* Search Bar */}
+                            <Paper 
+                                elevation={0} 
+                                sx={{ 
+                                    p: 3, 
+                                    mb: 3, 
+                                    borderRadius: 3,
+                                    background: 'linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%)',
+                                    border: '1px solid rgba(235, 103, 7, 0.1)',
+                                    boxShadow: '0 4px 20px rgba(0,0,0,0.08)'
+                                }}
+                            >
+                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                                    <Box sx={{ 
+                                        p: 1.5, 
+                                        borderRadius: 2, 
+                                        background: 'linear-gradient(135deg, #eb6707 0%, #e42b12 100%)',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'center'
+                                    }}>
+                                        <SearchIcon sx={{ color: 'white', fontSize: 20 }} />
+                                    </Box>
                                     <TextField
                                         fullWidth
-                                        size="small"
-                                        placeholder="Search students by name, email, or course..."
+                                        placeholder="Search students by name, email, course, or phone number..."
                                         value={placementStudentsSearch}
                                         onChange={(e) => setPlacementStudentsSearch(e.target.value)}
-                                        InputProps={{
-                                            startAdornment: (
-                                                <InputAdornment position="start">
-                                                    <SearchIcon fontSize="small" />
-                                                </InputAdornment>
-                                            )
+                                        variant="outlined"
+                                        sx={{
+                                            '& .MuiOutlinedInput-root': {
+                                                borderRadius: 2,
+                                                backgroundColor: 'white',
+                                                '&:hover .MuiOutlinedInput-notchedOutline': {
+                                                    borderColor: '#eb6707',
+                                                },
+                                                '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                                                    borderColor: '#eb6707',
+                                                    borderWidth: 2,
+                                                },
+                                            },
                                         }}
                                     />
-                                </Grid>
-                                <Grid item xs={12} md={2}>
-                                    <FormControl fullWidth size="small">
-                                        <InputLabel>Course</InputLabel>
-                                        <Select
-                                            value={placementStudentsFilters.course_id}
-                                            onChange={(e) => setPlacementStudentsFilters({
-                                                ...placementStudentsFilters,
-                                                course_id: e.target.value
-                                            })}
-                                            label="Course"
-                                            disabled={coursesLoading}
-                                        >
-                                            <MenuItem value="">All Courses</MenuItem>
-                                            {coursesLoading ? (
-                                                <MenuItem disabled>Loading courses...</MenuItem>
-                                            ) : courses?.courses && Array.isArray(courses.courses) ? courses.courses.map((course) => (
-                                                <MenuItem key={course.id} value={course.id}>
-                                                    {course.name}
-                                                </MenuItem>
-                                            )) : (
-                                                <MenuItem disabled>No courses available</MenuItem>
-                                            )}
-                                        </Select>
-                                    </FormControl>
-                                </Grid>
-                                <Grid item xs={12} md={4}>
-                                    <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
-                                        <Typography variant="body2" sx={{ minWidth: '120px', fontWeight: 500 }}>
-                                            UG/BTech Passout Year:
-                                        </Typography>
-                                        <FormControl size="small" sx={{ minWidth: '100px' }}>
-                                            <InputLabel>From</InputLabel>
-                                            <Select
-                                                value={placementStudentsFilters.ug_year_from || ''}
-                                                onChange={(e) => setPlacementStudentsFilters({
-                                                    ...placementStudentsFilters,
-                                                    ug_year_from: e.target.value
-                                                })}
-                                                label="From"
-                                            >
-                                                <MenuItem value="">From</MenuItem>
-                                                {yearOptions.map((year) => (
-                                                    <MenuItem key={year} value={year}>
-                                                        {year}
-                                                    </MenuItem>
-                                                ))}
-                                            </Select>
-                                        </FormControl>
-                                        <Typography variant="body2" sx={{ mx: 1 }}>
-                                            to
-                                        </Typography>
-                                        <FormControl size="small" sx={{ minWidth: '100px' }}>
-                                            <InputLabel>To</InputLabel>
-                                            <Select
-                                                value={placementStudentsFilters.ug_year_to || ''}
-                                                onChange={(e) => setPlacementStudentsFilters({
-                                                    ...placementStudentsFilters,
-                                                    ug_year_to: e.target.value
-                                                })}
-                                                label="To"
-                                            >
-                                                <MenuItem value="">To</MenuItem>
-                                                {yearOptions.map((year) => (
-                                                    <MenuItem key={year} value={year}>
-                                                        {year}
-                                                    </MenuItem>
-                                                ))}
-                                            </Select>
-                                        </FormControl>
+                                </Box>
+                            </Paper>
+
+                            {/* Filters Section */}
+                            <Paper 
+                                elevation={0} 
+                                sx={{ 
+                                    p: 3, 
+                                    borderRadius: 3,
+                                    background: 'linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%)',
+                                    border: '1px solid rgba(235, 103, 7, 0.1)',
+                                    boxShadow: '0 4px 20px rgba(0,0,0,0.08)'
+                                }}
+                            >
+                                <Box 
+                                    sx={{ 
+                                        display: 'flex', 
+                                        alignItems: 'center', 
+                                        gap: 2, 
+                                        mb: filtersExpanded ? 3 : 0,
+                                        cursor: 'pointer',
+                                        transition: 'all 0.3s ease',
+                                        '&:hover': {
+                                            backgroundColor: 'rgba(235, 103, 7, 0.05)',
+                                            borderRadius: 2,
+                                            p: 1,
+                                            m: -1
+                                        }
+                                    }}
+                                    onClick={() => setFiltersExpanded(!filtersExpanded)}
+                                >
+                                    <Box sx={{ 
+                                        p: 1, 
+                                        borderRadius: 2, 
+                                        background: 'linear-gradient(135deg, #eb6707 0%, #e42b12 100%)',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'center'
+                                    }}>
+                                        <FilterListIcon sx={{ color: 'white', fontSize: 18 }} />
                                     </Box>
-                                </Grid>
-                                <Grid item xs={12} md={4}>
-                                    <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
-                                        <Typography variant="body2" sx={{ minWidth: '120px', fontWeight: 500 }}>
-                                            PG/MTech Passout Year:
-                                        </Typography>
-                                        <FormControl size="small" sx={{ minWidth: '100px' }}>
-                                            <InputLabel>From</InputLabel>
-                                            <Select
-                                                value={placementStudentsFilters.pg_year_from || ''}
-                                                onChange={(e) => setPlacementStudentsFilters({
-                                                    ...placementStudentsFilters,
-                                                    pg_year_from: e.target.value
-                                                })}
-                                                label="From"
-                                            >
-                                                <MenuItem value="">From</MenuItem>
-                                                {yearOptions.map((year) => (
-                                                    <MenuItem key={year} value={year}>
-                                                        {year}
-                                                    </MenuItem>
-                                                ))}
-                                            </Select>
-                                        </FormControl>
-                                        <Typography variant="body2" sx={{ mx: 1 }}>
-                                            to
-                                        </Typography>
-                                        <FormControl size="small" sx={{ minWidth: '100px' }}>
-                                            <InputLabel>To</InputLabel>
-                                            <Select
-                                                value={placementStudentsFilters.pg_year_to || ''}
-                                                onChange={(e) => setPlacementStudentsFilters({
-                                                    ...placementStudentsFilters,
-                                                    pg_year_to: e.target.value
-                                                })}
-                                                label="To"
-                                            >
-                                                <MenuItem value="">To</MenuItem>
-                                                {yearOptions.map((year) => (
-                                                    <MenuItem key={year} value={year}>
-                                                        {year}
-                                                    </MenuItem>
-                                                ))}
-                                            </Select>
-                                        </FormControl>
+                                    <Typography variant="h6" sx={{ 
+                                        fontWeight: 600, 
+                                        color: '#2c3e50',
+                                        background: 'linear-gradient(135deg, #eb6707 0%, #e42b12 100%)',
+                                        backgroundClip: 'text',
+                                        WebkitBackgroundClip: 'text',
+                                        WebkitTextFillColor: 'transparent',
+                                        flex: 1
+                                    }}>
+                                        Advanced Filters
+                                    </Typography>
+                                    <Box sx={{ 
+                                        p: 0.5, 
+                                        borderRadius: 1, 
+                                        background: 'rgba(235, 103, 7, 0.1)',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'center',
+                                        transition: 'transform 0.3s ease',
+                                        transform: filtersExpanded ? 'rotate(180deg)' : 'rotate(0deg)'
+                                    }}>
+                                        <ExpandMoreIcon sx={{ color: '#eb6707', fontSize: 20 }} />
                                     </Box>
-                                </Grid>
-                            </Grid>
-                            
-                            {/* Percentage Filters Row */}
-                            <Grid container spacing={2} sx={{ mt: 1 }}>
-                                <Grid item xs={12} md={2}>
-                                    <Tooltip title="Enter minimum UG/BTech percentage (0-100). Shows students with percentage >= this value">
-                                        <TextField
-                                            fullWidth
-                                            size="small"
-                                            label="UG/BTech %"
-                                            type="number"
-                                            placeholder="Min %"
-                                            value={placementStudentsFilters.ug_percentage}
-                                            onChange={(e) => {
-                                                const value = e.target.value;
-                                                // Only allow valid percentage values
-                                                if (value === '' || (parseFloat(value) >= 0 && parseFloat(value) <= 100)) {
-                                                    setPlacementStudentsFilters({
+                                </Box>
+
+                                {/* Filter Grid - Collapsible */}
+                                {filtersExpanded && (
+                                    <Box sx={{ 
+                                        animation: 'fadeIn 0.3s ease-in-out',
+                                        '@keyframes fadeIn': {
+                                            from: { opacity: 0, transform: 'translateY(-10px)' },
+                                            to: { opacity: 1, transform: 'translateY(0)' }
+                                        }
+                                    }}>
+                                        <Grid container spacing={3}>
+                                    {/* Course Filter */}
+                                    <Grid item xs={12} md={4}>
+                                        <Box sx={{ 
+                                            p: 2, 
+                                            borderRadius: 2, 
+                                            backgroundColor: 'rgba(235, 103, 7, 0.05)',
+                                            border: '1px solid rgba(235, 103, 7, 0.1)',
+                                            transition: 'all 0.3s ease',
+                                            '&:hover': {
+                                                backgroundColor: 'rgba(235, 103, 7, 0.08)',
+                                                transform: 'translateY(-2px)',
+                                                boxShadow: '0 4px 12px rgba(235, 103, 7, 0.15)'
+                                            }
+                                        }}>
+                                            <Typography variant="subtitle2" sx={{ 
+                                                mb: 1.5, 
+                                                fontWeight: 600, 
+                                                color: '#eb6707',
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                gap: 1
+                                            }}>
+                                                <SchoolIcon fontSize="small" />
+                                                Course
+                                            </Typography>
+                                            <FormControl fullWidth size="small">
+                                                <Select
+                                                    value={placementStudentsFilters.course_id}
+                                                    onChange={(e) => setPlacementStudentsFilters({
                                                         ...placementStudentsFilters,
-                                                        ug_percentage: value
-                                                    });
-                                                }
-                                            }}
-                                            inputProps={{ min: 0, max: 100, step: 0.01 }}
-                                        />
-                                    </Tooltip>
-                                </Grid>
-                                <Grid item xs={12} md={2}>
-                                    <Tooltip title="Enter minimum PG/MTech percentage (0-100). Shows students with percentage >= this value">
-                                        <TextField
-                                            fullWidth
-                                            size="small"
-                                            label="PG/MTech %"
-                                            type="number"
-                                            placeholder="Min %"
-                                            value={placementStudentsFilters.pg_percentage}
-                                            onChange={(e) => {
-                                                const value = e.target.value;
-                                                // Only allow valid percentage values
-                                                if (value === '' || (parseFloat(value) >= 0 && parseFloat(value) <= 100)) {
-                                                    setPlacementStudentsFilters({
-                                                        ...placementStudentsFilters,
-                                                        pg_percentage: value
-                                                    });
-                                                }
-                                            }}
-                                            inputProps={{ min: 0, max: 100, step: 0.01 }}
-                                        />
-                                    </Tooltip>
-                                </Grid>
-                                <Grid item xs={12} md={4}>
+                                                        course_id: e.target.value
+                                                    })}
+                                                    disabled={coursesLoading}
+                                                    sx={{
+                                                        borderRadius: 2,
+                                                        backgroundColor: 'white',
+                                                        '&:hover .MuiOutlinedInput-notchedOutline': {
+                                                            borderColor: '#eb6707',
+                                                        },
+                                                        '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                                                            borderColor: '#eb6707',
+                                                        },
+                                                    }}
+                                                >
+                                                    <MenuItem value="">All Courses</MenuItem>
+                                                    {coursesLoading ? (
+                                                        <MenuItem disabled>Loading courses...</MenuItem>
+                                                    ) : courses?.courses && Array.isArray(courses.courses) ? courses.courses.map((course) => (
+                                                        <MenuItem key={course.id} value={course.id}>
+                                                            {course.name}
+                                                        </MenuItem>
+                                                    )) : (
+                                                        <MenuItem disabled>No courses available</MenuItem>
+                                                    )}
+                                                </Select>
+                                            </FormControl>
+                                        </Box>
+                                    </Grid>
+
+                                    {/* UG/BTech Year Range */}
+                                    <Grid item xs={12} md={4}>
+                                        <Box sx={{ 
+                                            p: 2, 
+                                            borderRadius: 2, 
+                                            backgroundColor: 'rgba(52, 152, 219, 0.05)',
+                                            border: '1px solid rgba(52, 152, 219, 0.1)',
+                                            transition: 'all 0.3s ease',
+                                            '&:hover': {
+                                                backgroundColor: 'rgba(52, 152, 219, 0.08)',
+                                                transform: 'translateY(-2px)',
+                                                boxShadow: '0 4px 12px rgba(52, 152, 219, 0.15)'
+                                            }
+                                        }}>
+                                            <Typography variant="subtitle2" sx={{ 
+                                                mb: 1.5, 
+                                                fontWeight: 600, 
+                                                color: '#3498db',
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                gap: 1
+                                            }}>
+                                                <CalendarTodayIcon fontSize="small" />
+                                                UG/BTech Passout Year
+                                            </Typography>
+                                            <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
+                                                <FormControl size="small" sx={{ flex: 1 }}>
+                                                    <Select
+                                                        value={placementStudentsFilters.ug_year_from || ''}
+                                                        onChange={(e) => setPlacementStudentsFilters({
+                                                            ...placementStudentsFilters,
+                                                            ug_year_from: e.target.value
+                                                        })}
+                                                        sx={{
+                                                            borderRadius: 2,
+                                                            backgroundColor: 'white',
+                                                            '&:hover .MuiOutlinedInput-notchedOutline': {
+                                                                borderColor: '#3498db',
+                                                            },
+                                                            '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                                                                borderColor: '#3498db',
+                                                            },
+                                                        }}
+                                                    >
+                                                        <MenuItem value="">From</MenuItem>
+                                                        {yearOptions.map((year) => (
+                                                            <MenuItem key={year} value={year}>
+                                                                {year}
+                                                            </MenuItem>
+                                                        ))}
+                                                    </Select>
+                                                </FormControl>
+                                                <Typography variant="body2" sx={{ 
+                                                    mx: 1, 
+                                                    color: '#7f8c8d',
+                                                    fontWeight: 500
+                                                }}>
+                                                    to
+                                                </Typography>
+                                                <FormControl size="small" sx={{ flex: 1 }}>
+                                                    <Select
+                                                        value={placementStudentsFilters.ug_year_to || ''}
+                                                        onChange={(e) => setPlacementStudentsFilters({
+                                                            ...placementStudentsFilters,
+                                                            ug_year_to: e.target.value
+                                                        })}
+                                                        sx={{
+                                                            borderRadius: 2,
+                                                            backgroundColor: 'white',
+                                                            '&:hover .MuiOutlinedInput-notchedOutline': {
+                                                                borderColor: '#3498db',
+                                                            },
+                                                            '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                                                                borderColor: '#3498db',
+                                                            },
+                                                        }}
+                                                    >
+                                                        <MenuItem value="">To</MenuItem>
+                                                        {yearOptions.map((year) => (
+                                                            <MenuItem key={year} value={year}>
+                                                                {year}
+                                                            </MenuItem>
+                                                        ))}
+                                                    </Select>
+                                                </FormControl>
+                                            </Box>
+                                        </Box>
+                                    </Grid>
+
+                                    {/* PG/MTech Year Range */}
+                                    <Grid item xs={12} md={4}>
+                                        <Box sx={{ 
+                                            p: 2, 
+                                            borderRadius: 2, 
+                                            backgroundColor: 'rgba(155, 89, 182, 0.05)',
+                                            border: '1px solid rgba(155, 89, 182, 0.1)',
+                                            transition: 'all 0.3s ease',
+                                            '&:hover': {
+                                                backgroundColor: 'rgba(155, 89, 182, 0.08)',
+                                                transform: 'translateY(-2px)',
+                                                boxShadow: '0 4px 12px rgba(155, 89, 182, 0.15)'
+                                            }
+                                        }}>
+                                            <Typography variant="subtitle2" sx={{ 
+                                                mb: 1.5, 
+                                                fontWeight: 600, 
+                                                color: '#9b59b6',
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                gap: 1
+                                            }}>
+                                                <CalendarTodayIcon fontSize="small" />
+                                                PG/MTech Passout Year
+                                            </Typography>
+                                            <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
+                                                <FormControl size="small" sx={{ flex: 1 }}>
+                                                    <Select
+                                                        value={placementStudentsFilters.pg_year_from || ''}
+                                                        onChange={(e) => setPlacementStudentsFilters({
+                                                            ...placementStudentsFilters,
+                                                            pg_year_from: e.target.value
+                                                        })}
+                                                        sx={{
+                                                            borderRadius: 2,
+                                                            backgroundColor: 'white',
+                                                            '&:hover .MuiOutlinedInput-notchedOutline': {
+                                                                borderColor: '#9b59b6',
+                                                            },
+                                                            '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                                                                borderColor: '#9b59b6',
+                                                            },
+                                                        }}
+                                                    >
+                                                        <MenuItem value="">From</MenuItem>
+                                                        {yearOptions.map((year) => (
+                                                            <MenuItem key={year} value={year}>
+                                                                {year}
+                                                            </MenuItem>
+                                                        ))}
+                                                    </Select>
+                                                </FormControl>
+                                                <Typography variant="body2" sx={{ 
+                                                    mx: 1, 
+                                                    color: '#7f8c8d',
+                                                    fontWeight: 500
+                                                }}>
+                                                    to
+                                                </Typography>
+                                                <FormControl size="small" sx={{ flex: 1 }}>
+                                                    <Select
+                                                        value={placementStudentsFilters.pg_year_to || ''}
+                                                        onChange={(e) => setPlacementStudentsFilters({
+                                                            ...placementStudentsFilters,
+                                                            pg_year_to: e.target.value
+                                                        })}
+                                                        sx={{
+                                                            borderRadius: 2,
+                                                            backgroundColor: 'white',
+                                                            '&:hover .MuiOutlinedInput-notchedOutline': {
+                                                                borderColor: '#9b59b6',
+                                                            },
+                                                            '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                                                                borderColor: '#9b59b6',
+                                                            },
+                                                        }}
+                                                    >
+                                                        <MenuItem value="">To</MenuItem>
+                                                        {yearOptions.map((year) => (
+                                                            <MenuItem key={year} value={year}>
+                                                                {year}
+                                                            </MenuItem>
+                                                        ))}
+                                                    </Select>
+                                                </FormControl>
+                                            </Box>
+                                        </Box>
+                                    </Grid>
+
+                                    {/* Percentage Filters */}
+                                    <Grid item xs={12} md={6}>
+                                        <Box sx={{ 
+                                            p: 2, 
+                                            borderRadius: 2, 
+                                            backgroundColor: 'rgba(46, 204, 113, 0.05)',
+                                            border: '1px solid rgba(46, 204, 113, 0.1)',
+                                            transition: 'all 0.3s ease',
+                                            '&:hover': {
+                                                backgroundColor: 'rgba(46, 204, 113, 0.08)',
+                                                transform: 'translateY(-2px)',
+                                                boxShadow: '0 4px 12px rgba(46, 204, 113, 0.15)'
+                                            }
+                                        }}>
+                                            <Typography variant="subtitle2" sx={{ 
+                                                mb: 1.5, 
+                                                fontWeight: 600, 
+                                                color: '#2ecc71',
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                gap: 1
+                                            }}>
+                                                <TrendingUpIcon fontSize="small" />
+                                                UG/BTech Percentage
+                                            </Typography>
+                                            <Tooltip title="Enter minimum UG/BTech percentage (0-100). Shows students with percentage >= this value">
+                                                <TextField
+                                                    fullWidth
+                                                    size="small"
+                                                    type="number"
+                                                    placeholder="Minimum percentage"
+                                                    value={placementStudentsFilters.ug_percentage}
+                                                    onChange={(e) => {
+                                                        const value = e.target.value;
+                                                        if (value === '' || (parseFloat(value) >= 0 && parseFloat(value) <= 100)) {
+                                                            setPlacementStudentsFilters({
+                                                                ...placementStudentsFilters,
+                                                                ug_percentage: value
+                                                            });
+                                                        }
+                                                    }}
+                                                    inputProps={{ min: 0, max: 100, step: 0.01 }}
+                                                    sx={{
+                                                        '& .MuiOutlinedInput-root': {
+                                                            borderRadius: 2,
+                                                            backgroundColor: 'white',
+                                                            '&:hover .MuiOutlinedInput-notchedOutline': {
+                                                                borderColor: '#2ecc71',
+                                                            },
+                                                            '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                                                                borderColor: '#2ecc71',
+                                                            },
+                                                        },
+                                                    }}
+                                                />
+                                            </Tooltip>
+                                        </Box>
+                                    </Grid>
+
+                                    <Grid item xs={12} md={6}>
+                                        <Box sx={{ 
+                                            p: 2, 
+                                            borderRadius: 2, 
+                                            backgroundColor: 'rgba(230, 126, 34, 0.05)',
+                                            border: '1px solid rgba(230, 126, 34, 0.1)',
+                                            transition: 'all 0.3s ease',
+                                            '&:hover': {
+                                                backgroundColor: 'rgba(230, 126, 34, 0.08)',
+                                                transform: 'translateY(-2px)',
+                                                boxShadow: '0 4px 12px rgba(230, 126, 34, 0.15)'
+                                            }
+                                        }}>
+                                            <Typography variant="subtitle2" sx={{ 
+                                                mb: 1.5, 
+                                                fontWeight: 600, 
+                                                color: '#e67e22',
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                gap: 1
+                                            }}>
+                                                <TrendingUpIcon fontSize="small" />
+                                                PG/MTech Percentage
+                                            </Typography>
+                                            <Tooltip title="Enter minimum PG/MTech percentage (0-100). Shows students with percentage >= this value">
+                                                <TextField
+                                                    fullWidth
+                                                    size="small"
+                                                    type="number"
+                                                    placeholder="Minimum percentage"
+                                                    value={placementStudentsFilters.pg_percentage}
+                                                    onChange={(e) => {
+                                                        const value = e.target.value;
+                                                        if (value === '' || (parseFloat(value) >= 0 && parseFloat(value) <= 100)) {
+                                                            setPlacementStudentsFilters({
+                                                                ...placementStudentsFilters,
+                                                                pg_percentage: value
+                                                            });
+                                                        }
+                                                    }}
+                                                    inputProps={{ min: 0, max: 100, step: 0.01 }}
+                                                    sx={{
+                                                        '& .MuiOutlinedInput-root': {
+                                                            borderRadius: 2,
+                                                            backgroundColor: 'white',
+                                                            '&:hover .MuiOutlinedInput-notchedOutline': {
+                                                                borderColor: '#e67e22',
+                                                            },
+                                                            '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                                                                borderColor: '#e67e22',
+                                                            },
+                                                        },
+                                                    }}
+                                                />
+                                            </Tooltip>
+                                        </Box>
+                                    </Grid>
+                                        </Grid>
+                                    </Box>
+                                )}
+
+                                {/* Action Buttons */}
+                                <Box sx={{ 
+                                    mt: 3, 
+                                    pt: 3, 
+                                    borderTop: '1px solid rgba(0,0,0,0.1)',
+                                    display: 'flex',
+                                    justifyContent: 'space-between',
+                                    alignItems: 'center',
+                                    flexWrap: 'wrap',
+                                    gap: 2
+                                }}>
+                                    {/* Results Summary */}
                                     <Box sx={{ 
                                         display: 'flex', 
                                         alignItems: 'center', 
-                                        height: '100%',
-                                        px: 2,
-                                        py: 1,
-                                        bgcolor: 'rgba(235, 103, 7, 0.1)',
-                                        borderRadius: 1,
-                                        border: '1px solid rgba(235, 103, 7, 0.2)'
+                                        gap: 2,
+                                        p: 2,
+                                        borderRadius: 2,
+                                        background: 'linear-gradient(135deg, rgba(235, 103, 7, 0.1) 0%, rgba(228, 43, 18, 0.1) 100%)',
+                                        border: '1px solid rgba(235, 103, 7, 0.2)',
+                                        flex: 1,
+                                        minWidth: '200px'
                                     }}>
-                                        <Typography variant="body2" sx={{ color: '#eb6707', fontWeight: 500 }}>
+                                        <Box sx={{ 
+                                            p: 1, 
+                                            borderRadius: 1, 
+                                            background: 'linear-gradient(135deg, #eb6707 0%, #e42b12 100%)',
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            justifyContent: 'center'
+                                        }}>
+                                            <BarChartIcon sx={{ color: 'white', fontSize: 16 }} />
+                                        </Box>
+                                        <Typography variant="body2" sx={{ 
+                                            color: '#eb6707', 
+                                            fontWeight: 600,
+                                            fontSize: '0.95rem'
+                                        }}>
                                             📊 Showing {placementStudents?.length || 0} students
                                             {placementStudentsSearch || Object.values(placementStudentsFilters).some(val => val !== '') 
                                                 ? ' (filtered)' 
@@ -2969,9 +3546,10 @@ const AdminPlacement = () => {
                                             }
                                         </Typography>
                                     </Box>
-                                </Grid>
-                                <Grid item xs={12} md={2}>
-                                                                            <Tooltip 
+
+                                    {/* Action Buttons */}
+                                    <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
+                                        <Tooltip 
                                             title={
                                                 (() => {
                                                     const hasFilters = placementStudentsSearch || Object.values(placementStudentsFilters).some(val => val !== '');
@@ -2991,67 +3569,74 @@ const AdminPlacement = () => {
                                             }
                                             arrow
                                         >
+                                            <Button
+                                                variant="contained"
+                                                startIcon={<DownloadIcon />}
+                                                onClick={() => handleExportPlacementStudents()}
+                                                disabled={!placementStudents || placementStudents.length === 0}
+                                                sx={{
+                                                    textTransform: 'none',
+                                                    borderRadius: 2,
+                                                    px: 3,
+                                                    py: 1.5,
+                                                    background: 'linear-gradient(135deg, #eb6707 0%, #e42b12 100%)',
+                                                    boxShadow: '0 4px 15px rgba(235, 103, 7, 0.3)',
+                                                    '&:hover': {
+                                                        background: 'linear-gradient(135deg, #e42b12 0%, #eb6707 100%)',
+                                                        transform: 'translateY(-2px)',
+                                                        boxShadow: '0 6px 20px rgba(235, 103, 7, 0.4)',
+                                                    },
+                                                    '&:disabled': {
+                                                        background: '#bdc3c7',
+                                                        boxShadow: 'none',
+                                                        transform: 'none',
+                                                    }
+                                                }}
+                                            >
+                                                {placementStudentsSearch || Object.values(placementStudentsFilters).some(val => val !== '') 
+                                                    ? 'Export Filtered' 
+                                                    : 'Export All'
+                                                }
+                                            </Button>
+                                        </Tooltip>
+
                                         <Button
-                                            variant="contained"
-                                            startIcon={<DownloadIcon />}
-                                            onClick={() => handleExportPlacementStudents()}
-                                            disabled={!placementStudents || placementStudents.length === 0}
+                                            variant="outlined"
+                                            startIcon={<ClearIcon />}
+                                            onClick={() => {
+                                                setPlacementStudentsFilters({
+                                                    course_id: '',
+                                                    ug_year_from: '',
+                                                    ug_year_to: '',
+                                                    pg_year_from: '',
+                                                    pg_year_to: '',
+                                                    ug_percentage: '',
+                                                    pg_percentage: ''
+                                                });
+                                                setPlacementStudentsSearch('');
+                                            }}
                                             sx={{
                                                 textTransform: 'none',
                                                 borderRadius: 2,
-                                                background: 'linear-gradient(270deg, #eb6707 0%, #e42b12 100%)'
+                                                px: 3,
+                                                py: 1.5,
+                                                borderColor: '#e74c3c',
+                                                color: '#e74c3c',
+                                                borderWidth: 2,
+                                                '&:hover': {
+                                                    borderColor: '#c0392b',
+                                                    backgroundColor: 'rgba(231, 76, 60, 0.04)',
+                                                    borderWidth: 2,
+                                                    transform: 'translateY(-2px)',
+                                                    boxShadow: '0 4px 15px rgba(231, 76, 60, 0.2)',
+                                                }
                                             }}
                                         >
-                                            {placementStudentsSearch || Object.values(placementStudentsFilters).some(val => val !== '') 
-                                                ? 'Export Filtered' 
-                                                : 'Export All'
-                                            }
+                                            Clear Filters
                                         </Button>
-                                    </Tooltip>
-                                    {/* Export Info */}
-                                    <Typography variant="caption" sx={{ 
-                                        display: 'block', 
-                                        mt: 1, 
-                                        color: 'text.secondary',
-                                        textAlign: 'center',
-                                        fontStyle: 'italic'
-                                    }}>
-                                        {placementStudentsSearch || Object.values(placementStudentsFilters).some(val => val !== '') 
-                                            ? `Will export ${placementStudents?.length || 0} filtered students` 
-                                            : `Will export all ${placementStudents?.length || 0} students`
-                                        }
-                                    </Typography>
-                                </Grid>
-                                <Grid item xs={12} md={2}>
-                                    <Button
-                                        variant="outlined"
-                                        onClick={() => {
-                                            setPlacementStudentsFilters({
-                                                course_id: '',
-                                                ug_year_from: '',
-                                                ug_year_to: '',
-                                                pg_year_from: '',
-                                                pg_year_to: '',
-                                                ug_percentage: '',
-                                                pg_percentage: ''
-                                            });
-                                            setPlacementStudentsSearch('');
-                                        }}
-                                        sx={{
-                                            textTransform: 'none',
-                                            borderRadius: 2,
-                                            borderColor: '#eb6707',
-                                            color: '#eb6707',
-                                            '&:hover': {
-                                                borderColor: '#e42b12',
-                                                backgroundColor: 'rgba(235, 103, 7, 0.04)'
-                                            }
-                                        }}
-                                    >
-                                        Clear Filters
-                                    </Button>
-                                </Grid>
-                            </Grid>
+                                    </Box>
+                                </Box>
+                            </Paper>
                         </Box>
 
                         {/* Active Filters Summary */}
@@ -3165,8 +3750,15 @@ const AdminPlacement = () => {
                                 }}>
                                     <TableHead>
                                         <TableRow>
-                                            <TableCell>Name</TableCell>
+                                            <TableCell>
+                                                <Box display="flex" alignItems="center" gap={1}>
+                                                    <Typography variant="subtitle2" fontWeight={600}>
+                                                        Name
+                                                    </Typography>
+                                                </Box>
+                                            </TableCell>
                                             <TableCell>Course</TableCell>
+                                            <TableCell>Contact Number</TableCell>
                                             <TableCell>UG/BTech %</TableCell>
                                             <TableCell>PG/MTech %</TableCell>
                                             <TableCell>UG/BTech Passout Year</TableCell>
@@ -3181,7 +3773,8 @@ const AdminPlacement = () => {
                                                     return (
                                                         student.name?.toLowerCase().includes(search) ||
                                                         student.email?.toLowerCase().includes(search) ||
-                                                        student.course?.name?.toLowerCase().includes(search)
+                                                        student.course?.name?.toLowerCase().includes(search) ||
+                                                        student.phone?.toLowerCase().includes(search)
                                                     );
                                                 }
                                                 return true;
@@ -3202,13 +3795,16 @@ const AdminPlacement = () => {
                                                 >
                                                     <TableCell>
                                                         <Box display="flex" alignItems="center" gap={1}>
-                                                            <Avatar 
-                                                                sx={{ width: 32, height: 32, fontSize: '0.875rem' }}
-                                                                src={student.avatar_url}
-                                                                alt={student.name}
+                                                            <Tooltip 
+                                                                title={`Profile Completion: ${calculateProfileCompletion(student)}% - ${calculateProfileCompletion(student) >= 80 ? 'Excellent' : calculateProfileCompletion(student) >= 60 ? 'Good' : 'Needs improvement'}`}
+                                                                arrow
                                                             >
-                                                                {student.name?.charAt(0)?.toUpperCase()}
-                                                            </Avatar>
+                                                                <CircularProgressWithLabel 
+                                                                    value={calculateProfileCompletion(student)}
+                                                                    size={48}
+                                                                    student={student}
+                                                                />
+                                                            </Tooltip>
                                                             <Box sx={{ flex: 1 }}>
                                                                 <Typography variant="body2" fontWeight={600}>
                                                                     {student.name}
@@ -3232,6 +3828,11 @@ const AdminPlacement = () => {
                                                             size="small" 
                                                             color={student.course?.name ? "primary" : "default"}
                                                         />
+                                                    </TableCell>
+                                                    <TableCell>
+                                                        <Typography variant="body2">
+                                                            {student.phone || 'N/A'}
+                                                        </Typography>
                                                     </TableCell>
                                                     <TableCell>
                                                         {student.education_summary?.ug_percentage || 'N/A'}
@@ -3268,6 +3869,36 @@ const AdminPlacement = () => {
                                     There are no students currently enrolled in placement programs.
                                 </Typography>
                             </Paper>
+                        )}
+
+                        {/* Pagination Controls */}
+                        {!loadingPlacementStudents && !placementStudentsError && placementStudents && placementStudents.length > 0 && (
+                            <TablePagination
+                                component="div"
+                                count={placementStudentsPagination.total}
+                                page={placementStudentsPagination.current_page - 1}
+                                onPageChange={handlePlacementStudentsPageChange}
+                                rowsPerPage={placementStudentsPagination.per_page}
+                                onRowsPerPageChange={handlePlacementStudentsPerPageChange}
+                                rowsPerPageOptions={[10, 25, 50, 100]}
+                                labelRowsPerPage="Students per page:"
+                                labelDisplayedRows={({ from, to, count, page }) => {
+                                    const totalPages = Math.ceil(count / placementStudentsPagination.per_page);
+                                    const currentPage = page + 1;
+                                    return `Page ${currentPage} of ${totalPages}`;
+                                }}
+                                sx={{
+                                    borderTop: '1px solid',
+                                    borderColor: 'divider',
+                                    '& .MuiTablePagination-toolbar': {
+                                        paddingLeft: 2,
+                                        paddingRight: 2,
+                                    },
+                                    '& .MuiTablePagination-selectLabel, & .MuiTablePagination-displayedRows': {
+                                        fontSize: '0.875rem',
+                                    }
+                                }}
+                            />
                         )}
                     </Box>
                 </TabPanel>

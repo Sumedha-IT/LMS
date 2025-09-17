@@ -127,7 +127,7 @@ class PlacementStudentsController extends Controller
             }
 
             // Apply pagination
-            $perPage = $request->get('per_page', 25);
+            $perPage = $request->get('per_page', 10);
             $students = $query->paginate($perPage);
 
             // Transform the data to include calculated fields
