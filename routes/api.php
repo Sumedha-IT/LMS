@@ -493,6 +493,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
     
     // Profile Completion Routes
     Route::get('/profile-completion', [ProfileCompletionController::class, 'index']);
+    Route::get('/profile-completion/{userId}', [ProfileCompletionController::class, 'show']);
     Route::get('/profile-completion/can-apply', [ProfileCompletionController::class, 'canApply']);
     
     // Job Applications Search Routes (must be before apiResource)

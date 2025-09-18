@@ -60,6 +60,61 @@ class ProfileCompletionController extends Controller
     }
 
     /**
+     * Get profile completion status for a specific user (admin only)
+     *
+     * @param Request $request
+     * @param int $userId
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function show(Request $request, $userId)
+    {
+        try {
+            $currentUser = Auth::user();
+            
+            if (!$currentUser) {
+                return response()->json(['error' => 'Authentication required'], 401);
+            }
+
+            // Check if current user has admin permissions
+            if (!$currentUser->is_admin && !$currentUser->is_coordinator && !$currentUser->is_placement_coordinator) {
+                return response()->json(['error' => 'Unauthorized access'], 403);
+            }
+
+            // Find the target user
+            $user = \App\Models\User::find($userId);
+            if (!$user) {
+                return response()->json(['error' => 'User not found'], 404);
+            }
+
+            // Check if target user is a student
+            if (!$user->is_student && !$user->is_placement_student) {
+                return response()->json(['error' => 'Profile completion is only available for students'], 403);
+            }
+
+            $completion = $this->profileCompletionService->calculateProfileCompletion($user);
+            
+            return response()->json([
+                'success' => true,
+                'data' => $completion
+            ]);
+
+        } catch (\Exception $e) {
+            \Log::error('Error getting profile completion for user:', [
+                'admin_user_id' => Auth::id(),
+                'target_user_id' => $userId,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'error' => 'Failed to get profile completion status',
+                'message' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
      * Check if user can apply for placements
      *
      * @param Request $request

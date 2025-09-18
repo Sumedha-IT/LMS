@@ -581,9 +581,6 @@ const AdminPlacement = () => {
                 throw new Error('Authentication token not found');
             }
             
-            console.log('Calling API:', '/api/placement-students');
-            console.log('User token:', userData.token ? 'Token exists' : 'No token');
-            
             // Build query parameters from filters
             const queryParams = new URLSearchParams();
             if (placementStudentsFilters.course_id) {
@@ -613,20 +610,13 @@ const AdminPlacement = () => {
             queryParams.append('per_page', placementStudentsPagination.per_page);
             
             const apiUrl = `/api/placement-students${queryParams.toString() ? '?' + queryParams.toString() : ''}`;
-            console.log('API URL with filters and pagination:', apiUrl);
             
             const response = await axios.get(apiUrl, {
                 headers: { 'Authorization': `Bearer ${userData.token}` }
             });
         
-            console.log('Placement students response:', response.data);
-            console.log('Students data:', response.data.data);
-            console.log('Pagination data:', response.data.pagination);
             
             if (response.data.data && response.data.data.length > 0) {
-                console.log('First student:', response.data.data[0]);
-                console.log('First student course:', response.data.data[0].course);
-                console.log('First student batches:', response.data.data[0].batches);
             }
             
             // Set students data and pagination metadata
@@ -639,6 +629,27 @@ const AdminPlacement = () => {
                     ...prevStats,
                     totalStudents: response.data.pagination.total
                 }));
+            }
+
+            // Fetch profile completion data for all students
+            if (response.data.data && response.data.data.length > 0) {
+                const completionPromises = response.data.data.map(async (student) => {
+                    const completionData = await fetchStudentProfileCompletion(student.id);
+                    return { studentId: student.id, completionData };
+                });
+
+                try {
+                    const completionResults = await Promise.all(completionPromises);
+                    const completionMap = {};
+                    completionResults.forEach(({ studentId, completionData }) => {
+                        if (completionData) {
+                            completionMap[studentId] = completionData;
+                        }
+                    });
+                    setStudentProfileCompletion(completionMap);
+                } catch (error) {
+                    console.error('Error fetching profile completion data:', error);
+                }
             }
         } catch (error) {
             console.error('Error fetching placement students:', error);
@@ -685,9 +696,6 @@ const AdminPlacement = () => {
                 throw new Error('Authentication token not found');
             }
             
-            console.log('Calling API:', '/api/placement-students');
-            console.log('User token:', userData.token ? 'Token exists' : 'No token');
-            
             // Build query parameters from filters
             const queryParams = new URLSearchParams();
             if (placementStudentsFilters.course_id) {
@@ -717,20 +725,13 @@ const AdminPlacement = () => {
             queryParams.append('per_page', perPage);
             
             const apiUrl = `/api/placement-students${queryParams.toString() ? '?' + queryParams.toString() : ''}`;
-            console.log('API URL with filters and pagination:', apiUrl);
             
             const response = await axios.get(apiUrl, {
                 headers: { 'Authorization': `Bearer ${userData.token}` }
             });
         
-            console.log('Placement students response:', response.data);
-            console.log('Students data:', response.data.data);
-            console.log('Pagination data:', response.data.pagination);
             
             if (response.data.data && response.data.data.length > 0) {
-                console.log('First student:', response.data.data[0]);
-                console.log('First student course:', response.data.data[0].course);
-                console.log('First student batches:', response.data.data[0].batches);
             }
             
             // Set students data and pagination metadata
@@ -743,6 +744,27 @@ const AdminPlacement = () => {
                     ...prevStats,
                     totalStudents: response.data.pagination.total
                 }));
+            }
+
+            // Fetch profile completion data for all students
+            if (response.data.data && response.data.data.length > 0) {
+                const completionPromises = response.data.data.map(async (student) => {
+                    const completionData = await fetchStudentProfileCompletion(student.id);
+                    return { studentId: student.id, completionData };
+                });
+
+                try {
+                    const completionResults = await Promise.all(completionPromises);
+                    const completionMap = {};
+                    completionResults.forEach(({ studentId, completionData }) => {
+                        if (completionData) {
+                            completionMap[studentId] = completionData;
+                        }
+                    });
+                    setStudentProfileCompletion(completionMap);
+                } catch (error) {
+                    console.error('Error fetching profile completion data:', error);
+                }
             }
         } catch (error) {
             console.error('Error fetching placement students:', error);
@@ -784,56 +806,47 @@ const AdminPlacement = () => {
         fetchPlacementStudentsWithPerPage(1, newPerPage);
     };
 
-    // Function to calculate profile completion percentage
-    const calculateProfileCompletion = (student) => {
-        let completedFields = 0;
-        let totalFields = 0;
+    // State to store profile completion data for each student
+    const [studentProfileCompletion, setStudentProfileCompletion] = useState({});
 
-        // Basic profile fields
-        const basicFields = [
-            'name', 'email', 'phone', 'date_of_birth', 'gender', 
-            'address', 'city', 'state', 'country', 'pincode'
-        ];
-        
-        basicFields.forEach(field => {
-            totalFields++;
-            if (student[field] && student[field].toString().trim() !== '') {
-                completedFields++;
+    // Function to fetch profile completion for a specific student
+    const fetchStudentProfileCompletion = async (studentId) => {
+        try {
+            const userInfo = getCookie('user_info');
+            if (!userInfo) return null;
+
+            let userData;
+            try {
+                userData = JSON.parse(userInfo);
+            } catch (parseError) {
+                console.error('Error parsing user info:', parseError);
+                return null;
             }
-        });
 
-        // Education fields
-        if (student.studentEducation && student.studentEducation.length > 0) {
-            totalFields += 3; // degree, percentage, passout year
-            const education = student.studentEducation[0];
-            if (education.degreeType && education.degreeType.name) completedFields++;
-            if (education.percentage_cgpa) completedFields++;
-            if (education.duration_to) completedFields++;
-        } else {
-            totalFields += 3;
+            const response = await axios.get(`/api/profile-completion/${studentId}`, {
+                headers: { 'Authorization': `Bearer ${userData.token}` }
+            });
+
+            if (response.data.success) {
+                return response.data.data;
+            }
+            return null;
+        } catch (error) {
+            console.error('Error fetching profile completion for student:', studentId, error);
+            return null;
         }
+    };
 
-        // Course/Batch information
-        if (student.batches && student.batches.length > 0) {
-            totalFields += 2; // course, batch
-            const batch = student.batches[0];
-            if (batch.course_package && batch.course_package.name) completedFields++;
-            if (batch.name) completedFields++;
-        } else {
-            totalFields += 2;
-        }
-
-        // Avatar/profile picture
-        totalFields++;
-        if (student.avatar_url) completedFields++;
-
-        return Math.round((completedFields / totalFields) * 100);
+    // Function to get profile completion percentage for a student
+    const getStudentProfileCompletion = (student) => {
+        const completionData = studentProfileCompletion[student.id];
+        return completionData ? completionData.overall_percentage : 0;
     };
 
     // Custom CircularProgress with label component
-    const CircularProgressWithLabel = ({ value, size = 40, student }) => {
+    const CircularProgressWithLabel = React.forwardRef(({ value, size = 40, student, ...props }, ref) => {
         return (
-            <Box sx={{ position: 'relative', display: 'inline-flex', alignItems: 'center', gap: 1 }}>
+            <Box ref={ref} sx={{ position: 'relative', display: 'inline-flex', alignItems: 'center', gap: 1 }} {...props}>
                 <Box sx={{ position: 'relative', display: 'inline-flex' }}>
                     <CircularProgress
                         variant="determinate"
@@ -888,7 +901,7 @@ const AdminPlacement = () => {
                 </Box>
             </Box>
         );
-    };
+    });
 
     const handleOpenDialog = (type, item = null) => {
         setDialogType(type);
@@ -1262,7 +1275,6 @@ const AdminPlacement = () => {
     const handleViewStudentApplications = (student) => {
         // This can reuse the existing applications functionality
         // You can implement this based on your requirements
-        console.log('View applications for student:', student.id);
     };
 
     const handleExportPlacementStudents = () => {
@@ -1401,27 +1413,19 @@ const AdminPlacement = () => {
             const userInfo = getCookie('user_info');
             const userData = userInfo ? JSON.parse(userInfo) : null;
             
-            console.log('User info from cookie:', userInfo ? 'exists' : 'not found');
-            console.log('Parsed user data:', userData);
             
             if (!userData?.token) {
                 throw new Error('Authentication required - no valid token found');
             }
             
-            console.log('Token found, proceeding with API calls...');
-            console.log('Fetching user profile for ID:', studentId);
-            console.log('User token:', userData.token ? 'Token exists' : 'No token');
             
             // Try to get user data from existing placement students data first
             let profileResponse = null;
             const existingStudent = placementStudents.find(s => s.id == studentId);
             
             if (existingStudent) {
-                console.log('Using existing placement student data:', existingStudent);
                 profileResponse = { data: existingStudent };
             } else {
-                console.log('Student not found in existing data, trying API calls...');
-                
                 // Try to get user data from placement students API
                 try {
                     // Use the show method for individual student
@@ -1431,7 +1435,6 @@ const AdminPlacement = () => {
                     
                     if (placementResponse.data.success && placementResponse.data.data) {
                         profileResponse = { data: placementResponse.data.data };
-                        console.log('User data retrieved from placement students API:', placementResponse.data.data);
                     }
                 } catch (placementError) {
                     console.error('Placement students API failed:', placementError);
@@ -1446,7 +1449,6 @@ const AdminPlacement = () => {
                             const userData = searchResponse.data.data.find(user => user.id == studentId);
                             if (userData) {
                                 profileResponse = { data: userData };
-                                console.log('User data retrieved from placement students search API:', userData);
                             }
                         }
                     } catch (searchError) {
@@ -1456,7 +1458,6 @@ const AdminPlacement = () => {
                 
                 // If placement students API didn't work, try the users API as fallback
                 if (!profileResponse) {
-                    console.log('Trying users API as fallback...');
                     try {
                         const profileResult = await axios.get(`/api/users/${studentId}?include=course,batches`, {
                             headers: { 'Authorization': `Bearer ${userData.token}` }
@@ -1469,7 +1470,6 @@ const AdminPlacement = () => {
             }
             
             // Fetch applications and exam results (optional)
-            console.log('Fetching applications and exam results...');
             let applicationsResponse = { data: { data: [] } };
             let examResponse = { data: { data: [] } };
             
@@ -1478,7 +1478,6 @@ const AdminPlacement = () => {
                     headers: { 'Authorization': `Bearer ${userData.token}` }
                 });
                 applicationsResponse = applicationsResult;
-                console.log('Applications fetched successfully');
             } catch (applicationsError) {
                 console.error('Applications API failed:', applicationsError);
             }
@@ -1488,7 +1487,6 @@ const AdminPlacement = () => {
                     headers: { 'Authorization': `Bearer ${userData.token}` }
                 });
                 examResponse = examResult;
-                console.log('Exam results fetched successfully');
             } catch (examError) {
                 console.error('Exam API failed:', examError);
             }
@@ -1503,7 +1501,6 @@ const AdminPlacement = () => {
                     headers: { 'Authorization': `Bearer ${userData.token}` }
                 });
                 educationResponse = educationResult;
-                console.log('Education fetched successfully');
             } catch (educationError) {
                 console.error('Education API failed:', educationError);
             }
@@ -1513,7 +1510,6 @@ const AdminPlacement = () => {
                     headers: { 'Authorization': `Bearer ${userData.token}` }
                 });
                 projectsResponse = projectsResult;
-                console.log('Projects fetched successfully');
             } catch (projectsError) {
                 console.error('Projects API failed:', projectsError);
             }
@@ -1523,9 +1519,6 @@ const AdminPlacement = () => {
                     headers: { 'Authorization': `Bearer ${userData.token}` }
                 });
                 certificationsResponse = certificationsResult;
-                console.log('Certifications fetched successfully');
-                console.log('Certifications API Response:', certificationsResponse);
-                console.log('Certifications Data:', certificationsResponse.data);
             } catch (certificationsError) {
                 console.error('Certifications API failed:', certificationsError);
             }
@@ -1545,13 +1538,11 @@ const AdminPlacement = () => {
                 certifications: certificationsResponse.data.data || []
             };
             
-            console.log('Combined Student Data:', combinedStudentData);
             
             // If profile data is missing basic fields, try to get them from existing placement students data
             if (!combinedStudentData.email || !combinedStudentData.phone) {
                 const existingStudent = placementStudents.find(s => s.id == studentId);
                 if (existingStudent) {
-                    console.log('Using existing placement student data for missing fields:', existingStudent);
                     combinedStudentData.email = combinedStudentData.email || existingStudent.email;
                     combinedStudentData.phone = combinedStudentData.phone || existingStudent.phone;
                     combinedStudentData.name = combinedStudentData.name || existingStudent.name;
@@ -3796,11 +3787,11 @@ const AdminPlacement = () => {
                                                     <TableCell>
                                                         <Box display="flex" alignItems="center" gap={1}>
                                                             <Tooltip 
-                                                                title={`Profile Completion: ${calculateProfileCompletion(student)}% - ${calculateProfileCompletion(student) >= 80 ? 'Excellent' : calculateProfileCompletion(student) >= 60 ? 'Good' : 'Needs improvement'}`}
+                                                                title={`Profile Completion: ${getStudentProfileCompletion(student)}% - ${getStudentProfileCompletion(student) >= 80 ? 'Excellent' : getStudentProfileCompletion(student) >= 60 ? 'Good' : 'Needs improvement'}`}
                                                                 arrow
                                                             >
                                                                 <CircularProgressWithLabel 
-                                                                    value={calculateProfileCompletion(student)}
+                                                                    value={getStudentProfileCompletion(student)}
                                                                     size={48}
                                                                     student={student}
                                                                 />
@@ -6453,7 +6444,7 @@ const AdminPlacement = () => {
                                                             </ListItem>
                                                             <ListItem>
                                                                 <ListItemIcon>
-                                                                    <CalendarIcon />
+                                                                    <CalendarTodayIcon />
                                                                 </ListItemIcon>
                                                                 <ListItemText 
                                                                     primary="Date of Birth" 
@@ -6557,12 +6548,15 @@ const AdminPlacement = () => {
                                                                                  )}
                                                                                  <Grid item xs={12} md={6}>
                                                                                      <Typography variant="body2" color="text.secondary">
-                                                                                         Duration: {formatDate(edu.duration_from)} - {formatDate(edu.duration_to)}
+                                                                                         {edu.degree_type?.id === 1 || edu.degree_type?.id === 2 ? 
+                                                                                             `Passout Year: ${edu.year_of_passout || 'N/A'}` : 
+                                                                                             `Duration: ${formatDate(edu.duration_from)} - ${formatDate(edu.duration_to)}`
+                                                                                         }
                                                                                      </Typography>
                                                                                  </Grid>
                                                                                  <Grid item xs={12} md={6}>
                                                                                      <Typography variant="body2" color="text.secondary">
-                                                                                         CGPA/Percentage: {edu.percentage_cgpa || 'N/A'}%
+                                                                                         {edu.grade_type === 'cgpa' ? 'CGPA' : 'Percentage'}: {edu.percentage_cgpa || 'N/A'}{edu.grade_type === 'cgpa' ? '' : '%'}
                                                                                      </Typography>
                                                                                  </Grid>
                                                                                  <Grid item xs={12}>
