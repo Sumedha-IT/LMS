@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\Team;
 use App\Models\User;
+use App\Notifications\WelcomeEmail;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
@@ -50,5 +51,22 @@ class UserService
         });
         return ['success' => true];
      
+    }
+
+    public function sendWelcomeEmailWithDelay($email, $password, $studentName = 'Student', $delayMinutes = 1)
+    {
+        try {
+            $notification = new WelcomeEmail([
+                'login_email' => $email,
+                'login_password' => $password,
+                'student_name' => $studentName,
+                'delay' => $delayMinutes
+            ]);
+            \Notification::route('mail', $email)->notify($notification);
+            
+            return ['success' => true, 'message' => 'Welcome email queued successfully'];
+        } catch (\Exception $e) {
+            return ['success' => false, 'message' => 'Failed to queue welcome email: ' . $e->getMessage()];
+        }
     }
 }

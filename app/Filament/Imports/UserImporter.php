@@ -207,26 +207,25 @@ class UserImporter extends Importer
             }
         }
 
-        // Send welcome email to the user
+        // Send welcome email to the user with delay
         if (!empty($this->userPassword) && !empty($this->record->email)) {
             try {
-                Mail::send('emailTemplates.sitWelcomeEmail', [
-                    'student_name' => $this->record->name,
+                $notification = new \App\Notifications\WelcomeEmail([
                     'login_email' => $this->record->email,
                     'login_password' => $this->userPassword,
-                    'login_url' => 'https://eduspark.sumedhait.com'
-                ], function ($message) {
-                    $message->to($this->record->email);
-                    $message->subject('Welcome to SIT Placements Platform');
-                });
+                    'student_name' => $this->record->name,
+                    'delay' => 1 // 1 minute delay
+                ]);
+                \Notification::route('mail', $this->record->email)->notify($notification);
                 
-                \Log::info('Welcome email sent successfully during import', [
+                \Log::info('Welcome email queued successfully during import', [
                     'user_id' => $this->record->id,
                     'user_email' => $this->record->email,
-                    'user_name' => $this->record->name
+                    'user_name' => $this->record->name,
+                    'delay_minutes' => 1
                 ]);
             } catch (\Exception $e) {
-                \Log::error('Failed to send welcome email during import', [
+                \Log::error('Failed to queue welcome email during import', [
                     'user_id' => $this->record->id,
                     'user_email' => $this->record->email,
                     'error' => $e->getMessage()

@@ -18,7 +18,12 @@ class CreateUser extends CreateRecord
 
         //dd($email, $password);
 
-        $notification = new WelcomeEmail(['login_email' => $email['email'], 'login_password' => $password['password']]);
+        // Send welcome email with a 1-minute delay
+        $notification = new WelcomeEmail([
+            'login_email' => $email['email'], 
+            'login_password' => $password['password'],
+            'delay' => 1 // 1 minute delay
+        ]);
         \Notification::route('mail', $email['email'])->notify($notification);
     }
 }
