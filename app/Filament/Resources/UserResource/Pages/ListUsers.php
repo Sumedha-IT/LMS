@@ -53,12 +53,7 @@ class ListUsers extends ListRecords
 
                     //dd($email, $password);
 
-                    // Send welcome email with a 1-minute delay
-                    $notification = new WelcomeEmail([
-                        'login_email' => $email, 
-                        'login_password' => $password,
-                        'delay' => 1 // 1 minute delay
-                    ]);
+                    $notification = new WelcomeEmail(['login_email' => $email, 'login_password' => $password]);
                     \Notification::route('mail', $email)->notify($notification);
                 }),
 

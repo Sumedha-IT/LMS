@@ -8,15 +8,13 @@ use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Mail\Mailable;
-use Carbon\Carbon;
 
-class WelcomeEmail extends Notification implements ShouldQueue
+class WelcomeEmail extends Notification
 {
     use Queueable;
     public $login_email;
     public $login_password;
     public $student_name;
-    public $delay;
 
     /**
      * Create a new notification instance.
@@ -26,15 +24,6 @@ class WelcomeEmail extends Notification implements ShouldQueue
         $this->login_email = $data['login_email'];
         $this->login_password = $data['login_password'];
         $this->student_name = $data['student_name'] ?? 'Student';
-        $this->delay = $data['delay'] ?? 1; // Delay in minutes, default is 0 (immediate)
-    }
-
-    /**
-     * Get the delay for the notification.
-     */
-    public function delay($notifiable)
-    {
-        return Carbon::now()->addMinutes($this->delay);
     }
 
     /**
