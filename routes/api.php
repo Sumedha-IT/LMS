@@ -491,10 +491,11 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::get('/users/{id}', [UserController::class, 'show']);
     Route::apiResource('companies', CompanyController::class);
     
-    // Profile Completion Routes
-    Route::get('/profile-completion', [ProfileCompletionController::class, 'index']);
-    Route::get('/profile-completion/{userId}', [ProfileCompletionController::class, 'show']);
-    Route::get('/profile-completion/can-apply', [ProfileCompletionController::class, 'canApply']);
+    // Profile Completion Routes (with rate limiting)
+    Route::get('/profile-completion', [ProfileCompletionController::class, 'index'])->middleware('throttle:60,1');
+    Route::get('/profile-completion/{userId}', [ProfileCompletionController::class, 'show'])->middleware('throttle:30,1');
+    Route::post('/profile-completion/bulk', [ProfileCompletionController::class, 'bulk'])->middleware('throttle:10,1');
+    Route::get('/profile-completion/can-apply', [ProfileCompletionController::class, 'canApply'])->middleware('throttle:60,1');
     
     // Job Applications Search Routes (must be before apiResource)
     Route::get('job-applications/search', [JobApplicationController::class, 'search']);
@@ -513,7 +514,7 @@ Route::apiResource('job-applications', JobApplicationController::class);
         
     Route::apiResource('placement-criteria', PlacementCriteriaController::class);
     Route::apiResource('job-eligibility-criteria', JobEligibilityCriteriaController::class);
-    Route::apiResource('placement-students', PlacementStudentsController::class);
+    Route::apiResource('placement-students', PlacementStudentsController::class)->middleware('throttle:30,1');
 
 
 });

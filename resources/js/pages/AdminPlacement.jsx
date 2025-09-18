@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { format } from 'date-fns';
 import * as XLSX from 'xlsx';
 import JSZip from 'jszip';
+import profileCompletionManager from '../utils/profileCompletionManager';
 import { 
     Box, 
     Tabs, 
@@ -631,22 +632,15 @@ const AdminPlacement = () => {
                 }));
             }
 
-            // Fetch profile completion data for all students
+            // Fetch profile completion data for all students using batch processing
             if (response.data.data && response.data.data.length > 0) {
-                const completionPromises = response.data.data.map(async (student) => {
-                    const completionData = await fetchStudentProfileCompletion(student.id);
-                    return { studentId: student.id, completionData };
-                });
-
+                const studentIds = response.data.data.map(student => student.id);
+                
                 try {
-                    const completionResults = await Promise.all(completionPromises);
-                    const completionMap = {};
-                    completionResults.forEach(({ studentId, completionData }) => {
-                        if (completionData) {
-                            completionMap[studentId] = completionData;
-                        }
-                    });
+                    console.log(`Fetching profile completion for ${studentIds.length} students in batches`);
+                    const completionMap = await profileCompletionManager.fetchBatchProfileCompletion(studentIds);
                     setStudentProfileCompletion(completionMap);
+                    console.log(`Successfully fetched profile completion for ${Object.keys(completionMap).length} students`);
                 } catch (error) {
                     console.error('Error fetching profile completion data:', error);
                 }
@@ -746,22 +740,15 @@ const AdminPlacement = () => {
                 }));
             }
 
-            // Fetch profile completion data for all students
+            // Fetch profile completion data for all students using batch processing
             if (response.data.data && response.data.data.length > 0) {
-                const completionPromises = response.data.data.map(async (student) => {
-                    const completionData = await fetchStudentProfileCompletion(student.id);
-                    return { studentId: student.id, completionData };
-                });
-
+                const studentIds = response.data.data.map(student => student.id);
+                
                 try {
-                    const completionResults = await Promise.all(completionPromises);
-                    const completionMap = {};
-                    completionResults.forEach(({ studentId, completionData }) => {
-                        if (completionData) {
-                            completionMap[studentId] = completionData;
-                        }
-                    });
+                    console.log(`Fetching profile completion for ${studentIds.length} students in batches`);
+                    const completionMap = await profileCompletionManager.fetchBatchProfileCompletion(studentIds);
                     setStudentProfileCompletion(completionMap);
+                    console.log(`Successfully fetched profile completion for ${Object.keys(completionMap).length} students`);
                 } catch (error) {
                     console.error('Error fetching profile completion data:', error);
                 }
@@ -809,32 +796,9 @@ const AdminPlacement = () => {
     // State to store profile completion data for each student
     const [studentProfileCompletion, setStudentProfileCompletion] = useState({});
 
-    // Function to fetch profile completion for a specific student
+    // Function to fetch profile completion for a specific student (using manager)
     const fetchStudentProfileCompletion = async (studentId) => {
-        try {
-            const userInfo = getCookie('user_info');
-            if (!userInfo) return null;
-
-            let userData;
-            try {
-                userData = JSON.parse(userInfo);
-            } catch (parseError) {
-                console.error('Error parsing user info:', parseError);
-                return null;
-            }
-
-            const response = await axios.get(`/api/profile-completion/${studentId}`, {
-                headers: { 'Authorization': `Bearer ${userData.token}` }
-            });
-
-            if (response.data.success) {
-                return response.data.data;
-            }
-            return null;
-        } catch (error) {
-            console.error('Error fetching profile completion for student:', studentId, error);
-            return null;
-        }
+        return await profileCompletionManager.fetchStudentProfileCompletion(studentId);
     };
 
     // Function to get profile completion percentage for a student

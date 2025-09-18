@@ -60,6 +60,67 @@ class ProfileCompletionController extends Controller
     }
 
     /**
+     * Get profile completion status for multiple users (admin only)
+     *
+     * @param Request $request
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function bulk(Request $request)
+    {
+        try {
+            $currentUser = Auth::user();
+            
+            if (!$currentUser) {
+                return response()->json(['error' => 'Authentication required'], 401);
+            }
+
+            // Check if current user has admin permissions
+            if (!$currentUser->is_admin && !$currentUser->is_coordinator && !$currentUser->is_placement_coordinator) {
+                return response()->json(['error' => 'Unauthorized access'], 403);
+            }
+
+            $userIds = $request->input('user_ids', []);
+            
+            if (empty($userIds) || !is_array($userIds)) {
+                return response()->json(['error' => 'user_ids array is required'], 400);
+            }
+
+            // Limit to 50 users per request to prevent abuse
+            if (count($userIds) > 50) {
+                return response()->json(['error' => 'Maximum 50 users allowed per request'], 400);
+            }
+
+            $completions = [];
+            foreach ($userIds as $userId) {
+                $user = \App\Models\User::find($userId);
+                if ($user && ($user->is_student || $user->is_placement_student)) {
+                    $completion = $this->profileCompletionService->calculateProfileCompletion($user);
+                    $completions[$userId] = $completion;
+                }
+            }
+            
+            return response()->json([
+                'success' => true,
+                'data' => $completions
+            ]);
+
+        } catch (\Exception $e) {
+            \Log::error('Error getting bulk profile completion:', [
+                'admin_user_id' => Auth::id(),
+                'user_ids' => $request->input('user_ids', []),
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'error' => 'Failed to get bulk profile completion status',
+                'message' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
      * Get profile completion status for a specific user (admin only)
      *
      * @param Request $request
