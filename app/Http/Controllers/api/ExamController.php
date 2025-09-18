@@ -146,15 +146,12 @@ class ExamController extends Controller
         }
 
         try {
-            DB::beginTransaction();
-            
-            $exam = Exam::create($data);
-            $exam->batches()->attach($data['batchIds']);
-            
-            DB::commit();
-            $data = new ExamResource($exam);
+            $data = DB::transaction(function () use ($data) {
+                $exam = Exam::create($data);
+                $exam->batches()->attach($data['batchIds']);
+                return new ExamResource($exam);
+            }, 3); // Retry up to 3 times for deadlocks
         } catch (QueryException $e) {
-            DB::rollBack();
             if ($e->getCode() === '23000') {
                 return response()->json([
                     'message' => 'Duplicate entry for name and batch combination',
@@ -162,6 +159,17 @@ class ExamController extends Controller
                     'status' =>  409
                 ], 409); // 409 Conflict
             }
+            
+            // Handle lock timeout specifically
+            if (str_contains($e->getMessage(), 'Lock wait timeout exceeded')) {
+                return response()->json([
+                    'message' => 'Database is busy. Please try again in a moment.',
+                    'success' => false,
+                    'status' => 503
+                ], 503);
+            }
+            
+            throw $e; // Re-throw other exceptions
         }
         return response()->json(["data" => $data, 'message' => "Exam Created", "success" => true,'status' => 200], 200);
     }
@@ -199,21 +207,28 @@ class ExamController extends Controller
         }
 
         try {
-            DB::beginTransaction();
-            
-            $exam->update($data);
-            $exam->batches()->sync($data['batchIds']);
-            
-            DB::commit();
-            $data = new ExamResource($exam);
+            $data = DB::transaction(function () use ($exam, $data) {
+                $exam->update($data);
+                $exam->batches()->sync($data['batchIds']);
+                return new ExamResource($exam);
+            }, 3); // Retry up to 3 times for deadlocks
         } catch (QueryException $e) {
-            DB::rollBack();
             if ($e->getCode() === '23000') {
                 return response()->json([
                     'message' => 'Duplicate entry for name and batch combination',
                     'hasError' => true
                 ], 409); // 409 Conflict
             }
+            
+            // Handle lock timeout specifically
+            if (str_contains($e->getMessage(), 'Lock wait timeout exceeded')) {
+                return response()->json([
+                    'message' => 'Database is busy. Please try again in a moment.',
+                    'hasError' => true
+                ], 503);
+            }
+            
+            throw $e; // Re-throw other exceptions
         }
         return response()->json(["data" => $data, 'message' => "Exam Updated", "success" => true,'status' => 200], 200);
     }
