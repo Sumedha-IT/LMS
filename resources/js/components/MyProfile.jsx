@@ -56,7 +56,7 @@ const calculateCompletionPercentage = (formData, menuId, projects) => {
         const basicFields = ['name', 'email', 'gender', 'birthday'];
         const additionalFields = ['address', 'city', 'state_id', 'pincode'];
         const docsFields = ['aadhaar_number', 'upload_aadhar', 'linkedin_profile', 'passport_photo'];
-        const parentFields = ['parent_name', 'parent_contact_number', 'residential_address'];
+        const parentFields = ['parent_name', 'parent_contact', 'residential_address'];
 
         const basicComplete = basicFields.filter(field => formData[field]).length;
         const additionalComplete = additionalFields.filter(field => formData[field]).length;
@@ -238,7 +238,7 @@ const MyProfile = () => {
     resume_path: null,
     upload_aadhar: null,
     parent_name: '',
-    parent_contact_number: '',
+    parent_contact: '',
     residential_address: '',
     receive_email_notification: false,
     receive_sms_notification: false,
@@ -460,40 +460,43 @@ const MyProfile = () => {
           setDegreeTypes(degreeResponse.data.data || []);
 
           // Use the dedicated fetchEducationData function to ensure proper original data storage
-          await fetchEducationData();
+          const processedEducationData = await fetchEducationData();
 
-          // Get unique degree type IDs that need specializations
+          // Get unique degree type IDs that need specializations from the returned data
           const uniqueDegreeTypeIds = [...new Set(
-            formData.education
+            (processedEducationData || [])
               .map(edu => edu.degree_type_id || (edu.degree_type && edu.degree_type.id))
               .filter(id => id && ![1, 2, '1', '2'].includes(Number(id)))
           )];
 
+
           // Fetch all specializations from API (including BSc and MSc now that they're in DB)
-          const specializationPromises = uniqueDegreeTypeIds.map(degreeTypeId =>
-            axios.get(`${API_ENDPOINT}/get/specialization/${degreeTypeId}`, {
-              headers: {
-                'Accept': 'application/json',
-                'Authorization': `Bearer ${userData.token}`,
-              },
-              baseURL: API_URL // Ensure the base URL is set correctly
-            })
-          );
+          if (uniqueDegreeTypeIds.length > 0) {
+            const specializationPromises = uniqueDegreeTypeIds.map(degreeTypeId =>
+              axios.get(`${API_ENDPOINT}/get/specialization/${degreeTypeId}`, {
+                headers: {
+                  'Accept': 'application/json',
+                  'Authorization': `Bearer ${userData.token}`,
+                },
+                baseURL: API_URL // Ensure the base URL is set correctly
+              })
+            );
 
-          const specializationResponses = await Promise.all(specializationPromises);
+            const specializationResponses = await Promise.all(specializationPromises);
 
-          // Combine all specializations
-          const allSpecializations = specializationResponses.reduce((acc, response) => {
-            const newSpecs = response.data.data || [];
-            return [...acc, ...newSpecs];
-          }, []);
+            // Combine all specializations
+            const allSpecializations = specializationResponses.reduce((acc, response) => {
+              const newSpecs = response.data.data || [];
+              return [...acc, ...newSpecs];
+            }, []);
 
-          // Remove duplicates
-          const uniqueSpecializations = Array.from(
-            new Map(allSpecializations.map(spec => [spec.id, spec])).values()
-          );
+            // Remove duplicates
+            const uniqueSpecializations = Array.from(
+              new Map(allSpecializations.map(spec => [spec.id, spec])).values()
+            );
 
-          setSpecializations(uniqueSpecializations);
+            setSpecializations(uniqueSpecializations);
+          }
         }
       } catch (error) {
         toast.error('Failed to load data');
@@ -582,7 +585,7 @@ const MyProfile = () => {
 
       if (!userData?.token) {
         toast.error('Authentication required. Please log in again.');
-        return;
+        return null;
       }
 
       const response = await axios.get(`${API_ENDPOINT}/get/education`, {
@@ -596,6 +599,7 @@ const MyProfile = () => {
 
                 // Process the education data to ensure percentage_cgpa is a number and handle year_of_passout
           const processedEducation = (response.data.data || []).map(edu => {
+            
             return {
               ...edu,
               percentage_cgpa: typeof edu.percentage_cgpa === 'string' ? parseFloat(edu.percentage_cgpa) : edu.percentage_cgpa,
@@ -623,8 +627,12 @@ const MyProfile = () => {
       
       // Reset edit mode for all education items
       setEducationEditMode({});
+      
+      // Return the processed education data
+      return processedEducation;
     } catch (error) {
       toast.error(error.response?.data?.message || 'Failed to load education data');
+      return null;
     }
   };
 
@@ -1491,7 +1499,7 @@ const MyProfile = () => {
   const validateParentDetails = (data) => {
     const errors = [];
     if (!data.parent_name?.trim()) errors.push('Parent name is required');
-    if (!data.parent_contact_number?.trim()) errors.push('Parent contact number is required');
+    if (!data.parent_contact?.trim()) errors.push('Parent contact number is required');
     if (!data.residential_address?.trim()) errors.push('Residential address is required');
     return errors;
   };
@@ -1547,7 +1555,7 @@ const MyProfile = () => {
           [name]: value
         }));
       }
-    } else if (name === 'parent_contact_number') {
+    } else if (name === 'parent_contact') {
       // Only allow numbers and limit to 10 digits
       if (value.length <= 10 && /^\d*$/.test(value)) {
         setFormData(prev => ({
@@ -1904,7 +1912,7 @@ const MyProfile = () => {
 
     // Parent Details
     if (!data.parent_name?.trim()) errors.push('Parent name is required');
-    if (!data.parent_contact_number?.trim()) errors.push('Parent contact number is required');
+    if (!data.parent_contact?.trim()) errors.push('Parent contact number is required');
     if (!data.residential_address?.trim()) errors.push('Residential address is required');
 
     return errors;
@@ -2121,7 +2129,7 @@ const MyProfile = () => {
       const formDataToSend = new FormData();
       const jsonData = {
         parent_name: formData.parent_name?.trim(),
-        parent_contact_number: formData.parent_contact_number?.trim(),
+        parent_contact: formData.parent_contact?.trim(),
         residential_address: formData.residential_address?.trim()
       };
 
@@ -2208,7 +2216,7 @@ const MyProfile = () => {
         aadhaar_number: formData.aadhaar_number?.trim(),
         linkedin_profile: formData.linkedin_profile?.trim(),
         parent_name: formData.parent_name?.trim(),
-        parent_contact_number: formData.parent_contact_number?.trim(),
+        parent_contact: formData.parent_contact?.trim(),
         residential_address: formData.residential_address?.trim(),
         receive_email_notification: Boolean(formData.receive_email_notification),
         receive_sms_notification: Boolean(formData.receive_sms_notification),
@@ -2984,8 +2992,8 @@ const MyProfile = () => {
                 </label>
                 <input
                   type="tel"
-                  name="parent_contact_number"
-                  value={formData.parent_contact_number || ''}
+                  name="parent_contact"
+                  value={formData.parent_contact || ''}
                   onChange={handleChange}
                   className="w-full p-2 border rounded-lg focus:ring-orange-500 focus:border-orange-500"
                   placeholder="Enter 10-digit contact number"
@@ -3150,6 +3158,7 @@ const MyProfile = () => {
                             Specialization<span className="text-red-500">*</span>
                           </label>
                           <select
+                            key={`specialization-${index}-${specializations.length}`}
                             value={edu.specialization_id || (edu.specialization && edu.specialization.id) || ''}
                             onChange={(e) => {
                               const value = e.target.value;

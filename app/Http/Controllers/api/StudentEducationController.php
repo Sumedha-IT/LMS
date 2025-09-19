@@ -109,7 +109,9 @@ class StudentEducationController extends Controller
     }
     public function Get_education(Request $request){
         $user=$request->user();
-        $education=StudentEducation::where('user_id',$user->id)->get();
+        $education=StudentEducation::where('user_id',$user->id)
+            ->with(['degreeType', 'specialization'])
+            ->get();
         
         // Debug: Log the raw database data
         \Log::info('Raw education data from database:', $education->toArray());

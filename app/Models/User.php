@@ -59,6 +59,7 @@ class User extends Authenticatable implements HasTenants, FilamentUser, HasAvata
         'upload_resume',
         'upload_aadhar',
         'parent_name',
+        'parent_contact',
         'parent_email',
         'parent_aadhar',
         'parent_occupation',

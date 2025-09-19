@@ -25,7 +25,9 @@ class StudentEducationResource extends JsonResource
         return [
             'id'=>$this->id,
             'user_id'=>$this->user_id,
+            'degree_type_id'=>$this->degree_type_id,
             'degree_type'=>new DegreeResource($this->degreeType),
+            'specialization_id'=>$this->specialization_id,
             'specialization'=>new SpeacializationResource($this->specialization),
             'other_specialization'=>$this->other_specialization,
             'grade_type'=>$this->grade_type,
