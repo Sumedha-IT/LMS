@@ -33,13 +33,16 @@ class ProfileCompletionManager {
     }
   }
 
-  // Fetch profile completion for a single student with retry logic
+  // Fetch profile completion for a single student with enhanced retry logic
   async fetchStudentProfileCompletion(studentId, retryCount = 0) {
     const userData = this.getUserInfo();
     if (!userData) {
       console.error('User information not found');
       return null;
     }
+
+    // Use enhanced rate limiting for profile completion requests
+    await requestManager.throttleProfileCompletionRequest();
 
     const endpoint = `/api/profile-completion/${studentId}`;
     const options = {
@@ -117,13 +120,86 @@ class ProfileCompletionManager {
     return results;
   }
 
-  // Fetch profile completion using bulk endpoint
+  // Optimized pagination-aware profile completion fetching
+  async fetchBatchProfileCompletionOptimized(studentIds, page, perPage) {
+    console.log(`🚀 Optimized fetching: Page ${page}, ${perPage} students, ${studentIds.length} IDs`);
+    
+    // For small pages (≤10 students), use smaller batch size to avoid rate limiting
+    const optimizedBatchSize = perPage <= 10 ? 3 : 5;
+    const results = {};
+    
+    // Filter out already cached data to minimize API calls
+    const uncachedStudentIds = studentIds.filter(id => {
+      const cached = this.getCachedProfileCompletion(id);
+      if (cached) {
+        results[id] = cached;
+        return false; // Skip this ID as it's already cached
+      }
+      return true;
+    });
+
+    console.log(`📊 Cache hit: ${studentIds.length - uncachedStudentIds.length}/${studentIds.length} students`);
+    
+    if (uncachedStudentIds.length === 0) {
+      console.log(`✅ All ${studentIds.length} students already cached, returning cached data`);
+      return results;
+    }
+
+    // Process uncached students in smaller, optimized batches
+    const batches = this.chunkArray(uncachedStudentIds, optimizedBatchSize);
+    
+    for (let i = 0; i < batches.length; i++) {
+      const batch = batches[i];
+      console.log(`🔄 Processing optimized batch ${i + 1}/${batches.length} with ${batch.length} students`);
+
+      try {
+        // Try bulk endpoint first for efficiency
+        const bulkResults = await this.fetchBulkProfileCompletion(batch);
+        if (bulkResults) {
+          Object.assign(results, bulkResults);
+          console.log(`✅ Bulk fetch successful for batch ${i + 1}`);
+        } else {
+          // Fallback to sequential individual requests to avoid rate limiting
+          console.log(`⚠️ Bulk fetch failed, using sequential fallback for batch ${i + 1}`);
+          for (const studentId of batch) {
+            try {
+              const completionData = await this.fetchStudentProfileCompletion(studentId);
+              if (completionData) {
+                results[studentId] = completionData;
+              }
+              // Add small delay between individual requests to prevent rate limiting
+              await new Promise(resolve => setTimeout(resolve, 500));
+            } catch (error) {
+              console.error(`Error fetching profile completion for student ${studentId}:`, error);
+            }
+          }
+        }
+      } catch (error) {
+        console.error(`Error processing optimized batch ${i + 1}:`, error);
+      }
+
+      // Add delay between batches (longer delay for optimization)
+      if (i < batches.length - 1) {
+        const delay = perPage <= 10 ? 1000 : 1500; // Longer delay for larger pages
+        console.log(`⏳ Waiting ${delay}ms before next batch...`);
+        await new Promise(resolve => setTimeout(resolve, delay));
+      }
+    }
+
+    console.log(`🎉 Optimized fetch complete: ${Object.keys(results).length} students processed`);
+    return results;
+  }
+
+  // Fetch profile completion using bulk endpoint with enhanced rate limiting
   async fetchBulkProfileCompletion(studentIds) {
     const userData = this.getUserInfo();
     if (!userData) {
       console.error('User information not found');
       return null;
     }
+
+    // Use enhanced rate limiting for bulk profile completion requests
+    await requestManager.throttleProfileCompletionRequest();
 
     const endpoint = '/api/profile-completion/bulk';
     const options = {

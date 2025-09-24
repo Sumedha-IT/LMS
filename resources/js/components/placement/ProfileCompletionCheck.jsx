@@ -157,7 +157,7 @@ const ProfileCompletionCheck = ({ onProfileUpdate }) => {
         return null;
     }
 
-    const { overall_percentage, sections, is_complete, missing_sections } = profileData;
+    const { overall_percentage, sections, is_complete, missing_sections, missing_fields } = profileData;
 
     return (
         <>
@@ -238,11 +238,62 @@ const ProfileCompletionCheck = ({ onProfileUpdate }) => {
                     {!is_complete && (
                         <Alert severity="warning" sx={{ mb: 2 }}>
                             <Typography variant="body2">
-                                <strong>Profile completion required:</strong> You need at least 90% profile completion to apply for placements.
-                                {missing_sections.length > 0 && (
-                                    <span> Missing: {missing_sections.join(', ')}</span>
-                                )}
+                                <strong>Profile completion required:</strong> You need 100% profile completion to apply for placements.
                             </Typography>
+                            
+                            {missing_fields && Object.keys(missing_fields).length > 0 && (
+                                <Box sx={{ mt: 2 }}>
+                                    <Typography variant="body2" fontWeight="bold" sx={{ mb: 1 }}>
+                                        Missing fields to complete:
+                                    </Typography>
+                                    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+                                        {Object.entries(missing_fields).map(([section, fields]) => (
+                                            fields.length > 0 && (
+                                                <Box key={section} sx={{ 
+                                                    backgroundColor: 'rgba(255, 255, 255, 0.7)', 
+                                                    borderRadius: 1, 
+                                                    p: 1.5, 
+                                                    border: '1px solid rgba(237, 108, 2, 0.2)' 
+                                                }}>
+                                                    <Typography variant="caption" fontWeight="bold" sx={{ 
+                                                        textTransform: 'uppercase', 
+                                                        letterSpacing: 0.5,
+                                                        color: 'text.secondary',
+                                                        mb: 0.5,
+                                                        display: 'block'
+                                                    }}>
+                                                        {section.replace('_', ' ')}
+                                                    </Typography>
+                                                    <List dense sx={{ py: 0 }}>
+                                                        {fields.map((field, index) => (
+                                                            <ListItem key={index} sx={{ py: 0, px: 0 }}>
+                                                                <ListItemIcon sx={{ minWidth: 16 }}>
+                                                                    <Box sx={{ 
+                                                                        width: 6, 
+                                                                        height: 6, 
+                                                                        backgroundColor: '#ed6c02', 
+                                                                        borderRadius: '50%' 
+                                                                    }} />
+                                                                </ListItemIcon>
+                                                                <ListItemText 
+                                                                    primary={field.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())}
+                                                                    primaryTypographyProps={{ variant: 'caption' }}
+                                                                />
+                                                            </ListItem>
+                                                        ))}
+                                                    </List>
+                                                </Box>
+                                            )
+                                        ))}
+                                    </Box>
+                                </Box>
+                            )}
+                            
+                            {missing_sections.length > 0 && (
+                                <Typography variant="caption" sx={{ mt: 1, display: 'block', color: 'text.secondary' }}>
+                                    Incomplete sections: {missing_sections.join(', ')}
+                                </Typography>
+                            )}
                         </Alert>
                     )}
 

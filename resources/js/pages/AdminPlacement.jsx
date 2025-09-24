@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { format } from 'date-fns';
 import * as XLSX from 'xlsx';
 import JSZip from 'jszip';
@@ -45,7 +45,9 @@ import {
     List,
     ListItem,
     ListItemText,
-    ListItemIcon
+    ListItemIcon,
+    Pagination,
+    Stack
 } from '@mui/material';
 import RichTextEditor from '../components/common/RichTextEditor';
 import RichTextDisplay from '../components/common/RichTextDisplay';
@@ -280,7 +282,17 @@ const AdminPlacement = () => {
     const [loadingPlacementStudents, setLoadingPlacementStudents] = useState(false);
     const [placementStudentsError, setPlacementStudentsError] = useState(null);
     const [placementStudentsSearch, setPlacementStudentsSearch] = useState('');
+    const [debouncedPlacementStudentsSearch, setDebouncedPlacementStudentsSearch] = useState('');
     const [placementStudentsFilters, setPlacementStudentsFilters] = useState({
+        course_id: '',
+        ug_year_from: '',
+        ug_year_to: '',
+        pg_year_from: '',
+        pg_year_to: '',
+        ug_percentage: '',
+        pg_percentage: ''
+    });
+    const [debouncedPlacementStudentsFilters, setDebouncedPlacementStudentsFilters] = useState({
         course_id: '',
         ug_year_from: '',
         ug_year_to: '',
@@ -291,15 +303,27 @@ const AdminPlacement = () => {
     });
     const [filtersExpanded, setFiltersExpanded] = useState(false);
     
-    // Pagination state for placement students
+    // Request throttling state
+    const [lastRequestTime, setLastRequestTime] = useState(0);
+    const [requestCache, setRequestCache] = useState(new Map());
+    const [retryCount, setRetryCount] = useState(0);
+    
+    // Pagination state for placement students (cursor-based)
     const [placementStudentsPagination, setPlacementStudentsPagination] = useState({
         current_page: 1,
         last_page: 1,
         per_page: 10,
         total: 0,
         from: 0,
-        to: 0
+        to: 0,
+        has_more_pages: false,
+        prev_page_url: null,
+        next_page_url: null
     });
+    
+    // Track all loaded students for cursor pagination
+    const [allPlacementStudents, setAllPlacementStudents] = useState([]);
+    const [isLoadingMore, setIsLoadingMore] = useState(false);
     const [exportConfirmationDialog, setExportConfirmationDialog] = useState({ open: false, recordCount: 0 });
     
     // Generate year options for dropdowns
@@ -548,23 +572,106 @@ const AdminPlacement = () => {
     // Fetch placement students when Users tab is selected
     useEffect(() => {
         if (tabValue === 3) {
-            fetchPlacementStudents();
+            fetchPlacementStudents(1, false);
         }
     }, [tabValue]);
 
-    // Refetch placement students when filters change
+    // Debounce search input to prevent excessive API calls
     useEffect(() => {
-        if (tabValue === 3) {
-            // Reset to first page when filters change
-            setPlacementStudentsPagination(prev => ({ ...prev, current_page: 1 }));
-            fetchPlacementStudents(1);
-        }
+        const timer = setTimeout(() => {
+            setDebouncedPlacementStudentsSearch(placementStudentsSearch);
+        }, 500); // 500ms delay
+
+        return () => clearTimeout(timer);
+    }, [placementStudentsSearch]);
+
+    // Debounce filter changes to prevent excessive API calls
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            setDebouncedPlacementStudentsFilters(placementStudentsFilters);
+        }, 300); // 300ms delay for filters (shorter than search)
+
+        return () => clearTimeout(timer);
     }, [placementStudentsFilters]);
 
-    const fetchPlacementStudents = async (page = 1) => {
+    // Refetch placement students when debounced filters or debounced search change
+    useEffect(() => {
+        if (tabValue === 3) {
+            // Reset pagination state for new search/filter
+            setPlacementStudentsPagination(prev => ({ 
+                ...prev, 
+                current_page: 1
+            }));
+            setAllPlacementStudents([]);
+            fetchPlacementStudents(1, false); // Start fresh with page 1
+        }
+    }, [debouncedPlacementStudentsFilters, debouncedPlacementStudentsSearch]);
+
+    const fetchPlacementStudents = async (cursor = null, isLoadMore = false, customPerPage = null) => {
+        const currentTime = Date.now();
+        const MIN_REQUEST_INTERVAL = 1000; // Minimum 1 second between requests
+        const MAX_RETRIES = 3;
+        
+        // Throttle requests to prevent rate limiting
+        const timeSinceLastRequest = currentTime - lastRequestTime;
+        if (timeSinceLastRequest < MIN_REQUEST_INTERVAL) {
+            const delay = MIN_REQUEST_INTERVAL - timeSinceLastRequest;
+            await new Promise(resolve => setTimeout(resolve, delay));
+        }
+        
+        // Create cache key for this request
+         const cacheKey = JSON.stringify({
+              cursor: cursor || 1,
+              isLoadMore,
+              customPerPage: customPerPage || placementStudentsPagination.per_page,
+              search: debouncedPlacementStudentsSearch,
+              filters: debouncedPlacementStudentsFilters
+          });
+        
+        // Check cache first (valid for 30 seconds)
+        const cachedData = requestCache.get(cacheKey);
+        if (cachedData && (currentTime - cachedData.timestamp) < 30000) {
+            console.log('Using cached data for placement students');
+            
+            // Use cached data
+            const { students, pagination, profileCompletion } = cachedData.data;
+            
+            if (isLoadMore) {
+                setAllPlacementStudents(prev => [...prev, ...students]);
+                setPlacementStudents(prev => [...prev, ...students]);
+                if (profileCompletion && Object.keys(profileCompletion).length > 0) {
+                    setStudentProfileCompletion(prev => ({ ...prev, ...profileCompletion }));
+                }
+            } else {
+                setPlacementStudents(students);
+                setAllPlacementStudents(students);
+                if (profileCompletion && Object.keys(profileCompletion).length > 0) {
+                    setStudentProfileCompletion(profileCompletion);
+                }
+            }
+            
+            if (pagination && Object.keys(pagination).length > 0) {
+                setPlacementStudentsPagination(pagination);
+                if (pagination.total !== undefined) {
+                    setStats(prevStats => ({
+                        ...prevStats,
+                        totalStudents: pagination.total
+                    }));
+                }
+            }
+            
+            return;
+        }
+        
         try {
-            setLoadingPlacementStudents(true);
-            setPlacementStudentsError(null);
+            if (isLoadMore) {
+                setIsLoadingMore(true);
+            } else {
+                setLoadingPlacementStudents(true);
+                setPlacementStudentsError(null);
+            }
+            
+            setLastRequestTime(Date.now());
             
             // Get user info from localStorage or cookies using the existing getCookie function
             let userInfo = localStorage.getItem('user_info');
@@ -584,31 +691,37 @@ const AdminPlacement = () => {
             
             // Build query parameters from filters
             const queryParams = new URLSearchParams();
-            if (placementStudentsFilters.course_id) {
-                queryParams.append('course_id', placementStudentsFilters.course_id);
-            }
-            if (placementStudentsFilters.ug_year_from) {
-                queryParams.append('ug_year_from', placementStudentsFilters.ug_year_from);
-            }
-            if (placementStudentsFilters.ug_year_to) {
-                queryParams.append('ug_year_to', placementStudentsFilters.ug_year_to);
-            }
-            if (placementStudentsFilters.pg_year_from) {
-                queryParams.append('pg_year_from', placementStudentsFilters.pg_year_from);
-            }
-            if (placementStudentsFilters.pg_year_to) {
-                queryParams.append('pg_year_to', placementStudentsFilters.pg_year_to);
-            }
-            if (placementStudentsFilters.ug_percentage) {
-                queryParams.append('ug_percentage', placementStudentsFilters.ug_percentage);
-            }
-            if (placementStudentsFilters.pg_percentage) {
-                queryParams.append('pg_percentage', placementStudentsFilters.pg_percentage);
+            
+            // Add search parameter
+            if (debouncedPlacementStudentsSearch) {
+                queryParams.append('search', debouncedPlacementStudentsSearch);
             }
             
-            // Add pagination parameters
-            queryParams.append('page', page);
-            queryParams.append('per_page', placementStudentsPagination.per_page);
+            if (debouncedPlacementStudentsFilters.course_id) {
+                queryParams.append('course_id', debouncedPlacementStudentsFilters.course_id);
+            }
+            if (debouncedPlacementStudentsFilters.ug_year_from) {
+                queryParams.append('ug_year_from', debouncedPlacementStudentsFilters.ug_year_from);
+            }
+            if (debouncedPlacementStudentsFilters.ug_year_to) {
+                queryParams.append('ug_year_to', debouncedPlacementStudentsFilters.ug_year_to);
+            }
+            if (debouncedPlacementStudentsFilters.pg_year_from) {
+                queryParams.append('pg_year_from', debouncedPlacementStudentsFilters.pg_year_from);
+            }
+            if (debouncedPlacementStudentsFilters.pg_year_to) {
+                queryParams.append('pg_year_to', debouncedPlacementStudentsFilters.pg_year_to);
+            }
+            if (debouncedPlacementStudentsFilters.ug_percentage) {
+                queryParams.append('ug_percentage', debouncedPlacementStudentsFilters.ug_percentage);
+            }
+            if (debouncedPlacementStudentsFilters.pg_percentage) {
+                queryParams.append('pg_percentage', debouncedPlacementStudentsFilters.pg_percentage);
+            }
+            
+            // Add page-based pagination parameters
+            queryParams.append('page', cursor || 1);
+            queryParams.append('per_page', customPerPage || placementStudentsPagination.per_page);
             
             const apiUrl = `/api/placement-students${queryParams.toString() ? '?' + queryParams.toString() : ''}`;
             
@@ -616,37 +729,119 @@ const AdminPlacement = () => {
                 headers: { 'Authorization': `Bearer ${userData.token}` }
             });
         
+            const newStudents = response.data.data || [];
+            const paginationData = response.data.pagination || {};
             
-            if (response.data.data && response.data.data.length > 0) {
-            }
-            
-            // Set students data and pagination metadata
-            setPlacementStudents(response.data.data || []);
-            if (response.data.pagination) {
-                setPlacementStudentsPagination(response.data.pagination);
-                
-                // Update stats with the total count from pagination
-                setStats(prevStats => ({
-                    ...prevStats,
-                    totalStudents: response.data.pagination.total
-                }));
-            }
-
-            // Fetch profile completion data for all students using batch processing
-            if (response.data.data && response.data.data.length > 0) {
-                const studentIds = response.data.data.map(student => student.id);
-                
+            // Prepare profile completion data in parallel to avoid extra render cycles
+            let completionMap = {};
+            if (newStudents && newStudents.length > 0) {
+                const studentIds = newStudents.map(student => student.id);
                 try {
-                    console.log(`Fetching profile completion for ${studentIds.length} students in batches`);
-                    const completionMap = await profileCompletionManager.fetchBatchProfileCompletion(studentIds);
-                    setStudentProfileCompletion(completionMap);
-                    console.log(`Successfully fetched profile completion for ${Object.keys(completionMap).length} students`);
+                    completionMap = await profileCompletionManager.fetchBatchProfileCompletion(studentIds);
                 } catch (error) {
                     console.error('Error fetching profile completion data:', error);
                 }
             }
+            
+            // Cache the successful response
+            setRequestCache(prev => {
+                const newCache = new Map(prev);
+                newCache.set(cacheKey, {
+                    timestamp: Date.now(),
+                    data: {
+                        students: newStudents,
+                        pagination: paginationData,
+                        profileCompletion: completionMap
+                    }
+                });
+                
+                // Clean old cache entries (keep only last 10)
+                if (newCache.size > 10) {
+                    const oldestKey = newCache.keys().next().value;
+                    newCache.delete(oldestKey);
+                }
+                
+                return newCache;
+            });
+            
+            // Reset retry count on success
+            setRetryCount(0);
+            
+            // Perform all state updates at once to minimize re-renders
+            if (isLoadMore) {
+                // Append new students to existing list
+                setAllPlacementStudents(prev => [...prev, ...newStudents]);
+                setPlacementStudents(prev => [...prev, ...newStudents]);
+                if (Object.keys(completionMap).length > 0) {
+                    setStudentProfileCompletion(prev => ({ ...prev, ...completionMap }));
+                }
+            } else {
+                // Replace students list (new search/filter) with single state update
+                setPlacementStudents(newStudents);
+                setAllPlacementStudents(newStudents);
+                if (Object.keys(completionMap).length > 0) {
+                    setStudentProfileCompletion(completionMap);
+                }
+            }
+            
+            // Update pagination metadata and stats in one batch
+            if (Object.keys(paginationData).length > 0) {
+                setPlacementStudentsPagination(paginationData);
+                
+                // Update stats with the total count from pagination
+                if (paginationData.total !== undefined) {
+                    setStats(prevStats => ({
+                        ...prevStats,
+                        totalStudents: paginationData.total
+                    }));
+                }
+            }
         } catch (error) {
             console.error('Error fetching placement students:', error);
+            
+            // Handle rate limiting (429) with exponential backoff
+            if (error.response?.status === 429) {
+                const currentRetryCount = retryCount;
+                if (currentRetryCount < MAX_RETRIES) {
+                    const backoffDelay = Math.pow(2, currentRetryCount) * 1000; // Exponential backoff: 1s, 2s, 4s
+                    console.log(`Rate limited. Retrying in ${backoffDelay}ms (attempt ${currentRetryCount + 1}/${MAX_RETRIES})`);
+                    
+                    setRetryCount(currentRetryCount + 1);
+                    
+                    // Show user-friendly message
+                    if (!isLoadMore) {
+                        setPlacementStudentsError(`Too many requests. Retrying in ${Math.ceil(backoffDelay / 1000)} seconds...`);
+                    }
+                    
+                    // Wait and retry
+                    setTimeout(() => {
+                        fetchPlacementStudents(cursor, isLoadMore, customPerPage);
+                    }, backoffDelay);
+                    
+                    return; // Don't proceed to error handling
+                } else {
+                    setRetryCount(0);
+                    if (!isLoadMore) {
+                        setPlacementStudentsError('Server is busy. Please wait a moment and try again.');
+                    }
+                    return;
+                }
+            }
+            
+            // Reset retry count for non-429 errors
+            setRetryCount(0);
+            
+            // Handle 419 CSRF token errors specifically
+            if (error.response?.status === 419) {
+                // Try to refresh CSRF token and retry
+                try {
+                    await axios.get('/sanctum/csrf-cookie');
+                    // Retry the request once
+                    return fetchPlacementStudents(cursor, isLoadMore, customPerPage);
+                } catch (csrfError) {
+                    console.error('Failed to refresh CSRF token:', csrfError);
+                }
+            }
             
             // Provide more specific error messages
             let errorMessage = 'Failed to fetch placement students';
@@ -656,16 +851,27 @@ const AdminPlacement = () => {
                 errorMessage = 'Access denied. You do not have permission to view placement students.';
             } else if (error.response?.status === 404) {
                 errorMessage = 'Placement students API endpoint not found.';
+            } else if (error.response?.status === 419) {
+                errorMessage = 'Session expired. Please refresh the page and try again.';
             } else if (error.response?.status >= 500) {
                 errorMessage = 'Server error. Please try again later.';
             } else if (error.message) {
                 errorMessage += ': ' + error.message;
             }
             
-            setPlacementStudentsError(errorMessage);
-            setPlacementStudents([]);
+            if (!isLoadMore) {
+                // Set error state and clear data in one batch
+                setPlacementStudentsError(errorMessage);
+                setPlacementStudents([]);
+                setAllPlacementStudents([]);
+            }
         } finally {
-            setLoadingPlacementStudents(false);
+            // Update loading states in one place
+            if (isLoadMore) {
+                setIsLoadingMore(false);
+            } else {
+                setLoadingPlacementStudents(false);
+            }
         }
     };
 
@@ -740,17 +946,32 @@ const AdminPlacement = () => {
                 }));
             }
 
-            // Fetch profile completion data for all students using batch processing
+            // Fetch profile completion data ONLY for students on current page (pagination-aware)
             if (response.data.data && response.data.data.length > 0) {
                 const studentIds = response.data.data.map(student => student.id);
                 
                 try {
-                    console.log(`Fetching profile completion for ${studentIds.length} students in batches`);
-                    const completionMap = await profileCompletionManager.fetchBatchProfileCompletion(studentIds);
-                    setStudentProfileCompletion(completionMap);
-                    console.log(`Successfully fetched profile completion for ${Object.keys(completionMap).length} students`);
+                    setLoadingProfileCompletion(true);
+                    console.log(`🚀 Fetching profile completion for ${studentIds.length} students on page ${page} (pagination-aware)`);
+                    
+                    // Use optimized pagination-aware batch fetching
+                    const completionMap = await profileCompletionManager.fetchBatchProfileCompletionOptimized(
+                        studentIds, 
+                        page, 
+                        perPage
+                    );
+                    
+                    // Merge with existing completion data instead of replacing
+                    setStudentProfileCompletion(prevCompletion => ({
+                        ...prevCompletion,
+                        ...completionMap
+                    }));
+                    
+                    console.log(`✅ Successfully fetched profile completion for ${Object.keys(completionMap).length} students on page ${page}`);
                 } catch (error) {
-                    console.error('Error fetching profile completion data:', error);
+                    console.error('❌ Error fetching profile completion data:', error);
+                } finally {
+                    setLoadingProfileCompletion(false);
                 }
             }
         } catch (error) {
@@ -781,20 +1002,14 @@ const AdminPlacement = () => {
         setTabValue(newValue);
     };
 
-    // Pagination handlers for placement students
-    const handlePlacementStudentsPageChange = (event, newPage) => {
-        fetchPlacementStudents(newPage + 1); // Material-UI uses 0-based indexing
-    };
-
-    const handlePlacementStudentsPerPageChange = (event) => {
-        const newPerPage = parseInt(event.target.value, 10);
-        setPlacementStudentsPagination(prev => ({ ...prev, per_page: newPerPage, current_page: 1 }));
-        // Use the new per_page value directly instead of relying on state
-        fetchPlacementStudentsWithPerPage(1, newPerPage);
-    };
+    // Pagination handlers removed - using cursor-based pagination with Load More button
 
     // State to store profile completion data for each student
     const [studentProfileCompletion, setStudentProfileCompletion] = useState({});
+    const [loadingProfileCompletion, setLoadingProfileCompletion] = useState(false);
+    
+    // Student details cache
+    const [studentDetailsCache, setStudentDetailsCache] = useState(new Map());
 
     // Function to fetch profile completion for a specific student (using manager)
     const fetchStudentProfileCompletion = async (studentId) => {
@@ -807,23 +1022,78 @@ const AdminPlacement = () => {
         return completionData ? completionData.overall_percentage : 0;
     };
 
+    // Cache helper functions for student details
+    const getCachedStudentDetails = (cacheKey) => {
+        const cached = studentDetailsCache.get(cacheKey);
+        if (!cached) return null;
+        
+        // Check if cache is still valid (5 minutes)
+        const now = Date.now();
+        if (now - cached.timestamp < 5 * 60 * 1000) {
+            return cached.data;
+        }
+        
+        // Remove expired cache
+        setStudentDetailsCache(prev => {
+            const newCache = new Map(prev);
+            newCache.delete(cacheKey);
+            return newCache;
+        });
+        
+        return null;
+    };
+
+    const setCachedStudentDetails = (cacheKey, data) => {
+        setStudentDetailsCache(prev => {
+            const newCache = new Map(prev);
+            newCache.set(cacheKey, {
+                data,
+                timestamp: Date.now()
+            });
+            
+            // Clean old cache entries (keep only last 20)
+            if (newCache.size > 20) {
+                const oldestKey = newCache.keys().next().value;
+                newCache.delete(oldestKey);
+            }
+            
+            return newCache;
+        });
+    };
+
     // Custom CircularProgress with label component
     const CircularProgressWithLabel = React.forwardRef(({ value, size = 40, student, ...props }, ref) => {
+        // Check if profile completion data is being loaded for this student
+        const isLoadingProfileData = loadingProfileCompletion && !studentProfileCompletion[student.id];
+        
         return (
             <Box ref={ref} sx={{ position: 'relative', display: 'inline-flex', alignItems: 'center', gap: 1 }} {...props}>
                 <Box sx={{ position: 'relative', display: 'inline-flex' }}>
-                    <CircularProgress
-                        variant="determinate"
-                        value={value}
-                        size={size}
-                        thickness={4}
-                        sx={{
-                            color: value >= 80 ? '#4caf50' : value >= 60 ? '#ff9800' : '#f44336',
-                            position: 'absolute',
-                            top: 0,
-                            left: 0,
-                        }}
-                    />
+                    {isLoadingProfileData ? (
+                        <CircularProgress
+                            size={size}
+                            thickness={4}
+                            sx={{
+                                color: '#2196f3',
+                                position: 'absolute',
+                                top: 0,
+                                left: 0,
+                            }}
+                        />
+                    ) : (
+                        <CircularProgress
+                            variant="determinate"
+                            value={value}
+                            size={size}
+                            thickness={4}
+                            sx={{
+                                color: value >= 80 ? '#4caf50' : value >= 60 ? '#ff9800' : '#f44336',
+                                position: 'absolute',
+                                top: 0,
+                                left: 0,
+                            }}
+                        />
+                    )}
                     <Avatar
                         src={student.avatar_url}
                         sx={{ 
@@ -840,17 +1110,31 @@ const AdminPlacement = () => {
                     alignItems: 'center',
                     minWidth: '40px'
                 }}>
-                    <Typography
-                        variant="caption"
-                        sx={{
-                            fontSize: '0.75rem',
-                            fontWeight: 'bold',
-                            color: value >= 80 ? '#4caf50' : value >= 60 ? '#ff9800' : '#f44336',
-                            lineHeight: 1
-                        }}
-                    >
-                        {`${Math.round(value)}%`}
-                    </Typography>
+                    {isLoadingProfileData ? (
+                        <Typography
+                            variant="caption"
+                            sx={{
+                                fontSize: '0.75rem',
+                                fontWeight: 'bold',
+                                color: '#2196f3',
+                                lineHeight: 1
+                            }}
+                        >
+                            ...
+                        </Typography>
+                    ) : (
+                        <Typography
+                            variant="caption"
+                            sx={{
+                                fontSize: '0.75rem',
+                                fontWeight: 'bold',
+                                color: value >= 80 ? '#4caf50' : value >= 60 ? '#ff9800' : '#f44336',
+                                lineHeight: 1
+                            }}
+                        >
+                            {`${Math.round(value)}%`}
+                        </Typography>
+                    )}
                     <Typography
                         variant="caption"
                         sx={{
@@ -1351,10 +1635,11 @@ const AdminPlacement = () => {
 
     const handleStudentDetailsClick = async (studentId, jobId) => {
         try {
-        setStudentDetailsDialog({ open: true, studentId, jobId });
-        await fetchStudentDetails(studentId);
+            console.log(`👆 User clicked on student ${studentId}, opening details dialog`);
+            setStudentDetailsDialog({ open: true, studentId, jobId });
+            await fetchStudentDetails(studentId);
         } catch (error) {
-            console.error('Error in handleStudentDetailsClick:', error);
+            console.error('❌ Error in handleStudentDetailsClick:', error);
             setStudentDetailsError('Failed to load student details. Please try again.');
         }
     };
@@ -1373,10 +1658,23 @@ const AdminPlacement = () => {
             setLoadingStudentDetails(true);
             setStudentDetailsError(null);
             
+            console.log(`🚀 Loading student details for ID: ${studentId}`);
+            
+            // Check cache first to avoid unnecessary API calls
+            const cacheKey = `student_details_${studentId}`;
+            const cachedData = getCachedStudentDetails(cacheKey);
+            if (cachedData) {
+                console.log(`📊 Cache hit for student ${studentId}, using cached data`);
+                setSelectedStudentData(cachedData.profile);
+                setStudentJobApplications(cachedData.applications || []);
+                setStudentExamResults(cachedData.examResults || []);
+                setLoadingStudentDetails(false);
+                return;
+            }
+            
             // Get authentication token
             const userInfo = getCookie('user_info');
             const userData = userInfo ? JSON.parse(userInfo) : null;
-            
             
             if (!userData?.token) {
                 throw new Error('Authentication required - no valid token found');
@@ -1388,8 +1686,10 @@ const AdminPlacement = () => {
             const existingStudent = placementStudents.find(s => s.id == studentId);
             
             if (existingStudent) {
+                console.log(`✅ Using existing student data for ID: ${studentId}`);
                 profileResponse = { data: existingStudent };
             } else {
+                console.log(`🔄 Fetching fresh profile data for ID: ${studentId}`);
                 // Try to get user data from placement students API
                 try {
                     // Use the show method for individual student
@@ -1433,59 +1733,56 @@ const AdminPlacement = () => {
                 }
             }
             
-            // Fetch applications and exam results (optional)
-            let applicationsResponse = { data: { data: [] } };
-            let examResponse = { data: { data: [] } };
+            console.log(`🔄 Fetching additional data in parallel for student ${studentId}`);
             
-            try {
-                const applicationsResult = await axios.get(`/api/job-applications?user_id=${studentId}`, {
+            // Fetch all additional data in parallel for better performance
+            const additionalDataPromises = [
+                // Job applications
+                axios.get(`/api/job-applications?user_id=${studentId}`, {
                     headers: { 'Authorization': `Bearer ${userData.token}` }
-                });
-                applicationsResponse = applicationsResult;
-            } catch (applicationsError) {
-                console.error('Applications API failed:', applicationsError);
-            }
+                }).catch(err => {
+                    console.error('Applications API failed:', err);
+                    return { data: { data: [] } };
+                }),
+                
+                // Exam results
+                axios.get(`/api/students/${studentId}/exam-results`, {
+                    headers: { 'Authorization': `Bearer ${userData.token}` }
+                }).catch(err => {
+                    console.error('Exam API failed:', err);
+                    return { data: { data: [] } };
+                }),
+                
+                // Education
+                axios.get(`/api/get/education/${studentId}`, {
+                    headers: { 'Authorization': `Bearer ${userData.token}` }
+                }).catch(err => {
+                    console.error('Education API failed:', err);
+                    return { data: { data: [] } };
+                }),
+                
+                // Projects
+                axios.get(`/api/projects/${studentId}`, {
+                    headers: { 'Authorization': `Bearer ${userData.token}` }
+                }).catch(err => {
+                    console.error('Projects API failed:', err);
+                    return { data: { projects: [] } };
+                }),
+                
+                // Certifications
+                axios.get(`/api/certifications/${studentId}`, {
+                    headers: { 'Authorization': `Bearer ${userData.token}` }
+                }).catch(err => {
+                    console.error('Certifications API failed:', err);
+                    return { data: { data: [] } };
+                })
+            ];
             
-            try {
-                const examResult = await axios.get(`/api/students/${studentId}/exam-results`, {
-                    headers: { 'Authorization': `Bearer ${userData.token}` }
-                });
-                examResponse = examResult;
-            } catch (examError) {
-                console.error('Exam API failed:', examError);
-            }
-
-            // Now fetch education, projects, and certifications for the specific user (optional)
-            let educationResponse = { data: { data: [] } };
-            let projectsResponse = { data: { projects: [] } };
-            let certificationsResponse = { data: { data: [] } };
+            // Wait for all additional data to load in parallel
+            const [applicationsResponse, examResponse, educationResponse, projectsResponse, certificationsResponse] = 
+                await Promise.all(additionalDataPromises);
             
-            try {
-                const educationResult = await axios.get(`/api/get/education/${studentId}`, {
-                    headers: { 'Authorization': `Bearer ${userData.token}` }
-                });
-                educationResponse = educationResult;
-            } catch (educationError) {
-                console.error('Education API failed:', educationError);
-            }
-            
-            try {
-                const projectsResult = await axios.get(`/api/projects/${studentId}`, {
-                    headers: { 'Authorization': `Bearer ${userData.token}` }
-                });
-                projectsResponse = projectsResult;
-            } catch (projectsError) {
-                console.error('Projects API failed:', projectsError);
-            }
-            
-            try {
-                const certificationsResult = await axios.get(`/api/certifications/${studentId}`, {
-                    headers: { 'Authorization': `Bearer ${userData.token}` }
-                });
-                certificationsResponse = certificationsResult;
-            } catch (certificationsError) {
-                console.error('Certifications API failed:', certificationsError);
-            }
+            console.log(`✅ All data fetched successfully for student ${studentId}`);
             
             // Ensure we have profile data
             if (!profileResponse || !profileResponse.data) {
@@ -1502,7 +1799,6 @@ const AdminPlacement = () => {
                 certifications: certificationsResponse.data.data || []
             };
             
-            
             // If profile data is missing basic fields, try to get them from existing placement students data
             if (!combinedStudentData.email || !combinedStudentData.phone) {
                 const existingStudent = placementStudents.find(s => s.id == studentId);
@@ -1514,12 +1810,22 @@ const AdminPlacement = () => {
                 }
             }
             
+            // Cache the results for future use
+            const cacheData = {
+                profile: combinedStudentData,
+                applications: applicationsResponse.data.data || [],
+                examResults: examResponse.data.data || []
+            };
+            setCachedStudentDetails(cacheKey, cacheData);
+            
             setSelectedStudentData(combinedStudentData);
             setStudentJobApplications(applicationsResponse.data.data || []);
             setStudentExamResults(examResponse.data.data || []);
             
+            console.log(`🎉 Student details loaded successfully for ID: ${studentId}`);
+            
         } catch (err) {
-            console.error('Error fetching student details:', err);
+            console.error('❌ Error fetching student details:', err);
             setStudentDetailsError('Failed to load student details: ' + (err.response?.data?.message || err.message));
         } finally {
             setLoadingStudentDetails(false);
@@ -3691,6 +3997,15 @@ const AdminPlacement = () => {
                             <Alert severity="error" sx={{ mb: 3 }}>
                                 {placementStudentsError}
                             </Alert>
+                        ) : loadingProfileCompletion ? (
+                            <Alert severity="info" sx={{ mb: 3 }}>
+                                <Box display="flex" alignItems="center" gap={1}>
+                                    <CircularProgress size={20} />
+                                    <Typography variant="body2">
+                                        🚀 Optimized loading: Fetching profile completion data for current page only ({placementStudents.length} students)...
+                                    </Typography>
+                                </Box>
+                            </Alert>
                         ) : (
                             <TableContainer component={Paper} sx={{ borderRadius: 3, boxShadow: 4 }}>
                                 <Table size="small" sx={{
@@ -3722,18 +4037,6 @@ const AdminPlacement = () => {
                                     </TableHead>
                                     <TableBody>
                                         {placementStudents && Array.isArray(placementStudents) ? placementStudents
-                                            .filter(student => {
-                                                if (placementStudentsSearch) {
-                                                    const search = placementStudentsSearch.toLowerCase();
-                                                    return (
-                                                        student.name?.toLowerCase().includes(search) ||
-                                                        student.email?.toLowerCase().includes(search) ||
-                                                        student.course?.name?.toLowerCase().includes(search) ||
-                                                        student.phone?.toLowerCase().includes(search)
-                                                    );
-                                                }
-                                                return true;
-                                            })
                                             .map((student) => (
                                                 <TableRow 
                                                     key={student.id}
@@ -3742,8 +4045,7 @@ const AdminPlacement = () => {
                                                         cursor: 'pointer',
                                                         '&:hover': { 
                                                             backgroundColor: 'action.hover',
-                                                            transform: 'scale(1.01)',
-                                                            transition: 'all 0.2s ease-in-out'
+                                                            transition: 'background-color 0.2s ease-in-out'
                                                         }
                                                     }}
                                                     title="Click to view student details"
@@ -3827,33 +4129,86 @@ const AdminPlacement = () => {
                         )}
 
                         {/* Pagination Controls */}
-                        {!loadingPlacementStudents && !placementStudentsError && placementStudents && placementStudents.length > 0 && (
-                            <TablePagination
-                                component="div"
-                                count={placementStudentsPagination.total}
-                                page={placementStudentsPagination.current_page - 1}
-                                onPageChange={handlePlacementStudentsPageChange}
-                                rowsPerPage={placementStudentsPagination.per_page}
-                                onRowsPerPageChange={handlePlacementStudentsPerPageChange}
-                                rowsPerPageOptions={[10, 25, 50, 100]}
-                                labelRowsPerPage="Students per page:"
-                                labelDisplayedRows={({ from, to, count, page }) => {
-                                    const totalPages = Math.ceil(count / placementStudentsPagination.per_page);
-                                    const currentPage = page + 1;
-                                    return `Page ${currentPage} of ${totalPages}`;
-                                }}
-                                sx={{
-                                    borderTop: '1px solid',
-                                    borderColor: 'divider',
-                                    '& .MuiTablePagination-toolbar': {
-                                        paddingLeft: 2,
-                                        paddingRight: 2,
-                                    },
-                                    '& .MuiTablePagination-selectLabel, & .MuiTablePagination-displayedRows': {
-                                        fontSize: '0.875rem',
-                                    }
-                                }}
-                            />
+                        {!loadingPlacementStudents && !placementStudentsError && placementStudents && placementStudents.length > 0 && placementStudentsPagination.last_page > 1 && (
+                            <Box sx={{ 
+                                display: 'flex', 
+                                flexDirection: { xs: 'column', sm: 'row' },
+                                justifyContent: 'space-between', 
+                                alignItems: 'center',
+                                gap: 2,
+                                p: 3,
+                                borderTop: '1px solid',
+                                borderColor: 'divider'
+                            }}>
+                                {/* Per Page Selection */}
+                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                    <Typography variant="body2" color="text.secondary">
+                                        Show:
+                                    </Typography>
+                                    <FormControl size="small" sx={{ minWidth: 80 }}>
+                                        <Select
+                                            value={placementStudentsPagination.per_page}
+                                            onChange={(e) => {
+                                                const newPerPage = e.target.value;
+                                                setPlacementStudentsPagination(prev => ({
+                                                    ...prev,
+                                                    per_page: newPerPage,
+                                                    current_page: 1
+                                                }));
+                                                // Pass the new per_page value directly to avoid state update delay
+                                                fetchPlacementStudents(1, false, newPerPage);
+                                            }}
+                                            variant="outlined"
+                                        >
+                                            <MenuItem value={10}>10</MenuItem>
+                                            <MenuItem value={20}>20</MenuItem>
+                                            <MenuItem value={50}>50</MenuItem>
+                                            <MenuItem value={100}>100</MenuItem>
+                                        </Select>
+                                    </FormControl>
+                                    <Typography variant="body2" color="text.secondary">
+                                        per page
+                                    </Typography>
+                                </Box>
+
+                                {/* Pagination Component */}
+                                <Pagination
+                                    count={placementStudentsPagination.last_page}
+                                    page={placementStudentsPagination.current_page}
+                                    onChange={(event, page) => {
+                                        setPlacementStudentsPagination(prev => ({
+                                            ...prev,
+                                            current_page: page
+                                        }));
+                                        fetchPlacementStudents(page, false);
+                                    }}
+                                    color="primary"
+                                    shape="rounded"
+                                    showFirstButton
+                                    showLastButton
+                                />
+
+                                {/* Students Count Display */}
+                                <Typography variant="body2" color="text.secondary">
+                                    Showing {placementStudentsPagination.from || 0} to {placementStudentsPagination.to || 0} of {placementStudentsPagination.total || 0} students
+                                </Typography>
+                            </Box>
+                        )}
+                        
+                        {/* Simple Count Display for Single Page */}
+                        {!loadingPlacementStudents && !placementStudentsError && placementStudents && placementStudents.length > 0 && placementStudentsPagination.last_page <= 1 && (
+                            <Box sx={{ 
+                                display: 'flex', 
+                                justifyContent: 'center', 
+                                alignItems: 'center',
+                                p: 2,
+                                borderTop: '1px solid',
+                                borderColor: 'divider'
+                            }}>
+                                <Typography variant="body2" color="text.secondary">
+                                    Showing {placementStudents.length} of {placementStudentsPagination.total || placementStudents.length} students
+                                </Typography>
+                            </Box>
                         )}
                     </Box>
                 </TabPanel>
@@ -6286,11 +6641,20 @@ const AdminPlacement = () => {
                 
                 <DialogContent sx={{ p: 0 }}>
                     {loadingStudentDetails ? (
-                        <Box display="flex" justifyContent="center" alignItems="center" py={8}>
-                            <CircularProgress />
-                            <Typography variant="body2" sx={{ ml: 2 }}>
-                                Loading student details...
+                        <Box display="flex" flexDirection="column" justifyContent="center" alignItems="center" py={8}>
+                            <CircularProgress size={48} />
+                            <Typography variant="h6" sx={{ mt: 2, mb: 1 }}>
+                                🚀 Loading Student Details
                             </Typography>
+                            <Typography variant="body2" color="text.secondary" textAlign="center" sx={{ maxWidth: 400 }}>
+                                Fetching profile data, applications, exam results, and additional information in parallel...
+                            </Typography>
+                            <Box sx={{ mt: 2, display: 'flex', gap: 1 }}>
+                                <Chip label="Profile" size="small" color="primary" />
+                                <Chip label="Applications" size="small" color="secondary" />
+                                <Chip label="Education" size="small" color="success" />
+                                <Chip label="Projects" size="small" color="warning" />
+                            </Box>
                         </Box>
                     ) : studentDetailsError ? (
                         <Box p={3}>

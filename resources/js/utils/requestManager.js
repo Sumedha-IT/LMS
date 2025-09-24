@@ -43,7 +43,7 @@ class RequestManager {
     });
   }
 
-  // Throttle requests
+  // Throttle requests with adaptive rate limiting
   async throttleRequest(key) {
     const now = Date.now();
     const lastRequest = this.requestTimestamps.get(key);
@@ -55,6 +55,24 @@ class RequestManager {
     }
     
     this.requestTimestamps.set(key, now);
+  }
+
+  // Enhanced rate limiting for profile completion requests
+  async throttleProfileCompletionRequest() {
+    const profileCompletionKey = 'profile-completion-rate-limit';
+    const now = Date.now();
+    const lastRequest = this.requestTimestamps.get(profileCompletionKey);
+    
+    // Use longer delay for profile completion requests to avoid 429 errors
+    const profileCompletionDelay = 2000; // 2 seconds between profile completion requests
+    
+    if (lastRequest && (now - lastRequest) < profileCompletionDelay) {
+      const waitTime = profileCompletionDelay - (now - lastRequest);
+      console.log(`Profile completion request throttled, waiting ${waitTime}ms`);
+      await new Promise(resolve => setTimeout(resolve, waitTime));
+    }
+    
+    this.requestTimestamps.set(profileCompletionKey, now);
   }
 
   // Execute request with deduplication and caching

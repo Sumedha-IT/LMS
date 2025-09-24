@@ -27,6 +27,15 @@ class ProfileCompletionService
             'resume' => $this->calculateResumeCompletion($user),
         ];
 
+        // Get detailed missing fields for each section
+        $missingFields = [
+            'personal' => $this->getPersonalDetailsMissingFields($user),
+            'education' => $this->getEducationMissingFields($user),
+            'projects' => $this->getProjectsMissingFields($user),
+            'certifications' => $this->getCertificationsMissingFields($user),
+            'resume' => $this->getResumeMissingFields($user),
+        ];
+
         // Calculate weighted overall percentage
         $weights = [
             'personal' => 0.35,     // 35% weight for personal details
@@ -47,6 +56,7 @@ class ProfileCompletionService
             'weights' => $weights,
             'is_complete' => $overallPercentage >= 100, // 100% threshold for completion
             'missing_sections' => $this->getMissingSections($sections),
+            'missing_fields' => $missingFields,
         ];
     }
 
@@ -274,9 +284,159 @@ class ProfileCompletionService
             'can_apply' => $completion['is_complete'],
             'completion_percentage' => $completion['overall_percentage'],
             'missing_sections' => $completion['missing_sections'],
+            'missing_fields' => $completion['missing_fields'],
             'message' => $completion['is_complete'] 
                 ? 'Profile is complete. You can apply for placements.'
                 : 'Profile completion must be 100%. Please complete the following sections: ' . implode(', ', $completion['missing_sections'])
         ];
+    }
+
+    /**
+     * Get missing personal details fields
+     *
+     * @param User $user
+     * @return array
+     */
+    private function getPersonalDetailsMissingFields(User $user): array
+    {
+        $mandatoryFields = [
+            'name' => 'Full Name',
+            'email' => 'Email Address',
+            'gender' => 'Gender',
+            'birthday' => 'Date of Birth',
+            'address' => 'Address',
+            'city' => 'City',
+            'state_id' => 'State',
+            'pincode' => 'Pincode',
+            'aadhaar_number' => 'Aadhaar Number',
+            'passport_photo_path' => 'Passport Photo'
+        ];
+        
+        $missing = [];
+        foreach ($mandatoryFields as $field => $label) {
+            if (empty($user->$field)) {
+                $missing[] = $label;
+            }
+        }
+        
+        return $missing;
+    }
+
+    /**
+     * Get missing education fields
+     *
+     * @param User $user
+     * @return array
+     */
+    private function getEducationMissingFields(User $user): array
+    {
+        $missing = [];
+        $studentEducation = $user->studentEducation()->get();
+        
+        if ($studentEducation->isEmpty()) {
+            $missing[] = 'At least one education record is required';
+        } else {
+            foreach ($studentEducation as $index => $edu) {
+                $recordMissing = [];
+                
+                if (empty($edu->degree_type_id)) {
+                    $recordMissing[] = 'Degree Type';
+                }
+                if (empty($edu->institute_name)) {
+                    $recordMissing[] = 'Institute Name';
+                }
+                if (empty($edu->percentage_cgpa)) {
+                    $recordMissing[] = 'Percentage/CGPA';
+                }
+                
+                $hasDuration = (!empty($edu->duration_from) && !empty($edu->duration_to)) || !empty($edu->year_of_passout);
+                if (!$hasDuration) {
+                    $recordMissing[] = 'Duration or Year of Passout';
+                }
+                
+                if (!empty($recordMissing)) {
+                    $missing[] = 'Education Record ' . ($index + 1) . ': ' . implode(', ', $recordMissing);
+                }
+            }
+        }
+        
+        return $missing;
+    }
+
+    /**
+     * Get missing projects fields
+     *
+     * @param User $user
+     * @return array
+     */
+    private function getProjectsMissingFields(User $user): array
+    {
+        $missing = [];
+        $projects = $user->projects()->get();
+        
+        if ($projects->isEmpty()) {
+            $missing[] = 'At least one project is required';
+        } else {
+            foreach ($projects as $index => $project) {
+                $recordMissing = [];
+                
+                if (empty($project->title)) {
+                    $recordMissing[] = 'Title';
+                }
+                if (empty($project->description)) {
+                    $recordMissing[] = 'Description';
+                }
+                if (empty($project->start_date)) {
+                    $recordMissing[] = 'Start Date';
+                }
+                if (empty($project->technologies)) {
+                    $recordMissing[] = 'Technologies';
+                }
+                
+                if (!empty($recordMissing)) {
+                    $missing[] = 'Project ' . ($index + 1) . ': ' . implode(', ', $recordMissing);
+                }
+            }
+        }
+        
+        return $missing;
+    }
+
+    /**
+     * Get missing certifications fields
+     *
+     * @param User $user
+     * @return array
+     */
+    private function getCertificationsMissingFields(User $user): array
+    {
+        try {
+            $certifications = $user->certifications()->count();
+            if ($certifications === 0) {
+                return ['At least one certification is recommended'];
+            }
+        } catch (\Exception $e) {
+            // If certifications table doesn't exist, consider it optional
+            return [];
+        }
+        
+        return [];
+    }
+
+    /**
+     * Get missing resume fields
+     *
+     * @param User $user
+     * @return array
+     */
+    private function getResumeMissingFields(User $user): array
+    {
+        $missing = [];
+        
+        if (empty($user->upload_resume)) {
+            $missing[] = 'Resume document upload is required';
+        }
+        
+        return $missing;
     }
 }

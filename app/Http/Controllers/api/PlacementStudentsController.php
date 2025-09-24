@@ -51,6 +51,7 @@ class PlacementStudentsController extends Controller
                 $query->where(function($q) use ($search) {
                     $q->where('name', 'like', "%{$search}%")
                       ->orWhere('email', 'like', "%{$search}%")
+                      ->orWhere('phone', 'like', "%{$search}%")
                       ->orWhereHas('batches.course_package', function($courseQuery) use ($search) {
                            $courseQuery->where('name', 'like', "%{$search}%");
                        });
@@ -126,19 +127,40 @@ class PlacementStudentsController extends Controller
                 });
             }
 
+            // Apply traditional page-based pagination
+            $perPage = min($request->get('per_page', 10), 100); // Cap at 100 to prevent abuse
+            $page = $request->get('page', 1);
+            
+            // Order by id for consistent pagination
+            $query->orderBy('users.id', 'asc');
+            
+            // Optimize query by selecting only necessary fields
+            $query->select([
+                'users.id',
+                'users.name', 
+                'users.email',
+                'users.phone',
+                'users.avatar_url',
+                'users.role_id',
+                'users.created_at',
+                'users.updated_at'
+            ]);
+            
             // Apply pagination
-            $perPage = $request->get('per_page', 10);
-            $students = $query->paginate($perPage);
+            $students = $query->paginate($perPage, ['*'], 'page', $page);
 
             // Transform the data to include calculated fields
             $students->getCollection()->transform(function ($student) {
-
                 // Transform avatar URL to full URL
                 if ($student->avatar_url) {
                     $student->avatar_url = $student->getFilamentAvatarUrl();
                 }
 
-                // Get course from first batch
+                // Get course from first batch (load relationship efficiently)
+                $student->load(['batches' => function($query) {
+                    $query->withoutGlobalScope('limited')->with('course_package');
+                }]);
+                
                 $firstBatch = $student->batches->first();
                 if ($firstBatch && $firstBatch->course_package_id) {
                     $course = \App\Models\Course::find($firstBatch->course_package_id);
@@ -146,9 +168,10 @@ class PlacementStudentsController extends Controller
                 } else {
                     $student->course = null;
                 }
+
+                // Load education data efficiently
+                $student->load(['studentEducation.degreeType', 'studentEducation.specialization']);
                 
-
-
                 // Add calculated education summary
                 $student->education_summary = $this->getEducationSummary($student);
                 
@@ -164,6 +187,9 @@ class PlacementStudentsController extends Controller
                     'total' => $students->total(),
                     'from' => $students->firstItem(),
                     'to' => $students->lastItem(),
+                    'has_more_pages' => $students->hasMorePages(),
+                    'prev_page_url' => $students->previousPageUrl(),
+                    'next_page_url' => $students->nextPageUrl()
                 ]
             ]);
 

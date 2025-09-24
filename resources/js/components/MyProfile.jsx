@@ -5518,8 +5518,36 @@ const MyProfile = () => {
                   </svg>
                   <div className="text-sm text-yellow-800">
                     <strong>Profile completion required:</strong> You need 100% profile completion to apply for placements.
+                    
+                    {profileCompletionData?.missing_fields && Object.keys(profileCompletionData.missing_fields).length > 0 && (
+                      <div className="mt-3">
+                        <div className="font-semibold mb-2">Missing fields to complete:</div>
+                        <div className="space-y-2">
+                          {Object.entries(profileCompletionData.missing_fields).map(([section, fields]) => (
+                            fields.length > 0 && (
+                              <div key={section} className="bg-white rounded-md p-3 border border-yellow-300">
+                                <div className="text-xs font-semibold text-yellow-900 uppercase tracking-wide mb-1">
+                                  {section.replace('_', ' ')}
+                                </div>
+                                <ul className="text-xs text-yellow-800 space-y-1">
+                                  {fields.map((field, index) => (
+                                    <li key={index} className="flex items-center">
+                                      <span className="w-1.5 h-1.5 bg-yellow-500 rounded-full mr-2 flex-shrink-0"></span>
+                                      {field.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())}
+                                    </li>
+                                  ))}
+                                </ul>
+                              </div>
+                            )
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                    
                     {profileCompletionData?.missing_sections?.length > 0 && (
-                      <span> Missing: {profileCompletionData.missing_sections.join(', ')}</span>
+                      <div className="mt-2 text-xs text-yellow-700">
+                        Incomplete sections: {profileCompletionData.missing_sections.join(', ')}
+                      </div>
                     )}
                   </div>
                 </div>
