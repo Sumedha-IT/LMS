@@ -187,9 +187,12 @@ class UserController extends Controller
             // 'paymentStatus' => 'required|in:1,2,3',
             'name' =>  'required|string',
             "phone" => "required|string|max:12",
-            "branchLocation" => 'required|string|exists:branches,name',
-            "zohoCustomerId" => 'required|integer',
-            "batchId" => 'required|exists:batches,id'
+            "branchLocation" => 'nullable|string|exists:branches,name',
+            "zohoCustomerId" => 'nullable|integer',
+            "batchName" => 'required|string|exists:batches,name',
+            "course_name" => 'required|string|max:255',
+            "fees" => 'required|numeric|min:0',
+            "lead_id" => 'required|string|max:255'
         ]);
 
         if (!empty($validator->errors()->messages())) {

@@ -67,7 +67,10 @@ class User extends Authenticatable implements HasTenants, FilamentUser, HasAvata
         'receive_email_notification',
         'receive_sms_notification',
         'zoho_crm_id',
-        'course_id',
+        'course_name',
+        'fees',
+        'lead_id',
+        'batch_name',
         'program',
         'exam_total_marks',
         'exam_last_calculated_at',
@@ -194,6 +197,11 @@ class User extends Authenticatable implements HasTenants, FilamentUser, HasAvata
                     ->where('batches.course_package_id', '=', 'courses.id')
                     ->select('courses.*')
                     ->limit(1);
+    }
+
+    public function batch()
+    {
+        return $this->belongsTo(Batch::class, 'batch_name', 'name');
     }
 
     public function canAccessTenant(Model $tenant): bool
