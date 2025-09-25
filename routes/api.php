@@ -384,6 +384,11 @@ Route::middleware(['zohoAuth'])->group(function () {
 
 });
 
+// Password reset route for API-created users
+Route::middleware(['zohoAuth'])->group(function () {
+    Route::post('/reset-password', [UserController::class,'resetPassword']);
+});
+
 
 
 Route::get('/test', [TestingController::class,'testMail']);

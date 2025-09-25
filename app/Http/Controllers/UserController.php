@@ -187,11 +187,14 @@ class UserController extends Controller
             // 'paymentStatus' => 'required|in:1,2,3',
             'name' =>  'required|string',
             "phone" => "required|string|max:12",
+            "password" => 'nullable|string|min:6',
             "branchLocation" => 'nullable|string|exists:branches,name',
             "zohoCustomerId" => 'nullable|integer',
             "batchName" => 'required|string|exists:batches,name',
             "course_name" => 'required|string|max:255',
             "fees" => 'required|numeric|min:0',
+            "no_of_installments" => 'nullable|integer|min:1|max:12',
+            "program" => 'required|string|in:CEP/STEP,RISE,CD - 50/50,PAP,STEP',
             "lead_id" => 'required|string|max:255'
         ]);
 
@@ -201,8 +204,16 @@ class UserController extends Controller
 
         $data = $validator->validate();
         try {
-            $data = $us->createStudent($data);
-            return response()->json(['message' => 'User Created', 'data' => new StudentResource($data['user']), 'status' => 200, 'success' => true], 200);
+            $result = $us->createStudent($data);
+            return response()->json([
+                'message' => 'User Created', 
+                'data' => new StudentResource($result['user']), 
+                'password' => $result['password'],
+                'login_credentials' => $result['login_credentials'],
+                'email_sent' => $result['email_sent'],
+                'status' => 200, 
+                'success' => true
+            ], 200);
         } catch (\Exception $e) {
             if ($e->getCode() === '23000') {
                 return response()->json([
@@ -220,6 +231,34 @@ class UserController extends Controller
         }
     }
 
+
+    public function resetPassword(Request $request, UserService $us)
+    {
+        $request->validate([
+            'email' => 'required|email|exists:users,email'
+        ]);
+
+        $result = $us->resetUserPassword($request->email);
+        
+        if ($result['success']) {
+            return response()->json([
+                'message' => 'Password reset successfully',
+                'data' => [
+                    'user' => $result['user'],
+                    'new_password' => $result['new_password'],
+                    'email_sent' => $result['email_sent']
+                ],
+                'status' => 200,
+                'success' => true
+            ], 200);
+        } else {
+            return response()->json([
+                'message' => $result['message'],
+                'status' => 404,
+                'success' => false
+            ], 404);
+        }
+    }
 
     public function getPaymentDetails(ZohoService $zs)
     {

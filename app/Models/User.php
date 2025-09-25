@@ -69,6 +69,7 @@ class User extends Authenticatable implements HasTenants, FilamentUser, HasAvata
         'zoho_crm_id',
         'course_name',
         'fees',
+        'no_of_installments',
         'lead_id',
         'batch_name',
         'program',

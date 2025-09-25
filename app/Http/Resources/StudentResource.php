@@ -57,6 +57,12 @@ class StudentResource extends JsonResource
             "receive_sms_notification" => $this->receive_sms_notification,
             "avatar_url" => $this->avatar_url,
             'zoho_crm_id' => $this->zoho_crm_id,
+            'course_name' => $this->course_name,
+            'fees' => $this->fees,
+            'no_of_installments' => $this->no_of_installments,
+            'program' => $this->program,
+            'lead_id' => $this->lead_id,
+            'batch_name' => $this->batch_name,
             // Get course from batch's course_package relationship
             'course' => $this->whenLoaded('batches', function() {
                 $firstBatch = $this->batches->first();

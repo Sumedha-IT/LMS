@@ -134,7 +134,7 @@ class PlacementStudentsController extends Controller
             // Order by id for consistent pagination
             $query->orderBy('users.id', 'asc');
             
-            // Optimize query by selecting only necessary fields
+            // Select all necessary user fields to populate student profiles
             $query->select([
                 'users.id',
                 'users.name', 
@@ -142,6 +142,13 @@ class PlacementStudentsController extends Controller
                 'users.phone',
                 'users.avatar_url',
                 'users.role_id',
+                'users.country_code',
+                'users.gender',
+                'users.birthday',
+                'users.address',
+                'users.city',
+                'users.pincode',
+                'users.linkedin_profile',
                 'users.created_at',
                 'users.updated_at'
             ]);
@@ -258,7 +265,24 @@ class PlacementStudentsController extends Controller
                 return response()->json(['error' => 'Unauthorized access'], 403);
             }
 
-            $student = User::with([
+            // Select specific fields to optimize performance and ensure all necessary data is included
+            $student = User::select([
+                'users.id',
+                'users.name', 
+                'users.email',
+                'users.phone',
+                'users.avatar_url',
+                'users.role_id',
+                'users.country_code',
+                'users.gender',
+                'users.birthday',
+                'users.address',
+                'users.city',
+                'users.pincode',
+                'users.linkedin_profile',
+                'users.created_at',
+                'users.updated_at'
+            ])->with([
                 'role',
                 'batches' => function($query) {
                     // Use the withoutStudentScope method to bypass the global scope
