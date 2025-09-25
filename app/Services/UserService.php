@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\Team;
 use App\Models\User;
+use App\Models\Payment;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
@@ -15,14 +16,10 @@ class UserService
         // Use custom password if provided, otherwise generate random one
         $password = !empty($data['password']) ? $data['password'] : bin2hex(random_bytes(6));
         
-        // Handle team assignment only if branchLocation is provided
-        $team = null;
-        if (!empty($data['branchLocation'])) {
-            $team = Team::all()->select("id","slug")->where(function ($item) use($data){
-                if(str_contains($item['slug'], strtolower($data['branchLocation']))){
-                    return $item;
-                }
-            })->first();
+        // Handle team assignment - branchLocation is now required
+        $team = Team::where('name', $data['branchLocation'])->first();
+        if (!$team) {
+            throw new \Exception('Team not found with name: ' . $data['branchLocation']);
         }
 
         $input = [
@@ -32,7 +29,7 @@ class UserService
             'zoho_crm_id' => $data['zohoCustomerId'] ?? null,
             'course_name' => $data['course_name'],
             'fees' => $data['fees'],
-            'no_of_installments' => $data['no_of_installments'] ?? 1,
+            'no_of_installments' => $data['no_of_installments'],
             'program' => $data['program'],
             'lead_id' => $data['lead_id'],
             'batch_name' => $data['batchName'],
@@ -73,15 +70,19 @@ class UserService
         
         DB::statement("INSERT INTO ".$dbName.".batch_user (batch_id, user_id, created_at, updated_at) VALUES (".$batch->id.", ".$user->id.", NOW(), NOW())");
         
-        // Only add team assignment if team was found
-        if ($team) {
-            $query = "INSERT INTO ".$dbName.".team_user (team_id, user_id, created_at, updated_at) VALUES (".$team['id'].", ".$user->id.", NOW(), NOW())";
-            DB::statement($query);
-        } else {
-            // If no team found, assign to default team (team_id = 1) or create a default team assignment
-            // You may need to adjust this based on your system's default team
-            \Log::warning('No team found for branch location: ' . ($data['branchLocation'] ?? 'not provided'));
-        }
+        // Assign user to team (team is now guaranteed to exist)
+        $query = "INSERT INTO ".$dbName.".team_user (team_id, user_id, created_at, updated_at) VALUES (".$team->id.", ".$user->id.", NOW(), NOW())";
+        DB::statement($query);
+        
+        \Log::info('User assigned to team', [
+            'user_id' => $user->id,
+            'team_id' => $team->id,
+            'team_name' => $team->name,
+            'branch_location' => $data['branchLocation']
+        ]);
+
+        // Create payment record
+        $this->createPaymentRecord($user, $data);
        
         // Try to send email, but don't fail user creation if email fails
         try {
@@ -148,5 +149,43 @@ class UserService
             'email_sent' => $emailSent,
             'message' => 'Password reset successfully'
         ];
+    }
+
+    /**
+     * Create payment record for user
+     */
+    private function createPaymentRecord($user, $data)
+    {
+        $program = $data['program'];
+        $noOfInstallments = $data['no_of_installments'];
+        
+        // Get program fee from Payment model
+        $totalFee = Payment::getProgramFee($program);
+        
+        // Calculate installment amount
+        $installmentAmount = $noOfInstallments > 0 ? $totalFee / $noOfInstallments : $totalFee;
+        
+        // Create payment record
+        Payment::create([
+            'user_id' => $user->id,
+            'lead_id' => $data['lead_id'],
+            'program' => $program,
+            'total_fee' => $totalFee,
+            'no_of_installments' => $noOfInstallments,
+            'installment_amount' => round($installmentAmount, 2),
+            'paid_amount' => 0,
+            'remaining_amount' => $totalFee,
+            'status' => 'pending',
+            'installment_details' => []
+        ]);
+
+        \Log::info('Payment record created for user', [
+            'user_id' => $user->id,
+            'lead_id' => $data['lead_id'],
+            'program' => $program,
+            'total_fee' => $totalFee,
+            'installments' => $noOfInstallments,
+            'installment_amount' => round($installmentAmount, 2)
+        ]);
     }
 }

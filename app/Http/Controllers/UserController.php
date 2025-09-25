@@ -188,18 +188,26 @@ class UserController extends Controller
             'name' =>  'required|string',
             "phone" => "required|string|max:12",
             "password" => 'nullable|string|min:6',
-            "branchLocation" => 'nullable|string|exists:branches,name',
+            "branchLocation" => 'required|string|exists:teams,name',
             "zohoCustomerId" => 'nullable|integer',
             "batchName" => 'required|string|exists:batches,name',
             "course_name" => 'required|string|max:255',
             "fees" => 'required|numeric|min:0',
-            "no_of_installments" => 'nullable|integer|min:1|max:12',
+            "no_of_installments" => 'required|integer|min:1|max:12',
             "program" => 'required|string|in:CEP/STEP,RISE,CD - 50/50,PAP,STEP',
             "lead_id" => 'required|string|max:255'
         ]);
 
         if (!empty($validator->errors()->messages())) {
-            return response()->json(['message' => $validator->errors()->all()[0], 'status' => 400, 'success' => false], 400);
+            $errorMessage = $validator->errors()->all()[0];
+            
+            // Provide helpful error message for branch location
+            if (str_contains($errorMessage, 'branch location')) {
+                $availableTeams = \App\Models\Team::pluck('name')->toArray();
+                $errorMessage .= '. Available teams: ' . implode(', ', $availableTeams);
+            }
+            
+            return response()->json(['message' => $errorMessage, 'status' => 400, 'success' => false], 400);
         }
 
         $data = $validator->validate();

@@ -52,6 +52,7 @@ use App\Http\Controllers\api\PlacementCriteriaController;
 use App\Http\Controllers\api\JobEligibilityCriteriaController;
 use App\Http\Controllers\api\ProfileCompletionController;
 use App\Http\Controllers\api\PlacementStudentsController;
+use App\Http\Controllers\PaymentController;
 
 /*
 |--------------------------------------------------------------------------
@@ -349,6 +350,12 @@ Route::post('/questionBanks/questions/{id}', [QuestionBankController::class,'upd
 
     });
     Route::get("/paymentCentre", [UserController::class, "getPaymentDetails"]);
+    
+    // Payment routes
+    Route::get('/payments', [PaymentController::class, 'getPaymentDetails']);
+    Route::get('/payments/user/{userId}', [PaymentController::class, 'getPaymentByUserId']);
+    Route::post('/payments/installment', [PaymentController::class, 'recordInstallmentPayment']);
+    Route::get('/payments/program-fees', [PaymentController::class, 'getProgramFees']);
 
 
      // Profile Api

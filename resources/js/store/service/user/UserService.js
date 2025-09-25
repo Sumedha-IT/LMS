@@ -15,7 +15,7 @@ export const userApi = createApi({
         }),
 
         getPaymentData: builder.query({
-            query: () => `paymentCentre`,
+            query: () => `payments`,
         }),
 
         getUserExamData: builder.query({

@@ -418,6 +418,11 @@ class User extends Authenticatable implements HasTenants, FilamentUser, HasAvata
         return $this->hasMany(JobApplication::class);
     }
 
+    public function payments()
+    {
+        return $this->hasMany(Payment::class);
+    }
+
     /**
      * Get profile completion percentage
      *
